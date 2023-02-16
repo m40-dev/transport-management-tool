@@ -1,0 +1,213 @@
+QMainWindow, QDialog, QWidget, QTreeWidget, QSplitter{
+	background: rgb(250, 250, 250);
+}
+
+QLabel{
+	background: transparent;
+}
+
+QTreeWidget{
+	border: 1px solid #333;
+}
+
+QPlainTextEdit, QTextEdit, QComboBox{
+	color: #333;
+	border: 1px solid #333;
+	border-radius: 2px;
+}
+
+QLineEdit, QComboBox{
+    color: palette(Text);
+	border: 1px solid palette(Dark);
+    min-height: 2em;
+    margin: 0px;
+    padding: 0px;
+}
+QStatusBar, QSizeGrip{
+	color: palette(Light);
+	font: bold;
+	background-color: #9e2015;
+}
+
+QComboBox{
+		text-align: center;
+}
+
+QMenu{
+	background-color: palette(Base);
+}
+
+QScrollBar::vertical,QScrollBar::horizontal{
+	width:12px;
+	height:12px;
+	border-radius:2px;
+	border: 1px solid palette(Dark);
+}
+
+QScrollBar::handle:vertical{
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Midlight));
+	border:1px solid palette(Dark);
+	border-radius:2px;
+}
+
+QScrollBar::handle:horizontal{
+	background-color: qlineargradient(x1: 1, x2: 1, y1: 0, y2:1, stop: 0 palette(Light), stop: 1 palette(Midlight));
+	border:1px solid palette(Dark);
+	border-radius:2px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,QScrollBar::sub-page:vertical,QScrollBar::add-page:vertical{
+	background: transparent;
+	width:0px;height:1px;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal,QScrollBar::sub-page:horizontal,QScrollBar::add-page:horizontal{
+	background: transparent;
+	width:0px;height:1px;
+}
+
+QPushButton{
+    background-color: palette(Button.Active);
+	min-height: 2em;
+	min-width: 6em;
+	border: 1px solid #777;
+	border-radius: 2px;
+	border-style: outset;
+	text-align: center;
+    margin: 0px;
+    padding: 0px;
+}
+
+QTabBar::tab{
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Light));
+	border: 1px solid palette(Dark);
+	border-style: outset;
+	border-radius: 2px;
+	min-width: 6em;
+	padding:10px;
+}
+
+QTabBar::tab::selected{
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Midlight));
+	border: 1px solid palette(Highlight);
+	padding-left: 3px;
+}
+
+
+QTreeWidget::item{
+	min-height: 1.7em;
+    color: #333;
+}
+
+QTreeWidget::item::selected, QListWidget::item::selected, QMenu::item::selected{
+	color: #333;
+	font: bold;
+	padding-left: 4px;
+}
+
+QLabel{
+	border-radius: 2px;
+	padding-left: 2px;
+}
+
+QLabel[Widget=Header1]{
+	font-size: 18px;
+	background-color: #d5f2e5;
+	min-height: 40px;
+	color: #424445;
+	font: bold;
+}
+
+QLabel[Widget=Header2]{
+	font-size: 15px;
+	font: bold;
+	margin-left: 2px;
+	background-color: #d5edf2;
+	color: #444a54;
+	min-height: 25px;
+}
+
+QLabel[Widget=Header3]{
+	font-size: 14px;
+	font: bold;
+	background-color: #d64b79;
+	min-height: 25px;
+	color: #444a54;
+}
+
+QLabel[Widget=ItemLabel]{
+	font-size: 15px;
+	min-height: 25px;
+	color: #333;
+}
+
+QLabel[Widget=SequenceItem]{
+	border-radius: 3px;
+	border-left: 3px solid #888;
+	border-top: 2px solid qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 #e4e7eb, stop: 1 #ced5d6 );
+	border-bottom: 2px solid qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 #e4e7eb, stop: 1 #ced5d6 );
+	border-right: 2px solid #ced5d6;
+}
+
+QLabel[Widget=OrderNumber]{
+	font-size: 16px;
+}
+QLabel[Widget=ParameterLabel]{
+	font-size: 14px;
+	font: italic;
+}
+
+QLabel[Widget=MethodItem]{
+	border-left: 2px solid #696;
+}
+QToolButton{
+    background-color: palette(Button.Active);
+    height: 28px;
+    width: 90px;
+	margin: 1px;
+	border: 1px solid #9ad3e3;
+	border-radius: 2px;
+	padding: 1px;
+}
+
+QToolButton::hover{
+	background-color: #e4f5f7;
+}
+
+QToolButton[Widget=AddButton]{
+	background-image: url("./lib/ui/img/add_btn.png");
+	border-radius: 16px;
+	border: none;
+}
+
+
+QToolButton[Widget=DeleteButton]{
+	background-image: url("./lib/ui/img/delete_btn.png");
+	border-radius: 16px;
+	border: none;
+}
+
+QToolButton[Widget=UpArrow]{
+	background-image: url("./lib/ui/img/up_arrow.png");
+	border: none;
+}
+
+QToolButton[Widget=DownArrow]{
+	background-image: url("./lib/ui/img/down_arrow.png");
+	border: none;
+}
+
+QToolButton[Widget=DeleteButton]::hover{
+	background-color: #f7b3a3;
+}
+
+QCheckBox[Widget=CheckBoxHeader]{
+	font-size: 15px;
+	color: #333;
+}
+
+QToolButton[Widget=SelectFileButton]{
+	background-image: url("./lib/ui/img/search_btn.png");
+	border-radius: 16px;
+	border: none;
+}
