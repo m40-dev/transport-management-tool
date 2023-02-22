@@ -191,19 +191,37 @@ class object_container(transport_template_custom_object):
         local_relation_list = []
         
         if table_relations is not None:
-            for relation_type, relation_tables_dict in table_relations.items():
-                for table_name, relation_columns_list in relation_tables_dict.items():
-                    for relation in relation_columns_list:
-                        table_name = relation["table_name"]
-                        column_name = relation["column_name"]
-                        relation_type = relation["relation_type"]
-                        relation_key = f"{table_name}|{column_name}|{relation_type}"
-                        if relation_key not in local_relation_list:
-                            local_relation_list.append(relation_key)
-                            relation_object = object_parameter(self.application, "Relation", relation_key)
-                            self.object_relations.append(relation_object)
+            print("table relations", table_relations)
+            for relation in table_relations:
+                print(relation)
+                relation_keys = self.get_relation_keys(relation)
+                for relation_key in relation_keys:
+                    if relation_key not in local_relation_list:
+                        print(relation_key)
+                        local_relation_list.append(relation_key)
+                        relation_object = object_parameter(self.application, "Relation", relation_key)
+                        self.object_relations.append(relation_object)
             return True
         return False
+
+    def get_relation_keys(self, relation):
+        relation_type = relation["Relation"]
+        relation_keys = []
+
+        table_name = relation["ChildTable"]
+        column_name = relation["ChildColumn"]
+
+        prefix = f"{table_name}|{column_name}|"
+
+        if relation_type in [1, 3]:
+            relation_keys.append(f"{prefix}FK") 
+        if relation_type == 3:
+            relation_keys.append(f"{prefix}CR")
+        if relation_type == 5:
+            relation_keys.append(f"{prefix}FK, IgnoreSupersetHandling")
+
+        return relation_keys
+
 
 class object_parameter(transport_template_custom_object):
     def __init__(self, application, parameter_name, parameter_value="", source_element=None,):

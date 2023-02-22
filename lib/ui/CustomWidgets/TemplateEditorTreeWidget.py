@@ -82,9 +82,7 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
                 if "%" in self.table_display_pattern:
                     for column_name in self.object_columns:
                         if column_name in object_display:
-                            column_value =  self.object_data.__getattribute__(column_name)
-                            if column_value is None:
-                                column_value = ""
+                            column_value =  self.get_value(column_name)
                             object_display = object_display.replace(column_name, column_value)
                     object_display = object_display.replace("%", "")
                 display = f"{self.objectkey_table} - ({object_display})"
@@ -96,21 +94,21 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
         self.setText(0, display_text)
 
     def get_value(self, column_name):
+        value = ""
         if isinstance(self.object_data, dict):
-            value = self.object_data.get(column_name, None)
+            value = self.object_data.get(column_name, "")
 
         if isinstance(self.object_data, Row):
-            value = self.object_data.__getattribute__(column_name)
-        
+            if column_name in self.object_columns:
+                value = self.object_data.__getattribute__(column_name)
+
         if value is None:
-            return ""
+            value = ""
         return value
     
     @property
     def follow_table(self):
-        if isinstance(self.object_data, dict):
-            value = self.object_data.get("follow_table", None)
-
+        value = ""
         if isinstance(self.object_data, Row):
             if self.table_name == "DialogTable":
                 value = self.object_data.TableName
@@ -123,33 +121,70 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
             return db_table_info.PKName1, db_table_info.PKName2
         return None, None
 
+    def get_db_object_columns(self, db_row):
+        if isinstance(db_row, Row):
+            columns = [column[0] for column in db_row.cursor_description]
+            return columns
+        return []
+
     @property
     def related_objects(self):
+        follow_up_relations = []
         selected_objects = {self.table_name: [self.object_data]}
         if self.object_relations is not None:
-            for relation_type, relation_tables_dict in self.object_relations.items():
-                for table_name, relation_columns_list in relation_tables_dict.items():
-                    for relation in relation_columns_list:
-                        relation_type = relation["relation_type"]
-                        if relation_type == "FK":
-                            table_name = relation["follow_table"]
-                            column_name = relation["follow_column"]
-                            if column_name in self.object_columns:
-                                query = f"select * from {table_name} where {column_name} = '{self.get_value(column_name)}'"
-                        else:
-                            table_name = relation["table_name"]
-                            column_name = relation["column_name"]
-                            if column_name in self.object_columns:
-                                query = f"select * from {table_name} where {column_name} = '{self.get_value(column_name)}'"
-                        # print("Relation: ", relation, "Query: ", query)
-                        query_result = self.db_connection.run_db_query(query)
-                        for row in query_result:
-                            if table_name not in selected_objects.keys():
-                                selected_objects[table_name] = [row]
-                            else:
-                                if row not in selected_objects[table_name]:
-                                    selected_objects[table_name].append(row)
+            for relation in self.object_relations:
+                # Configuration
+                status = self.get_relation_objects(relation, selected_objects)
+                if not status:
+                    follow_up_relations.append(relation)
 
+        print("follow up relations:", follow_up_relations)
+
+        for f_relation in follow_up_relations:
+            status = self.get_relation_objects(f_relation, selected_objects)
+            if not status:
+                print("follow up failed:", f_relation)
+        print(selected_objects)
+        return selected_objects
+
+    def get_relation_objects(self, relation, selected_objects={}):
+        base_object_table = relation["ParentTable"]
+        base_object_value_column = relation["ParentColumn"]
+
+        table_name = relation["ChildTable"]
+        column_name = relation["ChildColumn"]
+
+        column_value = self.get_value(base_object_value_column)
+        print(f"Relation: ", relation)
+
+        if base_object_table != self.table_name and base_object_table in selected_objects.keys():
+            query_values_list = []
+            for related_object in selected_objects[base_object_table]:
+                related_object_columns = self.get_db_object_columns(related_object)
+                if base_object_value_column in related_object_columns:
+                    base_object_value = related_object.__getattribute__(base_object_value_column)
+                    query_values_list.append(str(base_object_value))
+            column_value = "', '".join(query_values_list)
+            print(column_value)
+
+        query_results = self.get_db_objects(table_name, column_name, column_value)
+        
+        for db_record in query_results:
+            if table_name not in selected_objects.keys():
+                selected_objects[table_name] = [db_record]
+            else:
+                if db_record not in selected_objects[table_name]:
+                    selected_objects[table_name].append(db_record)
+        return True
+
+    def get_db_objects(self, table_name, query_column, query_values):
+        selected_objects = []
+        query = f"select * from {table_name} where {query_column} in ('{query_values}')"
+
+        query_result = self.db_connection.run_db_query(query)
+        for row in query_result:
+            selected_objects.append(row)
+        print("results:", len(selected_objects), "query:", query)
         return selected_objects
 
 
@@ -168,9 +203,9 @@ class TE_Table_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         return display
 
 
-class TE_Column_TreeWidgetItem(TemplateEditorTreeWidgetItem):
+class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     def __init__(self, application, object_data, xml_object=None, source_widget=None):
-        super(TE_Column_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget=source_widget)
+        super(TE_RelationColumn_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget=source_widget)
 
     @property
     def display_name(self):
@@ -179,7 +214,9 @@ class TE_Column_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             table_name = self.object_data.get("table_name", "")
             column_name = self.object_data.get("column_name", "")
             relation_type = self.object_data.get("relation_type", "")
-            display = f"{relation_type}: {column_name}"
+            follow_table = self.object_data.get("follow_table", "")
+            follow_column = self.object_data.get("follow_column", "")
+            display = f"{relation_type}: {column_name} -> {follow_table}"
 
         if isinstance(self.object_data, Row):
             if self.objectkey_table == "DialogColumn":

@@ -17,7 +17,7 @@ from lib.ui.MainWindow_ui import Ui_MainWindow
 from lib.ui.SessionDetailsDialog import SessionDetailsDialog
 
 """ Custom Widgets """
-from lib.ui.CustomWidgets.TemplateEditorTreeWidget import TemplateEditorTreeWidgetItem, TE_Table_TreeWidgetItem, TE_Column_TreeWidgetItem
+from lib.ui.CustomWidgets.TemplateEditorTreeWidget import TemplateEditorTreeWidgetItem, TE_Table_TreeWidgetItem, TE_RelationColumn_TreeWidgetItem
 from lib.ui.CustomWidgets.TemplateEditorListWidget import TemplateEditorListWidgetItem
 from lib.ui.CustomWidgets.ContextMenu import relation_widget_context_menu, xml_structure_context_menu
 """ database connector imports"""
@@ -167,73 +167,54 @@ class Transport_Manager(QMainWindow):
             self.db_column_info[row.ColumnName] = row
 
     def load_table_relations_data(self):
-        query = f"select \
-        BASE.ParentTable, BASE.ChildTable, Base.ParentColumn, Base.ChildColumn, Base.IsConnectedInTransport \
-        from QBM_VQBMRelationALL BASE \
-        where isnull(BASE.IsConnectedInTransport, 0) > 0 \
-        order by BASE.ParentTable"
+        query = "select \
+            BASE.Caption, \
+            BASE.IsConnectedInTransport as 'Relation',\
+            BASE.ParentTable as 'TableGroup',\
+            BASE.ParentTable,\
+            Base.ParentColumn, \
+            BASE.ChildTable,  \
+            Base.ChildColumn  \
+            from QBM_VQBMRelationALL BASE \
+            where isnull(BASE.IsConnectedInTransport, 0) > 0 \
+            order by BASE.ParentTable"
 
         query_result = self.db_connection.run_db_query(query)
+        self.save_relation_data(query_result)
 
+        query = "select \
+            BASE.Caption, \
+            BASE.IsConnectedInTransport as 'Relation',\
+            BASE.ChildTable as 'TableGroup',\
+            BASE.ParentTable,\
+            Base.ParentColumn, \
+            BASE.ChildTable,  \
+            Base.ChildColumn  \
+            from QBM_VQBMRelationALL BASE \
+            where isnull(BASE.IsConnectedInTransport, 0) > 0 \
+            order by BASE.ParentTable"
+
+        query_result = self.db_connection.run_db_query(query)
+        self.save_relation_data(query_result)
+
+    def save_relation_data(self, query_result):
         for row in query_result:
-            cr_relation = {
-                "table_name": row.ChildTable, 
-                "column_name": row.ChildColumn, 
-                "is_connected_in_transport": row.IsConnectedInTransport, 
-                "relation_type": "CR", 
-                "follow_table": row.ParentTable,
-                "follow_column": row.ParentColumn
-                }
-            fk_relation = {
-                "table_name": row.ParentTable, 
-                "column_name": row.ParentColumn, 
-                "is_connected_in_transport": row.IsConnectedInTransport, 
-                "relation_type": "FK", 
-                "follow_table": row.ChildTable,
-                "follow_column": row.ChildColumn
+            relation = {
+                "Caption": row.Caption,
+                "TableGroup": row.TableGroup,
+                "ParentTable": row.ParentTable, 
+                "ParentColumn": row.ParentColumn, 
+                "Relation": row.Relation,
+                "ChildTable": row.ChildTable,
+                "ChildColumn": row.ChildColumn
                 }
 
-            if row.ParentTable not in self.db_table_relations.keys():
-                self.db_table_relations[row.ParentTable] = {"CR": {}, "FK": {}}
-            
-            if row.ChildTable not in self.db_table_relations[row.ParentTable]["CR"].keys():
-                self.db_table_relations[row.ParentTable]["CR"][row.ChildTable] = []
+            if row.TableGroup not in self.db_table_relations.keys():
+                self.db_table_relations[row.TableGroup] = [relation]
+                continue
 
-            if row.ChildTable not in self.db_table_relations[row.ParentTable]["FK"].keys():
-                self.db_table_relations[row.ParentTable]["FK"][row.ChildTable] = []
-
-            if cr_relation not in self.db_table_relations[row.ParentTable]["CR"][row.ChildTable]:
-                self.db_table_relations[row.ParentTable]["CR"][row.ChildTable].append(cr_relation)
-            
-            if fk_relation not in self.db_table_relations[row.ParentTable]["FK"][row.ChildTable]:
-                self.db_table_relations[row.ParentTable]["FK"][row.ChildTable].append(fk_relation)
-
-            # cr_relation = {"table_name": row.ChildTable, "column_name": row.ChildColumn, "is_connected_in_transport": row.IsConnectedInTransport, "relation_type": "CR"}
-            fk_relation = {
-                "table_name": row.ChildTable, 
-                "column_name": row.ChildColumn, 
-                "is_connected_in_transport": row.IsConnectedInTransport, 
-                "relation_type": "FK", 
-                "follow_table": row.ParentTable,
-                "follow_column": row.ParentColumn
-                }
-
-            if row.ChildTable not in self.db_table_relations.keys():
-                self.db_table_relations[row.ChildTable] = {"CR": {}, "FK": {}}
-
-            if row.ChildTable not in self.db_table_relations[row.ChildTable]["FK"].keys():
-                self.db_table_relations[row.ChildTable]["FK"][row.ChildTable] = []
-
-            if fk_relation not in self.db_table_relations[row.ChildTable]["FK"][row.ChildTable]:
-                self.db_table_relations[row.ChildTable]["FK"][row.ChildTable].append(fk_relation)
-
-            # if row.ChildTable not in self.db_table_relations[row.ChildTable]["CR"].keys():
-            #     self.db_table_relations[row.ChildTable]["CR"][row.ChildTable] = []
-
-            # cr_relation = {"table_name": row.ParentTable, "column_name": row.ChildColumn, "is_connected_in_transport": row.IsConnectedInTransport, "relation_type": "CR"}
-            # self.db_table_relations[row.ChildTable]["CR"][row.ChildTable].append(cr_relation)
-
-            # fk_relation = {"table_name": row.ParentTable, "column_name": row.ChildColumn, "is_connected_in_transport": row.IsConnectedInTransport, "relation_type": "FK"}
+            if relation not in self.db_table_relations[row.TableGroup]:
+                self.db_table_relations[row.TableGroup].append(relation)
 
     def select_source_object(self, source_widget):
         if source_widget is not None:
@@ -252,20 +233,9 @@ class Transport_Manager(QMainWindow):
     def extend_table_relations(self, current_relations, new_relations):
         current = current_relations
         new = new_relations
-
-        for relation_type, relation_tables_dict in new.items():
-            for table_name, relation_columns_list in relation_tables_dict.items():
-                for relation in relation_columns_list:
-                    if relation_type not in current.keys():
-                        current[relation_type][table_name] = [relation]
-                        continue
-
-                    if table_name not in current[relation_type].keys():
-                        current[relation_type][table_name] = [relation]
-                        continue
-
-                    if relation not in current[relation_type][table_name]:
-                        current[relation_type][table_name].append(relation)
+        for relation in new:
+            if relation not in current:
+                current.append(relation)
         return current
 
     def relation_context_menu(self, menuPosition):
@@ -286,6 +256,9 @@ class Transport_Manager(QMainWindow):
         
     def list_related_objects(self, source_widget):
         if source_widget is not None:
+            for i in reversed(range(source_widget.childCount())):
+                source_widget.removeChild(source_widget.child(i))
+
             for table_name, results in source_widget.related_objects.items():
                 table_widget = TE_Table_TreeWidgetItem(self, self.db_table_info.get(table_name, table_name))
                 source_widget.addChild(table_widget)
@@ -331,30 +304,12 @@ class Transport_Manager(QMainWindow):
     def load_table_relations(self, relations, source_widget):
         self.ui.RelationsViewTreeWidget.clear()
 
-        cr_object_data = {"Name": "Child Relation", "Description": "Structural node that organizes all possible Child relations to the selected object class." }
-        fk_object_data = {"Name": "Foreign Key Relation", "Description": "Structural node that organizes all possible Foreign Key relations to the selected object class." }
-
-        fk_relation_widget = TemplateEditorTreeWidgetItem(self, fk_object_data, source_widget=source_widget)
-        cr_relation_widget = TemplateEditorTreeWidgetItem(self, cr_object_data, source_widget=source_widget)
-
-        for relation_type, table_relation_data in relations.items():
-            relation_widget = fk_relation_widget
-            if relation_type == "CR":
-                relation_widget = cr_relation_widget
-            for table_name, relation_list in table_relation_data.items():
-                if len(relation_list) == 0:
-                    continue
-
-                table_widget = TE_Table_TreeWidgetItem(self, self.db_table_info.get(table_name, table_name), source_widget=source_widget)
-                relation_widget.addChild(table_widget)
-
-                for column_data_dict in relation_list:
-                    # column_name = column_data_dict["column_name"]
-                    column_widget = TE_Column_TreeWidgetItem(self, column_data_dict, source_widget=source_widget)
-                    table_widget.addChild(column_widget)
-            
-        self.ui.RelationsViewTreeWidget.addTopLevelItem(cr_relation_widget)
-        self.ui.RelationsViewTreeWidget.addTopLevelItem(fk_relation_widget)
+        for relation in relations:
+            table_name = relation["ParentTable"]
+            if relation["TableGroup"] == table_name:
+                table_name = relation["ChildTable"]
+            table_widget = TE_Table_TreeWidgetItem(self, self.db_table_info.get(table_name, table_name), source_widget=source_widget)
+            self.ui.RelationsViewTreeWidget.addTopLevelItem(table_widget)
             
     def add_selected_object_with_relation(self):
         selected_source_widgets = self.ui.SearchResultsListWidget.selectedItems()
@@ -387,7 +342,9 @@ class Transport_Manager(QMainWindow):
                     container_element = task_item.xml_object.add_container(source_widget)
                     task_item.addChild(child_item)
                     child_item.xml_object = container_element
+                    self.list_related_objects(child_item)
         self.load_xml_preview()
+
 
     def get_child_tables(self, table_name, depth=0):
         child_tables = []
@@ -410,7 +367,7 @@ class Transport_Manager(QMainWindow):
 
     def get_table_relations(self, table_name):
         all_table_relations = {}
-        local_table_relations = self.db_table_relations.copy()
+        local_table_relations = self.db_table_relations
 
         table_relations = local_table_relations.get(table_name, None)
         return table_relations

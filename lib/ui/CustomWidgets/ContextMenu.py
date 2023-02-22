@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import (QMenu)
 from PyQt6.QtCore import pyqtSignal
-from lib.ui.CustomWidgets.TemplateEditorTreeWidget import TE_Table_TreeWidgetItem, TE_Column_TreeWidgetItem, TemplateEditorTreeWidgetItem
+from lib.ui.CustomWidgets.TemplateEditorTreeWidget import TE_Table_TreeWidgetItem, TE_RelationColumn_TreeWidgetItem, TemplateEditorTreeWidgetItem
 
 
 class relation_widget_context_menu(QMenu):
@@ -16,7 +16,7 @@ class relation_widget_context_menu(QMenu):
             if isinstance(source_widget, TE_Table_TreeWidgetItem):
                 action_follow_table_relations = self.addAction(f"Follow Table Relations: {source_widget.object_data.TableName}")
                 action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget) )
-            if isinstance(source_widget, TE_Column_TreeWidgetItem):
+            if isinstance(source_widget, TE_RelationColumn_TreeWidgetItem):
                 action_follow_table_relations = self.addAction(f"Follow Table Relations: {source_widget.object_data['follow_table']}")
                 action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget) )
 
