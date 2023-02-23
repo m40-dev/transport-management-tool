@@ -188,16 +188,17 @@ class object_container(transport_template_custom_object):
 
     def reset_container_relations(self):
         table_relations = self.base_object.object_relations
+
+        for element in self.object_relations.data.getchildren():
+            self.object_relations.data.remove(element)
+
         local_relation_list = []
         
         if table_relations is not None:
-            print("table relations", table_relations)
             for relation in table_relations:
-                print(relation)
                 relation_keys = self.get_relation_keys(relation)
                 for relation_key in relation_keys:
                     if relation_key not in local_relation_list:
-                        print(relation_key)
                         local_relation_list.append(relation_key)
                         relation_object = object_parameter(self.application, "Relation", relation_key)
                         self.object_relations.append(relation_object)
@@ -215,10 +216,12 @@ class object_container(transport_template_custom_object):
 
         if relation_type in [1, 3]:
             relation_keys.append(f"{prefix}FK") 
-        if relation_type == 3:
+        if relation_type in [2, 3]:
             relation_keys.append(f"{prefix}CR")
         if relation_type == 5:
             relation_keys.append(f"{prefix}FK, IgnoreSupersetHandling")
+        if relation_type == 6:
+            relation_keys.append(f"{prefix}CR, IgnoreSupersetHandling")
 
         return relation_keys
 

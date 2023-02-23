@@ -53,6 +53,7 @@ class Transport_Manager(QMainWindow):
         self.ui.TableComboBox.currentTextChanged.connect(self.load_db_objects)
         self.ui.AddSelectedObjectsWithRelationsButton.clicked.connect(self.add_selected_object_with_relation)
         self.ui.SearchResultsListWidget.currentItemChanged.connect(self.select_source_object)
+        self.ui.XMLStructureTreeWidget.currentItemChanged.connect(self.select_source_object)
 
         """ UI style scheme """
         self.color_theme = Application_Theme()
@@ -103,16 +104,17 @@ class Transport_Manager(QMainWindow):
         self.load_xml_preview()
 
     def remove_selected_nodes(self):
-        tree_widget = self.ui.XMLStructureTreeWidget
-        if tree_widget.hasFocus():
-            for node_widget in tree_widget.selectedItems():
-                if node_widget.deleteObject():
-                    parent_node = node_widget.parent()
-                    if parent_node:
-                        parent_node.removeChild(node_widget)
-                    else:
-                        root = tree_widget.invisibleRootItem()
-                        root.removeChild(node_widget)
+        tree_widgets = [self.ui.XMLStructureTreeWidget, self.ui.RelationsViewTreeWidget]
+        for tree_widget in tree_widgets:
+            if tree_widget.hasFocus():
+                for node_widget in tree_widget.selectedItems():
+                    if node_widget.deleteObject():
+                        parent_node = node_widget.parent()
+                        if parent_node:
+                            parent_node.removeChild(node_widget)
+                        else:
+                            root = tree_widget.invisibleRootItem()
+                            root.removeChild(node_widget)
         self.load_xml_preview()
 
     def load_xml_preview(self):
@@ -303,13 +305,28 @@ class Transport_Manager(QMainWindow):
 
     def load_table_relations(self, relations, source_widget):
         self.ui.RelationsViewTreeWidget.clear()
+        tree_widgets = {}
 
         for relation in relations:
-            table_name = relation["ParentTable"]
-            if relation["TableGroup"] == table_name:
-                table_name = relation["ChildTable"]
-            table_widget = TE_Table_TreeWidgetItem(self, self.db_table_info.get(table_name, table_name), source_widget=source_widget)
-            self.ui.RelationsViewTreeWidget.addTopLevelItem(table_widget)
+            parent_table_name = relation["ParentTable"]
+            table_group_name = relation["TableGroup"]
+            child_table_name = relation["ChildTable"]
+            child_column_name = relation["ChildColumn"]
+
+            if parent_table_name not in tree_widgets.keys():
+                parent_widget = TE_Table_TreeWidgetItem(self, self.db_table_info.get(parent_table_name, parent_table_name), source_widget=source_widget)
+                tree_widgets[parent_table_name] = parent_widget
+            else:
+                parent_widget = tree_widgets[parent_table_name]
+            
+            child_widget = TE_RelationColumn_TreeWidgetItem(self, relation, source_widget=source_widget)
+            parent_widget.addChild(child_widget)
+            parent_widget.setExpanded(True)
+        
+        for tree_widget in tree_widgets.values():
+            self.ui.RelationsViewTreeWidget.addTopLevelItem(tree_widget)
+
+        self.ui.RelationsViewTreeWidget.sortItems(1, Qt.SortOrder.AscendingOrder)
             
     def add_selected_object_with_relation(self):
         selected_source_widgets = self.ui.SearchResultsListWidget.selectedItems()
@@ -338,11 +355,11 @@ class Transport_Manager(QMainWindow):
             for source_widget in selected_source_widgets:
                 """ Add all selected objects to selected Task Container """
                 if isinstance(source_widget, TemplateEditorListWidgetItem):
-                    child_item = TemplateEditorTreeWidgetItem(self, object_data=source_widget.object_data, source_widget=source_widget)
-                    container_element = task_item.xml_object.add_container(source_widget)
-                    task_item.addChild(child_item)
-                    child_item.xml_object = container_element
-                    self.list_related_objects(child_item)
+                    object_container = TemplateEditorTreeWidgetItem(self, object_data=source_widget.object_data, source_widget=source_widget)
+                    container_element = task_item.xml_object.add_container(object_container)
+                    task_item.addChild(object_container)
+                    object_container.xml_object = container_element
+                    self.list_related_objects(object_container)
         self.load_xml_preview()
 
 
@@ -364,42 +381,6 @@ class Transport_Manager(QMainWindow):
                     return list(set(child_tables))
         
         return child_tables
-
-    def get_table_relations(self, table_name):
-        all_table_relations = {}
-        local_table_relations = self.db_table_relations
-
-        table_relations = local_table_relations.get(table_name, None)
-        return table_relations
-
-        child_tables = self.get_child_tables(table_name)
-
-        for table_name in child_tables:
-            table_relations = local_table_relations.get(table_name, None)
-            if table_relations is not None:
-                if table_name not in all_table_relations.keys():
-                    all_table_relations[table_name] = table_relations
-                else:
-                    all_table_relations.update(table_relations)
-                # if len(all_table_relations) == 0:
-                #     all_table_relations.update(table_relations)
-                # else:
-                    # CR = all_table_relations.get("CR", None)
-                    # new_CR = table_relations.get("CR", None)
-
-                    # if CR is not None and new_CR is not None:
-                    #     for table, relation_data in new_CR.items():
-                    #         print("new relation", table, relation_data)
-                    #     CR.update(new_CR)
-                
-                    # FK = all_table_relations.get("FK", None)
-                    # new_FK = table_relations.get("FK", None)
-
-                    # if FK is not None and new_FK is not None:
-                    #     FK.update(new_FK)
-        # print(all_table_relations)
-        return all_table_relations
-
 
     def get_session_details(self):
         dialog = SessionDetailsDialog(self)

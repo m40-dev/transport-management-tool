@@ -14,10 +14,10 @@ class relation_widget_context_menu(QMenu):
 
         if source_widget:
             if isinstance(source_widget, TE_Table_TreeWidgetItem):
-                action_follow_table_relations = self.addAction(f"Follow Table Relations: {source_widget.object_data.TableName}")
+                action_follow_table_relations = self.addAction(f"Follow Table Relations")
                 action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget) )
             if isinstance(source_widget, TE_RelationColumn_TreeWidgetItem):
-                action_follow_table_relations = self.addAction(f"Follow Table Relations: {source_widget.object_data['follow_table']}")
+                action_follow_table_relations = self.addAction(f"Follow Table Relations")
                 action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget) )
 
 class xml_structure_context_menu(QMenu):
