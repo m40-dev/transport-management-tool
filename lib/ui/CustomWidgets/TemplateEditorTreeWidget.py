@@ -307,8 +307,6 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     
     @property
     def follow_column(self):
-        if self.ParentTable == self.TableGroup:
-            return self.ParentColumn
         return self.ChildColumn
 
     @property
