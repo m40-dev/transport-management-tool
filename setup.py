@@ -10,7 +10,7 @@ base = "Win32GUI"
 packages = []
 
 includes = ["os", "sys", "PyQt6", "PyQt6.Qsci", "lxml"]
-excludes = ["tcl", "tk", "Tkinter"]
+excludes = ["tcl", "tk", "Tkinter", "tkinter"]
 include_files = [
     "./Application.qss",
    # (

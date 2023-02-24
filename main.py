@@ -96,8 +96,8 @@ class Transport_Manager(QMainWindow):
         self.db_column_info = {}
         self.db_table_relations = {}
 
-        oi_test = {'session_name': 'oi-test', 'server_address': '172.21.49.199', 'database_name': 'OneIM', 'user_name': 'sa', 'user_password': 'P@ssw0rd12'}
-        self.sessions["oi-test"] = oi_test
+        # oi_test = {'session_name': 'oi-test', 'server_address': '172.21.49.199', 'database_name': 'OneIM', 'user_name': 'sa', 'user_password': 'P@ssw0rd12'}
+        # self.sessions["oi-test"] = oi_test
         
         self.load_saved_sessions()
         self.transport_template = transport_template(self)
@@ -312,6 +312,9 @@ class Transport_Manager(QMainWindow):
             table_group_name = relation["TableGroup"]
             child_table_name = relation["ChildTable"]
             child_column_name = relation["ChildColumn"]
+
+            if parent_table_name == table_group_name:
+                parent_table_name = child_table_name
 
             if parent_table_name not in tree_widgets.keys():
                 parent_widget = TE_Table_TreeWidgetItem(self, self.db_table_info.get(parent_table_name, parent_table_name), source_widget=source_widget)

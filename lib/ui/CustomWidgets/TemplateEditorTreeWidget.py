@@ -286,9 +286,9 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
 
         if isinstance(self.object_data, dict):
             if self.ParentTable == self.TableGroup:
-                display = f"{self.follow_table} - > {self.follow_column}"
+                display = f"{self.follow_table} -> {self.follow_column} <-> {self.ParentTable}"
             else:
-                display = f"{self.follow_column} -> {self.follow_table}"
+                display = f"{self.follow_table} - > {self.follow_column} <-> {self.follow_table}"
 
         if isinstance(self.object_data, Row):
             if self.objectkey_table == "DialogColumn":
