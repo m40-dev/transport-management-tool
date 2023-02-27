@@ -19,7 +19,11 @@ class transport_template_custom_object(object):
     @property
     def string(self):
         etree.indent(self.data)
-        return etree.tostring(self.data, pretty_print=True, encoding='UTF-8', xml_declaration=True).decode('UTF-8')
+        return etree.tostring(self.data, pretty_print=True, encoding='UTF-8').decode('UTF-8')
+
+    @property
+    def description(self):
+        return None
         
     def find_parent(self, element, class_lookup):
         parent_node = element.getparent()
@@ -94,6 +98,12 @@ class transport_template_custom_object(object):
         if isinstance(node_object, transport_template_custom_object):
             self.data.append(node_object.data)
     
+    def delete_child_items(self, element=None):
+        if element is None:
+            element = self.data
+
+        for child_element in element.getchildren():
+            element.remove(child_element)
 
 class transport_template(transport_template_custom_object):
 
@@ -108,9 +118,9 @@ class transport_template(transport_template_custom_object):
         self.header = etree.Element("Header")
 
         """ Transport description setup """
-        self.description = object_parameter(self.application, "Description", "Transport Template Editor Test")
+        self.transport_description = object_parameter(self.application, "Description", "Transport Template Editor Test")
 
-        self.header.append(self.description.data)
+        self.header.append(self.transport_description.data)
 
         self.tasks = etree.Element("Tasks")
 
@@ -122,6 +132,9 @@ class transport_template(transport_template_custom_object):
         new_task = transport_task(self.application, task_class)
         self.tasks.append(new_task.data)
         return new_task
+    
+    def clear_xml_tasks(self):
+        self.delete_child_items(self.tasks)
     
 
 class transport_task(transport_template_custom_object):
@@ -169,14 +182,14 @@ class object_container(transport_template_custom_object):
         base_object_node.append(base_object_columns)
 
         """ Container transport settings """
-        self.delete_residuals = object_parameter(self.application, "DeleteResiduals", base_object.delete_residual_objects)
+        self.delete_residuals_node = object_parameter(self.application, "DeleteResiduals", base_object.delete_residual_objects)
 
         """ Add selected Transport relations """
         self.object_relations = object_parameter(self.application, "Relations")
         
         """ attach container to the xml structure"""
         self.append(base_object_node)
-        self.append(self.delete_residuals)
+        self.append(self.delete_residuals_node)
         self.append(self.object_relations)
 
         self.reset_container_relations()
@@ -196,18 +209,23 @@ class object_container(transport_template_custom_object):
         
         if table_relations is not None:
             for relation in table_relations:
-                relation_keys = self.get_relation_keys(relation)
-                for relation_key in relation_keys:
-                    if relation_key not in local_relation_list:
-                        local_relation_list.append(relation_key)
-                        relation_object = object_parameter(self.application, "Relation", relation_key)
-                        self.object_relations.append(relation_object)
+                if relation["Relation"] > 0:
+                    relation_keys = self.get_relation_keys(relation)
+                    for relation_key in relation_keys:
+                        if relation_key not in local_relation_list:
+                            local_relation_list.append(relation_key)
+                            relation_object = object_parameter(self.application, "Relation", relation_key)
+                            self.object_relations.append(relation_object)
+            self.application.load_xml_preview()
             return True
+        self.application.load_xml_preview()
         return False
 
     def get_relation_keys(self, relation):
         relation_type = relation["Relation"]
         relation_keys = []
+
+        table_group_name = relation["TableGroup"]
 
         table_name = relation["ChildTable"]
         column_name = relation["ChildColumn"]
@@ -218,12 +236,21 @@ class object_container(transport_template_custom_object):
             relation_keys.append(f"{prefix}FK") 
         if relation_type in [2, 3]:
             relation_keys.append(f"{prefix}CR")
-        if relation_type == 5:
+        if relation_type in [5, 7]:
             relation_keys.append(f"{prefix}FK, IgnoreSupersetHandling")
-        if relation_type == 6:
+        if relation_type in [6, 7]:
             relation_keys.append(f"{prefix}CR, IgnoreSupersetHandling")
 
         return relation_keys
+        
+    @property
+    def delete_residuals(self):
+        return int(self.delete_residuals_node.data.text)
+
+    def set_delete_residuals(self, status):
+        self.delete_residuals_node.data.text = str(status)
+        self.reset_container_relations()
+        self.application.load_xml_preview()
 
 
 class object_parameter(transport_template_custom_object):

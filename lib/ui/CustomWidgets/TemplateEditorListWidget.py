@@ -77,7 +77,15 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
         display = None
         if isinstance(self.object_data, dict):
             display = self.object_data.get("Name", display)
-
+        
+        if isinstance(self.object_data, Row):
+            if self.objectkey_table == "DialogTable":
+                display = f"{self.object_data.TableName} - ({self.object_data.DisplayName})"
+                return display
+            if self.objectkey_table == "DialogColumn":
+                display = f"{self.object_data.ColumnName} - ({self.object_data.Caption})"
+                return display
+            
         if isinstance(self.object_data, Row):
             if self.table_display_pattern is not None and display is None:
                 object_display = self.table_display_pattern
@@ -87,7 +95,7 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
                             column_value =  self.object_data.__getattribute__(column_name)
                             if column_value is None:
                                 column_value = ""
-                            object_display = object_display.replace(column_name, column_value)
+                            object_display = object_display.replace(column_name, str(column_value))
                     object_display = object_display.replace("%", "")
                 display = f"{self.objectkey_table} - ({object_display})"
         if display is None:
@@ -96,8 +104,7 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
 
     @property
     def delete_residual_objects(self):
-        #TODO: add handling for the value based on the UI selection
-        return "1"
+        return str(int(self.application.ui.DeleteResidualCheckBox.isChecked()))
 
     def setDisplayName(self, display_text):
         self.setText(display_text)

@@ -42,5 +42,5 @@ setup(
     version="0.1",
     description="Transport Management Tool",
     options=options,
-    executables=executables,
+    executables=executables
 )
