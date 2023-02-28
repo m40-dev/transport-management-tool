@@ -34,6 +34,17 @@ class transport_template_custom_object(object):
         else:
             return None
 
+    def parse_xml_file(self, xml_file):
+        if not xml_file:
+            return False
+
+        xml_parser = etree.XMLParser(remove_comments=False, remove_blank_text=True)
+        xmlObj = etree.parse(xml_file, parser=xml_parser)
+
+        if xmlObj is not None:
+            self.data = xmlObj
+            self.application.load_xml_preview()
+
     def find_children(self, element, class_lookup):
         target_node = element.find(class_lookup)
         if target_node is not None:
@@ -109,8 +120,6 @@ class transport_template(transport_template_custom_object):
 
     def __init__(self, application, source_element=None):
         super(transport_template, self).__init__(application=application, node_class="TransportTemplate", source_element=source_element)
-
-        self.tasks = {}
 
         self.data.attrib["Version"] = "1.0"
 

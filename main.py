@@ -1,12 +1,14 @@
 from PyQt6.QtCore import Qt, QSettings, QPoint, QRegularExpression, QRegularExpressionMatch
 from PyQt6.QtWidgets import (
-    QMainWindow, QApplication, QMenu, QHeaderView, QProxyStyle, QStyleOption, QStyle, QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator
+    QMainWindow, QApplication, QMenu, QHeaderView, QProxyStyle, QStyleOption, QStyle, QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator, QFileDialog
 )
 from PyQt6.QtGui import QShortcut, QKeySequence, QIcon, QAction, QTextDocument
 
 
 """ qt traceback handling"""
 import traceback
+import copy
+import re
 
 from lib.ui.Theme import Application_Theme
 
@@ -25,8 +27,6 @@ from lib.db.database import DatabaseConnection
 
 """ XML library """
 from lib.xml.transport_template import transport_template, transport_template_custom_object
-
-import re
 
 VERSION = '0.1'
 
@@ -58,6 +58,8 @@ class Transport_Manager(QMainWindow):
         self.ui.XMLStructureTreeWidget.itemChanged.connect(self.handle_data_change)
         self.ui.XMLStructureTreeWidget.dragMoveEvent = self.xml_structure_move_event
         self.ui.XMLStructureTreeWidget.dropEvent = self.xml_structure_drop_event
+        self.ui.actionSaveFile.triggered.connect(self.save_file)
+        self.ui.actionOpen_File.triggered.connect(self.open_file)
 
         """ UI style scheme """
         self.color_theme = Application_Theme()
@@ -122,6 +124,25 @@ class Transport_Manager(QMainWindow):
         self.transport_template = transport_template(self)
         self.load_xml_preview()
 
+    def open_file(self):
+        dialog = QFileDialog(self, "Open existing template file")
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+
+        file_path = dialog.getOpenFileName(filter="*.xml")
+
+        if file_path[0] != "":
+            self.transport_template.parse_xml_file(file_path[0])
+
+    def save_file(self):
+        dialog = QFileDialog(self, "Save As")
+        dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+
+        file_path = dialog.getSaveFileName(filter="*.xml")
+
+        if file_path[0] != "":
+            with open(file_path[0], 'w') as doc:
+                doc.write(self.transport_template.string)
+
     def xml_structure_move_event(self, event):
         move_accept = True
 
@@ -162,7 +183,6 @@ class Transport_Manager(QMainWindow):
         while iterator.value():
             item = iterator.value()
             iterator += 1
-            print(item.text(0))
             if isinstance(item, TE_TransportTask_TreeWidgetItem) and item.xml_object is not None:
                 self.transport_template.tasks.append(item.xml_object.data)
                 item.xml_object.delete_child_items()
@@ -174,7 +194,6 @@ class Transport_Manager(QMainWindow):
                     if item.xml_object.description is not None:
                         current_task_data.append(item.xml_object.description)
                     current_task_data.append(item.xml_object.data)
-            
         self.load_xml_preview()
 
 
@@ -334,10 +353,12 @@ class Transport_Manager(QMainWindow):
 
     def extend_table_relations(self, current_relations, new_relations):
         current = current_relations
-        new = new_relations
+        new = copy.deepcopy(new_relations)
         for relation in new:
             if relation not in current:
                 current.append(relation)
+            if relation["Relation"] > 0 and not self.ui.SelectWithDatabaseModelCheckBox.isChecked():
+                relation["Relation"] = 0
         return current
 
     def relation_context_menu(self, menuPosition):
