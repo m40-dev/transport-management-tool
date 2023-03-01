@@ -26,7 +26,7 @@ from lib.ui.CustomWidgets.ContextMenu import relation_widget_context_menu, xml_s
 from lib.db.database import DatabaseConnection
 
 """ XML library """
-from lib.xml.transport_template import transport_template, transport_template_custom_object
+from lib.xml.transport_template import transport_template, transport_template_custom_object, transport_task, object_container
 
 VERSION = '0.1'
 
@@ -123,6 +123,7 @@ class Transport_Manager(QMainWindow):
         self.load_saved_sessions()
         self.transport_template = transport_template(self)
         self.load_xml_preview()
+        # self.connect_database("oi-test")
 
     def open_file(self):
         dialog = QFileDialog(self, "Open existing template file")
@@ -171,7 +172,7 @@ class Transport_Manager(QMainWindow):
         
         if not move_accept:
             event.ignore()
-    
+
     def xml_structure_drop_event(self, event):
         QTreeWidget.dropEvent(self.ui.XMLStructureTreeWidget, event)
         self.reset_xml_order()
@@ -278,7 +279,7 @@ class Transport_Manager(QMainWindow):
             Base.ChildColumn  \
             from QBM_VQBMRelationALL BASE \
             --where isnull(BASE.IsConnectedInTransport, 0) > 0 \
-            order by BASE.ParentTable"
+            order by BASE.ParentTable, BASE.ChildTable asc"
 
         query_result = self.db_connection.run_db_query(query)
         self.save_relation_data(query_result)
@@ -490,6 +491,24 @@ class Transport_Manager(QMainWindow):
                     object_container.refresh()
                     self.list_related_objects(object_container)
         self.load_xml_preview()
+
+    
+    def reload_xml_structure(self):
+        """ reload structure according to the xml structure data """
+        self.ui.XMLStructureTreeWidget.clear()
+        for task in self.transport_template.tasks:
+            object_data = {"Name": "Import Task"}
+            task_treewidget_item = TE_TransportTask_TreeWidgetItem(self, object_data)
+            task_item = transport_task(self, task.tag, task)
+            task_treewidget_item.xml_object = task_item
+            self.ui.XMLStructureTreeWidget.addTopLevelItem(task_treewidget_item)
+
+            for task_container in task_item.task_containers:
+                print(task_container)
+                # object_container = TE_ObjectContainer_TreeWidgetItem(self, object_data=source_widget.object_data, source_widget=source_widget)
+                # container_element = task_item.xml_object.add_container(object_container)
+
+
 
 
     def get_child_tables(self, table_name, depth=0):

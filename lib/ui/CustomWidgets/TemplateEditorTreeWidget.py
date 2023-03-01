@@ -18,7 +18,9 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
         self.object_relations = None
 
         if isinstance(source_widget, TemplateEditorListWidgetItem):
-            self.object_relations = copy.deepcopy(source_widget.object_relations)
+            object_relations = copy.deepcopy(source_widget.object_relations)
+            relations_sorted = sorted(object_relations, key=lambda d: (d['ParentTable'],  d['ChildTable']) ) 
+            self.object_relations = relations_sorted
         self.refresh()
 
     def deleteObject(self):
@@ -169,6 +171,7 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
             if not status:
                 # print("follow up failed:", f_relation)
                 pass
+
         return selected_objects
 
     def get_relation_objects(self, relation, selected_objects={}):
@@ -186,6 +189,8 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
 
         column_value = ""
         values_list = []
+        total_query_results = []
+        query_results = []
         # print(f"Relation: ", relation)
 
         #CR Relation
@@ -195,11 +200,12 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
             values_list = self.get_db_objects_values(selected_objects, ParentTable, ParentColumn)
             if len(values_list) > 0:
                 column_value = "', '".join(values_list)
-            recursive = True
-            query_results = self.get_db_objects(ChildTable, ChildColumn, column_value, selected_objects, recursive, ParentColumn)
+                query_results = self.get_db_objects(ChildTable, ChildColumn, column_value, selected_objects, recursive, ParentColumn)
+
             if len(query_results) > 0 and len(values_list) > 0 and query_results not in values_list:
-                print("reload referenced objects", ParentTable, ParentColumn, query_results)
-                self.reload_referenced_objects(ChildTable, ChildColumn, query_results, selected_objects)
+                total_query_results += query_results
+                # print("reload referenced objects", ChildTable, query_results)
+                self.reload_referenced_objects(relation, query_results, selected_objects)
 
         #FK Relation
         if TableRelation in [1, 3, 5]:
@@ -209,47 +215,47 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
                 values_list = self.get_db_objects_values(selected_objects, ChildTable, ChildColumn)
                 if len(values_list) > 0:
                     column_value = "', '".join(values_list)
-                # column_value = self.get_value(ChildColumn)
             if column_value is not None and column_value.strip() != "":
                 query_results = self.get_db_objects(ParentTable, ParentColumn, column_value, selected_objects, recursive, ChildColumn)
-            # if len(query_results) > 0 and len(values_list) > 0 and query_results not in values_list:
-            #     self.reload_referenced_objects(ParentTable, ParentColumn, query_results, selected_objects)
+                # print("found results", ParentTable, query_results)
+                if len(query_results) > 0 and len(values_list) > 0 and query_results not in values_list:
+                    total_query_results += query_results
+                    self.reload_referenced_objects(relation, query_results, selected_objects)
 
         if self.table_name != ParentTable and self.table_name != ChildTable:
             """ foreign table relation """
+            if TableRelation in [2, 3, 7]:
+                # print("Foreign CR RELATION")
+                values_list = self.get_db_objects_values(selected_objects, ParentTable, ParentColumn)
+                if len(values_list) > 0:
+                    column_value = "', '".join(values_list)
+                    query_results = self.get_db_objects(ChildTable, ChildColumn, column_value, selected_objects, recursive, ParentColumn)
+                    if len(query_results) > 0 and len(values_list) > 0 and query_results not in values_list:
+                        total_query_results += query_results
+                        # print("reload referenced objects?", ChildTable, query_results)
+                        self.reload_referenced_objects(relation, query_results, selected_objects)
     
-            if TableRelation in [1, 5]:
+            if TableRelation in [1, 3, 5]:
                 # print("Foreign FK RELATION")
                 values_list = self.get_db_objects_values(selected_objects, ChildTable, ChildColumn)
                 if len(values_list) > 0:
                     column_value = "', '".join(values_list)
-                    # recursive = True
+                    recursive = False
                     query_results = self.get_db_objects(ParentTable, ParentColumn, column_value, selected_objects, recursive, ChildColumn)
-                    if len(query_results) > 0 and query_results not in values_list:
+                    if len(query_results) > 0 and len(values_list) > 0 and query_results not in values_list:
+                        total_query_results += query_results
                         # print("reload referenced objects", ParentTable, ParentColumn, query_results)
-                        self.reload_referenced_objects(ParentTable, ParentColumn, query_results, selected_objects)
-            
-            if TableRelation in [2, 3, 7]:
-                # print("Foreign CR RELATION")
-                values_list = self.get_db_objects_values(selected_objects, ChildTable, ChildColumn)
-                if len(values_list) > 0:
-                    column_value = "', '".join(values_list)
-                    query_results = self.get_db_objects(ParentTable, ParentColumn, column_value, selected_objects, recursive, ChildColumn)
-                    if len(query_results) > 0 and query_results not in values_list:
-                        # print("reload referenced objects?", ParentTable, ParentColumn, query_results)
-                        self.reload_referenced_objects(ChildTable, ChildColumn, query_results, selected_objects)
-                        # return False
-            #     else:
-            #         # print("Parent table data not found:", ParentTable)
-            #         return False
-        return True
+                        self.reload_referenced_objects(relation, query_results, selected_objects)
+        if len(total_query_results) > 0:
+            return True
+        else:
+            """ Try to follow up later """
+            return False
 
-    def reload_referenced_objects(self, table_name, column_name, column_values, currently_selected):
+    def reload_referenced_objects(self, source_relation, column_values, currently_selected):
         """ Reload objects which are related to the table and column data with the provided values and add results to the currently selected items """
-        base_object_value = self.get_value(column_name)
-        if base_object_value is not None and base_object_value in column_values:
-            column_values = column_values.remove(base_object_value)
-            if column_values is None:
+        if column_values is not None:
+            if len(column_values) == 0:
                 return False
 
         column_value = "', '".join(column_values)
@@ -261,10 +267,29 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
                 ParentColumn = relation["ParentColumn"]
                 ChildTable = relation["ChildTable"]
                 ChildColumn = relation["ChildColumn"]
-                if ParentTable == table_name and TableRelation in [3, 7]:
-                    self.get_db_objects(ChildTable, ChildColumn, column_value, currently_selected, recursive=False, recursive_key_column=ParentColumn)
-                if ChildTable == table_name and TableRelation in [1, 5]:
-                    self.get_db_objects(ParentTable, ParentColumn, column_value, currently_selected, recursive=False, recursive_key_column=ChildColumn)
+
+                s_ParentTable = source_relation["ParentTable"]
+                s_ParentColumn = source_relation["ParentColumn"]
+                s_ChildTable = source_relation["ChildTable"]
+                s_ChildColumn = source_relation["ChildColumn"]
+                
+                if TableRelation == 0 or ParentTable == ChildTable:
+                    continue
+
+                if ParentTable == s_ParentTable == self.table_name and ParentColumn == s_ParentColumn and TableRelation in [2, 3, 7]:
+                    # print("Reload relation CR for Base Table objects:", relation, column_values, source_relation)
+                    res = self.get_db_objects(ChildTable, ChildColumn, column_value, currently_selected, recursive=False, recursive_key_column=ParentColumn)
+
+                if ChildTable == s_ChildTable and ChildColumn == s_ChildColumn and TableRelation in [1, 3, 5]:
+                    # print("Reload relation FK:", relation, column_values, source_relation )
+                    res = self.get_db_objects(ParentTable, ParentColumn, column_value, currently_selected, recursive=False, recursive_key_column=ChildColumn)
+                    if len(res) > 0:
+                        continue
+
+                if ParentTable == s_ParentTable and ParentColumn == s_ParentColumn and TableRelation in [2, 3, 7]:
+                    # print("Reload relation CR:", source_relation, column_values, relation )
+                    res = self.get_db_objects(ChildTable, ChildColumn, column_value, currently_selected, recursive=False, recursive_key_column=ParentColumn)
+
 
     def get_db_objects_values(self, all_objects_dict, table_name, column_name):
         values_list = []
@@ -291,7 +316,13 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
 
             db_object_columns = self.get_db_object_columns(db_record)
             query_column_value =  db_record.__getattribute__(query_column)
-            if query_column_value is not None:
+            
+            if recursive_key_column is not None and recursive_key_column in db_object_columns:
+                value =  db_record.__getattribute__(recursive_key_column)
+                if value is not None and value not in query_results_list:
+                    query_results_list.append(value)
+            
+            if query_column_value is not None and query_column_value not in query_results_list:
                 query_results_list.append(query_column_value)
 
             if table_name not in selected_objects_dict.keys():
@@ -301,16 +332,16 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
                     selected_objects_dict[table_name].append(db_record)
             if recursive and recursive_key_column in db_object_columns:
                 value =  db_record.__getattribute__(recursive_key_column)
-                if value is not None:
+                if value is not None and value not in follow_up_values:
                     follow_up_values.append(value)
 
         new_query_values = "', '".join(follow_up_values)
         
         if recursive and len(follow_up_values) > 0 and new_query_values != query_values:
             new_query_results = self.get_db_objects(table_name, query_column, new_query_values, selected_objects_dict, recursive)
-            query_results_list += new_query_results
-            # if len(new_query_results) > 0:
-            #     query_results_list.append(new_query_results)
+            for record in new_query_results:
+                if record not in query_results_list and record is not None:
+                    query_results_list.append(record)
         return query_results_list
 
     def handle_data_change(self, column):

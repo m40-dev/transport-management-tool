@@ -34,17 +34,6 @@ class transport_template_custom_object(object):
         else:
             return None
 
-    def parse_xml_file(self, xml_file):
-        if not xml_file:
-            return False
-
-        xml_parser = etree.XMLParser(remove_comments=False, remove_blank_text=True)
-        xmlObj = etree.parse(xml_file, parser=xml_parser)
-
-        if xmlObj is not None:
-            self.data = xmlObj
-            self.application.load_xml_preview()
-
     def find_children(self, element, class_lookup):
         target_node = element.find(class_lookup)
         if target_node is not None:
@@ -75,7 +64,8 @@ class transport_template_custom_object(object):
             child_elements = self.find_children(parent_element, class_lookup)
         if child_elements is not None:
             for element in child_elements:
-                child_objects.append(element)
+                if not isinstance(element, etree._Comment) and isinstance(element, etree._Element):
+                    child_objects.append(element)
         return child_objects
 
     def refresh(self):
@@ -124,18 +114,18 @@ class transport_template(transport_template_custom_object):
         self.data.attrib["Version"] = "1.0"
 
         """ Tranport Header setup """
-        self.header = etree.Element("Header")
+        header = etree.Element("Header")
 
         """ Transport description setup """
-        self.transport_description = object_parameter(self.application, "Description", "Transport Template Editor Test")
+        transport_description = object_parameter(self.application, "Description", "Transport Template Editor Test")
 
-        self.header.append(self.transport_description.data)
+        header.append(transport_description.data)
 
-        self.tasks = etree.Element("Tasks")
+        tasks = etree.Element("Tasks")
 
         """ Build the transport structure blocks """
-        self.append(self.header)
-        self.append(self.tasks)
+        self.append(header)
+        self.append(tasks)
 
     def add_transport_task(self, task_class):
         new_task = transport_task(self.application, task_class)
@@ -144,6 +134,26 @@ class transport_template(transport_template_custom_object):
     
     def clear_xml_tasks(self):
         self.delete_child_items(self.tasks)
+
+    @property
+    def tasks(self):
+        return self.find_child(self.data, "Tasks")
+
+    @property
+    def header(self):
+        return self.find_child(self.data, "Header")
+
+    def parse_xml_file(self, xml_file):
+        if not xml_file:
+            return False
+
+        xml_parser = etree.XMLParser(remove_comments=False, remove_blank_text=True)
+        xmlObj = etree.parse(xml_file, parser=xml_parser)
+
+        if xmlObj is not None:
+            self.data = xmlObj
+            self.application.load_xml_preview()
+            self.application.reload_xml_structure()
     
 
 class transport_task(transport_template_custom_object):
@@ -153,10 +163,13 @@ class transport_task(transport_template_custom_object):
         self.task_class = task_class
 
         """ Task Node setup"""
-        self.data.attrib["Display"] = self.task_class
+        if source_element is not None:
+            self.data = source_element
+        else:
+            self.data.attrib["Display"] = self.task_class
 
-        if self.task_class == "ObjectTransport":
-            self.data.attrib["Class"] = "VI.Transport.ObjectTransport, VI.Transport"
+            if self.task_class == "ObjectTransport":
+                self.data.attrib["Class"] = "VI.Transport.ObjectTransport, VI.Transport"
 
     def add_container(self, base_object):
         container = object_container(self.application, base_object)
@@ -164,6 +177,11 @@ class transport_task(transport_template_custom_object):
             self.append(container.description)
         self.append(container)
         return container
+
+    @property
+    def task_containers(self):
+        return self.get_child_objects()
+
             
 class object_container(transport_template_custom_object):
     def __init__(self, application, base_object, source_element=None):
