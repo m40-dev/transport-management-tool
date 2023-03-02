@@ -478,7 +478,6 @@ class Transport_Manager(QMainWindow):
             if ui_parent_table_name not in tree_widgets.keys():
                 parent_widget = TE_Table_TreeWidgetItem(self, self.db_table_info.get(ui_parent_table_name, ui_parent_table_name), source_widget=source_widget)
                 tree_widgets[ui_parent_table_name] = parent_widget
-                self.ui.RelationsViewTreeWidget.addTopLevelItem(parent_widget)
             else:
                 parent_widget = tree_widgets[ui_parent_table_name]
             
@@ -490,6 +489,9 @@ class Transport_Manager(QMainWindow):
 
             parent_widget.addChild(child_widget)
             child_widget.show_relation(self.ui.ShowAllColumnsCheckBox.isChecked())
+        for parent_widget in tree_widgets.values():
+            if parent_widget.childCount() > 0:
+                self.ui.RelationsViewTreeWidget.addTopLevelItem(parent_widget)
 
         self.ui.RelationsViewTreeWidget.sortItems(0, Qt.SortOrder.AscendingOrder)
 
