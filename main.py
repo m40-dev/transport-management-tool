@@ -52,10 +52,12 @@ class Transport_Manager(QMainWindow):
         self.ui.FindObjectButton.clicked.connect(self.find_objects)
         self.ui.TableComboBox.currentTextChanged.connect(self.load_db_objects)
         self.ui.AddSelectedObjectsWithRelationsButton.clicked.connect(self.add_selected_object_with_relation)
-        self.ui.SearchResultsListWidget.currentItemChanged.connect(self.select_source_object)
-        self.ui.XMLStructureTreeWidget.currentItemChanged.connect(self.select_source_object)
+        self.ui.SearchResultsListWidget.itemClicked.connect(self.select_source_object)
+        self.ui.XMLStructureTreeWidget.itemClicked.connect(self.select_source_object)
         self.ui.RelationsViewTreeWidget.itemChanged.connect(self.handle_data_change)
         self.ui.XMLStructureTreeWidget.itemChanged.connect(self.handle_data_change)
+        # self.ui.SelectWithDatabaseModelCheckBox.stateChanged.connect(self.select_relations_using_db_model)
+        # self.ui.ShowAllColumnsCheckBox.stateChanged.connect(self.show_all_relation_fields)
         self.ui.XMLStructureTreeWidget.dragMoveEvent = self.xml_structure_move_event
         self.ui.XMLStructureTreeWidget.dropEvent = self.xml_structure_drop_event
         self.ui.actionSaveFile.triggered.connect(self.save_file)
@@ -124,6 +126,41 @@ class Transport_Manager(QMainWindow):
         self.transport_template = transport_template(self)
         self.load_xml_preview()
         # self.connect_database("oi-test")
+
+    # def show_all_relation_fields(self, state):
+    #     print("show all relations", bool(state))
+    #     #0 - unchecked, 2 - checked
+
+    # def select_relations_using_db_model(self, state):
+    #     print("select using db model changed", bool(state))
+    #     #0 - unchecked, 2 - checked
+
+    def get_table_initial_relations(self, table_name):
+        initial_relations = copy.deepcopy(self.db_table_relations.get(table_name, None))
+        
+        if initial_relations is None:
+            return []
+
+        relation_tables = []
+
+        for relation in initial_relations:
+            # child_table = relation.get("ChildTable", None)
+            parent_table = relation.get("ParentTable", None)
+            # if child_table is not None:
+            #     if child_table != table_name and child_table not in relation_tables:
+            #         relation_tables.append(child_table)
+            if parent_table is not None:
+                if parent_table != table_name and parent_table not in relation_tables:
+                    relation_tables.append(parent_table)
+            
+        for relation_table in relation_tables:
+            # print("merging related table:", relation_table)
+            new_table_relations = self.db_table_relations.get(relation_table, None)
+            if new_table_relations is not None:
+                initial_relations = self.extend_table_relations(initial_relations, new_table_relations)
+
+        return initial_relations
+
 
     def open_file(self):
         dialog = QFileDialog(self, "Open existing template file")
@@ -284,21 +321,6 @@ class Transport_Manager(QMainWindow):
         query_result = self.db_connection.run_db_query(query)
         self.save_relation_data(query_result)
 
-        # query = "select \
-        #     BASE.Caption, \
-        #     BASE.IsConnectedInTransport as 'Relation',\
-        #     BASE.ChildTable as 'TableGroup',\
-        #     BASE.ParentTable,\
-        #     Base.ParentColumn, \
-        #     BASE.ChildTable,  \
-        #     Base.ChildColumn  \
-        #     from QBM_VQBMRelationALL BASE \
-        #     --where isnull(BASE.IsConnectedInTransport, 0) > 0 \
-        #     order by BASE.ParentTable"
-
-        # query_result = self.db_connection.run_db_query(query)
-        # self.save_relation_data(query_result)
-
     def save_relation_data(self, query_result):
         for row in query_result:
             relation = {
@@ -308,7 +330,8 @@ class Transport_Manager(QMainWindow):
                 "ParentColumn": row.ParentColumn, 
                 "Relation": row.Relation,
                 "ChildTable": row.ChildTable,
-                "ChildColumn": row.ChildColumn
+                "ChildColumn": row.ChildColumn,
+                "InitialRelationState": row.Relation
                 }
 
             if row.ParentTable not in self.db_table_relations.keys():
@@ -325,11 +348,17 @@ class Transport_Manager(QMainWindow):
 
     def select_source_object(self, source_widget):
         if source_widget is not None:
+
+            # if isinstance(source_widget, TemplateEditorListWidgetItem):
+            #     if source_widget.object_relations is None:
+            #         source_widget.set_object_relations(self.get_table_initial_relations(source_widget.table_name))
+            
             relations = source_widget.object_relations
             self.ui.RelationsViewTreeWidget.clear()
 
             if relations is not None:
-                self.load_table_relations(relations, source_widget)     
+                self.load_table_relations(relations, source_widget)  
+
             if isinstance(source_widget, TemplateEditorTreeWidgetItem):
                 if isinstance(source_widget.xml_object, transport_template_custom_object):
                     node_description = source_widget.xml_object.description
@@ -356,10 +385,11 @@ class Transport_Manager(QMainWindow):
         current = current_relations
         new = copy.deepcopy(new_relations)
         for relation in new:
-            if relation not in current:
+            check = next((current_item for current_item in current if current_item["ParentTable"] == relation["ParentTable"] and current_item["ChildTable"] == relation["ChildTable"]) , None)
+            if check is None:
                 current.append(relation)
-            if relation["Relation"] > 0 and not self.ui.SelectWithDatabaseModelCheckBox.isChecked():
-                relation["Relation"] = 0
+            else:
+                continue
         return current
 
     def relation_context_menu(self, menuPosition):
@@ -374,11 +404,15 @@ class Transport_Manager(QMainWindow):
         clickedItem = self.ui.XMLStructureTreeWidget.itemAt(menuPosition)
         if clickedItem:
             contextMenu = xml_structure_context_menu(self, clickedItem)
-            contextMenu.list_related_objects.connect(self.list_related_objects)
+            contextMenu.list_related_objects.connect(lambda: self.list_related_objects(clickedItem, True))
             menu_target = self.ui.XMLStructureTreeWidget.mapToGlobal(menuPosition)
             contextMenu.popup(menu_target)
         
-    def list_related_objects(self, source_widget):
+    def list_related_objects(self, source_widget, override=False):
+
+        if not override and not self.ui.AutoListObjectsFromDatabaseCheckBox.isChecked():
+            return False
+
         if source_widget is not None:
             for i in reversed(range(source_widget.childCount())):
                 source_widget.removeChild(source_widget.child(i))
@@ -392,10 +426,10 @@ class Transport_Manager(QMainWindow):
                 # print(table_name, results)
 
     def load_db_objects(self, table_name=None, data_rows=[]):
-        table_name = self.ui.TableComboBox.currentText()
+
         self.ui.SearchResultsListWidget.clear()
 
-        if len(data_rows) == 0: 
+        if len(data_rows) == 0 and table_name is not None: 
             query = f"select * from {table_name}"
             data_rows = self.db_connection.run_db_query(query)
 
@@ -428,14 +462,15 @@ class Transport_Manager(QMainWindow):
     def load_table_relations(self, relations, source_widget):
         self.ui.RelationsViewTreeWidget.clear()
         tree_widgets = {}
+        # print(len(relations))
 
         for relation in relations:
-            # print(relation)
             parent_table_name = relation["ParentTable"]
             table_group_name = relation["TableGroup"]
             child_table_name = relation["ChildTable"]
 
             ui_parent_table_name = child_table_name
+
             
             if table_group_name == child_table_name and child_table_name != source_widget.table_name:
                 ui_parent_table_name = parent_table_name
@@ -443,17 +478,24 @@ class Transport_Manager(QMainWindow):
             if ui_parent_table_name not in tree_widgets.keys():
                 parent_widget = TE_Table_TreeWidgetItem(self, self.db_table_info.get(ui_parent_table_name, ui_parent_table_name), source_widget=source_widget)
                 tree_widgets[ui_parent_table_name] = parent_widget
+                self.ui.RelationsViewTreeWidget.addTopLevelItem(parent_widget)
             else:
                 parent_widget = tree_widgets[ui_parent_table_name]
             
             child_widget = TE_RelationColumn_TreeWidgetItem(self, relation, source_widget=source_widget)
+
+            """ Connect main application signals """
+            self.ui.ShowAllColumnsCheckBox.stateChanged.connect(child_widget.show_relation)
+            self.ui.SelectWithDatabaseModelCheckBox.stateChanged.connect(child_widget.select_relations_using_db_model)
+
             parent_widget.addChild(child_widget)
-            parent_widget.setExpanded(True)
-       
-        for tree_widget in tree_widgets.values():
-            self.ui.RelationsViewTreeWidget.addTopLevelItem(tree_widget)
+            child_widget.show_relation(self.ui.ShowAllColumnsCheckBox.isChecked())
 
         self.ui.RelationsViewTreeWidget.sortItems(0, Qt.SortOrder.AscendingOrder)
+
+        table_widget = tree_widgets.get(source_widget.table_name, None)
+        if isinstance(table_widget, TE_Table_TreeWidgetItem):
+            table_widget.setExpanded(True)
             
     def add_selected_object_with_relation(self):
         selected_source_widgets = self.ui.SearchResultsListWidget.selectedItems()
@@ -489,6 +531,7 @@ class Transport_Manager(QMainWindow):
 
                     container_element.set_delete_residuals(str(int(self.ui.DeleteResidualCheckBox.isChecked())))
                     object_container.refresh()
+
                     self.list_related_objects(object_container)
         self.load_xml_preview()
 
@@ -511,24 +554,24 @@ class Transport_Manager(QMainWindow):
 
 
 
-    def get_child_tables(self, table_name, depth=0):
-        child_tables = []
-        local_table_relations = self.db_table_relations.copy()
+    # def get_child_tables(self, table_name, depth=0):
+    #     child_tables = []
+    #     local_table_relations = self.db_table_relations.copy()
 
-        table_relations = local_table_relations.get(table_name, None)
-        if table_relations is not None:
-            depth += 1
-            child_tables = list(table_relations.values())
+    #     table_relations = local_table_relations.get(table_name, None)
+    #     if table_relations is not None:
+    #         depth += 1
+    #         child_tables = list(table_relations.values())
             
-            if len(child_tables) > 0:
-                child_tables = list(child_tables[0].keys())
+    #         if len(child_tables) > 0:
+    #             child_tables = list(child_tables[0].keys())
 
-            for child_table_name in child_tables:
-                if depth < 3:
-                    child_tables += self.get_child_tables(child_table_name, depth)
-                    return list(set(child_tables))
+    #         for child_table_name in child_tables:
+    #             if depth < 3:
+    #                 child_tables += self.get_child_tables(child_table_name, depth)
+    #                 return list(set(child_tables))
         
-        return child_tables
+    #     return child_tables
 
     def get_session_details(self):
         dialog = SessionDetailsDialog(self)

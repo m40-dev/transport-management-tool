@@ -303,6 +303,9 @@
              <layout class="QVBoxLayout" name="verticalLayout_3">
               <item>
                <widget class="QListWidget" name="SearchResultsListWidget">
+                <property name="dragDropMode">
+                 <enum>QAbstractItemView::NoDragDrop</enum>
+                </property>
                 <property name="defaultDropAction">
                  <enum>Qt::IgnoreAction</enum>
                 </property>
@@ -312,8 +315,20 @@
                 <property name="selectionMode">
                  <enum>QAbstractItemView::ExtendedSelection</enum>
                 </property>
+                <property name="selectionBehavior">
+                 <enum>QAbstractItemView::SelectRows</enum>
+                </property>
+                <property name="movement">
+                 <enum>QListView::Free</enum>
+                </property>
+                <property name="isWrapping" stdset="0">
+                 <bool>false</bool>
+                </property>
                 <property name="resizeMode">
                  <enum>QListView::Adjust</enum>
+                </property>
+                <property name="spacing">
+                 <number>1</number>
                 </property>
                 <property name="wordWrap">
                  <bool>true</bool>
@@ -345,8 +360,21 @@
                </layout>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,0">
-                <item>
+               <layout class="QFormLayout" name="formLayout">
+                <property name="horizontalSpacing">
+                 <number>2</number>
+                </property>
+                <property name="verticalSpacing">
+                 <number>2</number>
+                </property>
+                <item row="1" column="0">
+                 <widget class="QCheckBox" name="ShowAllColumnsCheckBox">
+                  <property name="text">
+                   <string>Show All Columns</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="0" column="0">
                  <widget class="QCheckBox" name="SelectWithDatabaseModelCheckBox">
                   <property name="text">
                    <string>Select using database model</string>
@@ -356,7 +384,7 @@
                   </property>
                  </widget>
                 </item>
-                <item>
+                <item row="0" column="1">
                  <widget class="QCheckBox" name="DeleteResidualCheckBox">
                   <property name="toolTip">
                    <string>Selects the transport instruction to delete residual objects which were not provided in the transport package.</string>
@@ -366,6 +394,13 @@
                   </property>
                   <property name="text">
                    <string>Delete Residual Objects </string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="1" column="1">
+                 <widget class="QCheckBox" name="AutoListObjectsFromDatabaseCheckBox">
+                  <property name="text">
+                   <string>Auto List Objects from database</string>
                   </property>
                  </widget>
                 </item>
@@ -400,7 +435,7 @@
                 <enum>QAbstractItemView::SelectRows</enum>
                </property>
                <property name="autoExpandDelay">
-                <number>3</number>
+                <number>-1</number>
                </property>
                <property name="sortingEnabled">
                 <bool>false</bool>

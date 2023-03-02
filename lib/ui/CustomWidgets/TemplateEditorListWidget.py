@@ -13,8 +13,14 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
         self.application = application
         self.xml_object = xml_object
         self.object_data = object_data
-        self.object_relations = copy.deepcopy(self.application.db_table_relations.get(self.table_name, None))
+        self.object_relations = None
+        self.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
         self.refresh()
+
+        self.set_object_relations(self.application.get_table_initial_relations(self.table_name))
+
+    def set_object_relations(self, object_relations_list):
+        self.object_relations = object_relations_list
 
     def deleteObject(self):
         if self.xml_object.delete_object():

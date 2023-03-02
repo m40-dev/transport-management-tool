@@ -264,9 +264,9 @@ class object_container(transport_template_custom_object):
         if relation_type in [2, 3]:
             relation_keys.append(f"{prefix}CR")
         if relation_type in [5, 7]:
-            relation_keys.append(f"{prefix}FK, IgnoreSupersetHandling")
+            relation_keys.append(f"{prefix}FK, IgnoreInSupersetHandling")
         if relation_type in [6, 7]:
-            relation_keys.append(f"{prefix}CR, IgnoreSupersetHandling")
+            relation_keys.append(f"{prefix}CR, IgnoreInSupersetHandling")
 
         return relation_keys
         
@@ -276,7 +276,7 @@ class object_container(transport_template_custom_object):
 
     def set_delete_residuals(self, status):
         self.delete_residuals_node.data.text = str(status)
-        self.reset_container_relations()
+        # self.reset_container_relations()
         self.application.load_xml_preview()
 
 

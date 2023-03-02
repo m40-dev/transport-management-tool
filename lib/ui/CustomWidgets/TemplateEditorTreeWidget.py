@@ -17,10 +17,6 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
         self.source_widget = source_widget
         self.object_relations = None
 
-        if isinstance(source_widget, TemplateEditorListWidgetItem):
-            object_relations = copy.deepcopy(source_widget.object_relations)
-            relations_sorted = sorted(object_relations, key=lambda d: (d['ParentTable'],  d['ChildTable']) ) 
-            self.object_relations = relations_sorted
         self.refresh()
 
     def deleteObject(self):
@@ -202,7 +198,7 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
                 column_value = "', '".join(values_list)
                 query_results = self.get_db_objects(ChildTable, ChildColumn, column_value, selected_objects, recursive, ParentColumn)
 
-            if len(query_results) > 0 and len(values_list) > 0 and query_results not in values_list:
+            if len(query_results) > 0:
                 total_query_results += query_results
                 # print("reload referenced objects", ChildTable, query_results)
                 self.reload_referenced_objects(relation, query_results, selected_objects)
@@ -215,10 +211,12 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
                 values_list = self.get_db_objects_values(selected_objects, ChildTable, ChildColumn)
                 if len(values_list) > 0:
                     column_value = "', '".join(values_list)
+            # print("column value:", column_value)
             if column_value is not None and column_value.strip() != "":
                 query_results = self.get_db_objects(ParentTable, ParentColumn, column_value, selected_objects, recursive, ChildColumn)
                 # print("found results", ParentTable, query_results)
-                if len(query_results) > 0 and len(values_list) > 0 and query_results not in values_list:
+                if len(query_results) > 0:
+                    # print("reload referenced objects", ParentTable, query_results)
                     total_query_results += query_results
                     self.reload_referenced_objects(relation, query_results, selected_objects)
 
@@ -230,9 +228,9 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
                 if len(values_list) > 0:
                     column_value = "', '".join(values_list)
                     query_results = self.get_db_objects(ChildTable, ChildColumn, column_value, selected_objects, recursive, ParentColumn)
-                    if len(query_results) > 0 and len(values_list) > 0 and query_results not in values_list:
+                    if len(query_results) > 0:
                         total_query_results += query_results
-                        # print("reload referenced objects?", ChildTable, query_results)
+                        # print("reload referenced objects", ChildTable, query_results)
                         self.reload_referenced_objects(relation, query_results, selected_objects)
     
             if TableRelation in [1, 3, 5]:
@@ -242,11 +240,12 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
                     column_value = "', '".join(values_list)
                     recursive = False
                     query_results = self.get_db_objects(ParentTable, ParentColumn, column_value, selected_objects, recursive, ChildColumn)
-                    if len(query_results) > 0 and len(values_list) > 0 and query_results not in values_list:
+                    if len(query_results) > 0:
                         total_query_results += query_results
                         # print("reload referenced objects", ParentTable, ParentColumn, query_results)
                         self.reload_referenced_objects(relation, query_results, selected_objects)
         if len(total_query_results) > 0:
+            # print("total relation results:", relation, total_query_results)
             return True
         else:
             """ Try to follow up later """
@@ -317,10 +316,10 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
             db_object_columns = self.get_db_object_columns(db_record)
             query_column_value =  db_record.__getattribute__(query_column)
             
-            if recursive_key_column is not None and recursive_key_column in db_object_columns:
-                value =  db_record.__getattribute__(recursive_key_column)
-                if value is not None and value not in query_results_list:
-                    query_results_list.append(value)
+            # if recursive_key_column is not None and recursive_key_column in db_object_columns:
+            #     value =  db_record.__getattribute__(recursive_key_column)
+            #     if value is not None and value not in query_results_list:
+            #         query_results_list.append(value)
             
             if query_column_value is not None and query_column_value not in query_results_list:
                 query_results_list.append(query_column_value)
@@ -330,10 +329,12 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
             else:
                 if db_record not in selected_objects_dict[table_name]:
                     selected_objects_dict[table_name].append(db_record)
+
             if recursive and recursive_key_column in db_object_columns:
                 value =  db_record.__getattribute__(recursive_key_column)
                 if value is not None and value not in follow_up_values:
                     follow_up_values.append(value)
+                    query_results_list.append(value)
 
         new_query_values = "', '".join(follow_up_values)
         
@@ -360,7 +361,6 @@ class TE_Table_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         self.setFlags(Qt.ItemFlag.NoItemFlags)
         self.setFlags(Qt.ItemFlag.ItemIsEnabled)
 
-
     @property
     def display_name(self):
         display = None
@@ -370,7 +370,6 @@ class TE_Table_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         if display is None:
             display = "Table without display name"
         return display
-    
 
 class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     def __init__(self, application, object_data, xml_object=None, source_widget=None):
@@ -380,12 +379,12 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         self.setCheckState(1, Qt.CheckState.Unchecked)
         self.setCheckState(2, Qt.CheckState.Unchecked)
         self.setCheckState(3, Qt.CheckState.Unchecked)
+       
         if self.auto_select_default or isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem):
             self.update_relation_satus()
         
         if not self.auto_select_default and isinstance(source_widget, TemplateEditorListWidgetItem):
             self.set_relation_state(0)
-        
 
     @property
     def auto_select_default(self):
@@ -396,21 +395,15 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         display = None
 
         if isinstance(self.object_data, dict):
-            
             if self.ParentTable == self.TableGroup and self.ParentTable == self.source_widget.table_name:
                 caption = self.get_table_display(self.follow_table)
                 display = f"{self.follow_column} << - {self.follow_table} ({caption})"
             else:
                 caption = self.get_table_display(self.follow_table)
                 display = f"{self.follow_column} - >> {self.follow_table} ({caption})"
-
-        if isinstance(self.object_data, Row):
-            if self.objectkey_table == "DialogColumn":
-                display = f"{self.object_data.Caption} - ({self.object_data.ColumnName})"
         
         if display is None:
-            display = "Column without display name"
-
+            display = "Relation Column without display name"
         return display
 
     @property
@@ -426,7 +419,7 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     @property
     def Relation(self):
         if isinstance(self.object_data, dict):
-            return self.object_data.get("Relation", "")
+            return self.object_data.get("Relation", "0")
 
     @property
     def ChildTable(self):
@@ -452,12 +445,28 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     def TableGroup(self):
         if isinstance(self.object_data, dict):
             return self.object_data.get("TableGroup", "")
+
+    @property
+    def InitialRelationState(self):
+        if isinstance(self.object_data, dict):
+            return self.object_data.get("InitialRelationState", 0)
         
     def set_relation_state(self, relation):
-        if isinstance(self.object_data, dict):
-            self.object_data["Relation"] = relation
-            if isinstance(self.source_widget, TemplateEditorTreeWidgetItem):
-                self.source_widget.refresh()
+        self.object_data["Relation"] = relation
+
+        if isinstance(self.source_widget, TemplateEditorTreeWidgetItem):
+            self.source_widget.refresh()
+        self.update_relation_satus()
+
+    def show_relation(self, state):
+        if self.InitialRelationState == 0:
+            self.setHidden(not bool(state))
+    
+    def select_relations_using_db_model(self, state):
+        if bool(state):
+            self.set_relation_state(self.InitialRelationState)
+        else:
+            self.set_relation_state(0)
 
     def update_relation_satus(self):
         if self.Relation:
@@ -475,6 +484,10 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
                 self.setCheckState(3, Qt.CheckState.Checked)
             else:
                 self.setCheckState(3, Qt.CheckState.Unchecked)
+        else:
+            self.setCheckState(1, Qt.CheckState.Unchecked)
+            self.setCheckState(2, Qt.CheckState.Unchecked)
+            self.setCheckState(3, Qt.CheckState.Unchecked)
     
     def get_relation_state(self):
         relation = ""
@@ -509,7 +522,14 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         # self.setFlags(self.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsUserCheckable)
         self.setCheckState(1, Qt.CheckState.Unchecked)  
         self.set_delete_residual_objects(str(int(self.application.ui.DeleteResidualCheckBox.isChecked())))
-        self.setFlags(Qt.ItemFlag.ItemIsDragEnabled | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable |Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsUserCheckable)       
+        self.setFlags(Qt.ItemFlag.ItemIsDragEnabled | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable |Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsUserCheckable)
+        
+        self.object_relations = None
+        if isinstance(source_widget, TemplateEditorListWidgetItem):
+            object_relations = copy.deepcopy(source_widget.object_relations)
+            if object_relations is not None:
+                relations_sorted = sorted(object_relations, key=lambda d: (d['ParentTable'],  d['ChildTable'])) 
+                self.object_relations = relations_sorted      
         self.refresh()
 
     
@@ -527,8 +547,12 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
 
     def handle_data_change(self, column):
         status = int(self.checkState(1) == Qt.CheckState.Checked)
-        if self.xml_object is not None:
-            self.xml_object.set_delete_residuals(status)
+        tree_widget = self.treeWidget()
+
+        for element in tree_widget.selectedItems():
+            if isinstance(element, TE_ObjectContainer_TreeWidgetItem):
+                self.set_delete_residual_objects(status)
+                element.setCheckState(column, self.checkState(column))
 
     @property
     def delete_residual_objects(self):
@@ -537,8 +561,7 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     def set_delete_residual_objects(self, state):
         if isinstance(self.xml_object, object_container):
             self.xml_object.set_delete_residuals(state)
-        
-        self.refresh()
+        # self.refresh()
 
 class TE_TransportTask_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     def __init__(self, application, object_data, xml_object=None, source_widget=None):
