@@ -1,9 +1,6 @@
-from PyQt6.QtWidgets import  QWidget, QGridLayout, QListWidgetItem
+from PyQt6.QtWidgets import  QListWidgetItem
 from PyQt6.QtCore import Qt
 from pyodbc import Row
-from lib.xml.transport_template import transport_template_custom_object
-import copy
-
 import re
 
 class TemplateEditorListWidgetItem(QListWidgetItem):
@@ -29,6 +26,16 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
 
     def refresh(self):
         self.setDisplayName(self.display_name)
+
+    def set_relation_state(self, changed_relation):
+        
+        if self.object_relations is not None:
+            for relation in self.object_relations:
+                if (relation["ParentTable"] == changed_relation["ParentTable"] and relation["ChildTable"] == changed_relation["ChildTable"]
+                    and relation["ParentColumn"] == changed_relation["ParentColumn"] and relation["ChildColumn"] == changed_relation["ChildColumn"]
+                    ):
+                    relation["Relation"] = changed_relation["Relation"]
+                    print("update relation state:", changed_relation)
 
     @property
     def tooltipText(self):
@@ -62,9 +69,9 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
 
     @property
     def table_display_pattern(self):
-        db_table_info = self.application.db_table_info.get(self.objectkey_table, None)
-        if db_table_info is not None:
-            return db_table_info.DisplayPattern
+        table_info = self.application.db.table_info.get(self.objectkey_table, None)
+        if table_info is not None:
+            return table_info.DisplayPattern
         return None
     
     @property
@@ -73,9 +80,9 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
 
     @property
     def pk_columns(self):
-        db_table_info = self.application.db_table_info.get(self.objectkey_table, None)
-        if db_table_info is not None:
-            return db_table_info.PKName1, db_table_info.PKName2
+        table_info = self.application.db.table_info.get(self.objectkey_table, None)
+        if table_info is not None:
+            return table_info.PKName1, table_info.PKName2
         return None, None
 
     @property

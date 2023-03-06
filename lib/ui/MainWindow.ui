@@ -14,10 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
-    <property name="spacing">
-     <number>2</number>
-    </property>
+   <layout class="QGridLayout" name="gridLayout">
     <property name="leftMargin">
      <number>2</number>
     </property>
@@ -30,7 +27,7 @@
     <property name="bottomMargin">
      <number>2</number>
     </property>
-    <item>
+    <item row="0" column="0">
      <widget class="QTabWidget" name="MainTabWidget">
       <property name="tabPosition">
        <enum>QTabWidget::West</enum>
@@ -210,21 +207,27 @@
        <attribute name="title">
         <string>Transport Template Editor</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_5">
+       <layout class="QGridLayout" name="gridLayout_3">
         <item row="0" column="0">
          <widget class="QSplitter" name="TemplateEditorSplitter_Left">
           <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+           <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
             <horstretch>0</horstretch>
             <verstretch>0</verstretch>
            </sizepolicy>
+          </property>
+          <property name="minimumSize">
+           <size>
+            <width>2011</width>
+            <height>0</height>
+           </size>
           </property>
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
           <widget class="QSplitter" name="TemplateEditorSplitter_Relations">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+            <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -233,10 +236,22 @@
             <enum>Qt::Vertical</enum>
            </property>
            <widget class="QSplitter" name="TemplateEditorSplitter_Search">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
             <property name="orientation">
              <enum>Qt::Vertical</enum>
             </property>
             <widget class="QGroupBox" name="SearchGroupBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="title">
               <string>Search</string>
              </property>
@@ -297,6 +312,12 @@
              </layout>
             </widget>
             <widget class="QGroupBox" name="SearchResultsGroupBox">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
              <property name="title">
               <string>Search Results</string>
              </property>
@@ -490,12 +511,6 @@
            </widget>
           </widget>
           <widget class="QSplitter" name="TemplateEditorSplitter_Right">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
            <property name="orientation">
             <enum>Qt::Horizontal</enum>
            </property>
@@ -577,13 +592,12 @@
              </property>
             </column>
            </widget>
-           <widget class="QTextBrowser" name="XMLStructureTextBrowser">
-            <property name="textInteractionFlags">
-             <set>Qt::LinksAccessibleByKeyboard|Qt::LinksAccessibleByMouse|Qt::TextBrowserInteraction|Qt::TextSelectableByKeyboard|Qt::TextSelectableByMouse</set>
-            </property>
-            <property name="openExternalLinks">
-             <bool>true</bool>
-            </property>
+           <widget class="QWidget" name="verticalLayoutWidget">
+            <layout class="QVBoxLayout" name="XMLEditorLayout" stretch="">
+             <property name="spacing">
+              <number>0</number>
+             </property>
+            </layout>
            </widget>
           </widget>
          </widget>

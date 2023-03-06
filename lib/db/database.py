@@ -1,5 +1,6 @@
 import pyodbc
 
+
 class DatabaseConnection(object):
     def __init__(self, connection_parameters):
 
@@ -9,6 +10,9 @@ class DatabaseConnection(object):
 
         self.db_session = None
         self.db_cursor = None
+        self.table_info = {}
+        self.column_info = {}
+        self.table_relations = {}
 
         self.connect_db()
 
@@ -48,3 +52,71 @@ class DatabaseConnection(object):
 
         data = self.db_cursor.fetchall()
         return data
+    
+    def get_object_columns(self, db_row):
+        if isinstance(db_row, pyodbc.Row):
+            columns = [column[0] for column in db_row.cursor_description]
+            return columns
+        return []
+    
+    def load_session_data(self):
+        self.load_table_relations_data()
+        self.load_column_data()
+        self.load_table_data()
+
+    def load_table_data(self):
+        query = "select * from DialogTable order by TableName"
+        query_result = self.run_db_query(query)
+
+        for row in query_result:
+            self.table_info[row.TableName] = row
+
+    def load_column_data(self):
+        query = "select * from DialogColumn order by Caption"
+        query_result = self.run_db_query(query)
+
+        for row in query_result:
+            self.column_info[row.ColumnName] = row
+
+    def load_table_relations_data(self):
+        query = "select \
+        BASE.Caption, \
+        BASE.IsConnectedInTransport as 'Relation',\
+        BASE.ParentTable as 'TableGroup',\
+        BASE.ParentTable,\
+        Base.ParentColumn, \
+        BASE.ChildTable,  \
+        Base.ChildColumn  \
+        from QBM_VQBMRelationALL BASE \
+        --where isnull(BASE.IsConnectedInTransport, 0) > 0 \
+        order by BASE.ParentTable, BASE.ChildTable asc"
+
+        query_result = self.run_db_query(query)
+        self.save_relation_data(query_result)
+
+    def save_relation_data(self, query_result):
+        for row in query_result:
+            relation = {
+                "Caption": row.Caption,
+                "TableGroup": row.TableGroup,
+                "ParentTable": row.ParentTable, 
+                "ParentColumn": row.ParentColumn, 
+                "Relation": row.Relation,
+                "ChildTable": row.ChildTable,
+                "ChildColumn": row.ChildColumn,
+                "InitialRelationState": row.Relation
+                }
+
+            if row.ParentTable not in self.table_relations.keys():
+                self.table_relations[row.ParentTable] = [relation]
+            
+            if row.ChildTable not in self.table_relations.keys():
+                self.table_relations[row.ChildTable] = [relation]
+
+            if relation not in self.table_relations[row.ParentTable]:
+                self.table_relations[row.ParentTable].append(relation)
+            
+            if relation not in self.table_relations[row.ChildTable]:
+                self.table_relations[row.ChildTable].append(relation)
+
+    

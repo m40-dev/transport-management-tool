@@ -1,6 +1,13 @@
 from PyQt6.QtWidgets import (QMenu)
 from PyQt6.QtCore import pyqtSignal
-from lib.ui.CustomWidgets.TemplateEditorTreeWidget import TE_Table_TreeWidgetItem, TE_RelationColumn_TreeWidgetItem, TemplateEditorTreeWidgetItem
+
+from lib.ui.CustomWidgets.TemplateEditorTreeWidgetItem import TemplateEditorTreeWidgetItem
+from lib.ui.CustomWidgets.TE_Table_TreeWidgetItem import TE_Table_TreeWidgetItem
+from lib.ui.CustomWidgets.TE_RelationColumn_TreeWidgetItem import TE_RelationColumn_TreeWidgetItem
+from lib.ui.CustomWidgets.TE_ObjectContainer_TreeWidgetItem import TE_ObjectContainer_TreeWidgetItem
+from lib.ui.CustomWidgets.TE_TransportTask_TreeWidgetItem import TE_TransportTask_TreeWidgetItem
+from lib.ui.CustomWidgets.TE_ObjectContainerData_TreeWidgetItem import TE_ObjectContainerData_TreeWidgetItem
+from lib.ui.CustomWidgets.TemplateEditorListWidget import TemplateEditorListWidgetItem
 
 
 class relation_widget_context_menu(QMenu):
