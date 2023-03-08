@@ -18,6 +18,7 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         
         if not self.auto_select_default and isinstance(source_widget, TemplateEditorListWidgetItem):
             self.set_relation_state(0)
+        self.refresh()
 
     @property
     def auto_select_default(self):
@@ -139,8 +140,8 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         return self.binary2int(int(relation))
 
     def handle_data_change(self, column):
-        # print("relation change:", self.object_data)
         status = self.get_relation_state()
+        # print("relation change:", self.object_data, status)
         self.set_relation_state(status)
         tree_widget = self.treeWidget()
         column_state = self.checkState(column)

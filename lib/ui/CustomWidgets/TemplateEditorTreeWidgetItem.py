@@ -16,7 +16,7 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
         self.source_widget = source_widget
         self.object_relations = None
 
-        self.refresh()
+        # self.refresh()
 
     def deleteObject(self):
         if isinstance(self.xml_object, transport_template_custom_object):

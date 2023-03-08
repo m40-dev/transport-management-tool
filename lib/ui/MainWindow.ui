@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>2057</width>
+    <width>2063</width>
     <height>1216</height>
    </rect>
   </property>
@@ -367,7 +367,7 @@
                 <item>
                  <widget class="QToolButton" name="AddSelectedObjectsWithRelationsButton">
                   <property name="text">
-                   <string>Add Selected With Relations</string>
+                   <string>Add With Relations</string>
                   </property>
                  </widget>
                 </item>
@@ -421,7 +421,21 @@
                 <item row="1" column="1">
                  <widget class="QCheckBox" name="AutoListObjectsFromDatabaseCheckBox">
                   <property name="text">
-                   <string>Auto List Objects from database</string>
+                   <string>Auto List Selected Objects from database</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="0">
+                 <widget class="QToolButton" name="DeselectAllToolButton">
+                  <property name="text">
+                   <string>deselect all</string>
+                  </property>
+                 </widget>
+                </item>
+                <item row="2" column="1">
+                 <widget class="QCheckBox" name="AutoLoadCheckBox">
+                  <property name="text">
+                   <string>Auto Load matching object from database</string>
                   </property>
                  </widget>
                 </item>
@@ -613,7 +627,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>2057</width>
+     <width>2063</width>
      <height>22</height>
     </rect>
    </property>

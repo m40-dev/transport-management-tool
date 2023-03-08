@@ -2,13 +2,12 @@ from lxml import etree
 from lib.xml.transport_template_custom_object import transport_template_custom_object
 from lib.xml.object_parameter import object_parameter
 import numbers
+import xmltodict
             
 class object_container(transport_template_custom_object):
     def __init__(self, application, source_element=None, base_table=None, display_name=None, delete_residual_objects=0, pk_columns={}, relations=[]):
         super(object_container, self).__init__(application=application, node_class="Parameter", source_element=source_element)
         self.relations = relations
-        self.table_name = base_table
-        self.display_name = display_name
         self.pk_columns = pk_columns
         self.base_object_node = None
         self.delete_residuals_node = None
@@ -54,6 +53,8 @@ class object_container(transport_template_custom_object):
             for element in self.get_child_objects():
                 if element.attrib["Name"] == "BaseObject":
                     self.base_object_node = object_parameter(self.application, "BaseObject", source_element=element)
+                    # print(element)
+                    
                 if element.attrib["Name"] == "DeleteResiduals":
                     self.delete_residuals_node = object_parameter(self.application, "DeleteResiduals", source_element=element)
                 if element.attrib["Name"] == "Relations":
@@ -63,8 +64,98 @@ class object_container(transport_template_custom_object):
     def description(self):
         container_description = etree.Comment(f"({self.table_name}) - ({self.display_name})")
         return container_description
+    
+    @property
+    def table_name(self):
+        table_name = ""
+        if isinstance(self.base_object_node, transport_template_custom_object):
+            for base_object_data_node in self.base_object_node.get_child_objects():
+                if base_object_data_node.attrib["Name"] == "Tablename":
+                    return base_object_data_node.text
+        return table_name
+    
+    @property
+    def key_columns(self):
+        key_columns = {}
+        if isinstance(self.base_object_node, transport_template_custom_object):
+            for base_object_data_node in self.base_object_node.get_child_objects():
+                if base_object_data_node.attrib["Name"] == "Columns":
+                    for column_node in base_object_data_node.getchildren():
+                        column_name = column_node.attrib.get("Name", "")
+                        column_value = column_node.text
+                        key_columns[column_name] = column_value
+        return key_columns
+
+    @property
+    def display_name(self):
+        display_name = ""
+        if isinstance(self.base_object_node, transport_template_custom_object):
+            for base_object_data_node in self.base_object_node.get_child_objects():
+                if base_object_data_node.attrib["Name"] == "Display":
+                    return base_object_data_node.text
+        return display_name
+
+    @property
+    def xml_object_relations(self):
+        object_relations = {}
+
+        if isinstance(self.object_relations_node, transport_template_custom_object):
+            for relation in self.object_relations_node.get_child_objects():
+                relation_data = []
+                if "|" in relation.text:
+                    relation_data = relation.text.split("|")
+                
+                if len(relation_data) != 3:
+                    # print("skip entry", relation.text)
+                    continue
+
+                child_table = relation_data[0]
+                child_column = relation_data[1]
+                relation_state = relation_data[2]
+                relation_key = f"{child_table}|{child_column}"
+                relation_number = 0
+
+                if "IgnoreInSupersetHandling" in relation_state:
+                    relation_number = 4
+                if "CR" in relation_state:
+                    relation_number += 2
+                if "FK" in relation_state:
+                    relation_number += 1
+
+                if relation_key not in object_relations:
+                    
+                    relation_entry = {
+                        "Caption": "",
+                        "ParentTable": "", 
+                        "ParentColumn": "", 
+                        "Relation": relation_number,
+                        "ChildTable": child_table,
+                        "ChildColumn": child_column,
+                        "InitialRelationState": relation_number
+                        }
+                
+                    object_relations[relation_key] = relation_entry
+                else:
+                    object_relations[relation_key]["Relation"] += relation_number
+                    object_relations[relation_key]["InitialRelationState"] += relation_number
+                    
+                    if object_relations[relation_key]["Relation"] > 7:
+                        object_relations[relation_key]["Relation"] = 7
+                        object_relations[relation_key]["InitialRelationState"] = 7
+
+        return list(object_relations.values())
+
+    def binary2int(self, binary): 
+        int_val, i, n = 0, 0, 0
+        while(binary != 0): 
+            a = binary % 10
+            int_val = int_val + a * pow(2, i) 
+            binary = binary // 10
+            i += 1
+        return int_val
 
     def reset_container_relations(self):
+        # print("reset relations")
         table_relations = self.relations
 
         for element in self.object_relations_node.data.getchildren():
@@ -81,16 +172,17 @@ class object_container(transport_template_custom_object):
                             local_relation_list.append(relation_key)
                             relation_object = object_parameter(self.application, "Relation", relation_key)
                             self.object_relations_node.append(relation_object)
+
             # self.application.load_xml_preview()
+            self.refresh_xml_preview()
             return True
         # self.application.load_xml_preview()
+        self.refresh_xml_preview()
         return False
 
     def get_relation_keys(self, relation):
         relation_type = relation["Relation"]
         relation_keys = []
-
-        table_group_name = relation["TableGroup"]
 
         table_name = relation["ChildTable"]
         column_name = relation["ChildColumn"]

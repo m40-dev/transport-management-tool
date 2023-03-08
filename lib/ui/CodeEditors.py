@@ -39,19 +39,18 @@ class xml_editor(QsciScintilla):
         self.setCaretLineVisible(True)
         self.setCaretLineBackgroundColor(QColor("#eee"))
         self.show()
+        self.text_to_find = ""
 
-    # def setText(self, newtext):
-    #     QsciScintilla.setText(self, newtext)
+    def find_text(self, text):
+        if text == self.text_to_find:
+            return self.findNext()
+        
+        self.text_to_find = text
 
-    def find_text(self, text, start_line=0):
-        print("find text", text)
+        current_cursor_pos = self.getCursorPosition()
+        result = self.findFirst(text, False, False, False, True, True, current_cursor_pos[0], 0, True)
+        if not result:
+            self.findFirst(text, False, False, False, True, True, 0, 0, True)
 
-        if not self.findNext():
-            current_cursor_pos = self.getCursorPosition()
-            result = self.findFirst(text, False, False, False, True, True, start_line, 0, True)
-            new_cursor_pos = self.getCursorPosition()
-
-        # if(result and current_cursor_pos[0] == new_cursor_pos[0]):
-        #     self.findNext()
 
 

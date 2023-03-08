@@ -9,6 +9,7 @@ class TE_Table_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         
         self.setFlags(Qt.ItemFlag.NoItemFlags)
         self.setFlags(Qt.ItemFlag.ItemIsEnabled)
+        self.refresh()
 
     @property
     def display_name(self):

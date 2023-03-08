@@ -37,7 +37,7 @@ from lib.xml.transport_template_custom_object import transport_template_custom_o
 from lib.xml.transport_task import transport_task
 from lib.xml.object_container import object_container
 
-VERSION = '0.1'
+VERSION = '0.3.4'
 
 class Transport_Manager(QMainWindow):
     """Main window class for session launcher"""
@@ -66,12 +66,11 @@ class Transport_Manager(QMainWindow):
         self.ui.XMLStructureTreeWidget.itemClicked.connect(self.select_source_object)
         self.ui.RelationsViewTreeWidget.itemChanged.connect(self.handle_data_change)
         self.ui.XMLStructureTreeWidget.itemChanged.connect(self.handle_data_change)
-        # self.ui.SelectWithDatabaseModelCheckBox.stateChanged.connect(self.select_relations_using_db_model)
-        # self.ui.ShowAllColumnsCheckBox.stateChanged.connect(self.show_all_relation_fields)
         self.ui.XMLStructureTreeWidget.dragMoveEvent = self.xml_structure_move_event
         self.ui.XMLStructureTreeWidget.dropEvent = self.xml_structure_drop_event
         self.ui.actionSaveFile.triggered.connect(self.save_file)
         self.ui.actionOpen_File.triggered.connect(self.open_file)
+        self.ui.DeselectAllToolButton.clicked.connect(self.deselect_all_relations)
 
         """ UI style scheme """
         self.color_theme = Application_Theme()
@@ -131,14 +130,14 @@ class Transport_Manager(QMainWindow):
         self.db = None
         self.sessions = {}
 
-        oi_test = {'session_name': 'oi-test', 'server_address': '172.21.49.199', 'database_name': 'OneIM', 'user_name': 'sa', 'user_password': 'P@ssw0rd12'}
-        self.sessions["oi-test"] = oi_test
+        # oi_test = {'session_name': 'oi-test', 'server_address': '172.21.49.199', 'database_name': 'OneIM', 'user_name': 'sa', 'user_password': 'P@ssw0rd12'}
+        # self.sessions["oi-test"] = oi_test
         self.xml_structure_changed.connect(self.load_xml_preview)
         self.load_saved_sessions()
         self.transport_template = transport_template(self)
         
         self.load_xml_preview()
-        self.connect_database("oi-test")
+        # self.connect_database("oi-test")
 
     # def show_all_relation_fields(self, state):
     #     print("show all relations", bool(state))
@@ -148,12 +147,12 @@ class Transport_Manager(QMainWindow):
     #     print("select using db model changed", bool(state))
     #     #0 - unchecked, 2 - checked
 
-    def get_table_initial_relations(self, table_name):
+    def get_table_initial_relations(self, table_name, extended_view=False):
         initial_relations = copy.deepcopy(self.db.table_relations.get(table_name, None))
         
         if initial_relations is None:
             return []
-        get_extended_view = False #TODO: make this a program configuration/checkbox
+        get_extended_view = extended_view #TODO: make this a program configuration/checkbox
         if not get_extended_view:
             return initial_relations
 
@@ -177,6 +176,12 @@ class Transport_Manager(QMainWindow):
 
         return initial_relations
 
+    def deselect_all_relations(self):
+        self.ui.RelationsViewTreeWidget.expandAll()
+        self.ui.RelationsViewTreeWidget.selectAll()
+        for relation_widget in self.ui.RelationsViewTreeWidget.selectedItems():
+            if isinstance(relation_widget, TE_RelationColumn_TreeWidgetItem):
+                relation_widget.set_relation_state(0)
 
     def open_file(self):
         dialog = QFileDialog(self, "Open existing template file")
@@ -315,14 +320,9 @@ class Transport_Manager(QMainWindow):
             if relations is not None:
                 self.load_table_relations(relations, source_widget)  
 
-            if isinstance(source_widget, TemplateEditorTreeWidgetItem):
-                if isinstance(source_widget.xml_object, transport_template_custom_object):
-                    node_description = source_widget.xml_object.description
-                    search_text = ""
-                    if node_description is not None:
-                        search_text = node_description.text
-                    search_text = search_text.strip()
-                    self.ui.XMLEditorWidget.find_text(search_text)
+            if isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem):
+                self.ui.XMLEditorWidget.find_text(source_widget.search_text)
+
     
     def follow_table_relation(self, relation_widget):
         if relation_widget.follow_table:
@@ -373,6 +373,7 @@ class Transport_Manager(QMainWindow):
                 source_widget.removeChild(source_widget.child(i))
 
             for table_name, results in source_widget.related_objects.items():
+
                 table_widget = TE_Table_TreeWidgetItem(self, self.db.table_info.get(table_name, table_name))
                 source_widget.addChild(table_widget)
                 for selected_object in results:
@@ -423,12 +424,11 @@ class Transport_Manager(QMainWindow):
 
         for relation in relations:
             parent_table_name = relation["ParentTable"]
-            table_group_name = relation["TableGroup"]
             child_table_name = relation["ChildTable"]
 
             ui_parent_table_name = child_table_name
 
-            if table_group_name == child_table_name and child_table_name != source_widget.table_name:
+            if parent_table_name == child_table_name and child_table_name != source_widget.table_name:
             # if parent_table_name == source_widget.table_name:
                 ui_parent_table_name = parent_table_name
             
@@ -501,6 +501,7 @@ class Transport_Manager(QMainWindow):
                     container_element = task_item.xml_object.add_container(base_table=source_widget.table_name, display_name=source_widget.display_name, delete_residual_objects=str(int(self.ui.DeleteResidualCheckBox.isChecked())), pk_columns=pk_columns_dict, relations=source_widget.object_relations)
 
                     object_container = TE_ObjectContainer_TreeWidgetItem(self, object_data=source_widget.object_data, xml_object=container_element, source_widget=source_widget)
+                    container_element.relations = object_container.object_relations
                     
                     task_item.addChild(object_container)
 

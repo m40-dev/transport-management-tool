@@ -35,7 +35,7 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
                     and relation["ParentColumn"] == changed_relation["ParentColumn"] and relation["ChildColumn"] == changed_relation["ChildColumn"]
                     ):
                     relation["Relation"] = changed_relation["Relation"]
-                    print("update relation state:", changed_relation)
+                    # print("update relation state:", changed_relation)
 
     @property
     def tooltipText(self):

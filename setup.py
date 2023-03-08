@@ -6,6 +6,7 @@ import os
 from cx_Freeze import setup, Executable
 
 base = "Win32GUI"
+from main import VERSION
 
 packages = []
 
@@ -32,7 +33,7 @@ executables = [Executable("Main.py", target_name="TransportManager.exe", base=ba
 setup(
     name="TransportManager",
     author="EmergencyCode",
-    version="0.3",
+    version=VERSION,
     description="Transport Management Tool",
     options=options,
     executables=executables

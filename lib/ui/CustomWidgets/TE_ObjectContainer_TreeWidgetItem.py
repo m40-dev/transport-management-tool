@@ -18,13 +18,61 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             if object_relations is not None:
                 relations_sorted = sorted(object_relations, key=lambda d: (d['ParentTable'],  d['ChildTable'])) 
                 self.object_relations = relations_sorted    
+            self.refresh()
         
         if object_data is None and xml_object is not None:
             self.load_container_from_xml()
-        self.refresh()
 
     def load_container_from_xml(self):
-        pass
+        self.setText(0, self.display_name)
+        self.object_relations = copy.deepcopy(self.xml_object.xml_object_relations)
+        self.xml_object.relations = self.object_relations
+        # self.application.load_table_relations(self.object_relations, self)
+    
+    def load_from_database(self):
+        if self.xml_object is not None:
+            table_name = self.xml_object.table_name
+            self.object_data = self.db.get_db_object(table_name, self.xml_object.key_columns, "and" )
+            if len(self.object_data) > 0:
+                self.object_data = self.object_data[0]
+            db_relations = self.application.get_table_initial_relations(table_name)
+            loaded_tables = [table_name]
+
+            for xml_source_relation in self.object_relations:
+                xml_table = xml_source_relation["ChildTable"]
+                if xml_table not in loaded_tables:
+                    loaded_tables.append(xml_table)
+                    new_relations = self.application.get_table_initial_relations(xml_table)
+                    db_relations = self.application.extend_table_relations(db_relations, new_relations)
+
+            if db_relations is not None:
+                for db_relation in db_relations:
+                    db_relation["Relation"] = 0
+
+            for xml_source_relation in self.object_relations:
+                xml_table = xml_source_relation["ChildTable"]
+                xml_column = xml_source_relation["ChildColumn"]
+                xml_relation = xml_source_relation["Relation"]
+
+                for db_relation in db_relations:
+                    db_table = db_relation["ChildTable"]
+                    db_column = db_relation["ChildColumn"]
+                    if db_table == xml_table and db_column == xml_column:
+                        db_relation["Relation"] = xml_relation
+            
+            relations_sorted = sorted(db_relations, key=lambda d: (d['ParentTable'],  d['ChildTable'])) 
+            self.object_relations = relations_sorted
+            self.xml_object.relations = relations_sorted
+        self.refresh()
+
+    @property
+    def display_name(self):
+        if self.xml_object is not None:
+            return f"{self.xml_object.table_name} - {self.xml_object.display_name}"
+        
+    @property
+    def search_text(self):
+        return self.xml_object.display_name
     
     def refresh(self):
         if self.object_data is not None:
@@ -87,7 +135,7 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         return selected_objects
 
     def get_relation_objects(self, relation, selected_objects={}):
-        BaseTable = relation["TableGroup"]
+
         TableRelation = relation["Relation"]
         ParentTable = relation["ParentTable"]
         ParentColumn = relation["ParentColumn"]
@@ -177,7 +225,6 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         if self.object_relations is not None:
             for relation in self.object_relations:
                 TableRelation = relation["Relation"]
-                BaseTable = relation["TableGroup"]
                 ParentTable = relation["ParentTable"]
                 ParentColumn = relation["ParentColumn"]
                 ChildTable = relation["ChildTable"]

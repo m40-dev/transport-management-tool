@@ -73,8 +73,13 @@ class transport_template_custom_object(object):
 
     def delete_object(self):
         parent_node = self.data.getparent()
+        previous_node = self.data.getprevious()
+
         if parent_node is not None:
             parent_node.remove(self.data)
+        
+        if isinstance(previous_node, etree._Comment):
+            parent_node.remove(previous_node)
         return True
 
     def get_attribute(self, attribute):

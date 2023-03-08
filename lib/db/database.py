@@ -53,6 +53,18 @@ class DatabaseConnection(object):
         data = self.db_cursor.fetchall()
         return data
     
+    def get_db_object(self, table_name, query_dict, condition):
+        where_clause = ""
+        query_elements = []
+        for column_name, column_value in query_dict.items():
+            query_elements.append(f"{column_name} = '{column_value}' ")
+
+        where_clause = condition.join(query_elements)
+        string_query = f"select * from {table_name} where {where_clause}"
+
+        if where_clause.strip() != "" and len(query_elements) > 0:
+            return self.run_db_query(string_query)
+    
     def get_object_columns(self, db_row):
         if isinstance(db_row, pyodbc.Row):
             columns = [column[0] for column in db_row.cursor_description]
@@ -82,7 +94,6 @@ class DatabaseConnection(object):
         query = "select \
         BASE.Caption, \
         BASE.IsConnectedInTransport as 'Relation',\
-        BASE.ParentTable as 'TableGroup',\
         BASE.ParentTable,\
         Base.ParentColumn, \
         BASE.ChildTable,  \
@@ -98,7 +109,6 @@ class DatabaseConnection(object):
         for row in query_result:
             relation = {
                 "Caption": row.Caption,
-                "TableGroup": row.TableGroup,
                 "ParentTable": row.ParentTable, 
                 "ParentColumn": row.ParentColumn, 
                 "Relation": row.Relation,
