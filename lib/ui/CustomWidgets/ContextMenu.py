@@ -38,8 +38,9 @@ class xml_structure_context_menu(QMenu):
         self.parent = parent
 
         if isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem):
-            action_list_related_objects = self.addAction(f"List Related Objects")
-            action_list_related_objects.triggered.connect(lambda: self.list_related_objects.emit(source_widget) )
+            if source_widget.object_data is not None:
+                action_list_related_objects = self.addAction(f"List Related Objects")
+                action_list_related_objects.triggered.connect(lambda: self.list_related_objects.emit(source_widget) )
 
             if isinstance(source_widget.xml_object, transport_template_custom_object) and source_widget.object_data is None:
                 action_load_from_database = self.addAction(f"Load Object From Database")

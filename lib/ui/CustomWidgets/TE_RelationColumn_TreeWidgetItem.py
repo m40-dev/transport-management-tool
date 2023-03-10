@@ -93,7 +93,7 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         self.update_relation_satus()
 
     def show_relation(self, state):
-        if self.InitialRelationState == 0:
+        if self.InitialRelationState == 0 and self.Relation == 0:
             self.setHidden(not bool(state))
 
         parent_widget = self.parent()

@@ -202,11 +202,11 @@ class object_container(transport_template_custom_object):
         
     @property
     def delete_residuals(self):
-        if isinstance(self.delete_residuals_node.data.text, numbers.Number):
+        if self.delete_residuals_node.data.text.isnumeric():
             return int(self.delete_residuals_node.data.text)
         return 0
 
     def set_delete_residuals(self, status):
         self.delete_residuals_node.set_text(status)
-        self.refresh_xml_preview()
+        # self.refresh_xml_preview()
 

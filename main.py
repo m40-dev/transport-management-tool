@@ -53,6 +53,7 @@ class Transport_Manager(QMainWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        
 
         self.setWindowTitle(f"Transport Manager Tool - {VERSION}")
 
@@ -191,6 +192,7 @@ class Transport_Manager(QMainWindow):
 
         if file_path[0] != "":
             self.transport_template.parse_xml_file(file_path[0])
+        self.load_xml_preview()
 
     def save_file(self):
         dialog = QFileDialog(self, "Save As")
@@ -313,7 +315,7 @@ class Transport_Manager(QMainWindow):
             self.ui.TableComboBox.addItem(table_name)
 
     def select_source_object(self, source_widget):
-        if source_widget is not None:
+        if isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem) or isinstance(source_widget, TemplateEditorListWidgetItem):
             relations = source_widget.object_relations
             self.ui.RelationsViewTreeWidget.clear()
 
@@ -331,10 +333,8 @@ class Transport_Manager(QMainWindow):
             merged_relations = self.extend_table_relations(source_widget_relations, new_relations)
             relation_widget.source_widget.object_relations = merged_relations
             if isinstance(relation_widget.source_widget, TemplateEditorTreeWidgetItem):
-                # self.list_related_objects(relation_widget.source_widget)
                 relation_widget.source_widget.refresh()
             self.load_table_relations(new_relations, relation_widget.source_widget, relation_widget)
-            # self.load_xml_preview()
 
     def extend_table_relations(self, current_relations, new_relations):
         current = current_relations
@@ -359,27 +359,9 @@ class Transport_Manager(QMainWindow):
         clickedItem = self.ui.XMLStructureTreeWidget.itemAt(menuPosition)
         if clickedItem:
             contextMenu = xml_structure_context_menu(self, clickedItem)
-            contextMenu.list_related_objects.connect(lambda: self.list_related_objects(clickedItem, True))
+            contextMenu.list_related_objects.connect(lambda: clickedItem.list_related_objects(True))
             menu_target = self.ui.XMLStructureTreeWidget.mapToGlobal(menuPosition)
             contextMenu.popup(menu_target)
-        
-    def list_related_objects(self, source_widget, override=False):
-
-        if not override and not self.ui.AutoListObjectsFromDatabaseCheckBox.isChecked():
-            return False
-
-        if source_widget is not None:
-            for i in reversed(range(source_widget.childCount())):
-                source_widget.removeChild(source_widget.child(i))
-
-            for table_name, results in source_widget.related_objects.items():
-
-                table_widget = TE_Table_TreeWidgetItem(self, self.db.table_info.get(table_name, table_name))
-                source_widget.addChild(table_widget)
-                for selected_object in results:
-                    selected_object_widget = TE_ObjectContainerData_TreeWidgetItem(self, selected_object)
-                    table_widget.addChild(selected_object_widget)
-                # print(table_name, results)
 
     def load_db_objects(self, table_name=None, data_rows=[]):
 
@@ -505,7 +487,6 @@ class Transport_Manager(QMainWindow):
                     
                     task_item.addChild(object_container)
 
-                    self.list_related_objects(object_container)
         self.load_xml_preview()
 
     def reload_xml_structure(self):
