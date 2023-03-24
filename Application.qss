@@ -11,17 +11,17 @@ QTreeWidget{
 }
 
 QPlainTextEdit, QTextEdit, QComboBox{
-	color: #333;
-	border: 1px solid #333;
+	color: palette(Text);
+	border: 1px solid #9ad3e3;
 	border-radius: 2px;
+	min-height: 1.5em;
 }
 
 QLineEdit, QComboBox{
     color: palette(Text);
-	border: 1px solid palette(Dark);
-    min-height: 2em;
+	border: 1px solid #9ad3e3;
     margin: 0px;
-    padding: 0px;
+    padding: 2px;
 }
 QStatusBar, QSizeGrip{
 	color: palette(Light);
@@ -29,12 +29,14 @@ QStatusBar, QSizeGrip{
 	background-color: #9e2015;
 }
 
-QComboBox{
-		text-align: center;
-}
-
 QMenu{
 	background-color: palette(Base);
+	min-width: 10em;
+}
+
+QMenu::item{
+	padding: 2px;
+	min-width: 10em;
 }
 
 QScrollBar::vertical,QScrollBar::horizontal{
@@ -84,24 +86,27 @@ QTabBar::tab{
 	border-style: outset;
 	border-radius: 2px;
 	padding:10px;
+	color: #999;
 }
 
 QTabBar::tab::selected{
 	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Midlight));
 	border: 1px solid palette(Highlight);
 	padding-left: 3px;
+	font: bold;
+	color: #655;
 }
 
 
-QTreeWidget::item{
+QTreeWidget::item, QListWidget::item, QListView::item{
 	min-height: 1.7em;
     color: #333;
 }
 
-QTreeWidget::item::selected, QListWidget::item::selected, QMenu::item::selected{
+QTreeWidget::item::selected, QListWidget::item::selected, QMenu::item::selected, QListView::item::selected{
 	color: #333;
 	font: bold;
-	padding-left: 4px;
+	padding-left: 5px;
 }
 
 QLabel{
@@ -161,15 +166,14 @@ QLabel[Widget=MethodItem]{
 }
 QToolButton{
     background-color: palette(Button.Active);
-    height: 28px;
-    width: 90px;
 	margin: 1px;
 	border: 1px solid #9ad3e3;
 	border-radius: 2px;
-	padding: 1px;
+	padding: 3px;
+	min-height: 1.5em;
 }
 
-QToolButton::hover{
+QPushButton::hover, QToolButton::hover{
 	background-color: #e4f5f7;
 }
 

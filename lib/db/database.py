@@ -13,6 +13,7 @@ class DatabaseConnection(object):
         self.table_info = {}
         self.column_info = {}
         self.table_relations = {}
+        self.child_table_relations = {}
 
         self.connect_db()
 
@@ -36,6 +37,12 @@ class DatabaseConnection(object):
         if connection:
             self.db_session = connection
             self.db_cursor = connection.cursor()
+    
+    @property
+    def is_connected(self):
+        if self.db_session is not None:
+            return True
+        return False
 
     def disconnect_db(self):
         if self.db_cursor is not None:
@@ -47,11 +54,18 @@ class DatabaseConnection(object):
     def run_db_query(self, string_query):
         if self.db_cursor is None or self.db_session is None:
             return False
-
+        
         self.db_cursor.execute(string_query)
 
         data = self.db_cursor.fetchall()
         return data
+    
+    def get_transport_where_clause(self, table_name):
+        where_clause = ""
+        table_info = self.table_info.get(table_name, None)
+        if table_info is not None:
+            return table_info.TransportWhereClause
+        return where_clause
     
     def get_db_object(self, table_name, query_dict, condition):
         where_clause = ""
@@ -119,14 +133,20 @@ class DatabaseConnection(object):
 
             if row.ParentTable not in self.table_relations.keys():
                 self.table_relations[row.ParentTable] = [relation]
-            
-            if row.ChildTable not in self.table_relations.keys():
-                self.table_relations[row.ChildTable] = [relation]
 
             if relation not in self.table_relations[row.ParentTable]:
                 self.table_relations[row.ParentTable].append(relation)
             
+            if row.ChildTable not in self.table_relations.keys():
+                self.table_relations[row.ChildTable] = [relation]
+                
             if relation not in self.table_relations[row.ChildTable]:
                 self.table_relations[row.ChildTable].append(relation)
+
+            if row.ChildTable not in self.child_table_relations.keys():
+                self.child_table_relations[row.ChildTable] = [relation]
+                
+            if relation not in self.child_table_relations[row.ChildTable]:
+                self.child_table_relations[row.ChildTable].append(relation)
 
     

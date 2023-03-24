@@ -27,6 +27,14 @@ class xml_editor(QsciScintilla):
         self.setWrapMode(QsciScintilla.WrapMode.WrapWord)
         self.lexer = QsciLexerXML()
         self.lexer.setFont(font)
+        
+        editor_bg = QColor("#fff")
+
+        self.lexer.setDefaultPaper(editor_bg)
+        self.lexer.setPaper(editor_bg)
+
+        self.setMarginsBackgroundColor(editor_bg)
+
         api = QsciAPIs(self.lexer)
 
         api.prepare()

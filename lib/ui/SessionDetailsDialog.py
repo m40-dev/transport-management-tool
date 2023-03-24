@@ -11,7 +11,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 
 class SessionDetailsDialog(QtWidgets.QDialog):
 
-    def __init__(self, application):
+    def __init__(self, application, session_data=None):
         super(SessionDetailsDialog, self).__init__(flags=QtCore.Qt.WindowType.Dialog, parent=application)
 
         self.resize(440, 226)
@@ -71,6 +71,8 @@ class SessionDetailsDialog(QtWidgets.QDialog):
         self.buttonBox.rejected.connect(self.reject)
         QtCore.QMetaObject.connectSlotsByName(self)
 
+        if session_data is not None:
+            self.set_form_data(session_data)
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -80,6 +82,19 @@ class SessionDetailsDialog(QtWidgets.QDialog):
         self.label.setText(_translate("Dialog", "Session Name"))
         self.label_4.setText(_translate("Dialog", "User Name"))
         self.label_3.setText(_translate("Dialog", "Database Name"))
+
+    def set_form_data(self, data_dict):
+        session_name = data_dict.get("session_name", "")
+        server_address = data_dict.get("server_address", "")
+        database_name = data_dict.get("database_name", "")
+        user_name = data_dict.get("user_name", "") 
+        user_password = data_dict.get("user_password", "")
+
+        self.SessionName.setText(session_name)
+        self.ServerAddress.setText(server_address)
+        self.DatabaseName.setText(database_name)
+        self.UserName.setText(user_name)
+        self.UserPassword.setText(user_password)
 
     @property 
     def session_name(self):

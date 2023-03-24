@@ -12,12 +12,14 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         self.setCheckState(1, Qt.CheckState.Unchecked)
         self.setCheckState(2, Qt.CheckState.Unchecked)
         self.setCheckState(3, Qt.CheckState.Unchecked)
-       
-        if self.auto_select_default or isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem):
-            self.update_relation_satus()
         
-        if not self.auto_select_default and isinstance(source_widget, TemplateEditorListWidgetItem):
+        if isinstance(source_widget, TemplateEditorListWidgetItem) and self.auto_select_default:
+            self.set_relation_state(self.InitialRelationState)
+
+        if isinstance(source_widget, TemplateEditorListWidgetItem) and self.auto_select_default is False:
             self.set_relation_state(0)
+
+        self.update_relation_status()
         self.refresh()
 
     @property
@@ -29,8 +31,8 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         display = None
 
         if isinstance(self.object_data, dict):
-            caption = self.get_table_display(self.ParentTable)
-            display = f"{self.follow_column} - >> {self.ParentTable} ({caption})"
+            caption = self.get_table_display(self.follow_table)
+            display = f"{self.follow_column} - >> {self.follow_table} ({caption})"
         
         if display is None:
             display = "Relation Column without display name"
@@ -80,7 +82,7 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     def InitialRelationState(self):
         if isinstance(self.object_data, dict):
             return self.object_data.get("InitialRelationState", 0)
-        
+
     def set_relation_state(self, relation):
         self.object_data["Relation"] = relation
 
@@ -90,7 +92,7 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         if isinstance(self.source_widget, TemplateEditorListWidgetItem):
             self.source_widget.set_relation_state(self.object_data)
 
-        self.update_relation_satus()
+        self.update_relation_status()
 
     def show_relation(self, state):
         if self.InitialRelationState == 0 and self.Relation == 0:
@@ -112,7 +114,7 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         else:
             self.set_relation_state(0)
 
-    def update_relation_satus(self):
+    def update_relation_status(self):
         if self.Relation:
             if self.Relation in [1, 3, 5, 7]:
                 self.setCheckState(1, Qt.CheckState.Checked)
@@ -159,6 +161,6 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         return int_val
 
     def get_table_display(self, table_name):
-        table_info = self.db.table_info.get(table_name, None)
+        table_info = self.application.db.table_info.get(table_name, None)
         if table_info is not None:
             return table_info.DisplayName

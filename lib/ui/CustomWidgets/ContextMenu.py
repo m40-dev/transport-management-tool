@@ -32,17 +32,33 @@ class xml_structure_context_menu(QMenu):
     """ Custom QMenu used to manage relation items """
     
     list_related_objects = pyqtSignal(object)
+    load_object_from_database = pyqtSignal(object)
+    save_relation_preset = pyqtSignal(object)
+    add_transport_task = pyqtSignal()
 
     def __init__(self, parent, source_widget):
         super(xml_structure_context_menu, self).__init__(parent)
         self.parent = parent
+        self.menu_items = []
 
         if isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem):
-            if source_widget.object_data is not None:
-                action_list_related_objects = self.addAction(f"List Related Objects")
-                action_list_related_objects.triggered.connect(lambda: self.list_related_objects.emit(source_widget) )
+
+            action_list_related_objects = self.addAction("List Related Objects")
+            action_list_related_objects.triggered.connect(lambda: self.list_related_objects.emit(source_widget) )
+            
+            self.addSeparator()
 
             if isinstance(source_widget.xml_object, transport_template_custom_object) and source_widget.object_data is None:
-                action_load_from_database = self.addAction(f"Load Object From Database")
-                action_load_from_database.triggered.connect(source_widget.load_from_database)
+                action_load_from_database = self.addAction("Load Object From Database")
+                action_load_from_database.triggered.connect(lambda: self.load_object_from_database.emit(source_widget) )
+                self.menu_items.append(action_load_from_database)
 
+            if source_widget.object_data is not None:
+                action_save_preset = self.addAction("Save Relations as Preset")
+                action_save_preset.triggered.connect(lambda: self.save_relation_preset.emit(source_widget) )
+                self.menu_items.append(action_save_preset)
+            
+        if source_widget is None:
+            action_add_task = self.addAction("Add Transport Task")
+            action_add_task.triggered.connect(lambda: self.add_transport_task.emit() )
+            self.menu_items.append(action_add_task)

@@ -8,8 +8,8 @@ from lib.ui.CustomWidgets.TE_ObjectContainerData_TreeWidgetItem import TE_Object
 
 
 class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, source_widget=None):
-        super(TE_ObjectContainer_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget=source_widget)
+    def __init__(self, application, object_data, xml_object=None, source_widget=None, table_name=None):
+        super(TE_ObjectContainer_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget=source_widget, table_name=table_name)
 
         self.setCheckState(1, Qt.CheckState.Unchecked)  
         self.setFlags(Qt.ItemFlag.ItemIsDragEnabled | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable |Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsUserCheckable)
@@ -28,6 +28,24 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         if object_data is None and xml_object is not None:
             self.load_container_from_xml()
 
+    def set_all_relations_state(self, state):
+        if self.object_relations is not None:
+            for relation in self.object_relations:
+                relation["Relation"] = state
+        
+            if isinstance(self.xml_object, object_container):
+                self.xml_object.relations = self.object_relations
+
+            self.refresh()
+            return True
+        return False
+    
+    def set_object_relations(self, relations_data):
+        self.object_relations = relations_data
+        if isinstance(self.xml_object, object_container):
+            self.xml_object.relations = self.object_relations
+        self.refresh()
+
     def load_container_from_xml(self):
         self.setText(0, self.display_name)
         self.object_relations = copy.deepcopy(self.xml_object.xml_object_relations)
@@ -43,21 +61,25 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     def list_related_objects(self, override=False):
         if not override and not self.application.ui.AutoListObjectsFromDatabaseCheckBox.isChecked():
             return False
+        
+        if self.object_data is None:
+            self.load_from_database()
 
         for i in reversed(range(self.childCount())):
             self.removeChild(self.child(i))
 
         for table_name, results in self.related_objects.items():
-            table_widget = TE_Table_TreeWidgetItem(self, self.db.table_info.get(table_name, table_name))
+            table_widget = TE_Table_TreeWidgetItem(self.application, self.application.db.table_info.get(table_name, table_name))
             self.addChild(table_widget)
             for selected_object in results:
-                selected_object_widget = TE_ObjectContainerData_TreeWidgetItem(self, selected_object)
+                selected_object_widget = TE_ObjectContainerData_TreeWidgetItem(self.application, selected_object, table_name=table_name)
                 table_widget.addChild(selected_object_widget)
+            table_widget.sortChildren(0, Qt.SortOrder.AscendingOrder)
     
     def load_from_database(self):
         if self.xml_object is not None:
             table_name = self.xml_object.table_name
-            self.object_data = self.db.get_db_object(table_name, self.xml_object.key_columns, "and" )
+            self.object_data = self.application.db.get_db_object(table_name, self.xml_object.key_columns, "and" )
             if len(self.object_data) > 0:
                 self.object_data = self.object_data[0]
             db_relations = self.application.get_table_initial_relations(table_name)
@@ -73,22 +95,78 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             if db_relations is not None:
                 for db_relation in db_relations:
                     db_relation["Relation"] = 0
-
-            for xml_source_relation in self.object_relations:
-                xml_table = xml_source_relation["ChildTable"]
-                xml_column = xml_source_relation["ChildColumn"]
-                xml_relation = xml_source_relation["Relation"]
-
-                for db_relation in db_relations:
-                    db_table = db_relation["ChildTable"]
-                    db_column = db_relation["ChildColumn"]
-                    if db_table == xml_table and db_column == xml_column:
-                        db_relation["Relation"] = xml_relation
             
+            """ select all base relations that match the xml relation state, skip relations that are not marked for transport in the database """
+            selected_relations, skipped_relations = self.select_referenced_relations(source=self.object_relations, target=db_relations)
+
+            """ select leftover relations where we can match the parent column with the child column """
+            selected_relations, skipped_relations = self.select_skipped_relations(skipped_relations, selected_relations, db_relations, match_parent_column=True)
+            
+            """ select leftover relations where the xml relation matches and do not try to match the parent column anymore (basically include all relations where necessary) """
+            selected_relations, skipped_relations = self.select_skipped_relations(skipped_relations, selected_relations, db_relations, match_parent_column=False)
+    
             relations_sorted = sorted(db_relations, key=lambda d: (d['ParentTable'],  d['ChildTable'])) 
+
+            """ save final relation data """
             self.object_relations = relations_sorted
             self.xml_object.relations = relations_sorted
+    
+    def select_skipped_relations(self, skipped_relations, selected_relations, target, match_parent_column=True):
+        updated_keys = []
+        follow_up_relations = []
+        for relation_key, relations in skipped_relations.items():
+            for relation in relations:
+                relation_table = relation["ChildTable"]
+                relation_column = relation["ChildColumn"]
+                skipped_key = f"{relation_table}|{relation_column}"
+                if skipped_key not in selected_relations.keys():
+                    updated_keys.append(relation_key)
+                    if relation not in follow_up_relations:
+                        follow_up_relations.append(relation)
+                    
+        return self.select_referenced_relations(source=follow_up_relations, target=target, ignore_initial_state=True, match_parent_column=match_parent_column)
 
+    def select_referenced_relations(self, source, target, ignore_initial_state=False, match_parent_column=True):
+        skipped_relations = {}
+        selected_relations = {}
+
+        for xml_source_relation in source:
+            xml_table = xml_source_relation["ChildTable"]
+            xml_column = xml_source_relation["ChildColumn"]
+            xml_relation = xml_source_relation["Relation"]
+
+            for db_relation in target:
+                db_table = db_relation["ChildTable"]
+                db_column = db_relation["ChildColumn"]
+                db_parent_column = db_relation["ParentColumn"]
+                db_initial_state = db_relation["InitialRelationState"]
+
+                relation_key = f"{db_table}|{db_column}"
+
+                skip_entry = False
+                if ignore_initial_state and match_parent_column:
+                    if db_table == xml_table and db_column == xml_column and db_parent_column != xml_column:
+                        skip_entry = True
+
+                if db_table == xml_table and db_column == xml_column and (db_initial_state > 0 or (ignore_initial_state and not skip_entry)):
+                    db_relation["Relation"] = xml_relation
+                    
+                    if relation_key not in selected_relations.keys():
+                        selected_relations[relation_key] = [db_relation]
+                        continue
+                    if db_relation not in selected_relations[relation_key]:
+                        selected_relations[relation_key].append(db_relation)
+                        continue
+                else:
+                    relation_key = f"{xml_table}|{xml_column}"
+                    if relation_key not in skipped_relations.keys():
+                        skipped_relations[relation_key] = [xml_source_relation]
+                        continue
+
+                    if xml_source_relation not in skipped_relations[relation_key]:
+                        skipped_relations[relation_key].append(xml_source_relation)
+                        
+        return selected_relations, skipped_relations
 
     @property
     def display_name(self):
@@ -112,7 +190,7 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             else:
                 self.setCheckState(1, Qt.CheckState.Unchecked)
 
-        self.application.load_xml_preview()
+        self.application.xml_structure_changed.emit()
 
     def handle_data_change(self, column):
         status = int(self.checkState(1) == Qt.CheckState.Checked)
@@ -121,11 +199,9 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         self.set_delete_residual_objects(status)
 
         for element in tree_widget.selectedItems():
-            if isinstance(element, TE_ObjectContainer_TreeWidgetItem):
+            if isinstance(element, TE_ObjectContainer_TreeWidgetItem) and element != self:
                 self.set_delete_residual_objects(status)
                 element.setCheckState(column, self.checkState(column))
-
-        self.application.load_xml_preview()
 
     @property
     def delete_residual_objects(self):
@@ -137,7 +213,7 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
 
     @property
     def pk_columns(self):
-        table_info = self.db.table_info.get(self.objectkey_table, None)
+        table_info = self.application.db.table_info.get(self.table_name, None)
         if table_info is not None:
             return table_info.PKName1, table_info.PKName2
         return None, None
@@ -178,11 +254,11 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         values_list = []
         total_query_results = []
         query_results = []
-        print(f"Relation: ", relation)
+        # print(f"Relation: ", relation)
 
         #CR Relation
-        if TableRelation in [2, 3, 7] and self.table_name == ParentTable or self.table_name == ChildTable:
-            print("CR RELATION")
+        if TableRelation in [2, 3, 7] and (self.table_name == ParentTable or self.table_name == ChildTable):
+            # print("CR RELATION")
             # column_value = self.get_value(ChildColumn)
             values_list = self.get_db_objects_values(selected_objects, ParentTable, ParentColumn)
             if len(values_list) > 0:
@@ -195,8 +271,8 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
                 self.reload_referenced_objects(relation, query_results, selected_objects)
 
         #FK Relation
-        if TableRelation in [1, 3, 5] and self.table_name == ParentTable or self.table_name == ChildTable:
-            print("FK RELATION")
+        if TableRelation in [1, 3, 5] and (self.table_name == ParentTable or self.table_name == ChildTable):
+            # print("FK RELATION")
             # column_value = self.get_value(ChildColumn)
             # if column_value is None:
             values_list = self.get_db_objects_values(selected_objects, ChildTable, ChildColumn)
@@ -211,10 +287,11 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
                     total_query_results += query_results
                     self.reload_referenced_objects(relation, query_results, selected_objects)
 
+
         if self.table_name != ParentTable and self.table_name != ChildTable:
             """ foreign table relation """
             if TableRelation in [2, 3, 7]:
-                print("Foreign CR RELATION")
+                # print("Foreign CR RELATION")
                 values_list = self.get_db_objects_values(selected_objects, ParentTable, ParentColumn)
                 if len(values_list) > 0:
                     column_value = "', '".join(values_list)
@@ -223,9 +300,9 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
                         total_query_results += query_results
                         # print("reload referenced objects", ChildTable, query_results)
                         self.reload_referenced_objects(relation, query_results, selected_objects)
-    
+
             if TableRelation in [1, 3, 5]:
-                print("Foreign FK RELATION")
+                # print("Foreign FK RELATION")
                 values_list = self.get_db_objects_values(selected_objects, ChildTable, ChildColumn)
                 if len(values_list) > 0:
                     column_value = "', '".join(values_list)
@@ -235,8 +312,9 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
                         total_query_results += query_results
                         # print("reload referenced objects", ParentTable, ParentColumn, query_results)
                         self.reload_referenced_objects(relation, query_results, selected_objects)
+
+
         if len(total_query_results) > 0:
-            # print("total relation results:", relation, total_query_results)
             return True
         else:
             """ Try to follow up later """
@@ -247,6 +325,11 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         if column_values is not None:
             if len(column_values) == 0:
                 return False
+            
+        s_ParentTable = source_relation["ParentTable"]
+        s_ParentColumn = source_relation["ParentColumn"]
+        s_ChildTable = source_relation["ChildTable"]
+        s_ChildColumn = source_relation["ChildColumn"]
 
         column_value = "', '".join(column_values)
         if self.object_relations is not None:
@@ -256,11 +339,6 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
                 ParentColumn = relation["ParentColumn"]
                 ChildTable = relation["ChildTable"]
                 ChildColumn = relation["ChildColumn"]
-
-                s_ParentTable = source_relation["ParentTable"]
-                s_ParentColumn = source_relation["ParentColumn"]
-                s_ChildTable = source_relation["ChildTable"]
-                s_ChildColumn = source_relation["ChildColumn"]
                 
                 if TableRelation == 0 or ParentTable == ChildTable:
                     continue
@@ -275,16 +353,22 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
                 #     if len(res) > 0:
                 #         continue
 
-                if ParentTable == s_ParentTable and ParentColumn == s_ParentColumn: # and TableRelation in [1, 2, 3, 7]:
-                    print("Reload relation CR:", source_relation, column_values, relation )
+                if ParentTable == s_ChildTable and TableRelation in [2, 3, 7]:
+                    # print("Reload relation CR:", source_relation, column_values, relation )
                     res = self.get_db_objects(ChildTable, ChildColumn, column_value, currently_selected, recursive=False, recursive_key_column=ParentColumn)
+
+                if ParentTable == s_ParentTable and TableRelation in [1, 3]:
+                    # print("Reload relation FK:", source_relation, column_values, relation )
+                    res = self.get_db_objects(ParentTable, ParentColumn, column_value, currently_selected, recursive=False, recursive_key_column=ChildColumn)
+
+                
 
     def get_db_objects_values(self, all_objects_dict, table_name, column_name):
         values_list = []
         if table_name in all_objects_dict.keys():
             related_objects = all_objects_dict[table_name]
             for record in related_objects:
-                record_columns = self.db.get_object_columns(record)
+                record_columns = self.application.db.get_object_columns(record)
                 if column_name in record_columns:
                     column_value = record.__getattribute__(column_name)
                     if column_value is not None:
@@ -293,16 +377,22 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
 
 
     def get_db_objects(self, table_name, query_column, query_values, selected_objects_dict={}, recursive=False, recursive_key_column=None):
-
+        
         query = f"select * from {table_name} where {query_column} in ('{query_values}')"
-        query_result = self.db.run_db_query(query)
+        
+        database_where_clause = self.application.db.get_transport_where_clause(table_name)
+        
+        if database_where_clause:
+            query = f"select * from {table_name} where {query_column} in ('{query_values}') and {database_where_clause}"
+        
+        query_result = self.application.db.run_db_query(query)
 
-        print("results:", len(query_result), "query:", query)
+        # print("results:", len(query_result), "query:", query)
         follow_up_values = []
         query_results_list = []
         for db_record in query_result:
 
-            db_object_columns = self.db.get_object_columns(db_record)
+            db_object_columns = self.application.db.get_object_columns(db_record)
             query_column_value =  db_record.__getattribute__(query_column)
             
             # if recursive_key_column is not None and recursive_key_column in db_object_columns:

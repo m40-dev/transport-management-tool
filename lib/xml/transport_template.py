@@ -49,5 +49,5 @@ class transport_template(transport_template_custom_object):
 
         if xmlObj is not None:
             self.data = xmlObj
-            self.application.load_xml_preview()
+            self.application.xml_structure_changed.emit()
             self.application.reload_xml_structure()

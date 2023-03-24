@@ -1,23 +1,32 @@
-from PyQt6.QtWidgets import  QListWidgetItem
+from PyQt6.QtWidgets import  QListWidgetItem, QGridLayout, QLabel
 from PyQt6.QtCore import Qt
 from pyodbc import Row
 import re
 
 class TemplateEditorListWidgetItem(QListWidgetItem):
-    def __init__(self, application, object_data, xml_object=None):
+    def __init__(self, application, object_data, xml_object=None, table_name=None):
         super(TemplateEditorListWidgetItem, self).__init__()
 
         self.application = application
         self.xml_object = xml_object
         self.object_data = object_data
         self.object_relations = None
+        self.source_table = table_name
         self.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
         self.refresh()
-
-        self.set_object_relations(self.application.get_table_initial_relations(self.table_name))
+        if self.object_relations is None:
+            self.set_object_relations(self.application.get_table_initial_relations(self.table_name))
 
     def set_object_relations(self, object_relations_list):
         self.object_relations = object_relations_list
+
+    def set_all_relations_state(self, state):
+        if self.object_relations is not None:
+            for relation in self.object_relations:
+                relation["Relation"] = state
+            # self.refresh()
+            return True
+        return False
 
     def deleteObject(self):
         if self.xml_object.delete_object():
@@ -28,7 +37,6 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
         self.setDisplayName(self.display_name)
 
     def set_relation_state(self, changed_relation):
-        
         if self.object_relations is not None:
             for relation in self.object_relations:
                 if (relation["ParentTable"] == changed_relation["ParentTable"] and relation["ChildTable"] == changed_relation["ChildTable"]
@@ -69,18 +77,20 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
 
     @property
     def table_display_pattern(self):
-        table_info = self.application.db.table_info.get(self.objectkey_table, None)
+        table_info = self.application.db.table_info.get(self.table_name, None)
         if table_info is not None:
             return table_info.DisplayPattern
         return None
     
     @property
     def table_name(self):
+        if self.source_table is not None:            
+            return self.source_table
         return self.objectkey_table
 
     @property
     def pk_columns(self):
-        table_info = self.application.db.table_info.get(self.objectkey_table, None)
+        table_info = self.application.db.table_info.get(self.table_name, None)
         if table_info is not None:
             return table_info.PKName1, table_info.PKName2
         return None, None
@@ -92,23 +102,23 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
             display = self.object_data.get("Name", display)
         
         if isinstance(self.object_data, Row):
-            if self.objectkey_table == "DialogTable":
+            if self.table_name == "DialogTable":
                 display = f"{self.object_data.TableName} - ({self.object_data.DisplayName})"
                 return display
-            if self.objectkey_table == "DialogColumn":
+            if self.table_name == "DialogColumn":
                 display = f"{self.object_data.ColumnName} - ({self.object_data.Caption})"
                 return display
             
         if isinstance(self.object_data, Row):
             if self.table_display_pattern is not None and display is None:
-                object_display = self.table_display_pattern
+                object_display = self.table_display_pattern.upper()
                 if "%" in self.table_display_pattern:
                     for column_name in self.object_columns:
-                        if column_name in object_display:
+                        if column_name.upper() in object_display:
                             column_value =  self.object_data.__getattribute__(column_name)
                             if column_value is None:
                                 column_value = ""
-                            object_display = object_display.replace(column_name, str(column_value))
+                            object_display = object_display.replace(column_name.upper(), str(column_value))
                     object_display = object_display.replace("%", "")
                 display = f"{self.objectkey_table} - ({object_display})"
         if display is None:

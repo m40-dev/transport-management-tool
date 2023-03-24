@@ -6,14 +6,14 @@ import copy
 import re
 
 class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, source_widget=None):
+    def __init__(self, application, object_data, xml_object=None, source_widget=None, table_name=None):
         super(TemplateEditorTreeWidgetItem, self).__init__()
 
         self.application = application
-        self.db = application.db
         self.xml_object = xml_object
         self.object_data = object_data
         self.source_widget = source_widget
+        self.source_table = table_name
         self.object_relations = None
 
         # self.refresh()
@@ -50,21 +50,23 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
             if match:
                 table_name = match.group(1)
         return table_name
-
+    
+    @property
+    def table_name(self):
+        if self.source_table is not None:            
+            return self.source_table
+        return self.objectkey_table
+    
     @property
     def object_columns(self):
-        return self.db.get_object_columns(self.object_data)
+        return self.application.db.get_object_columns(self.object_data)
 
     @property
     def table_display_pattern(self):
-        table_info = self.db.table_info.get(self.objectkey_table, None)
+        table_info = self.application.db.table_info.get(self.table_name, None)
         if table_info is not None:
             return table_info.DisplayPattern
         return None
-
-    @property
-    def table_name(self):
-        return self.objectkey_table
 
     @property
     def display_name(self):
@@ -74,15 +76,17 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
 
         if isinstance(self.object_data, Row):
             if self.table_display_pattern is not None and display is None:
-                object_display = self.table_display_pattern
+                object_display = self.table_display_pattern.upper()
                 if "%" in self.table_display_pattern:
                     for column_name in self.object_columns:
-                        if column_name.upper() in self.table_display_pattern.upper():
-                            column_value =  str(self.get_value(column_name))
-                            object_display = object_display.replace(column_name, column_value)
+                        if column_name.upper() in object_display:
+                            column_value =  self.object_data.__getattribute__(column_name)
+                            if column_value is None:
+                                column_value = ""
+                            object_display = object_display.replace(column_name.upper(), column_value)
                     object_display = object_display.replace("%", "")
                 display = f"{self.objectkey_table} - ({object_display})"
-
+        
         if display is None:
             display = f"{self.objectkey_table} - ({self.xobjectkey})"
         

@@ -1,14 +1,18 @@
-from PyQt6.QtCore import Qt, QSettings, QPoint, QRegularExpression, QRegularExpressionMatch
+from PyQt6.QtCore import Qt, QSettings, QPoint, QRegularExpression, QRegularExpressionMatch, QTimer, QRectF, QSize
 from PyQt6.QtWidgets import (
-    QMainWindow, QApplication, QMenu, QHeaderView, QProxyStyle, QStyleOption, QStyle, QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator, QFileDialog
+    QMainWindow, QApplication, QMenu, QHeaderView, QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator, QFileDialog, QMessageBox, QStyleOptionViewItem, QStyle, QStyledItemDelegate, QTreeWidgetItem
 )
-from PyQt6.QtGui import QShortcut, QKeySequence, QIcon, QAction, QTextDocument
+from PyQt6.QtGui import QShortcut, QKeySequence, QIcon, QAction, QTextDocument, QAbstractTextDocumentLayout
 
 
 """ qt traceback handling"""
 import traceback
 import copy
 import re
+import hashlib
+import json
+from cryptography.fernet import Fernet, InvalidToken
+import base64
 
 from lib.ui.Theme import Application_Theme
 
@@ -17,6 +21,10 @@ from PyQt6.QtCore import pyqtSignal
 """ UI import """
 from lib.ui.MainWindow_ui import Ui_MainWindow
 from lib.ui.SessionDetailsDialog import SessionDetailsDialog
+from lib.ui.EncryptionKeyDialog import EncryptionKeyDialog
+from lib.ui.RelationPresetDialog import RelationPresetDialog
+from lib.ui.MessageBox import MsgBox
+
 
 """ Custom Widgets """
 from lib.ui.CustomWidgets.TemplateEditorTreeWidgetItem import TemplateEditorTreeWidgetItem
@@ -37,8 +45,9 @@ from lib.xml.transport_template_custom_object import transport_template_custom_o
 from lib.xml.transport_task import transport_task
 from lib.xml.object_container import object_container
 
-VERSION = '0.3.4'
-
+VERSION = '0.3.7'
+XML_PREVIEW_TIMER = 200
+        
 class Transport_Manager(QMainWindow):
     """Main window class for session launcher"""
 
@@ -62,7 +71,7 @@ class Transport_Manager(QMainWindow):
         self.ui.actionAdd_DatabaseConnection.triggered.connect(self.get_session_details)
         self.ui.FindObjectButton.clicked.connect(self.find_objects)
         self.ui.TableComboBox.currentTextChanged.connect(self.load_db_objects)
-        self.ui.AddSelectedObjectsWithRelationsButton.clicked.connect(self.add_selected_object_with_relation)
+        self.ui.AddSelectedObjectsWithRelationsButton.clicked.connect(self.select_object_for_transport)
         self.ui.SearchResultsListWidget.itemClicked.connect(self.select_source_object)
         self.ui.XMLStructureTreeWidget.itemClicked.connect(self.select_source_object)
         self.ui.RelationsViewTreeWidget.itemChanged.connect(self.handle_data_change)
@@ -72,6 +81,8 @@ class Transport_Manager(QMainWindow):
         self.ui.actionSaveFile.triggered.connect(self.save_file)
         self.ui.actionOpen_File.triggered.connect(self.open_file)
         self.ui.DeselectAllToolButton.clicked.connect(self.deselect_all_relations)
+        self.ui.AddAsSingleObjectsButton.clicked.connect(lambda: self.select_object_for_transport(add_without_relations=True))
+        self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
 
         """ UI style scheme """
         self.color_theme = Application_Theme()
@@ -81,7 +92,6 @@ class Transport_Manager(QMainWindow):
         
         self.ui.XMLEditorWidget = xml_editor(self)
         self.ui.XMLEditorLayout.insertWidget(0, self.ui.XMLEditorWidget)
-
 
         self.ui.PackageManagerSplitter_Left.setSizes([round(self.width()*0.2), round(self.width()*0.2)])
         self.ui.PackageManagerSplitter_Right.setSizes([round(self.width()*0.5), round(self.width()*0.5)])
@@ -106,6 +116,8 @@ class Transport_Manager(QMainWindow):
         self.ui.XMLStructureTreeWidget.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.ui.XMLStructureTreeWidget.header().setStretchLastSection(False)
         
+        self.ui.FindObjectButton.setEnabled(False)
+        self.ui.TableComboBox.setEnabled(False)
 
         """ Context Menu """
         self.ui.RelationsViewTreeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -113,6 +125,11 @@ class Transport_Manager(QMainWindow):
 
         self.ui.XMLStructureTreeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.ui.XMLStructureTreeWidget.customContextMenuRequested.connect(self.xml_structure_context_menu)
+
+        self.xml_structure_changed.connect(self.reload_xml_preview)
+        self.xml_preview_timer = QTimer(self)
+        self.xml_preview_timer.setSingleShot(True)
+        self.xml_preview_timer.timeout.connect(self.load_xml_preview)
 
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.remove_selected_nodes)
@@ -129,24 +146,83 @@ class Transport_Manager(QMainWindow):
 
         """ Program variables """
         self.db = None
-        self.sessions = {}
+        self.encryption_key = None
+        self.last_widget_clicked = None
 
-        # oi_test = {'session_name': 'oi-test', 'server_address': '172.21.49.199', 'database_name': 'OneIM', 'user_name': 'sa', 'user_password': 'P@ssw0rd12'}
-        # self.sessions["oi-test"] = oi_test
-        self.xml_structure_changed.connect(self.load_xml_preview)
-        self.load_saved_sessions()
-        self.transport_template = transport_template(self)
+        """ Saved Session data """
+        self.sessions = self.settings.value("sessions")
+        if self.sessions is None:
+            self.sessions = {}
+
+        if len(self.sessions) > 0:
+            encryption_key = self.get_encryption_key()
+            if encryption_key:
+                self.encryption_key = encryption_key
+                if self.decrypt_session_details():
+                    self.load_saved_sessions()
+                else:
+                    print("session data decryption failed")
+            else:
+                print("session details were not loaded")
         
-        self.load_xml_preview()
-        # self.connect_database("oi-test")
+        """ Saved relation presets data """
+        self.relation_presets = self.settings.value("relation_presets")
+        if self.relation_presets is None:
+            self.relation_presets = {}
 
-    # def show_all_relation_fields(self, state):
-    #     print("show all relations", bool(state))
-    #     #0 - unchecked, 2 - checked
+        """ Initial transport template object """
+        self.transport_template = transport_template(self)
+        # self.connect_database("oneim-test")
+        # self.transport_template.parse_xml_file("C:/Users/m40/Downloads/test3-object_listing.xml")
+        self.xml_structure_changed.emit()
 
-    # def select_relations_using_db_model(self, state):
-    #     print("select using db model changed", bool(state))
-    #     #0 - unchecked, 2 - checked
+    def get_encryption_key(self, initial=False):
+        encryption_key = EncryptionKeyDialog(self, initial)
+        if encryption_key.exec():
+            enc = hashlib.sha3_512(bytes(encryption_key.encryption_key, 'utf-8'))
+            return enc.hexdigest()
+        return False
+        
+    def decrypt_session_details(self):
+        encrypted_session_details = self.sessions
+        if isinstance(encrypted_session_details, dict):
+            return True
+
+        if self.encryption_key is None:
+            self.encryption_key = self.get_encryption_key()
+
+        byte_key = bytes(self.encryption_key, 'utf-8')[0:32]
+        b64_byte_key = base64.urlsafe_b64encode(byte_key)
+
+        crypto = Fernet(b64_byte_key)
+        try:
+            decrypted_session_details = crypto.decrypt(encrypted_session_details)
+        except:
+            return False
+
+        session_data = json.loads(decrypted_session_details)
+        if session_data:
+            self.sessions = session_data
+            return True
+        return False
+
+    def save_session_details(self):
+        if len(self.sessions) == 0:
+            self.settings.setValue("sessions", {})
+            return True
+        encoded_session_data = json.dumps(self.sessions).encode('utf-8')
+
+        if self.encryption_key is None:
+            self.encryption_key = self.get_encryption_key(initial=True)
+
+        byte_key = bytes(self.encryption_key, 'utf-8')[0:32]
+        b64_byte_key = base64.urlsafe_b64encode(byte_key)
+
+        crypto = Fernet(b64_byte_key)
+        encrypted_session_details = crypto.encrypt(encoded_session_data)
+
+        self.settings.setValue("sessions", encrypted_session_details)
+
 
     def get_table_initial_relations(self, table_name, extended_view=False):
         initial_relations = copy.deepcopy(self.db.table_relations.get(table_name, None))
@@ -178,11 +254,18 @@ class Transport_Manager(QMainWindow):
         return initial_relations
 
     def deselect_all_relations(self):
-        self.ui.RelationsViewTreeWidget.expandAll()
-        self.ui.RelationsViewTreeWidget.selectAll()
-        for relation_widget in self.ui.RelationsViewTreeWidget.selectedItems():
-            if isinstance(relation_widget, TE_RelationColumn_TreeWidgetItem):
-                relation_widget.set_relation_state(0)
+        list_widgets = [self.ui.XMLStructureTreeWidget, self.ui.SearchResultsListWidget]
+        select_element = None
+        for selected_widget in list_widgets:
+            if self.last_widget_clicked == selected_widget:
+                for element in selected_widget.selectedItems():
+                    if isinstance(element, (TE_ObjectContainer_TreeWidgetItem, TemplateEditorListWidgetItem)):
+                        element.set_all_relations_state(0)
+                        select_element = element
+
+        if select_element is not None:
+            self.select_source_object(select_element)
+                
 
     def open_file(self):
         dialog = QFileDialog(self, "Open existing template file")
@@ -192,7 +275,7 @@ class Transport_Manager(QMainWindow):
 
         if file_path[0] != "":
             self.transport_template.parse_xml_file(file_path[0])
-        self.load_xml_preview()
+        self.xml_structure_changed.emit()
 
     def save_file(self):
         dialog = QFileDialog(self, "Save As")
@@ -255,12 +338,13 @@ class Transport_Manager(QMainWindow):
                     if item.xml_object.description is not None:
                         current_task_data.append(item.xml_object.description)
                     current_task_data.append(item.xml_object.data)
-        self.load_xml_preview()
+        self.xml_structure_changed.emit()
 
 
-    def handle_data_change(self, changed_widget, column):
+    def handle_data_change(self, changed_widget, column):       
         if isinstance(changed_widget, TemplateEditorTreeWidgetItem):
             changed_widget.handle_data_change(column)
+        self.xml_structure_changed.emit()
 
     def remove_selected_nodes(self):
         tree_widgets = [self.ui.XMLStructureTreeWidget, self.ui.RelationsViewTreeWidget]
@@ -274,21 +358,68 @@ class Transport_Manager(QMainWindow):
                         else:
                             root = tree_widget.invisibleRootItem()
                             root.removeChild(node_widget)
-        self.load_xml_preview()
+        self.xml_structure_changed.emit()
+
+    def reload_xml_preview(self):
+        self.xml_preview_timer.start(XML_PREVIEW_TIMER)
 
     def load_xml_preview(self):
-        # print("xml preview refresh")
+        # print("load xml preview")
         self.ui.XMLEditorWidget.setText(self.transport_template.string)
 
     def load_saved_sessions(self):
-        for session_name in self.sessions.keys():
-            self.add_session_to_menu(session_name)
+        if self.sessions is not None:
+            if isinstance(self.sessions, dict):
+                for session_name in self.sessions.keys():
+                    self.add_session_to_menu(session_name)
+
+    def get_session_details(self, session_name=None):
+        session_data = self.sessions.get(session_name, None)
+        dialog = SessionDetailsDialog(self, session_data)
+        if dialog.exec():
+            if dialog.session_name not in self.sessions.keys() and not session_name:
+                self.add_session_to_menu(dialog.session_name)
+
+            if session_name and dialog.session_name != session_name:
+                source_session = self.ui.menuConnections.findChildren(QMenu, session_name, Qt.FindChildOption.FindDirectChildrenOnly)
+                if len(source_session) == 1:
+                    source_session = source_session[0]
+                    source_session.setObjectName(dialog.session_name)
+                    source_session.setTitle(dialog.session_name)
+                    self.sessions.pop(session_name)
+
+            self.sessions[dialog.session_name] = dialog.form_values
+            self.save_session_details()
+
 
     def add_session_to_menu(self, session_name):
-        NewActionItem = self.ui.menuConnections.addAction(session_name)
-        NewActionItem.triggered.connect(lambda: self.connect_database(session_name))
+        NewMenuItem = self.ui.menuConnections.addMenu(session_name)
+        NewMenuItem.setObjectName(session_name)
+        ConnectAction = NewMenuItem.addAction("Connect")
+        EditAction = NewMenuItem.addAction("Edit")
+        NewMenuItem.addSeparator()
+        DeleteAction = NewMenuItem.addAction("Delete")
+
+        ConnectAction.triggered.connect(lambda: self.connect_database(NewMenuItem.objectName()))
+        EditAction.triggered.connect(lambda: self.get_session_details(NewMenuItem.objectName()))
+        DeleteAction.triggered.connect(lambda: self.delete_session(NewMenuItem))
+
+    def delete_session(self, session_menu_object):
+        session_name = session_menu_object.title()
+
+        decision = QMessageBox.question(self, "Confirm Session Delete", f"Are you sure to delete session info: {session_name}?")
+        if decision == QMessageBox.StandardButton.Yes:
+            action = session_menu_object.menuAction()
+            self.ui.menuConnections.removeAction(action)
+            
+            self.sessions.pop(session_name)
+            self.save_session_details()
 
     def connect_database(self, session_name):
+
+        if not isinstance(self.sessions, dict):
+            return False
+        
         if session_name not in self.sessions.keys():
             return False
         
@@ -298,23 +429,35 @@ class Transport_Manager(QMainWindow):
 
         if self.db is not None:
             self.db.disconnect_db()
+            self.db = None
 
         self.db = DatabaseConnection(session_params)
         
         if self.db is not None:
             self.db.load_session_data()
             self.reload_ui_data()
+            
 
     def clear_widgets(self):
         self.ui.TableComboBox.clear()
         self.ui.TableFilter.clear()
 
     def reload_ui_data(self):
+        if self.db.is_connected:
+            self.ui.FindObjectButton.setEnabled(True)
+            self.ui.TableComboBox.setEnabled(True)
+
         self.ui.TableComboBox.clear()
         for table_name in self.db.table_info.keys():
             self.ui.TableComboBox.addItem(table_name)
 
     def select_source_object(self, source_widget):
+        if isinstance(source_widget, TemplateEditorListWidgetItem):
+            self.last_widget_clicked = source_widget.listWidget()
+        
+        if isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem):
+            self.last_widget_clicked = source_widget.treeWidget()
+
         if isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem) or isinstance(source_widget, TemplateEditorListWidgetItem):
             relations = source_widget.object_relations
             self.ui.RelationsViewTreeWidget.clear()
@@ -324,21 +467,84 @@ class Transport_Manager(QMainWindow):
 
             if isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem):
                 self.ui.XMLEditorWidget.find_text(source_widget.search_text)
+            
+            self.load_table_relation_presets(source_widget.table_name)
+            
+    def save_relation_preset(self, source_widget):
+        relation_dialog = RelationPresetDialog(self)
+        if isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem):
+            relation_dialog.relations = copy.deepcopy(source_widget.object_relations)
 
+        if relation_dialog.exec():
+            preset_dict = {relation_dialog.name: relation_dialog.preset_data}
+            if source_widget.table_name not in self.relation_presets.keys():
+                self.relation_presets[source_widget.table_name] = preset_dict
+
+            if relation_dialog.name not in self.relation_presets[source_widget.table_name].keys():
+                self.relation_presets[source_widget.table_name][relation_dialog.name] = relation_dialog.preset_data
+            else:
+                """ overwrite existing? """
+                self.relation_presets[source_widget.table_name][relation_dialog.name] = relation_dialog.preset_data
+
+        self.settings.setValue("relation_presets", self.relation_presets)
+
+    def load_table_relation_presets(self, table_name):
+        self.ui.RelationPresetsComboBox.clear()
+
+        table_presets = self.relation_presets.get(table_name, None)
+        if table_presets is not None:
+            for preset_name, preset_data in table_presets.items():
+                self.ui.RelationPresetsComboBox.addItem(preset_name)
     
+    def apply_table_relation_preset(self):
+        preset_name = self.ui.RelationPresetsComboBox.currentText()
+        preset_data = None
+        preset_table = None
+        for table_name, relations in self.relation_presets.items():
+            preset_data = relations.get(preset_name, None)
+            if preset_data is not None:
+                preset_table = table_name
+                break
+    
+        if preset_data:
+            if self.last_widget_clicked == self.ui.XMLStructureTreeWidget:
+                for element in self.ui.XMLStructureTreeWidget.selectedItems():
+                    if isinstance(element, TE_ObjectContainer_TreeWidgetItem) and element.table_name == preset_table:
+                        preset_data_relations = copy.deepcopy(preset_data["table_relations"])
+                        element.set_object_relations(preset_data_relations)
+                        self.select_source_object(element)
+            
+            if self.last_widget_clicked == self.ui.SearchResultsListWidget:
+                for element in self.ui.SearchResultsListWidget.selectedItems():
+                    if isinstance(element, TemplateEditorListWidgetItem) and element.table_name == preset_table:
+                        preset_data_relations = copy.deepcopy(preset_data["table_relations"])
+                        element.set_object_relations(preset_data_relations)
+                        self.select_source_object(element)
+
     def follow_table_relation(self, relation_widget):
         if relation_widget.follow_table:
             source_widget_relations = relation_widget.source_widget.object_relations
+
+            # new_relations = copy.deepcopy(self.db.child_table_relations.get(relation_widget.follow_table, None))
+            # if new_relations is None:
             new_relations = copy.deepcopy(self.db.table_relations.get(relation_widget.follow_table, None))
-            merged_relations = self.extend_table_relations(source_widget_relations, new_relations)
-            relation_widget.source_widget.object_relations = merged_relations
-            if isinstance(relation_widget.source_widget, TemplateEditorTreeWidgetItem):
-                relation_widget.source_widget.refresh()
-            self.load_table_relations(new_relations, relation_widget.source_widget, relation_widget)
+
+            if new_relations is not None:
+                merged_relations = self.extend_table_relations(source_widget_relations, new_relations)
+                relation_widget.source_widget.object_relations = merged_relations
+
+                if isinstance(relation_widget.source_widget, TemplateEditorTreeWidgetItem):
+                    relation_widget.source_widget.refresh()
+
+                self.load_table_relations(new_relations, relation_widget.source_widget, relation_widget)
 
     def extend_table_relations(self, current_relations, new_relations):
         current = current_relations
+
         new = new_relations
+        if new is None:
+            return current
+        
         for relation in new:
             check = next((current_item for current_item in current if current_item["ParentTable"] == relation["ParentTable"] and current_item["ChildTable"] == relation["ChildTable"]) , None)
             if check is None:
@@ -357,23 +563,59 @@ class Transport_Manager(QMainWindow):
             
     def xml_structure_context_menu(self, menuPosition):
         clickedItem = self.ui.XMLStructureTreeWidget.itemAt(menuPosition)
-        if clickedItem:
-            contextMenu = xml_structure_context_menu(self, clickedItem)
-            contextMenu.list_related_objects.connect(lambda: clickedItem.list_related_objects(True))
+        contextMenu = xml_structure_context_menu(self, clickedItem)
+        contextMenu.list_related_objects.connect(lambda: self.list_related_objects(clickedItem, True))
+        contextMenu.load_object_from_database.connect(lambda: self.load_objects_from_database(clickedItem))
+        contextMenu.save_relation_preset.connect(lambda: self.save_relation_preset(clickedItem))
+        contextMenu.add_transport_task.connect(self.add_transport_task)
+
+        if len(contextMenu.menu_items) > 0:
             menu_target = self.ui.XMLStructureTreeWidget.mapToGlobal(menuPosition)
             contextMenu.popup(menu_target)
+        
+    def add_transport_task(self, task_type=None):
+        object_data = {"Name": "Import Task", "Description": "Structural node that organizes all tasks of one group." }
+        task_item = TE_TransportTask_TreeWidgetItem(self, object_data)
+        self.ui.XMLStructureTreeWidget.addTopLevelItem(task_item)
+
+        """ Create XML Node """
+        task = self.transport_template.add_transport_task("ObjectTransport")
+        task_item.xml_object = task
+        self.xml_structure_changed.emit()
+        return task_item
+
+
+    def list_related_objects(self, source_widget_item, override=False):
+        tree_widget = self.ui.XMLStructureTreeWidget
+        for element in tree_widget.selectedItems():
+            if isinstance(element, TE_ObjectContainer_TreeWidgetItem):
+                element.list_related_objects(True)
+        
+        if len(tree_widget.selectedItems()) == 0:
+            source_widget_item.list_related_objects(True)
+
+    def load_objects_from_database(self, source_widget_item):
+        tree_widget = self.ui.XMLStructureTreeWidget
+        for element in tree_widget.selectedItems():
+            if isinstance(element, TE_ObjectContainer_TreeWidgetItem):
+                element.load_from_database()
+        
+        if len(tree_widget.selectedItems()) == 0:
+            source_widget_item.load_from_database()
 
     def load_db_objects(self, table_name=None, data_rows=[]):
 
         self.ui.SearchResultsListWidget.clear()
 
-        if len(data_rows) == 0 and table_name is not None: 
+        if len(data_rows) == 0 and table_name: 
             query = f"select * from {table_name}"
             data_rows = self.db.run_db_query(query)
 
         for row in data_rows:
-            w = TemplateEditorListWidgetItem(self, row)
+            w = TemplateEditorListWidgetItem(self, row, table_name=table_name)
             self.ui.SearchResultsListWidget.addItem(w)
+
+        self.load_table_relation_presets(table_name)
 
     def get_objectkey_table(self, input_string):
         table_name = None
@@ -385,14 +627,29 @@ class Transport_Manager(QMainWindow):
         return table_name
 
     def find_objects(self):
+        if not self.db.is_connected:
+            return False
+        
         filter = self.ui.ObjectQueryTextEdit.toPlainText()
-        filter_rows = filter.split(",")
         data_rows = []
-        for object_query in filter_rows:
-             object_query = object_query.strip()
-             table_name = self.get_objectkey_table(object_query)
-             if table_name is not None:
-                query = f"select * from {table_name} where XObjectKey = '{object_query}'"
+
+        if self.ui.XObjectKeysFilterRadioButton.isChecked():
+            filter_rows = filter.splitlines()
+            for object_query in filter_rows:
+                object_query = object_query.strip()
+                table_name = self.get_objectkey_table(object_query)
+                if table_name is not None:
+                    query = f"select * from {table_name} where XObjectKey = '{object_query}'"
+                    data_rows += self.db.run_db_query(query)
+
+        if self.ui.SelectedTableFilterRadioButton.isChecked() and self.ui.TableComboBox.currentText().strip() != "":
+            object_query = filter.strip()
+            table_name = self.ui.TableComboBox.currentText()
+            if len(object_query) > 0:
+                query = f"select * from {table_name} where {object_query}"
+                data_rows += self.db.run_db_query(query)
+            else:
+                query = f"select * from {table_name}"
                 data_rows += self.db.run_db_query(query)
 
         self.load_db_objects(data_rows=data_rows)
@@ -403,7 +660,9 @@ class Transport_Manager(QMainWindow):
 
         tree_widgets = {}
         # print(len(relations))
-
+        if relations is None:
+            return False
+        
         for relation in relations:
             parent_table_name = relation["ParentTable"]
             child_table_name = relation["ChildTable"]
@@ -413,10 +672,16 @@ class Transport_Manager(QMainWindow):
             if parent_table_name == child_table_name and child_table_name != source_widget.table_name:
             # if parent_table_name == source_widget.table_name:
                 ui_parent_table_name = parent_table_name
+
+            if ui_parent_table_name == source_widget.table_name and append_to_existing_widget is not None:
+                """ skip relations referenced to the base table of the object """
+                continue
             
             child_widget = TE_RelationColumn_TreeWidgetItem(self, relation, source_widget=source_widget)
             
-            # ui_parent_table_name = child_widget.follow_table
+            if append_to_existing_widget is not None and ui_parent_table_name == append_to_existing_widget.follow_table:
+                if ui_parent_table_name not in tree_widgets.keys():
+                    tree_widgets[ui_parent_table_name] = append_to_existing_widget
 
             if ui_parent_table_name not in tree_widgets.keys():
                 parent_widget = TE_Table_TreeWidgetItem(self, self.db.table_info.get(ui_parent_table_name, ui_parent_table_name), source_widget=source_widget)
@@ -427,7 +692,7 @@ class Transport_Manager(QMainWindow):
 
             """ Connect main application signals """
             self.ui.ShowAllColumnsCheckBox.stateChanged.connect(child_widget.show_relation)
-            self.ui.SelectWithDatabaseModelCheckBox.stateChanged.connect(child_widget.select_relations_using_db_model)
+            # self.ui.SelectWithDatabaseModelCheckBox.stateChanged.connect(child_widget.select_relations_using_db_model)
 
             parent_widget.addChild(child_widget)
             # child_widget.show_relation(self.ui.ShowAllColumnsCheckBox.isChecked())
@@ -447,22 +712,15 @@ class Transport_Manager(QMainWindow):
 
         if isinstance(table_widget, TE_Table_TreeWidgetItem):
             table_widget.setExpanded(True)
-            
-    def add_selected_object_with_relation(self):
+
+    def select_object_for_transport(self, add_without_relations=False):
         selected_source_widgets = self.ui.SearchResultsListWidget.selectedItems()
         if selected_source_widgets is not None:
             selected_target_widgets = self.ui.XMLStructureTreeWidget.selectedItems()
             task_item = None
             if len(selected_target_widgets) == 0:
                 """ Create UI Node """
-                object_data = {"Name": "Import Task", "Description": "Structural node that organizes all tasks of one group." }
-                task_item = TE_TransportTask_TreeWidgetItem(self, object_data)
-                self.ui.XMLStructureTreeWidget.addTopLevelItem(task_item)
-
-                """ Create XML Node """
-                task = self.transport_template.add_transport_task("ObjectTransport")
-                task_item.xml_object = task
-                
+                task_item = self.add_transport_task("ObjectTransport")
             else:
                 """ Find Parent Node """
                 for widget in selected_target_widgets:
@@ -482,12 +740,16 @@ class Transport_Manager(QMainWindow):
 
                     container_element = task_item.xml_object.add_container(base_table=source_widget.table_name, display_name=source_widget.display_name, delete_residual_objects=str(int(self.ui.DeleteResidualCheckBox.isChecked())), pk_columns=pk_columns_dict, relations=source_widget.object_relations)
 
-                    object_container = TE_ObjectContainer_TreeWidgetItem(self, object_data=source_widget.object_data, xml_object=container_element, source_widget=source_widget)
-                    container_element.relations = object_container.object_relations
+                    object_container = TE_ObjectContainer_TreeWidgetItem(self, object_data=source_widget.object_data, xml_object=container_element, source_widget=source_widget, table_name=source_widget.table_name)
                     
+                    container_element.relations = object_container.object_relations
+
                     task_item.addChild(object_container)
 
-        self.load_xml_preview()
+                    if add_without_relations:
+                        object_container.set_all_relations_state(0)
+
+        self.xml_structure_changed.emit()
 
     def reload_xml_structure(self):
         """ reload structure according to the xml structure data """
@@ -504,17 +766,12 @@ class Transport_Manager(QMainWindow):
                 object_container_widget = TE_ObjectContainer_TreeWidgetItem(self, object_data=None, xml_object=container_element)
                 task_treewidget_item.addChild(object_container_widget)
 
-    def get_session_details(self):
-        dialog = SessionDetailsDialog(self)
-        if dialog.exec():
-            if dialog.session_name not in self.sessions.keys():
-                self.add_session_to_menu(dialog.session_name)
-
-            self.sessions[dialog.session_name] = dialog.form_values
-
     def close_application(self, event, force=False):
         self.settings.setValue("geometry", self.saveGeometry())
         self.settings.setValue("windowState", self.saveState())
+        self.settings.setValue("relation_presets", self.relation_presets)
+
+        self.save_session_details()
 
         if event:
             event.accept()
@@ -530,8 +787,7 @@ class Transport_Manager(QMainWindow):
                                 '{0}: {1}'.format(exc_type.__name__, exc_value)])
         
         print (log_msg)
-
-
+        MsgBox(self, exc_type.__name__, log_msg)
 
 if __name__ == "__main__":
     import sys
