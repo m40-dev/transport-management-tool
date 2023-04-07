@@ -14,9 +14,13 @@ class TE_Table_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     @property
     def display_name(self):
         display = None
+        if isinstance(self.object_data, str):
+            display = self.object_data
+
         if isinstance(self.object_data, Row):
             if self.objectkey_table == "DialogTable":
                 display = f"{self.object_data.TableName} - ({self.object_data.DisplayName})"
+
         if display is None:
             display = "Table without display name"
         return display

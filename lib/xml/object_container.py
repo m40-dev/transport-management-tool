@@ -62,7 +62,7 @@ class object_container(transport_template_custom_object):
 
     @property
     def description(self):
-        container_description = etree.Comment(f"({self.table_name}) - ({self.display_name})")
+        container_description = etree.Comment(self.display_name)
         return container_description
     
     @property

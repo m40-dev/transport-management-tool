@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt, QSettings, QPoint, QRegularExpression, QRegularExpressionMatch, QTimer, QRectF, QSize
 from PyQt6.QtWidgets import (
-    QMainWindow, QApplication, QMenu, QHeaderView, QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator, QFileDialog, QMessageBox, QStyleOptionViewItem, QStyle, QStyledItemDelegate, QTreeWidgetItem
+    QMainWindow, QApplication, QMenu, QHeaderView, QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator, QFileDialog, QMessageBox, QStyleOptionViewItem, QStyle, QStyledItemDelegate, QTreeWidgetItem, QLabel
 )
 from PyQt6.QtGui import QShortcut, QKeySequence, QIcon, QAction, QTextDocument, QAbstractTextDocumentLayout
 
@@ -36,7 +36,7 @@ from lib.ui.CustomWidgets.TE_TransportTask_TreeWidgetItem import TE_TransportTas
 from lib.ui.CustomWidgets.TE_ObjectContainerData_TreeWidgetItem import TE_ObjectContainerData_TreeWidgetItem
 from lib.ui.CustomWidgets.TemplateEditorListWidget import TemplateEditorListWidgetItem
 from lib.ui.CustomWidgets.PackageManagerTreeWidgetItem import PackageManagerTreeWidgetItem
-from lib.ui.CustomWidgets.PackageManagerTreeWidgetItem import PackageManagerXMLFile
+from lib.ui.CustomWidgets.PackageManagerTreeWidgetItem import PackageManagerXMLFile, PackageManagerXMLFolder
 from lib.ui.CustomWidgets.ContextMenu import relation_widget_context_menu, xml_structure_context_menu
 from lib.ui.CodeEditors import xml_editor
 """ database connector imports"""
@@ -48,7 +48,7 @@ from lib.xml.transport_template_custom_object import transport_template_custom_o
 from lib.xml.transport_task import transport_task
 from lib.xml.object_container import object_container
 
-VERSION = '0.3.7'
+VERSION = '0.4.1'
 XML_PREVIEW_TIMER = 200
         
 class Transport_Manager(QMainWindow):
@@ -68,6 +68,9 @@ class Transport_Manager(QMainWindow):
         
 
         self.setWindowTitle(f"Transport Manager Tool - {VERSION}")
+        window_icon = QIcon("./icon.ico")
+        self.setWindowIcon(window_icon)
+        self.color_theme = Application_Theme()
 
         """ Connect UI signals """
         self.closeEvent = self.close_application
@@ -83,21 +86,21 @@ class Transport_Manager(QMainWindow):
         self.ui.XMLStructureTreeWidget.dropEvent = self.xml_structure_drop_event
         self.ui.actionSaveFile.triggered.connect(self.save_file)
         self.ui.actionSave_As.triggered.connect(self.save_as_other_file)
-        self.ui.actionOpen_File.triggered.connect(self.open_file)
+        self.ui.actionOpen_File.triggered.connect(lambda: self.open_file())
         self.ui.actionChange_WorkingDirectory.triggered.connect(self.change_workdir)
         self.ui.DeselectAllToolButton.clicked.connect(self.deselect_all_relations)
         self.ui.AddAsSingleObjectsButton.clicked.connect(lambda: self.select_object_for_transport(add_without_relations=True))
         self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
         self.ui.PackageViewTreeWidget.itemDoubleClicked.connect(self.load_package_definition)
 
-        """ UI style scheme """
-        self.color_theme = Application_Theme()
-        self.setStyleSheet(self.color_theme.style_sheet)
-
         """ UI Configurations """
         
         self.ui.XMLEditorWidget = xml_editor(self)
-        self.ui.XMLEditorLayout.insertWidget(0, self.ui.XMLEditorWidget)
+        self.ui.current_file_label = QLabel(self)
+        self.ui.current_file_label.setProperty("Widget", "FilePathLabel")
+        self.ui.current_file_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
+        self.ui.XMLEditorLayout.insertWidget(0, self.ui.current_file_label)
+        self.ui.XMLEditorLayout.insertWidget(1, self.ui.XMLEditorWidget)
 
         self.ui.PackageManagerSplitter_Left.setSizes([round(self.width()*0.2), round(self.width()*0.2)])
         self.ui.PackageManagerSplitter_Right.setSizes([round(self.width()*0.5), round(self.width()*0.5)])
@@ -121,6 +124,8 @@ class Transport_Manager(QMainWindow):
         self.ui.XMLStructureTreeWidget.setHeaderLabels(['Transport Structure', 'Delete Residual'])
         self.ui.XMLStructureTreeWidget.header().setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)
         self.ui.XMLStructureTreeWidget.header().setStretchLastSection(False)
+
+        # self.ui.PackageViewTreeWidget.setIndentation(25)
         
         self.ui.FindObjectButton.setEnabled(False)
         self.ui.TableComboBox.setEnabled(False)
@@ -143,15 +148,9 @@ class Transport_Manager(QMainWindow):
 
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.remove_selected_nodes)
+        QShortcut(QKeySequence.StandardKey.Refresh, self, self.refresh_ui)
 
-        # self.ui.MainTabWidget.setCurrentIndex(1)
-        """ Restore window settings """
-        self.settings = QSettings("EmergencyCode", "Transport_Manager")
-        if self.settings.value("geometry") is not None:
-            self.restoreGeometry(self.settings.value("geometry"))
-        if self.settings.value("windowState") is not None:
-            self.restoreState(self.settings.value("windowState"))
-
+        self.refresh_ui()
         self.show()
 
         """ Program variables """
@@ -174,6 +173,7 @@ class Transport_Manager(QMainWindow):
                     print("session data decryption failed")
             else:
                 print("session details were not loaded")
+                self.sessions = {}
         
         """ Saved relation presets data """
         self.relation_presets = self.settings.value("relation_presets")
@@ -185,6 +185,18 @@ class Transport_Manager(QMainWindow):
         # self.connect_database("oneim-test")
         # self.transport_template.parse_xml_file("C:/Users/m40/Downloads/test3-object_listing.xml")
         self.xml_structure_changed.emit()
+
+    def refresh_ui(self):
+        """ UI style scheme """
+        self.setStyleSheet(self.color_theme.style_sheet)
+
+        """ Restore window settings """
+        self.settings = QSettings("EmergencyCode", "Transport_Manager")
+        if self.settings.value("geometry") is not None:
+            self.restoreGeometry(self.settings.value("geometry"))
+        if self.settings.value("windowState") is not None:
+            self.restoreState(self.settings.value("windowState"))
+
 
     """ Database Session Management """
 
@@ -225,20 +237,43 @@ class Transport_Manager(QMainWindow):
             workdir = self.current_workdir
         if workdir is None:
             return False
-        
+        # self.ui.PackageViewTreeWidget.setColumnCount(2)
         self.ui.PackageViewTreeWidget.clear()
-
+        folders = {}
         for file_path in Path(workdir).rglob( '*.xml' ):
+            
+            parent_path = file_path.parent
+            folder = None
+
+            if parent_path.is_dir() and Path(workdir).absolute() != parent_path.absolute():
+                if parent_path.absolute() in folders.keys():
+                    folder = folders[parent_path.absolute()]
+                else:
+                    folder = PackageManagerXMLFolder(self, parent_path)
+                    folder.setData(1, Qt.ItemDataRole.InitialSortOrderRole, 10)
+                    folders[parent_path.absolute()] = folder
+
             if file_path.is_file():
                 file_widget = PackageManagerXMLFile(self, file_path)
-                self.ui.PackageViewTreeWidget.addTopLevelItem(file_widget)
+                file_widget.setData(1, Qt.ItemDataRole.InitialSortOrderRole, 20)
+                if folder:
+                    folder.addChild(file_widget)
+                else:
+                    self.ui.PackageViewTreeWidget.addTopLevelItem(file_widget)
 
-        self.ui.PackageViewTreeWidget.sortItems(0, Qt.SortOrder.AscendingOrder)
+        for folder_path, folder_widget in folders.items():
+            parent_widget = folders.get(folder_widget.parent_directory, None)
+            if parent_widget:
+                parent_widget.addChild(folder_widget)
+            else:
+                self.ui.PackageViewTreeWidget.addTopLevelItem(folder_widget)
+
+        self.ui.PackageViewTreeWidget.sortByColumn(0, Qt.SortOrder.AscendingOrder)
+        
 
     def load_package_definition(self, source_widget=None):
-        print("load package", source_widget)
         if isinstance(source_widget, PackageManagerXMLFile):
-            self.open_file(source_widget.file_path)
+            self.open_file(source_widget.path)
             self.ui.MainTabWidget.setCurrentWidget(self.ui.MainTabWidget_Transport_Template_Editor)
 
     def open_file(self, file_path=None):
@@ -252,6 +287,7 @@ class Transport_Manager(QMainWindow):
         if file_path:
             self.transport_template.parse_xml_file(file_path)
             self.current_file = file_path
+            self.ui.current_file_label.setText(file_path)
 
         self.xml_structure_changed.emit()
 
@@ -308,6 +344,7 @@ class Transport_Manager(QMainWindow):
         if len(self.sessions) == 0:
             self.settings.setValue("sessions", {})
             return True
+        
         encoded_session_data = json.dumps(self.sessions).encode('utf-8')
 
         if self.encryption_key is None:
@@ -520,6 +557,7 @@ class Transport_Manager(QMainWindow):
 
     def xml_structure_move_event(self, event):
         move_accept = True
+        source_widget = event.source().currentItem()
 
         QTreeWidget.dragMoveEvent(self.ui.XMLStructureTreeWidget, event)
 
@@ -538,7 +576,9 @@ class Transport_Manager(QMainWindow):
             
             if isinstance(dropItem, TE_ObjectContainerData_TreeWidgetItem):
                 move_accept = False
-            
+
+            if isinstance(dropItem, TE_TransportTask_TreeWidgetItem) and isinstance(source_widget, TE_TransportTask_TreeWidgetItem):
+                move_accept = False
 
         if dropIndicator == QAbstractItemView.DropIndicatorPosition.BelowItem:
             if isinstance(dropItem, TE_TransportTask_TreeWidgetItem):
@@ -559,14 +599,15 @@ class Transport_Manager(QMainWindow):
             item = iterator.value()
             iterator += 1
             if isinstance(item, TE_TransportTask_TreeWidgetItem) and item.xml_object is not None:
-                self.transport_template.tasks.append(item.xml_object.data)
-                item.xml_object.delete_child_items()
+                self.transport_template.tasks_root.append(item.xml_object.data)
+                if item.childCount() > 0:
+                    item.xml_object.delete_child_items()
                 current_task_data = item.xml_object.data
                 continue
 
             if isinstance(item.xml_object, transport_template_custom_object):
                 if item.xml_object.data is not None:
-                    if item.xml_object.description is not None:
+                    if item.xml_object.description is not None and current_task_data is not None:
                         current_task_data.append(item.xml_object.description)
                     current_task_data.append(item.xml_object.data)
         self.xml_structure_changed.emit()
@@ -575,16 +616,16 @@ class Transport_Manager(QMainWindow):
         """ reload structure according to the xml structure data """
         self.ui.XMLStructureTreeWidget.clear()
         for task in self.transport_template.tasks:
-            object_data = {"Name": "Import Task"}
-            task_treewidget_item = TE_TransportTask_TreeWidgetItem(self, object_data)
-            task_item = transport_task(self, task.tag, task)
-            task_treewidget_item.xml_object = task_item
+            
+            task_treewidget_item = TE_TransportTask_TreeWidgetItem(self, object_data=task, xml_object=task)
+            # task_item = transport_task(self, task.task_type, task.data)
+            # task_treewidget_item.xml_object = task_item
             self.ui.XMLStructureTreeWidget.addTopLevelItem(task_treewidget_item)
-
-            for task_container_xml in task_item.task_containers:
-                container_element = object_container(self, source_element=task_container_xml)
-                object_container_widget = TE_ObjectContainer_TreeWidgetItem(self, object_data=None, xml_object=container_element)
-                task_treewidget_item.addChild(object_container_widget)
+            if task.task_class == "VI.Transport.ObjectTransport, VI.Transport":
+                for task_container_xml in task.task_containers:
+                    container_element = object_container(self, source_element=task_container_xml)
+                    object_container_widget = TE_ObjectContainer_TreeWidgetItem(self, object_data=None, xml_object=container_element)
+                    task_treewidget_item.addChild(object_container_widget)
             
             task_treewidget_item.setExpanded(True)
 
@@ -642,13 +683,11 @@ class Transport_Manager(QMainWindow):
             self.load_table_relation_presets(source_widget.table_name)
 
     def add_transport_task(self, task_type=None):
-        object_data = {"Name": "Import Task", "Description": "Structural node that organizes all tasks of one group." }
-        task_item = TE_TransportTask_TreeWidgetItem(self, object_data)
-        self.ui.XMLStructureTreeWidget.addTopLevelItem(task_item)
-
         """ Create XML Node """
         task = self.transport_template.add_transport_task("ObjectTransport")
-        task_item.xml_object = task
+        task_item = TE_TransportTask_TreeWidgetItem(self, task, task)
+        self.ui.XMLStructureTreeWidget.addTopLevelItem(task_item)
+
         self.xml_structure_changed.emit()
         return task_item
     
@@ -791,7 +830,10 @@ class Transport_Manager(QMainWindow):
                     tree_widgets[ui_parent_table_name] = append_to_existing_widget
 
             if ui_parent_table_name not in tree_widgets.keys():
-                parent_widget = TE_Table_TreeWidgetItem(self, self.db.table_info.get(ui_parent_table_name, ui_parent_table_name), source_widget=source_widget)
+                table_info = ui_parent_table_name
+                if self.db:
+                    table_info = self.db.table_info.get(ui_parent_table_name, ui_parent_table_name)
+                parent_widget = TE_Table_TreeWidgetItem(self, table_info, source_widget=source_widget)
                 tree_widgets[ui_parent_table_name] = parent_widget
             else:
                 parent_widget = tree_widgets[ui_parent_table_name]
@@ -827,7 +869,8 @@ class Transport_Manager(QMainWindow):
         self.settings.setValue("windowState", self.saveState())
         self.settings.setValue("relation_presets", self.relation_presets)
 
-        self.save_session_details()
+        if len(self.sessions) > 0:
+            self.save_session_details()
 
         if event:
             event.accept()

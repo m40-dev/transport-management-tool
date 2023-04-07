@@ -161,6 +161,9 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         return int_val
 
     def get_table_display(self, table_name):
-        table_info = self.application.db.table_info.get(table_name, None)
-        if table_info is not None:
-            return table_info.DisplayName
+        if self.application.db:
+            table_info = self.application.db.table_info.get(table_name, None)
+            if table_info is not None:
+                return table_info.DisplayName
+        else:
+            return table_name

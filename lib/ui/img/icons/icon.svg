@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="98.369087mm"
+   height="98.369087mm"
+   viewBox="0 0 98.369087 98.369087"
+   version="1.1"
+   id="svg5"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="icon.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="1.5962541"
+     inkscape:cx="-27.2513"
+     inkscape:cy="173.21803"
+     inkscape:window-width="3440"
+     inkscape:window-height="1369"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     showborder="true"
+     inkscape:showpageshadow="false" />
+  <defs
+     id="defs2">
+    <marker
+       style="overflow:visible"
+       id="marker15060"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Lstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(1.1,0,0,1.1,1.1,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.625;stroke-linejoin:round"
+         id="path15058" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker15050"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Lstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(1.1,0,0,1.1,1.1,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.625;stroke-linejoin:round"
+         id="path15048" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-47.697874,-18.525409)">
+    <circle
+       style="fill:none;fill-opacity:0;stroke:#d9551e;stroke-width:1.982;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:15.856, 3.964, 1.982, 3.964;stroke-dashoffset:9.1172;stroke-opacity:1;marker-start:url(#marker15060);marker-mid:url(#marker15050)"
+       id="path14598"
+       transform="rotate(-14.556205)"
+       r="35.885445"
+       cy="89.885986"
+       cx="76.755127"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <rect
+       style="fill:#f38275;fill-opacity:0.746988;stroke:none;stroke-width:2.049;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:16.392, 16.392;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect15170"
+       width="38.944584"
+       height="37.990284"
+       x="78.156021"
+       y="48.134674"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <rect
+       style="fill:#ad3427;fill-opacity:0.746988;stroke:none;stroke-width:1.00966;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:8.0773, 8.0773;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect15170-6"
+       width="33.557621"
+       height="10.705245"
+       x="81.056679"
+       y="72.684799"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <rect
+       style="fill:#ad3427;fill-opacity:0.746988;stroke:none;stroke-width:1.00966;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:8.0773, 8.0773;stroke-dashoffset:0;stroke-opacity:1"
+       id="rect15170-6-9"
+       width="33.557621"
+       height="10.705245"
+       x="81.056686"
+       y="50.988945"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="fill:none;fill-opacity:1;stroke:#d05a29;stroke-width:2.085;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 117.04529,61.925624 0.0553,-13.778118 -13.17774,-0.04213"
+       id="path20683"
+       sodipodi:nodetypes="ccc"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="fill:none;fill-opacity:1;stroke:#d05a29;stroke-width:2.085;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 103.32249,86.069654 13.77811,0.0553 0.0421,-13.17774"
+       id="path20683-4"
+       sodipodi:nodetypes="ccc"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="fill:none;fill-opacity:1;stroke:#d05a29;stroke-width:2.085;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 78.211321,72.346844 -0.0553,13.77811 13.17774,0.0421"
+       id="path20683-3"
+       sodipodi:nodetypes="ccc"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="fill:none;fill-opacity:1;stroke:#d05a29;stroke-width:2.085;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 91.934131,48.189974 -13.77811,-0.0553 -0.0421,13.17774"
+       id="path20683-3-1"
+       sodipodi:nodetypes="ccc"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+  </g>
+</svg>

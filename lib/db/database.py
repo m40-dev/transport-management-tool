@@ -149,4 +149,29 @@ class DatabaseConnection(object):
             if relation not in self.child_table_relations[row.ChildTable]:
                 self.child_table_relations[row.ChildTable].append(relation)
 
+    def get_table_display_pattern(self, table_name):
+        table_info = self.table_info.get(table_name, None)
+        if table_info is not None:
+            return table_info.DisplayPattern
+        return None
     
+    def get_object_display_name(self, table_name, db_object_attrs):
+        display_pattern = self.get_table_display_pattern(table_name)
+        db_objects = self.get_db_object(table_name, db_object_attrs, "and")
+        objects_display_name = []
+        for db_object in db_objects:
+            objects_display_name.append(self.parse_object_display(db_object, display_pattern))
+        return " ".join(objects_display_name)
+
+    
+    def parse_object_display(self, db_object, display_pattern):
+        object_display = display_pattern.upper()
+        if "%" in display_pattern:
+            for column_name in self.get_object_columns(db_object):
+                if column_name.upper() in object_display:
+                    column_value =  db_object.__getattribute__(column_name)
+                    if column_value is None:
+                        column_value = ""
+                    object_display = object_display.replace(column_name.upper(), str(column_value))
+            object_display = object_display.replace("%", "")
+        return object_display

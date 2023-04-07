@@ -101,17 +101,32 @@ QTabBar::tab::selected{
 QTreeWidget::item, QListWidget::item, QListView::item{
 	min-height: 1.7em;
     color: #333;
+	background-color: rgb(250, 250, 250);
 }
 
+QTreeWidget::item:alternate, QListWidget::item:alternate, QListView::item:alternate{
+	background-color: #e1f9fa;
+}
+
+
 QTreeWidget::item::selected, QListWidget::item::selected, QMenu::item::selected, QListView::item::selected{
-	color: #333;
-	font: bold;
+	min-height: 3em;
 	padding-left: 5px;
+	background-color: #c9f2de;
+	border: 1px solid #c4f2e3;
 }
 
 QLabel{
 	border-radius: 2px;
 	padding-left: 2px;
+}
+
+QLabel[Widget=FilePathLabel]{
+	font-size: 15px;
+	font: bold;
+	margin-left: 2px;
+	color: #616b88;
+	min-height: 25px;
 }
 
 QLabel[Widget=Header1]{

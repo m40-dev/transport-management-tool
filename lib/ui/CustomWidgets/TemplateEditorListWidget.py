@@ -77,10 +77,14 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
 
     @property
     def table_display_pattern(self):
+        return self.application.db.get_table_display_pattern(self.table_name)
+
+    @property
+    def table_is_relation(self):
         table_info = self.application.db.table_info.get(self.table_name, None)
         if table_info is not None:
-            return table_info.DisplayPattern
-        return None
+            return table_info.isMNTable
+        return 0
     
     @property
     def table_name(self):
@@ -111,18 +115,24 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
             
         if isinstance(self.object_data, Row):
             if self.table_display_pattern is not None and display is None:
-                object_display = self.table_display_pattern.upper()
-                if "%" in self.table_display_pattern:
-                    for column_name in self.object_columns:
-                        if column_name.upper() in object_display:
-                            column_value =  self.object_data.__getattribute__(column_name)
-                            if column_value is None:
-                                column_value = ""
-                            object_display = object_display.replace(column_name.upper(), str(column_value))
-                    object_display = object_display.replace("%", "")
+                object_display = self.application.db.parse_object_display(self.object_data, self.table_display_pattern)
                 display = f"{self.objectkey_table} - ({object_display})"
-        if display is None:
-            display = f"{self.objectkey_table} - ({self.xobjectkey})"
+
+            if display is None:
+                display = f"{self.objectkey_table} - ({self.xobjectkey})"
+                if self.table_is_relation:
+                    display = f"{self.objectkey_table} - (relation)"
+                    related_objects_display = []
+                    relations = self.application.db.table_relations.get(self.table_name, None)
+                    if relations is not None:
+                        relations_sorted = sorted(relations, key=lambda d: (d['ParentTable'],  d['ParentColumn']))
+                        for relation in relations_sorted:
+                            parent_table = relation["ParentTable"]
+                            parent_column = relation["ParentColumn"]
+                            if parent_column in self.pk_columns:
+                                related_objects_display.append(self.application.db.get_object_display_name(parent_table, {parent_column: self.get_value(parent_column)}))
+                    related_objects_display_names = " - ".join(related_objects_display)
+                    display = f"{self.objectkey_table} - ({related_objects_display_names})"
         return display
 
     @property

@@ -18,23 +18,33 @@ class transport_template(transport_template_custom_object):
 
         header.append(transport_description.data)
 
-        tasks = etree.Element("Tasks")
+        tasks_root = etree.Element("Tasks")
 
         """ Build the transport structure blocks """
         self.append(header)
-        self.append(tasks)
+        self.append(tasks_root)
 
     def add_transport_task(self, task_class):
         new_task = transport_task(self.application, task_class)
-        self.tasks.append(new_task.data)
+        self.tasks_root.append(new_task.data)
         return new_task
     
     def clear_xml_tasks(self):
-        self.delete_child_items(self.tasks)
+        self.delete_child_items(self.tasks_root)
 
     @property
-    def tasks(self):
+    def tasks_root(self):
         return self.find_child(self.data, "Tasks")
+    
+    @property
+    def tasks(self):
+        task_nodes = self.find_children(self.data, "Tasks")
+        task_list = []
+        if task_nodes:
+            for task in task_nodes:
+                task_obj = transport_task(self.application, task.attrib["Display"], task)
+                task_list.append(task_obj)
+        return task_list
 
     @property
     def header(self):

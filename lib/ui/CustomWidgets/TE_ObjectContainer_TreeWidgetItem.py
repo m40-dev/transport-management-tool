@@ -62,6 +62,9 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         if not override and not self.application.ui.AutoListObjectsFromDatabaseCheckBox.isChecked():
             return False
         
+        if not self.application.db:
+            return False
+        
         if self.object_data is None:
             self.load_from_database()
 
@@ -69,7 +72,12 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             self.removeChild(self.child(i))
 
         for table_name, results in self.related_objects.items():
-            table_widget = TE_Table_TreeWidgetItem(self.application, self.application.db.table_info.get(table_name, table_name))
+            table_display_name = table_name
+            if self.application.db:
+                table_display_name = self.application.db.table_info.get(table_name, table_name)
+
+            table_widget = TE_Table_TreeWidgetItem(self.application, table_display_name)
+
             self.addChild(table_widget)
             for selected_object in results:
                 selected_object_widget = TE_ObjectContainerData_TreeWidgetItem(self.application, selected_object, table_name=table_name)
@@ -77,11 +85,13 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             table_widget.sortChildren(0, Qt.SortOrder.AscendingOrder)
     
     def load_from_database(self):
-        if self.xml_object is not None:
+        if self.xml_object is not None and self.application.db:
             table_name = self.xml_object.table_name
             self.object_data = self.application.db.get_db_object(table_name, self.xml_object.key_columns, "and" )
+            
             if len(self.object_data) > 0:
                 self.object_data = self.object_data[0]
+            
             db_relations = self.application.get_table_initial_relations(table_name)
             loaded_tables = [table_name]
 

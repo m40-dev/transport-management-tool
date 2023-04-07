@@ -12,7 +12,7 @@ from PyQt6 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
-        MainWindow.resize(2121, 1216)
+        MainWindow.resize(2121, 1215)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
@@ -84,6 +84,7 @@ class Ui_MainWindow(object):
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.PackageViewTreeWidget.sizePolicy().hasHeightForWidth())
         self.PackageViewTreeWidget.setSizePolicy(sizePolicy)
+        self.PackageViewTreeWidget.setAlternatingRowColors(True)
         self.PackageViewTreeWidget.setWordWrap(True)
         self.PackageViewTreeWidget.setObjectName("PackageViewTreeWidget")
         self.PackageViewTreeWidget.headerItem().setText(0, "1")
@@ -363,7 +364,7 @@ class Ui_MainWindow(object):
         self.menubar.addAction(self.menuAbout.menuAction())
 
         self.retranslateUi(MainWindow)
-        self.MainTabWidget.setCurrentIndex(1)
+        self.MainTabWidget.setCurrentIndex(0)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):

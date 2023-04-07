@@ -14,7 +14,9 @@ includes = ["os", "sys", "PyQt6", "PyQt6.Qsci", "lxml"]
 excludes = ["tcl", "tk", "Tkinter", "tkinter"]
 
 include_files = [
+    "./icon.ico",
     "./Application.qss",
+    ("./lib/ui/img", "./lib/ui/img")
 ]
 
 
@@ -28,7 +30,7 @@ options = {
     }
 }
 
-executables = [Executable("Main.py", target_name="TransportManager.exe", base=base)]
+executables = [Executable("Main.py", target_name="TransportManager.exe", base=base, icon="./icon.ico")]
 
 setup(
     name="TransportManager",
