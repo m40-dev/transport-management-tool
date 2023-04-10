@@ -15,11 +15,12 @@ class transport_template_custom_object(object):
             self.data.tail = None
         else:
             self.data = source_element
+            self.data.tail = None
 
     @property
     def string(self):
         etree.indent(self.data)
-        return etree.tostring(self.data, pretty_print=True, encoding='UTF-8').decode('UTF-8')
+        return etree.tostring(self.data, pretty_print=True, encoding='UTF-8', method="xml").decode('UTF-8')
 
     @property
     def description(self):

@@ -1,7 +1,7 @@
 from lxml import etree
 from lib.xml.transport_template_custom_object import transport_template_custom_object
 from lib.xml.object_parameter import object_parameter
-from lib.xml.transport_task import transport_task
+from lib.xml.transport_task import transport_task, sql_script_transport_task
 
 class transport_template(transport_template_custom_object):
 
@@ -25,9 +25,17 @@ class transport_template(transport_template_custom_object):
         self.append(tasks_root)
 
     def add_transport_task(self, task_class):
-        new_task = transport_task(self.application, task_class)
-        self.tasks_root.append(new_task.data)
-        return new_task
+        task_obj = None
+        if task_class == "VI.Transport.ObjectTransport, VI.Transport":
+            task_obj = transport_task(self.application, task_class)
+        elif task_class == "VI.Transport.SQLTransport, VI.Transport":
+            task_obj = sql_script_transport_task(self.application, task_class)
+        else:
+            task_obj = transport_task(self.application, task_class)
+
+        if task_obj:
+            self.tasks_root.append(task_obj.data)
+            return task_obj
     
     def clear_xml_tasks(self):
         self.delete_child_items(self.tasks_root)
@@ -42,8 +50,17 @@ class transport_template(transport_template_custom_object):
         task_list = []
         if task_nodes:
             for task in task_nodes:
-                task_obj = transport_task(self.application, task.attrib["Display"], task)
-                task_list.append(task_obj)
+                if not isinstance(task, etree._Comment) and isinstance(task, etree._Element):
+                    task_type = task.attrib.get("Class", None)
+                    if task_type:
+                        if task_type == "VI.Transport.ObjectTransport, VI.Transport":
+                            task_obj = transport_task(self.application, task_type, task)
+                        if task_type == "VI.Transport.SQLTransport, VI.Transport":
+                            task_obj = sql_script_transport_task(self.application, task_type, task)
+                        else:
+                            task_obj = transport_task(self.application, task_type, task)
+                    if task_obj:
+                        task_list.append(task_obj)
         return task_list
 
     @property

@@ -5,10 +5,12 @@ from lib.ui.CustomWidgets.TemplateEditorTreeWidgetItem import TemplateEditorTree
 from lib.ui.CustomWidgets.TE_Table_TreeWidgetItem import TE_Table_TreeWidgetItem
 from lib.ui.CustomWidgets.TE_RelationColumn_TreeWidgetItem import TE_RelationColumn_TreeWidgetItem
 from lib.ui.CustomWidgets.TE_ObjectContainer_TreeWidgetItem import TE_ObjectContainer_TreeWidgetItem
-from lib.ui.CustomWidgets.TE_TransportTask_TreeWidgetItem import TE_TransportTask_TreeWidgetItem
+from lib.ui.CustomWidgets.TE_TransportTask_TreeWidgetItem import TE_TransportTask_TreeWidgetItem, TE_SQLTransportTask_TreeWidgetItem, TE_ObjectTransportTask_TreeWidgetItem
 from lib.ui.CustomWidgets.TE_ObjectContainerData_TreeWidgetItem import TE_ObjectContainerData_TreeWidgetItem
+from lib.ui.CustomWidgets.TE_SQLScriptContainer_TreeWidgetItem import TE_SQLScriptContainer_TreeWidgetItem
 from lib.ui.CustomWidgets.TemplateEditorListWidget import TemplateEditorListWidgetItem
 from lib.xml.transport_template_custom_object import transport_template_custom_object
+from lib.xml.transport_task import sql_script_transport_task
 
 
 class relation_widget_context_menu(QMenu):
@@ -34,7 +36,9 @@ class xml_structure_context_menu(QMenu):
     list_related_objects = pyqtSignal(object)
     load_object_from_database = pyqtSignal(object)
     save_relation_preset = pyqtSignal(object)
-    add_transport_task = pyqtSignal()
+    add_transport_task = pyqtSignal(str)
+    edit_sql_script = pyqtSignal(object)
+    add_sql_script = pyqtSignal(object, str)
 
     def __init__(self, parent, source_widget):
         super(xml_structure_context_menu, self).__init__(parent)
@@ -57,8 +61,30 @@ class xml_structure_context_menu(QMenu):
                 action_save_preset = self.addAction("Save Relations as Preset")
                 action_save_preset.triggered.connect(lambda: self.save_relation_preset.emit(source_widget) )
                 self.menu_items.append(action_save_preset)
-            
+
+        if isinstance(source_widget, TE_SQLScriptContainer_TreeWidgetItem):
+            action_edit_script = self.addAction("Edit SQL Script")
+            action_edit_script.triggered.connect(lambda: self.edit_sql_script.emit(source_widget))
+            self.menu_items.append(action_edit_script)
+
+        if isinstance(source_widget, TE_SQLTransportTask_TreeWidgetItem):
+            if isinstance(source_widget.xml_object, sql_script_transport_task):
+                if source_widget.xml_object.common_sql is None:
+                    action_add_common_sql_script = self.addAction("Add System SQL Script (CommonSQL)")
+                    action_add_common_sql_script.triggered.connect(lambda: self.add_sql_script.emit(source_widget, "CommonSQL"))
+                    self.menu_items.append(action_add_common_sql_script)
+                
+                if source_widget.xml_object.payload_sql is None:
+                    action_add_payload_sql_script = self.addAction("Add User Data SQL Script (PayloadSQL)")
+                    action_add_payload_sql_script.triggered.connect(lambda: self.add_sql_script.emit(source_widget, "PayloadSQL"))
+                    self.menu_items.append(action_add_payload_sql_script)
+
         if source_widget is None:
-            action_add_task = self.addAction("Add Transport Task")
-            action_add_task.triggered.connect(lambda: self.add_transport_task.emit() )
-            self.menu_items.append(action_add_task)
+            transport_menu = self.addMenu("Add Transport Task")
+            self.menu_items.append(transport_menu)
+
+            action_add_object_task = transport_menu.addAction("Add Object Transport Task")
+            action_add_object_task.triggered.connect(lambda: self.add_transport_task.emit("VI.Transport.ObjectTransport, VI.Transport"))
+
+            action_add_sql_task = transport_menu.addAction("Add SQL Transport Task")
+            action_add_sql_task.triggered.connect(lambda: self.add_transport_task.emit("VI.Transport.SQLTransport, VI.Transport"))

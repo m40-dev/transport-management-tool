@@ -1,11 +1,13 @@
 from PyQt6.QtWidgets import  QTreeWidgetItem
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from pyodbc import Row
 from lib.xml.transport_template_custom_object import transport_template_custom_object
 import copy
 import re
 
 class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
+    column_data_changed = pyqtSignal(int)
+
     def __init__(self, application, object_data, xml_object=None, source_widget=None, table_name=None):
         super(TemplateEditorTreeWidgetItem, self).__init__()
 
@@ -125,8 +127,5 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
             value = ""
         return value
     
-
-
     def handle_data_change(self, column):
         pass
-

@@ -12,8 +12,9 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         super(TE_ObjectContainer_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget=source_widget, table_name=table_name)
 
         self.setCheckState(1, Qt.CheckState.Unchecked)  
+        self.setText(1, "Delete Residual Objects")
         self.setFlags(Qt.ItemFlag.ItemIsDragEnabled | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable |Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsUserCheckable)
-        
+        # self.column_data_changed.connect(self.handle_data_change)
         self.object_relations = None
         if isinstance(source_widget, TemplateEditorListWidgetItem):
             object_relations = copy.deepcopy(source_widget.object_relations)
@@ -203,6 +204,7 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         self.application.xml_structure_changed.emit()
 
     def handle_data_change(self, column):
+        # print("data change in object container", column)
         status = int(self.checkState(1) == Qt.CheckState.Checked)
         tree_widget = self.treeWidget()
 
