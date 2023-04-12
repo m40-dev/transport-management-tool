@@ -25,6 +25,7 @@ from lib.ui.SessionDetailsDialog import SessionDetailsDialog
 from lib.ui.EncryptionKeyDialog import EncryptionKeyDialog
 from lib.ui.RelationPresetDialog import RelationPresetDialog
 from lib.ui.ScriptEditorDialog import ScriptEditorDialog
+from lib.ui.TransportPackageDialog import TransportPackageDialog
 from lib.ui.MessageBox import MsgBox
 
 
@@ -39,7 +40,7 @@ from lib.ui.CustomWidgets.TE_SQLScriptContainer_TreeWidgetItem import TE_SQLScri
 from lib.ui.CustomWidgets.TemplateEditorListWidget import TemplateEditorListWidgetItem
 from lib.ui.CustomWidgets.PackageManagerTreeWidgetItem import PackageManagerTreeWidgetItem
 from lib.ui.CustomWidgets.PackageManagerTreeWidgetItem import PackageManagerXMLFile, PackageManagerXMLFolder
-from lib.ui.ContextMenu import relation_widget_context_menu, xml_structure_context_menu
+from lib.ui.ContextMenu import relation_widget_context_menu, xml_structure_context_menu, package_definition_context_menu
 from lib.ui.CodeEditors import xml_editor
 """ database connector imports"""
 from lib.db.database import DatabaseConnection
@@ -51,8 +52,8 @@ from lib.xml.transport_task import transport_task
 from lib.xml.object_container import object_container
 from lib.xml.sql_script_container import sql_script_container
 
-VERSION = '0.4.1'
-XML_PREVIEW_TIMER = 200
+VERSION = '0.4.3'
+XML_PREVIEW_TIMER = 100
         
 class Transport_Manager(QMainWindow):
     """Main window class for session launcher"""
@@ -68,7 +69,6 @@ class Transport_Manager(QMainWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        
 
         self.setWindowTitle(f"Transport Manager Tool - {VERSION}")
         window_icon = QIcon("./icon.ico")
@@ -95,6 +95,7 @@ class Transport_Manager(QMainWindow):
         self.ui.AddAsSingleObjectsButton.clicked.connect(lambda: self.select_object_for_transport(add_without_relations=True))
         self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
         self.ui.PackageViewTreeWidget.itemDoubleClicked.connect(self.load_package_definition)
+        self.ui.actionNew_Transport_Template.triggered.connect(self.new_transport_template)
 
         """ UI Configurations """
         
@@ -133,9 +134,12 @@ class Transport_Manager(QMainWindow):
 
         """ Context Menu """
         self.ui.RelationsViewTreeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.ui.RelationsViewTreeWidget.customContextMenuRequested.connect(self.relation_context_menu)
         self.ui.XMLStructureTreeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.ui.PackageViewTreeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+
+        self.ui.RelationsViewTreeWidget.customContextMenuRequested.connect(self.relation_context_menu)
         self.ui.XMLStructureTreeWidget.customContextMenuRequested.connect(self.xml_structure_context_menu)
+        self.ui.PackageViewTreeWidget.customContextMenuRequested.connect(self.package_definition_context_menu)
 
         self.xml_structure_changed.connect(self.reload_xml_preview)
         self.xml_preview_timer = QTimer(self)
@@ -182,8 +186,7 @@ class Transport_Manager(QMainWindow):
             self.relation_presets = {}
 
         """ Initial transport template object """
-        self.transport_template = transport_template(self)
-        self.xml_structure_changed.emit()
+        self.new_transport_template()
 
     def refresh_ui(self):
         """ UI style scheme """
@@ -271,11 +274,7 @@ class Transport_Manager(QMainWindow):
                 self.ui.PackageViewTreeWidget.addTopLevelItem(folder_widget)
 
         self.ui.PackageViewTreeWidget.sortByColumn(0, Qt.SortOrder.AscendingOrder)
-        
-
-    def load_package_definition(self, source_widget=None):
-        if isinstance(source_widget, PackageManagerXMLFile):
-            self.open_file(source_widget.path)
+        self.ui.MainTabWidget.setCurrentWidget(self.ui.MainTabWidget_Transport_Package)
 
     def open_file(self, file_path=None):
         if file_path is None:
@@ -287,8 +286,8 @@ class Transport_Manager(QMainWindow):
 
         if file_path:
             self.transport_template.parse_xml_file(file_path)
-            self.current_file = file_path
-            self.ui.current_file_label.setText(file_path)
+            self.set_current_file(file_path)
+
         self.ui.MainTabWidget.setCurrentWidget(self.ui.MainTabWidget_Transport_Template_Editor)
         self.xml_structure_changed.emit()
 
@@ -296,18 +295,61 @@ class Transport_Manager(QMainWindow):
         if self.current_file is not None:
             with open(self.current_file, 'w') as doc:
                 doc.write(self.transport_template.string)
+            return self.current_file
         else:
-            self.save_as_other_file()
+            return self.save_as_other_file()
 
-    def save_as_other_file(self):
+    def save_as_other_file(self, initial_directory=None):
         dialog = QFileDialog(self, "Save As")
-        dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+        dialog.setFileMode(QFileDialog.FileMode.AnyFile) 
 
-        file_path = dialog.getSaveFileName(filter="*.xml")
+        file_path = dialog.getSaveFileName(filter="*.xml", directory=str(initial_directory))
 
         if file_path[0] != "":
             with open(file_path[0], 'w') as doc:
                 doc.write(self.transport_template.string)
+            self.set_current_file(file_path[0])
+            return file_path[0]
+        return False
+
+    def set_current_file(self, file_path):            
+        self.current_file = None
+        if file_path:
+            self.current_file = file_path
+        self.ui.current_file_label.setText(file_path)
+
+    def new_transport_template(self):
+        self.set_current_file(None)
+        self.transport_template = transport_template(self)
+        self.reload_xml_structure()
+        self.xml_structure_changed.emit()
+
+    """ Package Definition """
+    def add_package_definition(self, source_folder_widget):
+        if isinstance(source_folder_widget, PackageManagerXMLFolder):
+            self.new_transport_template()
+            directory = source_folder_widget.path
+            package_details = TransportPackageDialog(self, directory)
+            if package_details.exec():
+                source_folder_widget.add_file(package_details.file_path)
+                self.transport_template.transport_description.set_text(package_details.description)
+                self.set_current_file(package_details.file_path)
+                self.save_file()
+                self.xml_structure_changed.emit()
+
+    def load_package_definition(self, source_widget=None):
+        if isinstance(source_widget, PackageManagerXMLFile):
+            self.open_file(source_widget.path)
+
+    def package_definition_context_menu(self, menuPosition):
+        clickedItem = self.ui.PackageViewTreeWidget.itemAt(menuPosition)
+        if clickedItem:
+            contextMenu = package_definition_context_menu(self, clickedItem)
+            menu_target = self.ui.PackageViewTreeWidget.mapToGlobal(menuPosition)
+
+            contextMenu.add_package_definition.connect(self.add_package_definition)
+            if len(contextMenu.menu_items) > 0:
+                contextMenu.popup(menu_target)
 
     """ Session Data Management """
 
@@ -637,7 +679,7 @@ class Transport_Manager(QMainWindow):
                         task_treewidget_item.addChild(object_container_widget)
             if task_treewidget_item is None:
                 task_treewidget_item = TE_TransportTask_TreeWidgetItem(self, object_data=task, xml_object=task)
-                
+
             if task_treewidget_item:
                 self.ui.XMLStructureTreeWidget.addTopLevelItem(task_treewidget_item)
                 task_treewidget_item.setExpanded(True)
