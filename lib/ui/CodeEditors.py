@@ -11,9 +11,12 @@ class code_editor(QsciScintilla):
         self.font.setFamily('Consolas')
         self.font.setFixedPitch(True)
         self.font.setPointSize(10)
+        
         # self.setFont(font)
 
         self.setMarginsFont(self.font)
+
+        self.light_mode = True
 
         # AutoIndentation
         self.setAutoIndent(True)
@@ -25,25 +28,37 @@ class code_editor(QsciScintilla):
         self.setMarginWidth(0, 0)
         self.setWrapMode(QsciScintilla.WrapMode.WrapWord)
 
-        self.editor_bg = QColor("#fff")
-
-        self.setMarginsBackgroundColor(self.editor_bg)
-
         lexer = QsciLexerXML()
         self.setLexer(lexer)
 
         #line color
         self.setCaretLineVisible(True)
-        self.setCaretLineBackgroundColor(QColor("#eee"))
+        
 
         self.reconfigure_editor(lexer)
         self.show()
         self.text_to_find = ""
 
     def reconfigure_editor(self, lexer):
+        editor_bg_color = QColor("#fff")
+        editor_text_color = QColor("#333")
+        caret_bg_color = QColor("#eee")
+
+        
+        if not self.light_mode:
+            editor_bg_color = QColor("#1e1f1c")
+            editor_text_color = QColor("#eee")
+            caret_bg_color = QColor("#555")
+            lexer.setColor(editor_text_color)
+
         lexer.setFont(self.font)
-        lexer.setDefaultPaper(self.editor_bg)
-        lexer.setPaper(self.editor_bg)
+        lexer.setDefaultPaper(editor_bg_color)
+        lexer.setPaper(editor_bg_color)
+
+        self.setMarginsBackgroundColor(editor_bg_color)
+        self.setMarginsForegroundColor(editor_text_color)
+        self.setCaretLineBackgroundColor(caret_bg_color)
+
 
 
     def find_text(self, text):

@@ -14,9 +14,9 @@ class transport_template(transport_template_custom_object):
         header = etree.Element("Header")
 
         """ Transport description setup """
-        transport_description = object_parameter(self.application, "Description", "Transport Template Editor Test")
+        self.transport_description = object_parameter(self.application, "Description", "Transport Template Description")
 
-        header.append(transport_description.data)
+        header.append(self.transport_description.data)
 
         tasks_root = etree.Element("Tasks")
 

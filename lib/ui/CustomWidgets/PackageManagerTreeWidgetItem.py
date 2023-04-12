@@ -1,6 +1,8 @@
 from PyQt6.QtWidgets import  QTreeWidgetItem
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QFont
+from pathlib import Path
+
 
 TYPE_COLUMN = 1
 
@@ -66,3 +68,8 @@ class PackageManagerXMLFolder(PackageManagerTreeWidgetItem):
     def parent_directory(self):
         return self.object_data.parent
     
+    def add_file(self, file_path):
+        file_obj = Path(file_path)
+        file_widget = PackageManagerXMLFile(self.application, file_obj)
+        self.addChild(file_widget)
+        self.setExpanded(True)

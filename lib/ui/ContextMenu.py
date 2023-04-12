@@ -9,6 +9,7 @@ from lib.ui.CustomWidgets.TE_TransportTask_TreeWidgetItem import TE_TransportTas
 from lib.ui.CustomWidgets.TE_ObjectContainerData_TreeWidgetItem import TE_ObjectContainerData_TreeWidgetItem
 from lib.ui.CustomWidgets.TE_SQLScriptContainer_TreeWidgetItem import TE_SQLScriptContainer_TreeWidgetItem
 from lib.ui.CustomWidgets.TemplateEditorListWidget import TemplateEditorListWidgetItem
+from lib.ui.CustomWidgets.PackageManagerTreeWidgetItem import PackageManagerXMLFolder, PackageManagerXMLFile
 from lib.xml.transport_template_custom_object import transport_template_custom_object
 from lib.xml.transport_task import sql_script_transport_task
 
@@ -88,3 +89,21 @@ class xml_structure_context_menu(QMenu):
 
             action_add_sql_task = transport_menu.addAction("Add SQL Transport Task")
             action_add_sql_task.triggered.connect(lambda: self.add_transport_task.emit("VI.Transport.SQLTransport, VI.Transport"))
+
+class package_definition_context_menu(QMenu):
+    """ Custom QMenu used to manage relation items """
+    
+    add_package_definition = pyqtSignal(object)
+
+    def __init__(self, parent, source_widget):
+        super(package_definition_context_menu, self).__init__(parent)
+        self.parent = parent
+
+        self.menu_items = []
+
+        if source_widget:
+            if isinstance(source_widget, PackageManagerXMLFolder):
+                action_add_package_definition = self.addAction("Add Package Definition")
+                action_add_package_definition.triggered.connect(lambda: self.add_package_definition.emit(source_widget) )
+
+                self.menu_items.append(action_add_package_definition)
