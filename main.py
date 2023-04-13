@@ -52,7 +52,7 @@ from lib.xml.transport_task import transport_task
 from lib.xml.object_container import object_container
 from lib.xml.sql_script_container import sql_script_container
 
-VERSION = '0.4.3'
+VERSION = '0.4.4'
 XML_PREVIEW_TIMER = 100
         
 class Transport_Manager(QMainWindow):
