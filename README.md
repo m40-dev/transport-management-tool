@@ -73,14 +73,15 @@ This software has been built with maximum usability in mind and will have its ow
 The goal is to have the overall structure of the whole application and work around the parts that are the most difficult/troubling to work with.
 Any exception that program will catch is going to be thrown on the screen in the dedicated message box. This can help with bug fixing and understanding the issues system runs into.
 
-*What I know does not work too well right now:*
-    * Connecting to the database with wrong connection data will freeze the program until the timeout is reached
-    * If you do not decrypt the session data correctly and then create new connection, any previously saved session will be overwritten. There is no warning to that.
-    * There is totally *no* support for any other xml format than the one with structure of the transport template
-    * In some cases the SQL script cannot be edited, even when it is presented properly in the xml preview
-    * In some cases the comments above the containers are not deleted
-    * There is almost no validation to what you move around the xml structure - for now you need to know better not to add transport task into another transport task or sql task into object transport container.
-    * Object Relations cluster is sometimes weird in what it does (especially selecting relations using the database model). 
-    * Working directory is currently used more for the sake of opening different files faster/easier - manual saving still sends us into other locations
-    * There is no prompt when switching transport template and not saving the current one
-    * There is no indication that you have some unsaved changes in the template comparing to the original file.
+**What I know does not work too well right now:**
+
+* Connecting to the database with wrong connection data will freeze the program until the timeout is reached
+* If you do not decrypt the session data correctly and then create new connection, any previously saved session will be overwritten. There is no warning to that.
+* There is totally *no* support for any other xml format than the one with structure of the transport template
+* In some cases the SQL script cannot be edited, even when it is presented properly in the xml preview
+* In some cases the comments above the containers are not deleted
+* There is almost no validation to what you move around the xml structure - for now you need to know better not to add transport task into another transport task or sql task into object transport container.
+* Object Relations cluster is sometimes weird in what it does (especially selecting relations using the database model). 
+* Working directory is currently used more for the sake of opening different files faster/easier - manual saving still sends us into other locations
+* There is no prompt when switching transport template and not saving the current one
+* There is no indication that you have some unsaved changes in the template comparing to the original file.
