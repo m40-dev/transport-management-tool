@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt
 from pyodbc import Row
-from lib.ui.CustomWidgets.TemplateEditorTreeWidgetItem import TemplateEditorTreeWidgetItem
+from . import TemplateEditorTreeWidgetItem
 
 
 class TE_Table_TreeWidgetItem(TemplateEditorTreeWidgetItem):

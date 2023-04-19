@@ -286,7 +286,6 @@ class Ui_MainWindow(object):
         self.XMLStructureTreeWidget.setProperty("showDropIndicator", True)
         self.XMLStructureTreeWidget.setDragEnabled(True)
         self.XMLStructureTreeWidget.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.InternalMove)
-        self.XMLStructureTreeWidget.setDefaultDropAction(QtCore.Qt.DropAction.MoveAction)
         self.XMLStructureTreeWidget.setAlternatingRowColors(True)
         self.XMLStructureTreeWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.XMLStructureTreeWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)

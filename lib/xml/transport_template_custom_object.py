@@ -76,11 +76,12 @@ class transport_template_custom_object(object):
         parent_node = self.data.getparent()
         previous_node = self.data.getprevious()
 
+        if isinstance(previous_node, etree._Comment):
+            parent_node.remove(previous_node)
+
         if parent_node is not None:
             parent_node.remove(self.data)
         
-        if isinstance(previous_node, etree._Comment):
-            parent_node.remove(previous_node)
         return True
 
     def get_attribute(self, attribute):
@@ -110,8 +111,9 @@ class transport_template_custom_object(object):
             element.remove(child_element)
 
     def set_text(self, value):
+        self.delete_child_items()
         self.data.text = str(value)
 
     @property
     def text(self):
-        return self.data.text
+        return "\n".join(self.data.itertext()).strip()

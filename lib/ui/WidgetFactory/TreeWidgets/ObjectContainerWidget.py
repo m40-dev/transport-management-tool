@@ -1,11 +1,11 @@
 from PyQt6.QtCore import Qt
 from lib.xml.object_container import object_container
-from lib.ui.CustomWidgets.TemplateEditorListWidget import TemplateEditorListWidgetItem
 import copy
-from lib.ui.CustomWidgets.TemplateEditorTreeWidgetItem import TemplateEditorTreeWidgetItem
-from lib.ui.CustomWidgets.TE_Table_TreeWidgetItem import TE_Table_TreeWidgetItem
-from lib.ui.CustomWidgets.TE_ObjectContainerData_TreeWidgetItem import TE_ObjectContainerData_TreeWidgetItem
-
+# from . import TemplateEditorTreeWidgetItem, TemplateEditorListWidgetItem, TE_Table_TreeWidgetItem, TE_ObjectContainerData_TreeWidgetItem
+from .TemplateEditorTreeWidget import TemplateEditorTreeWidgetItem
+from .TemplateEditorListWidget import TemplateEditorListWidgetItem
+from .TableObjectWidget import TE_Table_TreeWidgetItem
+from .ObjectContainerData import TE_ObjectContainerData_TreeWidgetItem
 
 class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     def __init__(self, application, object_data, xml_object=None, source_widget=None, table_name=None):

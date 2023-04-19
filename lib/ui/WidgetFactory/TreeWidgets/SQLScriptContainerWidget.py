@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from lib.ui.CustomWidgets.TemplateEditorTreeWidgetItem import TemplateEditorTreeWidgetItem
+from . import TemplateEditorTreeWidgetItem
 
 
 class TE_SQLScriptContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):

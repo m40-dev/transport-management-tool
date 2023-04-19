@@ -1,14 +1,19 @@
 from PyQt6.QtWidgets import  QTreeWidgetItem
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 from pyodbc import Row
 from lib.xml.transport_template_custom_object import transport_template_custom_object
-import copy
 import re
 
 class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
     column_data_changed = pyqtSignal(int)
 
-    def __init__(self, application, object_data, xml_object=None, source_widget=None, table_name=None):
+    def __init__(self, 
+                 application,
+                 object_data, 
+                 xml_object=None, 
+                 source_widget=None, 
+                 table_name=None):
+        
         super(TemplateEditorTreeWidgetItem, self).__init__()
 
         self.application = application
@@ -23,6 +28,7 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
     def deleteObject(self):
         if isinstance(self.xml_object, transport_template_custom_object):
             if self.xml_object.delete_object():
+                self.xml_object = None
                 return True
             else:
                 return False           
@@ -89,7 +95,9 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
 
         if isinstance(self.object_data, Row):
             if self.table_display_pattern is not None and display is None:
-                object_display = self.application.db.parse_object_display(self.object_data, self.table_display_pattern)
+                object_display = self.application.db.parse_object_display(
+                    self.object_data,
+                    self.table_display_pattern)
                 display = f"{self.objectkey_table} - ({object_display})"
 
             if display is None:
@@ -97,16 +105,25 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
                 if self.table_is_relation:
                     display = f"{self.objectkey_table} - (relation)"
                     related_objects_display = []
-                    relations = self.application.db.table_relations.get(self.table_name, None)
+                    relations = self.application.db.table_relations.get(
+                        self.table_name, 
+                        None)
                     if relations is not None:
-                        relations_sorted = sorted(relations, key=lambda d: (d['ParentTable'],  d['ParentColumn']))
+                        relations_sorted = sorted(
+                            relations, 
+                            key=lambda d: (d['ParentTable'],  d['ParentColumn'])
+                            )
                         for relation in relations_sorted:
                             parent_table = relation["ParentTable"]
                             parent_column = relation["ParentColumn"]
                             if parent_column in self.pk_columns:
-                                related_objects_display.append(self.application.db.get_object_display_name(parent_table, {parent_column: self.get_value(parent_column)}))
+                                related_objects_display.append(self.application.db.get_object_display_name(
+                                    parent_table, 
+                                    {parent_column: self.get_value(parent_column)}
+                                    )
+                                    )
                     related_objects_display_names = " - ".join(related_objects_display)
-                    display = f"{self.objectkey_table} - ({related_objects_display_names})"
+                    display = f"{self.objectkey_table} - ({related_objects_display_names})"  # noqa: E501
         if display is None:
             display = f"{self.objectkey_table} - ({self.xobjectkey})"
         return display

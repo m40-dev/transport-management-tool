@@ -1,6 +1,5 @@
 from PyQt6.QtCore import Qt
-from lib.ui.CustomWidgets.TemplateEditorTreeWidgetItem import TemplateEditorTreeWidgetItem
-from lib.ui.CustomWidgets.TE_SQLScriptContainer_TreeWidgetItem import TE_SQLScriptContainer_TreeWidgetItem
+from . import TemplateEditorTreeWidgetItem, TE_SQLScriptContainer_TreeWidgetItem
 from lib.xml.transport_task import transport_task, sql_script_transport_task
 
 
@@ -13,8 +12,8 @@ class TE_TransportTask_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     @property
     def display_name(self):
         display = "Transport Task Without Display"
-        if isinstance(self.object_data, transport_task):
-            display = f"{self.object_data.task_display} - ({self.object_data.task_class})"
+        if isinstance(self.xml_object, transport_task):
+            display = f"{self.xml_object.task_display} - ({self.xml_object.task_class})"
         return display
 
 class TE_ObjectTransportTask_TreeWidgetItem(TE_TransportTask_TreeWidgetItem):
@@ -42,7 +41,7 @@ class TE_SQLTransportTask_TreeWidgetItem(TE_TransportTask_TreeWidgetItem):
                 element.setCheckState(column, self.checkState(status))
 
     def refresh(self):
-        if self.object_data is not None:
+        if self.xml_object is not None:
             TemplateEditorTreeWidgetItem.refresh(self)
 
         if isinstance(self.xml_object, sql_script_transport_task):

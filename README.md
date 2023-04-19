@@ -40,7 +40,7 @@ List of Currently implemented features grouped into feature categories.
 * Bulk apply saved relations preset
 * Delete entries from the XML structure
 
-## Planned Features ##
+# Planned Features #
 * Transport Template validation
 * Transport template optimization and description validation
 * Transport templates merging

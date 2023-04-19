@@ -1,8 +1,5 @@
 from PyQt6.QtCore import Qt
-from lib.ui.CustomWidgets.TemplateEditorTreeWidgetItem import TemplateEditorTreeWidgetItem
-from lib.ui.CustomWidgets.TemplateEditorListWidget import TemplateEditorListWidgetItem
-from lib.ui.CustomWidgets.TE_Table_TreeWidgetItem import TE_Table_TreeWidgetItem
-from lib.ui.CustomWidgets.TE_ObjectContainer_TreeWidgetItem import TE_ObjectContainer_TreeWidgetItem
+from . import TemplateEditorTreeWidgetItem, TemplateEditorListWidgetItem, TE_Table_TreeWidgetItem
 
 class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     def __init__(self, application, object_data, xml_object=None, source_widget=None):
@@ -100,6 +97,7 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
 
         parent_widget = self.parent()
         hide_parent = True
+        # print(TE_Table_TreeWidgetItem, type(TE_Table_TreeWidgetItem))
         if isinstance(parent_widget, TE_Table_TreeWidgetItem):
             for i in range(0, parent_widget.childCount()):
                 if not parent_widget.child(i).isHidden():

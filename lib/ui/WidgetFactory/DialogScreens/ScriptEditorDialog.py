@@ -1,5 +1,5 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-from lib.ui.CodeEditors import sql_editor
+from lib.ui.WidgetFactory.CodeEditors.SQLEditor import sql_editor
 
 
 class ScriptEditorDialog(QtWidgets.QDialog):

@@ -1,18 +1,9 @@
 from PyQt6.QtWidgets import (QMenu)
 from PyQt6.QtCore import pyqtSignal
 
-from lib.ui.CustomWidgets.TemplateEditorTreeWidgetItem import TemplateEditorTreeWidgetItem
-from lib.ui.CustomWidgets.TE_Table_TreeWidgetItem import TE_Table_TreeWidgetItem
-from lib.ui.CustomWidgets.TE_RelationColumn_TreeWidgetItem import TE_RelationColumn_TreeWidgetItem
-from lib.ui.CustomWidgets.TE_ObjectContainer_TreeWidgetItem import TE_ObjectContainer_TreeWidgetItem
-from lib.ui.CustomWidgets.TE_TransportTask_TreeWidgetItem import TE_TransportTask_TreeWidgetItem, TE_SQLTransportTask_TreeWidgetItem, TE_ObjectTransportTask_TreeWidgetItem
-from lib.ui.CustomWidgets.TE_ObjectContainerData_TreeWidgetItem import TE_ObjectContainerData_TreeWidgetItem
-from lib.ui.CustomWidgets.TE_SQLScriptContainer_TreeWidgetItem import TE_SQLScriptContainer_TreeWidgetItem
-from lib.ui.CustomWidgets.TemplateEditorListWidget import TemplateEditorListWidgetItem
-from lib.ui.CustomWidgets.PackageManagerTreeWidgetItem import PackageManagerXMLFolder, PackageManagerXMLFile
 from lib.xml.transport_template_custom_object import transport_template_custom_object
 from lib.xml.transport_task import sql_script_transport_task
-
+from lib.ui.WidgetFactory import TE_ObjectContainer_TreeWidgetItem, TE_Table_TreeWidgetItem, TE_RelationColumn_TreeWidgetItem, TE_SQLScriptContainer_TreeWidgetItem, TE_SQLTransportTask_TreeWidgetItem, PackageManagerXMLFolder
 
 class relation_widget_context_menu(QMenu):
     """ Custom QMenu used to manage relation items """
@@ -24,6 +15,7 @@ class relation_widget_context_menu(QMenu):
         self.parent = parent
 
         if source_widget:
+            
             if isinstance(source_widget, TE_Table_TreeWidgetItem):
                 action_follow_table_relations = self.addAction(f"Add Table Relations: {source_widget.follow_table}")
                 action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget) )
