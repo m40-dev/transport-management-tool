@@ -1,7 +1,6 @@
 from PyQt6.Qsci import QsciScintilla, QsciLexerXML, QsciAPIs, QsciLexerSQL, QsciLexer
 from PyQt6.QtGui import QColor, QFont
 
-
 class BaseCodeEditor(QsciScintilla):
     def __init__(self, parent):
         self.parent = parent
@@ -46,6 +45,7 @@ class BaseCodeEditor(QsciScintilla):
         self.SCN_MODIFIED = self.modify
 
         self.reconfigure_editor(lexer)
+        self.expand_level = 10
 
     def reconfigure_editor(self, lexer):
         editor_bg_color = QColor("#fff")
@@ -122,3 +122,40 @@ class BaseCodeEditor(QsciScintilla):
                 self.set_fold([iter, fold], iter, fold, full)
                 prev = [-1, fold]
         self.set_fold(prev, lend - 1, 0, full)
+
+    def fold_by_level(self):
+        level = self.expand_level
+        # print("fold by level", level, level + 0x400)
+        SCI = self.SendScintilla
+        if level > 0:
+            level += 0x400
+            MASK = QsciScintilla.SC_FOLDLEVELNUMBERMASK
+            for line in range(self.lines()):
+                foldlevel = SCI(QsciScintilla.SCI_GETFOLDLEVEL, line) & MASK
+                if foldlevel == level:
+                    line = SCI(QsciScintilla.SCI_GETFOLDPARENT, line)
+                    if SCI(QsciScintilla.SCI_GETFOLDEXPANDED, line):
+                        SCI(QsciScintilla.SCI_FOLDLINE, line,
+                            QsciScintilla.SC_FOLDACTION_CONTRACT)
+        else:
+            SCI(QsciScintilla.SCI_FOLDALL, QsciScintilla.SC_FOLDACTION_EXPAND)
+        self.expand_level -= 1
+
+    def expand_by_level(self):
+        self.expand_level += 1
+        level = self.expand_level
+        # print("expand by level", level, level + 0x400)
+        SCI = self.SendScintilla
+        if level < 10:
+            level += 0x400
+            MASK = QsciScintilla.SC_FOLDLEVELNUMBERMASK
+            for line in range(self.lines()):
+                foldlevel = SCI(QsciScintilla.SCI_GETFOLDLEVEL, line) & MASK
+                if foldlevel == level:
+                    line = SCI(QsciScintilla.SCI_GETFOLDPARENT, line)
+                    if not SCI(QsciScintilla.SCI_GETFOLDEXPANDED, line):
+                        SCI(QsciScintilla.SCI_FOLDLINE, line,
+                            QsciScintilla.SC_FOLDACTION_EXPAND)
+        else:
+            SCI(QsciScintilla.SCI_FOLDALL, QsciScintilla.SC_FOLDACTION_EXPAND)
+        

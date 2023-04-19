@@ -78,7 +78,7 @@ Any exception that program will catch is going to be thrown on the screen in the
 * Connecting to the database with wrong connection data will freeze the program until the timeout is reached
 * If you do not decrypt the session data correctly and then create new connection, any previously saved session will be overwritten. There is no warning to that.
 * There is totally *no* support for any other xml format than the one with structure of the transport template
-* In some cases the SQL script cannot be edited, even when it is presented properly in the xml preview
+* SQL script can be edited, but any XML comments left inside the text node will be deleted
 * In some cases the comments above the containers are not deleted
 * There is almost no validation to what you move around the xml structure - for now you need to know better not to add transport task into another transport task or sql task into object transport container.
 * Object Relations cluster is sometimes weird in what it does (especially selecting relations using the database model). 

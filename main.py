@@ -40,7 +40,7 @@ from lib.xml.transport_template_custom_object import transport_template_custom_o
 from lib.xml.object_container import object_container
 from lib.xml.sql_script_container import sql_script_container
 
-VERSION = '0.4.4'
+VERSION = '0.4.5'
 XML_PREVIEW_TIMER = 100
         
 class Transport_Manager(QMainWindow):
@@ -147,11 +147,13 @@ class Transport_Manager(QMainWindow):
 
         self.current_workdir = None
         self.current_file = None
-
+        self.xml_structure_widgets = []
 
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.remove_selected_nodes)
         QShortcut(QKeySequence.StandardKey.Refresh, self, self.refresh_ui)
+        QShortcut(QKeySequence("Ctrl+0"), self, self.ui.XMLEditorWidget.expand_by_level)
+        QShortcut(QKeySequence("Ctrl+9"), self, self.ui.XMLEditorWidget.fold_by_level)
 
         self.refresh_ui()
         self.show()
@@ -616,7 +618,6 @@ class Transport_Manager(QMainWindow):
         self.xml_preview_timer.start(XML_PREVIEW_TIMER)
 
     def load_xml_preview(self):
-        # print("load xml preview")
         self.ui.XMLEditorWidget.setText(self.transport_template.string)
 
     def xml_structure_move_event(self, event):
@@ -648,16 +649,13 @@ class Transport_Manager(QMainWindow):
         if dropIndicator == QAbstractItemView.DropIndicatorPosition.BelowItem:
             if isinstance(dropItem, WidgetFactory.TE_TransportTask_TreeWidgetItem):
                 move_accept = False
-        # event.setDropAction(Qt.DropAction.MoveAction)
-        # event.setMove
+
         if not move_accept:
             event.ignore()
-        # else:
-        #     event.accept()
+
         QTreeWidget.dragMoveEvent(self.ui.XMLStructureTreeWidget, event)
 
     def xml_structure_drop_event(self, event):
-        # print("drop event", event.source().currentItem())
         event.setDropAction(Qt.DropAction.MoveAction)
         QTreeWidget.dropEvent(self.ui.XMLStructureTreeWidget, event)
         # event.accept()
@@ -670,7 +668,6 @@ class Transport_Manager(QMainWindow):
         while iterator.value():
             
             item = iterator.value()
-            print("iterated item", type(item), item.text(0), item, item.parent())
             iterator += 1
             if isinstance(item, WidgetFactory.TE_TransportTask_TreeWidgetItem) and item.xml_object is not None:
                 item.xml_object.delete_child_items()
@@ -686,12 +683,13 @@ class Transport_Manager(QMainWindow):
                     if container_xml.description is not None and current_task_data is not None:
                         current_task_data.append(container_xml.description)
                     current_task_data.append(container_xml.data)
-
+            
         self.xml_structure_changed.emit()
 
     def reload_xml_structure(self):
         """ reload structure according to the xml structure data """
         self.ui.XMLStructureTreeWidget.clear()
+        self.xml_structure_widgets = []
         task_treewidget_item = None
         for task in self.transport_template.tasks:
             if task.task_class == "VI.Transport.ObjectTransport, VI.Transport":
@@ -699,7 +697,7 @@ class Transport_Manager(QMainWindow):
                     self, 
                     object_data=None, 
                     xml_object=task)
-                
+                self.xml_structure_widgets.append(task_treewidget_item)
                 for task_container_xml in task.task_containers:
                     container_element = object_container(
                         self, 
@@ -711,13 +709,14 @@ class Transport_Manager(QMainWindow):
                         xml_object=container_element)
                     
                     task_treewidget_item.addChild(object_container_widget)
+                    self.xml_structure_widgets.append(object_container_widget)
 
             if task.task_class == "VI.Transport.SQLTransport, VI.Transport":
                 task_treewidget_item = WidgetFactory.TE_SQLTransportTask_TreeWidgetItem(
                     self, 
                     object_data=None, 
                     xml_object=task)
-                
+                self.xml_structure_widgets.append(task_treewidget_item)
                 for task_container_xml in task.task_containers:
                     container_element = sql_script_container(
                         self,
@@ -729,10 +728,12 @@ class Transport_Manager(QMainWindow):
                             object_data=None, 
                             xml_object=container_element)
                         task_treewidget_item.addChild(object_container_widget)
-            
+                    self.xml_structure_widgets.append(object_container_widget)
+
             if task_treewidget_item is None:
                 task_treewidget_item = WidgetFactory.TE_TransportTask_TreeWidgetItem(
                     self, object_data=None, xml_object=task)
+                self.xml_structure_widgets.append(task_treewidget_item)
 
             if task_treewidget_item:
                 self.ui.XMLStructureTreeWidget.addTopLevelItem(task_treewidget_item)
@@ -746,26 +747,22 @@ class Transport_Manager(QMainWindow):
         self.xml_structure_changed.emit()
 
     def remove_selected_nodes(self):
-        tree_widgets = [self.ui.XMLStructureTreeWidget, self.ui.RelationsViewTreeWidget]
+        tree_widgets = [self.ui.XMLStructureTreeWidget]
         for tree_widget in tree_widgets:
             if tree_widget.hasFocus():
                 for node_widget in tree_widget.selectedItems():
-                    # if isinstance(node_widget, WidgetFactory.TemplateEditorTreeWidgetItem):
-                    #     node_widget.deleteObject()
-                    
                     if isinstance(node_widget, WidgetFactory.TemplateEditorTreeWidgetItem):
-                        node_widget.xml_object = None
+                        node_widget.deleteObject()
                     
+                    if node_widget in self.xml_structure_widgets:
+                        self.xml_structure_widgets.remove(node_widget)
                     parent_node = node_widget.parent()
                     
                     if parent_node:
                         parent_node.removeChild(node_widget)
                     else:
-                        index = tree_widget.indexOfTopLevelItem(node_widget)
-
-                        tree_widget.takeTopLevelItem(index)
-                        # root = tree_widget.invisibleRootItem()
-                        # root.removeChild(node_widget)
+                        root = tree_widget.invisibleRootItem()
+                        root.removeChild(node_widget)
         self.reset_xml_order()
         self.xml_structure_changed.emit()
 
@@ -801,6 +798,7 @@ class Transport_Manager(QMainWindow):
             
             self.load_table_relation_presets(source_widget.table_name)
 
+
     def add_transport_task(self, task_type):
         """ Create XML Node """
 
@@ -815,6 +813,7 @@ class Transport_Manager(QMainWindow):
             task_item = WidgetFactory.TE_TransportTask_TreeWidgetItem(self, task, task)
 
         self.ui.XMLStructureTreeWidget.addTopLevelItem(task_item)
+        self.xml_structure_widgets.append(task_item)
 
         self.xml_structure_changed.emit()
         return task_item
@@ -852,6 +851,8 @@ class Transport_Manager(QMainWindow):
 
                     task_item.addChild(object_container)
 
+                    self.xml_structure_widgets.append(object_container)
+
                     if add_without_relations:
                         object_container.set_all_relations_state(0)
                     
@@ -866,7 +867,6 @@ class Transport_Manager(QMainWindow):
             self.xml_structure_changed.emit()
 
     def edit_sql_script(self, source_widget_item):
-        # print(source_widget_item.script)
         dialog = DialogScreens.ScriptEditorDialog(self, source_widget_item.script)
         if dialog.exec():
             source_widget_item.set_script(dialog.script)
@@ -947,7 +947,6 @@ class Transport_Manager(QMainWindow):
             self.ui.RelationsViewTreeWidget.clear()
 
         tree_widgets = {}
-        # print(len(relations))
         if relations is None:
             return False
         

@@ -4,7 +4,8 @@ class transport_template_custom_object(object):
 
     def __init__(self, application, node_class, source_element=None):
         super(transport_template_custom_object, self).__init__()
-        self.application=application
+        self.application = application
+        self.parent = application
         self.data = None
 
         """ Node setup for new objects """
