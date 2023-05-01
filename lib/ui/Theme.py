@@ -9,6 +9,8 @@ class Application_Theme(QPalette):
     def __init__(self):
         QPalette.__init__(self)
 
+        self.highlight_color = QColor(201, 242, 222, 250)
+
         brush = QBrush(QColor(235, 235, 235))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.Base, brush)
@@ -25,7 +27,7 @@ class Application_Theme(QPalette):
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.Window, brush)
         
-        brush = QBrush(QColor(158, 176, 226, 80))
+        brush = QBrush(QColor(201, 242, 222, 120))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.Highlight, brush)
         
@@ -35,7 +37,7 @@ class Application_Theme(QPalette):
 
         brush = QBrush(QColor(220, 100, 100, 95))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
-        self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText,  brush)
+        self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText, brush)
         
         brush = QBrush(QColor(155, 155, 155))
         brush.setStyle(Qt.BrushStyle.SolidPattern)

@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt, QSettings, QTimer
 from PyQt6.QtWidgets import (
     QMainWindow, QApplication, QMenu, QHeaderView, 
     QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator, 
-    QFileDialog, QMessageBox, QLabel
+    QFileDialog, QMessageBox, QLabel, QTreeView
     )
 from PyQt6.QtGui import QShortcut, QKeySequence, QIcon
 
@@ -40,6 +40,8 @@ from lib.xml.transport_template_custom_object import transport_template_custom_o
 from lib.xml.object_container import object_container
 from lib.xml.sql_script_container import sql_script_container
 
+from lib.data.DataModels import PackageDefinitionModel
+
 VERSION = '0.4.5'
 XML_PREVIEW_TIMER = 100
         
@@ -48,6 +50,8 @@ class Transport_Manager(QMainWindow):
 
     refresh_widget = pyqtSignal(object)
     xml_structure_changed = pyqtSignal()
+    edit_definition = pyqtSignal(object)
+    start_task_execution = pyqtSignal(object)
     
     def __init__(
         self, parent=None, clipboard=None, event_filter=None, qapplication=None
@@ -62,6 +66,7 @@ class Transport_Manager(QMainWindow):
         window_icon = QIcon("./icon.ico")
         self.setWindowIcon(window_icon)
         self.color_theme = Application_Theme()
+        self.setPalette(self.color_theme)
 
         """ Connect UI signals """
         self.closeEvent = self.close_application
@@ -84,8 +89,8 @@ class Transport_Manager(QMainWindow):
         self.ui.AddAsSingleObjectsButton.clicked.connect(
             lambda: self.select_object_for_transport(add_without_relations=True))
         self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
-        self.ui.PackageViewTreeWidget.itemDoubleClicked.connect(self.load_package_definition)
         self.ui.actionNew_Transport_Template.triggered.connect(self.new_transport_template)
+        self.edit_definition.connect(self.edit_task_definition)
         
         """ UI Configurations """
         self.ui.XMLEditorWidget = WidgetFactory.CodeEditors.xml_editor(self)
@@ -96,10 +101,8 @@ class Transport_Manager(QMainWindow):
         self.ui.XMLEditorLayout.insertWidget(0, self.ui.current_file_label)
         self.ui.XMLEditorLayout.insertWidget(1, self.ui.XMLEditorWidget)
 
-        self.ui.PackageManagerSplitter_Left.setSizes(
-            [round(self.width()*0.2), round(self.width()*0.2)])
-        self.ui.PackageManagerSplitter_Right.setSizes(
-            [round(self.width()*0.5), round(self.width()*0.5)])
+        self.ui.PackageManagerSplitter.setSizes(
+            [round(self.width()*0.2), round(self.width()*0.4)])
 
         self.ui.TemplateEditorSplitter_Search.setSizes(
             [round(self.height()*0.1), round(self.height()*0.3)])
@@ -131,14 +134,26 @@ class Transport_Manager(QMainWindow):
         self.ui.FindObjectButton.setEnabled(False)
         self.ui.TableComboBox.setEnabled(False)
 
+
+        self.ui.PackageViewTreeView.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.ui.PackageViewTreeView.setDragEnabled(True)
+        self.ui.PackageViewTreeView.setAcceptDrops(True)
+        self.ui.PackageViewTreeView.setDropIndicatorShown(True)
+        self.ui.PackageViewTreeView.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
+        self.ui.PackageViewTreeView.setUniformRowHeights(True)
+        self.ui.PackageViewTreeView.setAlternatingRowColors(True)
+        self.ui.PackageViewTreeView.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+
+        self.ui.PackageManagerTabWidget.setTabsClosable(True)
+
         """ Context Menu """
         self.ui.RelationsViewTreeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.ui.XMLStructureTreeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.ui.PackageViewTreeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.ui.PackageViewTreeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
         self.ui.RelationsViewTreeWidget.customContextMenuRequested.connect(self.relation_context_menu)
         self.ui.XMLStructureTreeWidget.customContextMenuRequested.connect(self.xml_structure_context_menu)
-        self.ui.PackageViewTreeWidget.customContextMenuRequested.connect(self.package_definition_context_menu)
+        self.ui.PackageViewTreeView.customContextMenuRequested.connect(self.package_definition_context_menu)
 
         self.xml_structure_changed.connect(self.reload_xml_preview)
         self.xml_preview_timer = QTimer(self)
@@ -188,6 +203,7 @@ class Transport_Manager(QMainWindow):
 
         """ Initial transport template object """
         self.new_transport_template()
+        self.load_workdir("C:/Users/m40/Downloads/transport manager test")
 
     def refresh_ui(self):
         """ UI style scheme """
@@ -201,6 +217,8 @@ class Transport_Manager(QMainWindow):
             self.restoreState(self.settings.value("windowState"))
 
         self.load_workdir()
+        tabwidget = WidgetFactory.ExecutionPlannerWidget(self)
+        self.ui.PackageManagerTabWidget.addTab(tabwidget, "Execution Planner")
 
     """ Database Session Management """
 
@@ -237,45 +255,41 @@ class Transport_Manager(QMainWindow):
             self.load_workdir(file_path)
     
     def load_workdir(self, workdir=None):
+        print(workdir)
         if workdir is None and self.current_workdir is not None:
             workdir = self.current_workdir
+        
         if workdir is None:
             return False
+
+        self.current_workdir = workdir
         workdir_path = Path(workdir).absolute()
-        # self.ui.PackageViewTreeWidget.setColumnCount(2)
-        self.ui.PackageViewTreeWidget.clear()
-        folders = {}
-        for file_path in Path(workdir).rglob( '*.xml' ):
-            
-            parent_paths = file_path.parents
-            
-            folder = None
-            for parent in parent_paths:
-                parent_path = parent.absolute()
-                if parent.is_dir() and workdir_path < parent_path:
-                    if parent_path not in folders.keys():
-                        folder = WidgetFactory.PackageManagerXMLFolder(self, parent)
-                        folder.setData(1, Qt.ItemDataRole.InitialSortOrderRole, 10)
-                        folders[parent_path] = folder
-
+        definitions = []
+        for file_path in Path(workdir).rglob( '*.json' ):
             if file_path.is_file():
-                file_widget = WidgetFactory.PackageManagerXMLFile(self, file_path)
-                file_widget.setData(1, Qt.ItemDataRole.InitialSortOrderRole, 20)
-                parent_folder = folders.get(file_path.parent.absolute(), None)
-                if parent_folder:
-                    parent_folder.addChild(file_widget)
-                else:
-                    self.ui.PackageViewTreeWidget.addTopLevelItem(file_widget)
+                feature_definition_location = file_path.parent.relative_to(workdir_path)
+                task_definitions_location = str(feature_definition_location) +  "/Export"
+                json_content = self.load_file(file_path.absolute())
+                package_definition = json.loads(json_content)
+                package_definition["task_definitions_location"] = task_definitions_location
+                definitions.append(package_definition)
+        definitions_sorted = sorted(
+                    definitions, 
+                    key=lambda d: (d['FeatureName'])
+                    )
+        data_model =  PackageDefinitionModel(parent=self.ui.PackageViewTreeView, data=definitions_sorted)
+        self.ui.PackageViewTreeView.setModel(data_model)
+        packageViewDelegate = WidgetFactory.PackageManager.PackageViewDelegate(
+            model_data=data_model, 
+            application=self, 
+            parent=self.ui.PackageViewTreeView)
+        self.ui.PackageViewTreeView.setItemDelegate(packageViewDelegate)
 
-        for folder_path, folder_widget in folders.items():
-            parent_widget = folders.get(folder_widget.parent_directory, None)
-            if parent_widget:
-                parent_widget.addChild(folder_widget)
-            else:
-                self.ui.PackageViewTreeWidget.addTopLevelItem(folder_widget)
-
-        self.ui.PackageViewTreeWidget.sortByColumn(0, Qt.SortOrder.AscendingOrder)
-        self.ui.MainTabWidget.setCurrentWidget(self.ui.MainTabWidget_Transport_Package)
+    def load_file(self, file_path):
+        file_content = ""
+        with open(file_path, 'r') as f:
+            file_content = f.read()
+        return file_content
 
     def open_file(self, file_path=None):
         if file_path is None:
@@ -345,14 +359,29 @@ class Transport_Manager(QMainWindow):
             self.open_file(source_widget.path)
 
     def package_definition_context_menu(self, menuPosition):
-        clickedItem = self.ui.PackageViewTreeWidget.itemAt(menuPosition)
+        clickedIndex = self.ui.PackageViewTreeView.indexAt(menuPosition)
+        clickedItem = clickedIndex.internalPointer()
         if clickedItem:
             contextMenu = WidgetFactory.package_definition_context_menu(self, clickedItem)
-            menu_target = self.ui.PackageViewTreeWidget.mapToGlobal(menuPosition)
+            menu_target = self.ui.PackageViewTreeView.mapToGlobal(menuPosition)
 
             contextMenu.add_package_definition.connect(self.add_package_definition)
+            contextMenu.add_task_definition.connect(self.add_task_definition)
+            contextMenu.edit_task_definition.connect(self.edit_task_definition)
             if len(contextMenu.menu_items) > 0:
                 contextMenu.popup(menu_target)
+
+    def add_task_definition(self, source_item):
+        print("add task definition for", source_item)
+
+    def edit_task_definition(self, source_item):
+        definitions_location = source_item.parent().data("task_definitions_location")
+        definition_file = source_item.data("DefinitionFile")
+        xml_definition = f"{self.current_workdir}/{definitions_location}/{definition_file}"
+        
+        xml_file_location = xml_definition
+
+        self.open_file(xml_file_location)
 
     """ Session Data Management """
 

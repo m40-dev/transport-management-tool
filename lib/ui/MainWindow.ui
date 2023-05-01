@@ -27,7 +27,7 @@
     <property name="bottomMargin">
      <number>2</number>
     </property>
-    <item row="0" column="0">
+    <item row="0" column="1">
      <widget class="QTabWidget" name="MainTabWidget">
       <property name="tabPosition">
        <enum>QTabWidget::West</enum>
@@ -36,7 +36,7 @@
        <enum>QTabWidget::Rounded</enum>
       </property>
       <property name="currentIndex">
-       <number>1</number>
+       <number>0</number>
       </property>
       <property name="documentMode">
        <bool>true</bool>
@@ -51,155 +51,84 @@
        <attribute name="title">
         <string>Transport Package Manager</string>
        </attribute>
-       <layout class="QGridLayout" name="gridLayout_2" rowstretch="0,1">
-        <property name="leftMargin">
-         <number>2</number>
-        </property>
-        <property name="topMargin">
-         <number>2</number>
-        </property>
-        <property name="rightMargin">
-         <number>2</number>
-        </property>
-        <property name="bottomMargin">
-         <number>2</number>
-        </property>
-        <property name="spacing">
-         <number>2</number>
-        </property>
-        <item row="0" column="0">
-         <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,1,1">
-          <property name="spacing">
-           <number>2</number>
-          </property>
-          <item>
-           <widget class="QCommandLinkButton" name="Task_EditTransportTemplateDefinition">
-            <property name="text">
-             <string>Edit Transport Template Definition</string>
-            </property>
-            <property name="description">
-             <string>Open the selected XML package in the transport template editor tab.</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCommandLinkButton" name="Task_ExportTransportPackage">
-            <property name="text">
-             <string>Export Transport Package</string>
-            </property>
-            <property name="description">
-             <string>Export Transport Package from the selected environment.</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCommandLinkButton" name="Task_InstallTransportPackage">
-            <property name="text">
-             <string>Install Transport Package</string>
-            </property>
-            <property name="description">
-             <string>Install Transport Package in the selected environment.</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item row="1" column="0">
-         <widget class="QSplitter" name="PackageManagerSplitter_Right">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="1">
+         <widget class="QSplitter" name="PackageManagerSplitter">
           <property name="orientation">
            <enum>Qt::Horizontal</enum>
           </property>
-          <widget class="QSplitter" name="PackageManagerSplitter_Left">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
-             <horstretch>1</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="orientation">
-            <enum>Qt::Horizontal</enum>
-           </property>
-           <widget class="QWidget" name="verticalLayoutWidget_5">
-            <layout class="QVBoxLayout" name="verticalLayout_5">
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayout_4">
-               <item>
-                <widget class="QLineEdit" name="SearchPackageLineEdit">
-                 <property name="toolTip">
-                  <string>Search Transport Package</string>
-                 </property>
-                 <property name="toolTipDuration">
-                  <number>1</number>
-                 </property>
-                 <property name="placeholderText">
-                  <string>Search Transport Package</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QToolButton" name="AddPackageButton">
-                 <property name="text">
-                  <string>Add</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <widget class="QTreeWidget" name="PackageViewTreeWidget">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-                 <horstretch>5</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="alternatingRowColors">
-                <bool>true</bool>
-               </property>
-               <property name="wordWrap">
-                <bool>true</bool>
-               </property>
-               <attribute name="headerVisible">
-                <bool>false</bool>
-               </attribute>
-               <column>
-                <property name="text">
-                 <string notr="true">1</string>
-                </property>
-               </column>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-           <widget class="QTreeWidget" name="PackageDefinitionTreeWidget">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-              <horstretch>10</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
+          <widget class="QWidget" name="verticalLayoutWidget_5">
+           <layout class="QVBoxLayout" name="verticalLayout_5">
+            <property name="spacing">
+             <number>2</number>
             </property>
-            <attribute name="headerVisible">
-             <bool>false</bool>
-            </attribute>
-            <column>
-             <property name="text">
-              <string notr="true">1</string>
-             </property>
-            </column>
-           </widget>
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <property name="bottomMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <item>
+               <widget class="QLineEdit" name="SearchPackageLineEdit">
+                <property name="toolTip">
+                 <string>Search Transport Package</string>
+                </property>
+                <property name="toolTipDuration">
+                 <number>1</number>
+                </property>
+                <property name="placeholderText">
+                 <string>Search Transport Package</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="FindPackageButton">
+                <property name="text">
+                 <string>Find</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QToolButton" name="AddPackageButton">
+                <property name="text">
+                 <string>Add</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="QTreeView" name="PackageViewTreeView">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                <horstretch>5</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="alternatingRowColors">
+               <bool>true</bool>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+              <attribute name="headerDefaultSectionSize">
+               <number>39</number>
+              </attribute>
+             </widget>
+            </item>
+           </layout>
           </widget>
-          <widget class="QPlainTextEdit" name="PackageDefinitionTextEdit">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-             <horstretch>3</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
+          <widget class="QTabWidget" name="PackageManagerTabWidget">
+           <property name="currentIndex">
+            <number>-1</number>
+           </property>
+           <property name="tabsClosable">
+            <bool>false</bool>
+           </property>
+           <property name="movable">
+            <bool>true</bool>
            </property>
           </widget>
          </widget>
@@ -699,6 +628,7 @@
     <property name="title">
      <string>Menu</string>
     </property>
+    <addaction name="actionNew_Transport_Template"/>
     <addaction name="actionOpen_File"/>
     <addaction name="actionSaveFile"/>
     <addaction name="actionSave_As"/>
@@ -720,16 +650,8 @@
     <addaction name="actionAdd_DatabaseConnection"/>
     <addaction name="separator"/>
    </widget>
-   <widget class="QMenu" name="menuNew">
-    <property name="title">
-     <string>New</string>
-    </property>
-    <addaction name="actionNew_Transport_Template"/>
-    <addaction name="separator"/>
-   </widget>
    <addaction name="menuMenu"/>
    <addaction name="menuConnections"/>
-   <addaction name="menuNew"/>
    <addaction name="menuAbout"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>

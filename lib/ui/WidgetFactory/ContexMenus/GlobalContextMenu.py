@@ -82,20 +82,37 @@ class xml_structure_context_menu(QMenu):
             action_add_sql_task = transport_menu.addAction("Add SQL Transport Task")
             action_add_sql_task.triggered.connect(lambda: self.add_transport_task.emit("VI.Transport.SQLTransport, VI.Transport"))
 
+
 class package_definition_context_menu(QMenu):
     """ Custom QMenu used to manage relation items """
     
     add_package_definition = pyqtSignal(object)
+    add_task_definition = pyqtSignal(object)
+    edit_task_definition = pyqtSignal(object)
 
-    def __init__(self, parent, source_widget):
+
+    def __init__(self, parent, source_item):
         super(package_definition_context_menu, self).__init__(parent)
         self.parent = parent
 
         self.menu_items = []
 
-        if source_widget:
-            if isinstance(source_widget, PackageManagerXMLFolder):
-                action_add_package_definition = self.addAction("Add Package Definition")
-                action_add_package_definition.triggered.connect(lambda: self.add_package_definition.emit(source_widget) )
 
-                self.menu_items.append(action_add_package_definition)
+        action_add_package_definition = self.addAction("Add Package Definition")
+        action_add_package_definition.triggered.connect(lambda: self.add_package_definition.emit(source_item) )
+
+        if source_item:
+            print(source_item.task_class)
+        if source_item.task_class == "PackageDefinition":
+            action_add_task_definition = self.addAction("Add Task Definition")
+            action_add_task_definition.triggered.connect(lambda: self.add_task_definition.emit(source_item) )
+            self.menu_items.append(action_add_task_definition)
+
+        if source_item.task_class == "TaskItem":
+            action_edit_task_definition = self.addAction("Edit Task Definition")
+            action_edit_task_definition.triggered.connect(lambda: self.edit_task_definition.emit(source_item) )
+            self.menu_items.append(action_edit_task_definition)
+
+        self.menu_items.append(action_add_package_definition)
+            
+            
