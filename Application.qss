@@ -16,6 +16,7 @@ QPlainTextEdit, QTextEdit, QComboBox{
 	border-radius: 2px;
 	min-height: 1.7em;
 	margin: 2px;
+	min-width: 10em;
 }
 
 QLineEdit, QComboBox{
@@ -284,6 +285,7 @@ QLabel[ExecutionPlannerWidget="ItemLabel"]{
 	font-size: 13px;
 	color: #333;
 	font: bold;
+	margin-right: 2em;
 }
 
 QLabel[ExecutionPlannerWidget="ItemDescription"]{

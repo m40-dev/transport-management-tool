@@ -1,74 +1,52 @@
-from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView, QTextEdit, QSplitter
+from PyQt6.QtCore import Qt, pyqtSignal
 from lib.data.DataModels import TaskExecutionModel
 from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
-
+from .ExecutionPlannerProcessRunner import ProcessRunner
 class ExecutionPlannerWidget(QWidget):
+    
+
     def __init__(self, parent):
         super(ExecutionPlannerWidget, self).__init__()
 
         self.parent = parent
         self.application = parent
+        self.ProcessRunner = ProcessRunner(self)
+        self.ProcessRunner.message.connect(self.log_message)
 
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(4, 4, 4, 4)
         self.layout.setSpacing(4)
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        self.treeview = QTreeView()
+        splitter = QSplitter(Qt.Orientation.Vertical)
 
-        self.layout.addWidget(self.treeview, 0, 0, 1, 1)
+        self.treeview = QTreeView()
+        self.console = QTextEdit()
+
+        splitter.addWidget(self.treeview)
+        splitter.addWidget(self.console)
+        splitter.setSizes([100, 30])
+
+        self.layout.addWidget(splitter, 0, 0, 1, 1)
+
+        self.console.hide()
+
 
         data = [
             {
                 "Name": "Group 1",
                 "objectclass": "TaskGroup",
-                "Description": "This Group have a description which might help organize things around. This Group have a description which might help organize things around.",
+                "Description": "This Group have a description which might help organize things around.",
                 "Tasks": [
-                        {
-                            "TaskName": "Task 1 Name",
-                            "Order": 30,
-                            "TaskType": "Transport/Schema/SQL/FeatureUpdate",
-                            "DefinitionFile": "xml_template_filename.xml",
-                            "ExportFile": "target_filename.zip",
-                            "ExportFileHash": "",
-                            "State": "Development",
-                            "CompilerOption": "None/Full/NoWeb",
-                            "Environment": "Any",
-                            "AutoUpdate": "False",
-                            "TestScript": ""
-                        },
-                        {
-                            "TaskName": "Task 2 Name",
-                            "Order": 40,
-                            "TaskType": "Transport/Schema/SQL/FeatureUpdate",
-                            "DefinitionFile": "xml_template_filename.xml",
-                            "ExportFile": "target_filename.zip",
-                            "ExportFileHash": "",
-                            "State": "Development",
-                            "CompilerOption": "None/Full/NoWeb",
-                            "Environment": "Any",
-                            "AutoUpdate": "False",
-                            "TestScript": ""
-                        }
+                        
                 ]
             },
             {
                 "Name": "Group 2",
                 "objectclass": "TaskGroup",
                 "Tasks": [
-                        {
-                            "Name": "Task 3",
-                            "Type": "Import",
-                            "objectclass": "TaskItem",
-                            "Description": "Import task 3 Description"
-                        },
-                    {
-                            "Name": "Task 4",
-                            "objectclass": "TaskItem",
-                            "Type": "Export",
-                            "Description": "Export task 4 Description"
-                        }
+                       
                 ]
             }
         ]
@@ -76,7 +54,16 @@ class ExecutionPlannerWidget(QWidget):
         self.model_data = TaskExecutionModel(data)
         self.treeview.setModel(self.model_data)
 
-        custom_item_delegate = ExecutionPlannerDelegate(self.model_data, parent=self.treeview)
+        custom_item_delegate = ExecutionPlannerDelegate(
+            model_data=self.model_data, 
+            parent=self.treeview, 
+            application=self.application, 
+            planner_widget=self
+            )
+        
+        custom_item_delegate.start_single_task_execution.connect(self.run_planner_task)
+        custom_item_delegate.start_group_task_execution.connect(self.run_planner_tasks_group)
+
         self.treeview.setItemDelegate(custom_item_delegate)
 
         self.treeview.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -99,8 +86,30 @@ class ExecutionPlannerWidget(QWidget):
         # section_width = round(self.treeview.viewport().width() / view_header.count()) * 1.5
         # for i in range(0, view_header.count()):
         #     self.treeview.setColumnWidth(i, section_width)
+
+    def run_planner_task(self, task_item):
+        print("start tasks", task_item)
+        self.ProcessRunner.start_process(task_item)
+        self.console.show()
+        
+    def run_planner_tasks_group(self, task_item):
+        self.console.show()
+        for child_task in task_item._children:
+            if child_task.task_class == "TaskItem":
+                self.ProcessRunner.start_process(child_task)
+        
+
+    def log_message(self, message, severity=None):
+        if len(message.strip()) == 0:
+            return False
+        if severity:
+            self.console.append(f"[{severity}]:{message.strip()}")
+        else:
+            self.console.append(message.strip())
+    
     def changeData(self, col, row):
         print("data changed in ", col, row)
+
     def dragMoveEvent(self, event):
         move_accept = False
         source_index = event.source().currentIndex()

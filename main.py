@@ -51,7 +51,6 @@ class Transport_Manager(QMainWindow):
     refresh_widget = pyqtSignal(object)
     xml_structure_changed = pyqtSignal()
     edit_definition = pyqtSignal(object)
-    start_task_execution = pyqtSignal(object)
     
     def __init__(
         self, parent=None, clipboard=None, event_filter=None, qapplication=None
@@ -91,6 +90,7 @@ class Transport_Manager(QMainWindow):
         self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
         self.ui.actionNew_Transport_Template.triggered.connect(self.new_transport_template)
         self.edit_definition.connect(self.edit_task_definition)
+        # self.start_task_execution.connect(self.run_task)
         
         """ UI Configurations """
         self.ui.XMLEditorWidget = WidgetFactory.CodeEditors.xml_editor(self)
@@ -164,6 +164,10 @@ class Transport_Manager(QMainWindow):
         self.current_file = None
         self.xml_structure_widgets = []
 
+        planner_menu = self.ui.menubar.addMenu("Execution Planner")
+        config_action = planner_menu.addAction("Configure")
+        config_action.triggered.connect(self.configure_execution_planner)
+
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.remove_selected_nodes)
         QShortcut(QKeySequence.StandardKey.Refresh, self, self.refresh_ui)
@@ -203,7 +207,6 @@ class Transport_Manager(QMainWindow):
 
         """ Initial transport template object """
         self.new_transport_template()
-        self.load_workdir("C:/Users/m40/Downloads/transport manager test")
 
     def refresh_ui(self):
         """ UI style scheme """
@@ -384,6 +387,14 @@ class Transport_Manager(QMainWindow):
         self.open_file(xml_file_location)
 
     """ Session Data Management """
+
+    def configure_execution_planner(self):
+        configuration = self.settings.value("ExecutionPlannerSettings")
+        new_configuration = WidgetFactory.DialogScreens.ExecutionPlannerConfigDialog(self)
+        new_configuration.setupForm(configuration)
+        if new_configuration.exec():
+            new_config_data = new_configuration.to_dict
+            self.settings.setValue("ExecutionPlannerSettings", new_config_data)
 
     def get_encryption_key(self, initial=False):
         encryption_key = DialogScreens.EncryptionKeyDialog(self, initial)

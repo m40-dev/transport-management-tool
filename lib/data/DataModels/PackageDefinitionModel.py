@@ -21,9 +21,6 @@ class PackageDefinitionItem(JSONDataItem):
         if child_tasks:
             for task_object in child_tasks:
                 task_class = task_object.get("objectclass", "TaskItem")
-                # if not task_class:
-                #     print("Mandatory task object attribute missing: objectclass")
-                #     continue
 
                 task_item = PackageDefinitionItem(task_class, task_object, parent=self)
                 self.addChild(task_item)
@@ -44,5 +41,7 @@ class PackageDefinitionItem(JSONDataItem):
         self._task_data['uid'] = self.uid
         self._task_data['objectclass'] = self.task_class
         self._task_data['row'] = self.row()
+        if self.parent().task_class == "PackageDefinition":
+            self._task_data['FeatureName'] = self.parent().data("FeatureName")
     
         return(self._task_data)

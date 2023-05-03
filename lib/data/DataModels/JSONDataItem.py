@@ -61,6 +61,7 @@ class JSONDataItem(QObject):
 
     def removeChild(self, row):
         if row >= 0 and row < len(self._children):
+            print(self._children)
             return self._children.pop(row)
 
     def removeItem(self):

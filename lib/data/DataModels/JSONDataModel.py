@@ -179,7 +179,6 @@ class JSONDataModel(QAbstractItemModel):
                 self.beginRemoveRows(parentIndex, item.row(), item.row())
                 item.removeItem()
                 self.endRemoveRows()
-                
         return True
 
     def dragEnterEvent(self, event):
