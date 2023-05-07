@@ -42,7 +42,7 @@ from lib.xml.sql_script_container import sql_script_container
 
 from lib.data.DataModels import PackageDefinitionModel
 
-VERSION = '0.4.5'
+VERSION = '0.4.6'
 XML_PREVIEW_TIMER = 100
         
 class Transport_Manager(QMainWindow):
@@ -90,7 +90,7 @@ class Transport_Manager(QMainWindow):
         self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
         self.ui.actionNew_Transport_Template.triggered.connect(self.new_transport_template)
         self.edit_definition.connect(self.edit_task_definition)
-        # self.start_task_execution.connect(self.run_task)
+        self.ui.PackageManagerTabWidget.tabCloseRequested.connect(self.close_tab)
         
         """ UI Configurations """
         self.ui.XMLEditorWidget = WidgetFactory.CodeEditors.xml_editor(self)
@@ -165,8 +165,11 @@ class Transport_Manager(QMainWindow):
         self.xml_structure_widgets = []
 
         planner_menu = self.ui.menubar.addMenu("Execution Planner")
+        new_plan_action = planner_menu.addAction("Add New Plan")
         config_action = planner_menu.addAction("Configure")
+
         config_action.triggered.connect(self.configure_execution_planner)
+        new_plan_action.triggered.connect(self.new_execution_plan)
 
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.remove_selected_nodes)
@@ -220,9 +223,34 @@ class Transport_Manager(QMainWindow):
             self.restoreState(self.settings.value("windowState"))
 
         self.load_workdir()
-        tabwidget = WidgetFactory.ExecutionPlannerWidget(self)
-        self.ui.PackageManagerTabWidget.addTab(tabwidget, "Execution Planner")
+        
 
+    """ Execution Planner """
+    def configure_execution_planner(self):
+        configuration = self.settings.value("ExecutionPlannerSettings")
+        new_configuration = WidgetFactory.DialogScreens.ExecutionPlannerConfigDialog(self)
+        new_configuration.setupForm(configuration)
+        if new_configuration.exec():
+            new_config_data = new_configuration.to_dict
+            self.settings.setValue("ExecutionPlannerSettings", new_config_data)
+    
+    def new_execution_plan(self):
+        tabwidget = WidgetFactory.ExecutionPlannerWidget(self)
+        tabwidget.planner_name_changed.connect(self.update_planner_tab_name)
+        self.ui.PackageManagerTabWidget.addTab(tabwidget, "New Execution Plan...")
+
+    def update_planner_tab_name(self, planner_widget):
+        index = self.ui.PackageManagerTabWidget.indexOf(planner_widget)
+        planner_name = planner_widget.name
+        self.ui.PackageManagerTabWidget.setTabText(index, planner_name)
+
+    def close_tab(self, index):
+        print("close tab")
+        tab_widget = self.ui.PackageManagerTabWidget.widget(index)
+        tab_widget.parent = None
+        tab_widget.deleteLater()
+        self.ui.PackageManagerTabWidget.removeTab(index)
+    
     """ Database Session Management """
 
     def connect_database(self, session_name):
@@ -290,7 +318,7 @@ class Transport_Manager(QMainWindow):
 
     def load_file(self, file_path):
         file_content = ""
-        with open(file_path, 'r') as f:
+        with open(file_path, 'rb') as f:
             file_content = f.read()
         return file_content
 
@@ -387,14 +415,6 @@ class Transport_Manager(QMainWindow):
         self.open_file(xml_file_location)
 
     """ Session Data Management """
-
-    def configure_execution_planner(self):
-        configuration = self.settings.value("ExecutionPlannerSettings")
-        new_configuration = WidgetFactory.DialogScreens.ExecutionPlannerConfigDialog(self)
-        new_configuration.setupForm(configuration)
-        if new_configuration.exec():
-            new_config_data = new_configuration.to_dict
-            self.settings.setValue("ExecutionPlannerSettings", new_config_data)
 
     def get_encryption_key(self, initial=False):
         encryption_key = DialogScreens.EncryptionKeyDialog(self, initial)
@@ -787,24 +807,36 @@ class Transport_Manager(QMainWindow):
         self.xml_structure_changed.emit()
 
     def remove_selected_nodes(self):
-        tree_widgets = [self.ui.XMLStructureTreeWidget]
-        for tree_widget in tree_widgets:
-            if tree_widget.hasFocus():
-                for node_widget in tree_widget.selectedItems():
-                    if isinstance(node_widget, WidgetFactory.TemplateEditorTreeWidgetItem):
-                        node_widget.deleteObject()
-                    
-                    if node_widget in self.xml_structure_widgets:
-                        self.xml_structure_widgets.remove(node_widget)
-                    parent_node = node_widget.parent()
-                    
-                    if parent_node:
-                        parent_node.removeChild(node_widget)
-                    else:
-                        root = tree_widget.invisibleRootItem()
-                        root.removeChild(node_widget)
-        self.reset_xml_order()
-        self.xml_structure_changed.emit()
+        if self.ui.MainTabWidget.currentWidget() == self.ui.MainTabWidget_Transport_Template_Editor:
+            tree_widgets = [self.ui.XMLStructureTreeWidget]
+            for tree_widget in tree_widgets:
+                self.remove_tree_widget_selected_node(tree_widget)
+        
+        if self.ui.MainTabWidget.currentWidget() == self.ui.MainTabWidget_Transport_Package:
+            current_widget = self.ui.PackageManagerTabWidget.currentWidget()
+            current_widget.remove_selected_items()
+        
+
+    def remove_tree_widget_selected_node(self, tree_widget):
+        if tree_widget.hasFocus():
+            for node_widget in tree_widget.selectedItems():
+                if isinstance(node_widget, WidgetFactory.TemplateEditorTreeWidgetItem):
+                    node_widget.deleteObject()
+                
+                if node_widget in self.xml_structure_widgets:
+                    self.xml_structure_widgets.remove(node_widget)
+                parent_node = node_widget.parent()
+                
+                if parent_node:
+                    parent_node.removeChild(node_widget)
+                else:
+                    root = tree_widget.invisibleRootItem()
+                    root.removeChild(node_widget)
+
+            if tree_widget == self.ui.XMLStructureTreeWidget:
+                self.reset_xml_order()
+                self.xml_structure_changed.emit()
+
 
     def clear_widgets(self):
         self.ui.TableComboBox.clear()

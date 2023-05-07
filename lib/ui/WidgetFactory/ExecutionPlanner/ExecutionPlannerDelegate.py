@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButto
 from PyQt6.QtCore import Qt, QRectF, pyqtSignal
 from PyQt6.QtGui import QPalette, QPen, QPainterPath 
 from lib.ui.Theme import Application_Theme
+from lib.ui.WidgetFactory.PackageManager.PackageViewDelegate import PackageDefinitionWidget
 
 class ExecutionPlannerDelegate(QStyledItemDelegate):
     start_single_task_execution = pyqtSignal(object)
@@ -29,13 +30,19 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
             editor.start_task_execution.connect(self.start_group_task_execution)
             return editor
 
+        if column_name == "Actions" and item.task_class == "PackageDefinition":
+            editor = PackageDefinitionWidget(data_item=item, parent=self.parent(), application=self.application)
+            # editor.start_task_execution.connect(self.start_group_task_execution)
+            return editor
+        
+
         return super().createEditor(parent, option, index)
 
     def setEditorData(self, editor, index):
         column_name = self.model_data.headerData(index.column())
         item = index.internalPointer()
         
-        if column_name == "Actions" and item.task_class in ["TaskItem", "TaskGroup"]:
+        if column_name == "Actions" and item.task_class in ["TaskItem", "TaskGroup", "PackageDefinition"]:
             viewport = self.parent().viewport()
             editor.setParent(viewport)
         else:
@@ -56,7 +63,7 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
         column_name = self.model_data.headerData(index.column())
         item = index.internalPointer()
 
-        if column_name == "Actions" and item.task_class in ["TaskItem", "TaskGroup"]:
+        if column_name == "Actions" and item.task_class in ["TaskItem", "TaskGroup", "PackageDefinition"]:
             widget = self.parent().indexWidget(index)
             if not widget:
                 widget = self.createEditor(self.parent(), option, index)
@@ -118,6 +125,7 @@ class ExecutionPlannerItem(QFrame):
         self.layout.addWidget(self.element_label, 0, 0, 1, 2)
         self.layout.addWidget(self.element_description, 1, 0, 1, 4)
         self.layout.addWidget(self.button1, 0, 4)
+        self.data_item.data_changed.connect(self.refresh_data)
         self.refresh_data()
 
         self.button1.clicked.connect(self.start_task)

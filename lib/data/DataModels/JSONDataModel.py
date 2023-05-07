@@ -45,7 +45,7 @@ class JSONDataModel(QAbstractItemModel):
         column_name = self.headerData(column)
         item.setData(column_name, value)
         self.dataChanged.emit(index, index)
-        self.exportModelToJson()
+        # self.exportModelToJson()
         return False
 
     def flags(self, index):
@@ -157,29 +157,47 @@ class JSONDataModel(QAbstractItemModel):
             newTask = self.modelDataClass(task_class, dropped_item, parentItem)
             newItems.append(newTask)
         
-        if row == -1 and column == -1:
-            row = parentItem.childCount()
+        # if row == -1 and column == -1:
+        #     row = parentItem.childCount()
         
-        self.beginInsertRows(parentIndex, row, (row + len(newItems)-1) )
-        parentItem.insertChildren(row, newItems)
-        self.endInsertRows()
+        # self.beginInsertRows(parentIndex, row, (row + len(newItems)-1) )
+        # parentItem.insertChildren(row, newItems)
+        # self.endInsertRows()
+        self.insert_items(parentIndex, newItems, row, column)
 
         for dropped_guid in dropped_guids:
             item = self.find_item_by_attribute("uid", dropped_guid)
+            # print(dropped_guid, item)
             if item:
-                
-                item_parent = item.parent()
-                parent_row = item_parent.row()
-
-                if item_parent == self.rootItem or parent_row is None:
-                    parentIndex = QModelIndex()
-                else:
-                    parentIndex = self.createIndex(parent_row, 0, item_parent)
-
-                self.beginRemoveRows(parentIndex, item.row(), item.row())
-                item.removeItem()
-                self.endRemoveRows()
+                self.remove_item(item)
+        # self.exportModelToJson()
         return True
+
+    def insert_items(self, parentIndex, list_of_items, row=-1, column=-1):
+        parentItem = self.rootItem
+
+        if parentIndex.isValid():
+            parentItem = parentIndex.internalPointer()
+
+        if row == -1 and column == -1:
+            row = parentItem.childCount()
+            column = 0
+        self.beginInsertRows(parentIndex, row, (row + len(list_of_items)-1) )
+        parentItem.insertChildren(row, list_of_items)
+        self.endInsertRows()
+
+    def remove_item(self, jsondataitem):
+        item_parent = jsondataitem.parent()
+        parent_row = item_parent.row()
+
+        if item_parent == self.rootItem or parent_row is None:
+            parentIndex = QModelIndex()
+        else:
+            parentIndex = self.createIndex(parent_row, 0, item_parent)
+
+        self.beginRemoveRows(parentIndex, jsondataitem.row(), jsondataitem.row())
+        jsondataitem.removeItem()
+        self.endRemoveRows()
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasFormat("application/vnd.jsondataitem"):

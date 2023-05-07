@@ -1,10 +1,14 @@
-from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView, QTextEdit, QSplitter
+from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView, QTextEdit, QSplitter, QLineEdit, QLabel
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QShortcut, QKeySequence
+from lib.ui.WidgetFactory import ExecutionPlannerContextMenu
 from lib.data.DataModels import TaskExecutionModel
 from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
 from .ExecutionPlannerProcessRunner import ProcessRunner
+from lib.ui.WidgetFactory import ExecutionPlannerGroupDialog
+
 class ExecutionPlannerWidget(QWidget):
-    
+    planner_name_changed = pyqtSignal(object)
 
     def __init__(self, parent):
         super(ExecutionPlannerWidget, self).__init__()
@@ -18,9 +22,11 @@ class ExecutionPlannerWidget(QWidget):
         self.layout.setContentsMargins(4, 4, 4, 4)
         self.layout.setSpacing(4)
         self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.setProperty("TabWidget", "ExecutionPlanner")
 
         splitter = QSplitter(Qt.Orientation.Vertical)
-
+        planner_label = QLabel("Planner Name")
+        self.planner_name = QLineEdit("New Execution Plan...")
         self.treeview = QTreeView()
         self.console = QTextEdit()
 
@@ -28,25 +34,19 @@ class ExecutionPlannerWidget(QWidget):
         splitter.addWidget(self.console)
         splitter.setSizes([100, 30])
 
-        self.layout.addWidget(splitter, 0, 0, 1, 1)
+        self.layout.addWidget(planner_label, 0, 0, 1, 1)
+        self.layout.addWidget(self.planner_name, 0, 1, 1, 1)
+        self.layout.addWidget(splitter, 1, 0, 1, 2)
+        self.planner_name.textChanged.connect(lambda: self.planner_name_changed.emit(self))
 
         self.console.hide()
-
 
         data = [
             {
                 "Name": "Group 1",
                 "objectclass": "TaskGroup",
-                "Description": "This Group have a description which might help organize things around.",
-                "Tasks": [
-                        
-                ]
-            },
-            {
-                "Name": "Group 2",
-                "objectclass": "TaskGroup",
-                "Tasks": [
-                       
+                "Description": "Default Execution Planner tasks group.",
+                "Tasks": [   
                 ]
             }
         ]
@@ -74,18 +74,54 @@ class ExecutionPlannerWidget(QWidget):
         self.treeview.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.treeview.dragMoveEvent = self.dragMoveEvent
         
-        # self.treeview.setUniformRowHeights(True)
         self.treeview.setAlternatingRowColors(True)
-        # self.treeview.setProperty("QTreeView::itemSpacing", 10)
-        # self.treeview.setSortingEnabled(True)
         self.treeview.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
-        view_header = self.treeview.header()
-        view_header.setStretchLastSection(True)
+        self.treeview.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.treeview.customContextMenuRequested.connect(self.open_context_menu)
 
-        # section_width = round(self.treeview.viewport().width() / view_header.count()) * 1.5
-        # for i in range(0, view_header.count()):
-        #     self.treeview.setColumnWidth(i, section_width)
+    @property
+    def name(self):
+        return self.planner_name.text()
+
+    def open_context_menu(self, menuPosition):
+        clickedIndex = self.treeview.indexAt(menuPosition)
+        contextMenu = ExecutionPlannerContextMenu(self, clickedIndex)
+        menu_target = self.treeview.mapToGlobal(menuPosition)
+
+        """ Connect Signals """
+        contextMenu.add_execution_group.connect(self.add_execution_group)
+        contextMenu.edit_execution_group.connect(self.edit_execution_group)
+
+        if len(contextMenu.menu_items) > 0:
+            contextMenu.popup(menu_target)
+
+    def add_execution_group(self, parent):
+        
+        new_group = {
+                "Name": "Group Name",
+                "objectclass": "TaskGroup",
+                "Description": "New Execution Group Description.",
+                "Tasks": [
+                ]
+            }
+        dialog = ExecutionPlannerGroupDialog(self.application, form_data=new_group)
+        dialog.setupForm()
+        if dialog.exec():
+            group_details = dialog.form_data
+            self.model_data.addExecutionGroup(task_data=group_details, parentIndex=parent)
+        
+    def edit_execution_group(self, index):
+        item = index.internalPointer()
+        form_data = item.task_data
+        dialog = ExecutionPlannerGroupDialog(self.application, form_data=form_data)
+        dialog.setupForm()
+        if dialog.exec():
+            group_details = dialog.form_data
+            item._task_data = group_details
+            item.data_changed.emit(item)
+            print(item.task_data)
+
 
     def run_planner_task(self, task_item):
         print("start tasks", task_item)
@@ -95,8 +131,12 @@ class ExecutionPlannerWidget(QWidget):
     def run_planner_tasks_group(self, task_item):
         self.console.show()
         for child_task in task_item._children:
+
             if child_task.task_class == "TaskItem":
                 self.ProcessRunner.start_process(child_task)
+
+            if child_task.childCount() > 0:
+                self.run_planner_tasks_group(child_task)
         
 
     def log_message(self, message, severity=None):
@@ -151,4 +191,7 @@ class ExecutionPlannerWidget(QWidget):
         else:
             event.ignore()
 
-
+    def remove_selected_items(self):
+        for item_index in self.treeview.selectedIndexes():
+            item = item_index.internalPointer()
+            item_index.model().remove_item(item)

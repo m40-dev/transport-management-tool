@@ -5,3 +5,4 @@ from .ScriptEditorDialog import *
 from .SessionDetailsDialog import *
 from .TransportPackageDialog import *
 from .ExecutionPlannerConfiguration import * 
+from .ExecutionPlannerGroupDialog import *

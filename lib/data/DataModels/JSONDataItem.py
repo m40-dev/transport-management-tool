@@ -3,13 +3,14 @@ from PyQt6.QtCore import Qt, pyqtSignal, QObject
 
 class JSONDataItem(QObject):
     data_changed = pyqtSignal(object)
+
     def __init__(self, task_class="JSONDataItem", task_data=None, parent=None):
         super().__init__(parent=parent)
         self._task_class = task_class
         self._parent = parent
         self._children = []
         self._task_data = task_data
-        self._uid = None
+        self._uid = str(uuid.uuid4())
 
         if task_data:
             children = task_data.get("children", None)
@@ -37,7 +38,7 @@ class JSONDataItem(QObject):
     @property
     def uid(self):
         if not self._task_data.get("uid", None) and not self._uid:
-            self.uid = str(uuid.uuid4())
+            self._uid = str(uuid.uuid4())
         return self._uid
 
     @uid.setter
@@ -61,7 +62,7 @@ class JSONDataItem(QObject):
 
     def removeChild(self, row):
         if row >= 0 and row < len(self._children):
-            print(self._children)
+            # print(self._children)
             return self._children.pop(row)
 
     def removeItem(self):
@@ -76,7 +77,7 @@ class JSONDataItem(QObject):
         return len(self._children)
 
     def row(self):
-        if self._parent is not None:
+        if self._parent is not None and self in self._parent._children:
             return self._parent._children.index(self)
     
     def setData(self, column, value):

@@ -116,3 +116,33 @@ class package_definition_context_menu(QMenu):
         self.menu_items.append(action_add_package_definition)
             
             
+class ExecutionPlannerContextMenu(QMenu):
+    """ Custom QMenu used to manage relation items """
+    add_execution_group = pyqtSignal(object)
+    edit_execution_group = pyqtSignal(object)
+
+
+    def __init__(self, parent, source_item):
+        super(ExecutionPlannerContextMenu, self).__init__(parent)
+        self.parent = parent
+        self.menu_items = []
+        clickedItem = source_item.internalPointer()
+
+        action_add_execution_group = self.addAction("Add Task Execution Group")
+        action_add_execution_group.triggered.connect(lambda: self.add_execution_group.emit(source_item) )
+
+        if clickedItem:
+            if clickedItem.task_class != "TaskItem":
+                # print(clickedItem.task_class)
+                self.menu_items.append(action_add_execution_group)
+
+            if clickedItem.task_class == "TaskGroup":
+                action_edit_execution_group = self.addAction("Edit Task Execution Group")
+                action_edit_execution_group.triggered.connect(lambda: self.edit_execution_group.emit(source_item) )
+                self.menu_items.append(action_edit_execution_group)
+        else:
+            self.menu_items.append(action_add_execution_group)
+
+        
+
+            

@@ -93,16 +93,19 @@ QTabBar::tab{
 	border: 1px solid palette(Dark);
 	border-style: outset;
 	border-radius: 2px;
-	padding:10px;
 	color: #999;
+	padding: 0.6em;
 }
 
-QTabBar::tab::selected{
+QTabBar::tab:selected{
 	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Midlight));
 	border: 1px solid palette(Highlight);
-	padding-left: 3px;
 	font: bold;
 	color: #655;
+}
+
+QTabBar::tab:top{
+	min-width: 10em;
 }
 
 QTreeWidget::indicator, QTreeView::indicator { 
