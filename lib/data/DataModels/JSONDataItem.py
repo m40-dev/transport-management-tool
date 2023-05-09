@@ -11,7 +11,7 @@ class JSONDataItem(QObject):
         self._children = []
         self._task_data = task_data
         self._uid = str(uuid.uuid4())
-
+        self._is_saved = True
         if task_data:
             children = task_data.get("children", None)
             if children:
@@ -81,10 +81,11 @@ class JSONDataItem(QObject):
             return self._parent._children.index(self)
     
     def setData(self, column, value):
-        # print("set Item data", column, value)
         prev_value = self._task_data.get(column, None)
-        self._task_data[column] = value
         if prev_value != value:
+            # print("set Item data:", column, "previous data:", prev_value, "current data:", value)
+            self._task_data[column] = value
+            self.is_saved = False
             self.data_changed.emit(self)
     
     def data(self, column):
@@ -101,6 +102,23 @@ class JSONDataItem(QObject):
             # print("add child", element.name)
             self.addChild(element, row)
             row +=1
+
+    @property
+    def is_saved(self):
+        return self._is_saved
+    
+    @is_saved.setter
+    def is_saved(self, state):
+        self._is_saved = state
+        if state is False and self.parent():
+            self.parent().is_saved = state
+            self.data_changed.emit(self.parent())
+
+    def save(self):
+        self.is_saved = True
+        self.data_changed.emit(self)
+        for child_node in self.children():
+            child_node.save()
 
     @property
     def task_data(self):
@@ -120,3 +138,11 @@ class JSONDataItem(QObject):
         self._task_data['row'] = self.row()
 
         return(self._task_data)
+
+    @property
+    def edit_data(self):
+        return self._task_data
+
+    def update_data(self, dict_data):
+        for key, value in dict_data.items():
+            self.setData(key, value)

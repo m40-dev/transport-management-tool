@@ -2,6 +2,7 @@ from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButto
 from PyQt6.QtCore import Qt, QRectF, pyqtSignal
 from PyQt6.QtGui import QPalette, QPen, QPainterPath 
 from lib.ui.Theme import Application_Theme
+import lib.ui.WidgetFactory as WidgetFactory
 import json
 import os
 
@@ -92,30 +93,51 @@ class PackageManagerItemWidget(QFrame):
 
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(2, 2, 2, 2)
-        # self.layout.setSpacing(3)
 
         self.element_label = QLabel(self)
         self.element_label.setProperty("ExecutionPlannerWidget", "ItemLabel")
-        self.element_label.setText(self.data_item.data("Name"))
 
         self.element_description = QLabel(self)
         self.element_description.setProperty("ExecutionPlannerWidget", "ItemDescription")
-        self.element_description.setText(self.data_item.data("Description"))
         self.element_description.setWordWrap(True)
 
         self.layout.addWidget(self.element_label, 0, 0, 1, 2)
-        self.layout.addWidget(self.element_description, 1, 0, 1, 4)
+        self.layout.addWidget(self.element_description, 1, 0, 1, 5)
+        self.data_item.data_changed.connect(self.refresh_data)
+        
+        """ Refresh state based on the model data """
+        self.refresh_data()
+    
+    def refresh_data(self):
+        self.element_label.setText(self.data_item.data("Name"))
+        self.element_description.setText(self.data_item.data("Description"))
 
 
 class PackageDefinitionWidget(PackageManagerItemWidget):
     def __init__(self, data_item, application, parent=None):
+        
         super().__init__(data_item=data_item, application=application, parent=parent)
-        self.element_label.setText(self.data_item.data("FeatureName"))
-        self.setProperty("ExecutionPlannerWidget", "GroupItem")
+
+        self.edit_feature_button = QToolButton()
+        self.edit_feature_button.setText("Edit Feature")
+        self.edit_feature_button.clicked.connect(self.edit_feature)
+
         self.save_feature_button = QToolButton()
         self.save_feature_button.setText("Save Feature")
-        self.layout.addWidget(self.save_feature_button, 0, 3, 1, 1)
+
+        self.layout.addWidget(self.edit_feature_button, 0, 3, 1, 1)
+        self.layout.addWidget(self.save_feature_button, 0, 4, 1, 1)
+
+        self.setProperty("ExecutionPlannerWidget", "GroupItem")
+
         self.save_feature_button.clicked.connect(self.save_feature)
+
+    def refresh_data(self):
+        super().refresh_data()
+        feature_display = self.data_item.data("FeatureName")
+        if not self.data_item.is_saved:
+            feature_display = f"* {feature_display}"
+        self.element_label.setText(feature_display)
 
     def save_feature(self):
         export = self.data_item.export_data
@@ -123,6 +145,7 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
             export.pop("export_definitions_location")
         if "feature_definition" in export.keys():
             export.pop("feature_definition")
+
         export_data = json.dumps(export, indent=4, separators=(',',':'))
         # print(export_data)
         definition_file = self.data_item.data("feature_definition")
@@ -130,17 +153,20 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
             export_file = f"{self.application.current_workdir}/{definition_file}"
             # print("export to: ", export_file)
             with open(export_file, 'w') as doc:
-                    doc.write(export_data)
+                doc.write(export_data)
+            self.data_item.save()
+    
+    def edit_feature(self):
+        dialog = WidgetFactory.TaskDefinitionDialog(self.application, self.data_item)
+        if dialog.exec():
+            self.data_item.update_data(dialog.form_data)
+
 
 class TaskDefinitionWidget(PackageManagerItemWidget):
     
     edit_task_definition = pyqtSignal(object)
     
     def __init__(self, data_item, application, parent=None):
-        super().__init__(data_item=data_item, application=application, parent=parent)
-
-        self.setProperty("ExecutionPlannerWidget", "TaskItem")
-        self.element_label.setText(self.data_item.data("TaskName"))
 
         """ Add Custom Widgets """
         self.task_type_label = QLabel()
@@ -172,10 +198,15 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         task_buttons_layout.addWidget(self.edit_xml_definition_button)
         task_buttons_layout.addWidget(self.edit_task_definition_button)
 
+        """ init parent class """
+
+        super().__init__(data_item=data_item, application=application, parent=parent)
+        
+        self.setProperty("ExecutionPlannerWidget", "TaskItem")
+
         """ Connect Signals """
         self.edit_xml_definition_button.clicked.connect(self.edit_task_xml_definition)
         self.edit_task_definition_button.clicked.connect(self.edit_task_definition)
-        self.data_item.data_changed.connect(self.refresh_data)
         
         """ Add Widgets to the layout """
         self.layout.addLayout(task_buttons_layout, 0, 2, 1, 3)
@@ -189,20 +220,23 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         self.layout.addWidget(self.task_autoupdate_label, 3, 3)
         self.layout.setColumnStretch(4, 1)
 
-        """ Refresh state based on the model data """
-        self.refresh_data()
 
     def edit_task_definition(self):
-        self.application.edit_task_definition(self.data_item)
+        dialog = WidgetFactory.TaskDefinitionDialog(self.application, self.data_item)
+        if dialog.exec():
+            self.data_item.update_data(dialog.form_data)
 
     def edit_task_xml_definition(self):
         self.application.edit_task_xml_definition(self.data_item)
 
     def refresh_data(self):
-        # print("data refresh")
-        task_name_display = self.data_item.data("TaskName")
+        super().refresh_data()
 
-        self.element_label.setText(task_name_display)
+        task_display = self.data_item.data("TaskName")
+        if not self.data_item.is_saved:
+            task_display = f"* {task_display}"
+
+        self.element_label.setText(task_display)
         self.element_description.setText(self.data_item.data("Description"))
 
         self.task_type_label.setText(self.data_item.data("TaskType"))

@@ -52,15 +52,6 @@ class PackageDefinitionItem(JSONDataItem):
         return task_data
 
     @property
-    def edit_data(self):
-        return self._task_data
-
-    def update_data(self, dict_data):
-        for key, value in dict_data.items():
-            self.setData(key, value)
-        self.data_changed.emit(self)
-
-    @property
     def export_data(self):
         if self._task_data is None:
             return self._task_data

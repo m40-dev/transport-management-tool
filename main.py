@@ -208,7 +208,7 @@ class Transport_Manager(QMainWindow):
         """ Initial transport template object """
         self.new_transport_template()
         self.new_execution_plan()
-        # self.load_workdir("C:/Users/m40/Downloads/transport manager test")
+        self.load_workdir("C:/Users/m40/Downloads/transport manager test")
 
 
     def refresh_ui(self):
@@ -406,10 +406,6 @@ class Transport_Manager(QMainWindow):
     def add_task_definition(self, source_item):
         print("add task definition for", source_item)
 
-    def edit_task_definition(self, source_item):
-        dialog = WidgetFactory.TaskDefinitionDialog(self, source_item)
-        if dialog.exec():
-            source_item.update_data(dialog.form_data)
 
     def edit_task_xml_definition(self, source_item):
         definitions_location = source_item.parent().data("export_definitions_location")
