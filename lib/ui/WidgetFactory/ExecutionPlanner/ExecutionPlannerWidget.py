@@ -1,5 +1,5 @@
-from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView, QTextEdit, QSplitter, QLineEdit, QLabel
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView, QTextEdit, QSplitter, QLineEdit, QLabel, QToolButton
+from PyQt6.QtCore import Qt, pyqtSignal, QProcess
 from PyQt6.QtGui import QShortcut, QKeySequence
 from lib.ui.WidgetFactory import ExecutionPlannerContextMenu
 from lib.data.DataModels import TaskExecutionModel
@@ -17,6 +17,7 @@ class ExecutionPlannerWidget(QWidget):
         self.application = parent
         self.ProcessRunner = ProcessRunner(self)
         self.ProcessRunner.message.connect(self.log_message)
+        self.ProcessRunner.stateChanged.connect(self.process_runner_state_handler)
 
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(4, 4, 4, 4)
@@ -27,6 +28,12 @@ class ExecutionPlannerWidget(QWidget):
         splitter = QSplitter(Qt.Orientation.Vertical)
         planner_label = QLabel("Planner Name")
         self.planner_name = QLineEdit("New Execution Plan...")
+
+        self.stop_execution = QToolButton()
+        self.stop_execution.setText("Stop Execution")
+        self.stop_execution.setEnabled(False)
+        self.stop_execution.clicked.connect(self.ProcessRunner.stop_planner_execution)
+
         self.treeview = QTreeView()
         self.console = QTextEdit()
 
@@ -36,7 +43,9 @@ class ExecutionPlannerWidget(QWidget):
 
         self.layout.addWidget(planner_label, 0, 0, 1, 1)
         self.layout.addWidget(self.planner_name, 0, 1, 1, 1)
-        self.layout.addWidget(splitter, 1, 0, 1, 2)
+        self.layout.addWidget(self.stop_execution, 0, 2, 1, 1)
+        
+        self.layout.addWidget(splitter, 1, 0, 1, 3)
         self.planner_name.textChanged.connect(lambda: self.planner_name_changed.emit(self))
 
         self.console.hide()
@@ -80,6 +89,14 @@ class ExecutionPlannerWidget(QWidget):
         self.treeview.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.treeview.customContextMenuRequested.connect(self.open_context_menu)
 
+    def process_runner_state_handler(self, running_state):
+        is_running = True
+
+        if running_state == QProcess.ProcessState.NotRunning:
+            is_running = False
+
+        self.stop_execution.setEnabled(is_running)
+
     @property
     def name(self):
         return self.planner_name.text()
@@ -97,7 +114,6 @@ class ExecutionPlannerWidget(QWidget):
             contextMenu.popup(menu_target)
 
     def add_execution_group(self, parent):
-        
         new_group = {
                 "Name": "Group Name",
                 "objectclass": "TaskGroup",
@@ -120,11 +136,9 @@ class ExecutionPlannerWidget(QWidget):
             group_details = dialog.form_data
             item._task_data = group_details
             item.data_changed.emit(item)
-            print(item.task_data)
 
 
     def run_planner_task(self, task_item):
-        print("start tasks", task_item)
         self.ProcessRunner.start_process(task_item)
         self.console.show()
         

@@ -89,7 +89,8 @@ class JSONDataItem(QObject):
     
     def data(self, column):
         # print("get Item data", column)
-        return self._task_data.get(column,  None)
+        if self._task_data:
+            return self._task_data.get(column,  None)
 
     def insertChildren(self, row, child_objects):
         # print(self.name, "insert children here", row, child_objects)

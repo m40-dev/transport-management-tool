@@ -157,12 +157,6 @@ class JSONDataModel(QAbstractItemModel):
             newTask = self.modelDataClass(task_class, dropped_item, parentItem)
             newItems.append(newTask)
         
-        # if row == -1 and column == -1:
-        #     row = parentItem.childCount()
-        
-        # self.beginInsertRows(parentIndex, row, (row + len(newItems)-1) )
-        # parentItem.insertChildren(row, newItems)
-        # self.endInsertRows()
         self.insert_items(parentIndex, newItems, row, column)
 
         for dropped_guid in dropped_guids:

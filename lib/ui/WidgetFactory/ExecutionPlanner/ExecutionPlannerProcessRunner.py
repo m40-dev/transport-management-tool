@@ -14,9 +14,14 @@ class ProcessRunner(QProcess):
         self.readyReadStandardError.connect(self.handle_stderr)
         self.finished.connect(self.process_finished)
         self.stateChanged.connect(self.handle_state)
+        
         self.is_running = False
         self.current_item = None
         self.task_queue = []
+
+    def stop_planner_execution(self):
+        self.task_queue = []
+        self.kill()
 
     def execute_planner_tasks(self, task_items):
         for task_item in task_items:

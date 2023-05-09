@@ -42,7 +42,7 @@ from lib.xml.sql_script_container import sql_script_container
 
 from lib.data.DataModels import PackageDefinitionModel
 
-VERSION = '0.4.6'
+VERSION = '0.4.9'
 XML_PREVIEW_TIMER = 100
         
 class Transport_Manager(QMainWindow):
@@ -50,7 +50,6 @@ class Transport_Manager(QMainWindow):
 
     refresh_widget = pyqtSignal(object)
     xml_structure_changed = pyqtSignal()
-    edit_definition = pyqtSignal(object)
     
     def __init__(
         self, parent=None, clipboard=None, event_filter=None, qapplication=None
@@ -89,7 +88,6 @@ class Transport_Manager(QMainWindow):
             lambda: self.select_object_for_transport(add_without_relations=True))
         self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
         self.ui.actionNew_Transport_Template.triggered.connect(self.new_transport_template)
-        self.edit_definition.connect(self.edit_task_definition)
         self.ui.PackageManagerTabWidget.tabCloseRequested.connect(self.close_tab)
         
         """ UI Configurations """
@@ -140,7 +138,6 @@ class Transport_Manager(QMainWindow):
         self.ui.PackageViewTreeView.setAcceptDrops(True)
         self.ui.PackageViewTreeView.setDropIndicatorShown(True)
         self.ui.PackageViewTreeView.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
-        self.ui.PackageViewTreeView.setUniformRowHeights(True)
         self.ui.PackageViewTreeView.setAlternatingRowColors(True)
         self.ui.PackageViewTreeView.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
@@ -210,6 +207,9 @@ class Transport_Manager(QMainWindow):
 
         """ Initial transport template object """
         self.new_transport_template()
+        self.new_execution_plan()
+        # self.load_workdir("C:/Users/m40/Downloads/transport manager test")
+
 
     def refresh_ui(self):
         """ UI style scheme """
@@ -223,7 +223,6 @@ class Transport_Manager(QMainWindow):
             self.restoreState(self.settings.value("windowState"))
 
         self.load_workdir()
-        
 
     """ Execution Planner """
     def configure_execution_planner(self):
@@ -302,8 +301,10 @@ class Transport_Manager(QMainWindow):
                 task_definitions_location = str(feature_definition_location) +  "/Export"
                 json_content = self.load_file(file_path.absolute())
                 package_definition = json.loads(json_content)
-                package_definition["task_definitions_location"] = task_definitions_location
+                package_definition["export_definitions_location"] = task_definitions_location
+                package_definition["feature_definition"] = str(feature_definition_location) + "/" + file_path.name
                 definitions.append(package_definition)
+        
         definitions_sorted = sorted(
                     definitions, 
                     key=lambda d: (d['FeatureName'])
@@ -398,7 +399,7 @@ class Transport_Manager(QMainWindow):
 
             contextMenu.add_package_definition.connect(self.add_package_definition)
             contextMenu.add_task_definition.connect(self.add_task_definition)
-            contextMenu.edit_task_definition.connect(self.edit_task_definition)
+            contextMenu.edit_task_definition.connect(self.edit_task_xml_definition)
             if len(contextMenu.menu_items) > 0:
                 contextMenu.popup(menu_target)
 
@@ -406,12 +407,16 @@ class Transport_Manager(QMainWindow):
         print("add task definition for", source_item)
 
     def edit_task_definition(self, source_item):
-        definitions_location = source_item.parent().data("task_definitions_location")
+        dialog = WidgetFactory.TaskDefinitionDialog(self, source_item)
+        if dialog.exec():
+            source_item.update_data(dialog.form_data)
+
+    def edit_task_xml_definition(self, source_item):
+        definitions_location = source_item.parent().data("export_definitions_location")
         definition_file = source_item.data("DefinitionFile")
         xml_definition = f"{self.current_workdir}/{definitions_location}/{definition_file}"
         
         xml_file_location = xml_definition
-
         self.open_file(xml_file_location)
 
     """ Session Data Management """

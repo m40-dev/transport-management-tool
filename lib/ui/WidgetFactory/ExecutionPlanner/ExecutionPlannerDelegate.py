@@ -21,18 +21,32 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
         item = index.internalPointer()
         
         if column_name == "Actions" and item.task_class == "TaskItem":
-            editor = ItemActionWidget(data_item=item, tree_view=self.parent(), application=self.application, planner_widget=self.planner_widget)
+            editor = ItemActionWidget(
+                data_item=item, 
+                tree_view=self.parent(), 
+                application=self.application, 
+                planner_widget=self.planner_widget)
+            
             editor.start_task_execution.connect(self.start_single_task_execution)
             return editor
         
         if column_name == "Actions" and item.task_class == "TaskGroup":
-            editor = GroupActionWidget(data_item=item, tree_view=self.parent(), application=self.application, planner_widget=self.planner_widget)
+            editor = GroupActionWidget(
+                data_item=item, 
+                tree_view=self.parent(), 
+                application=self.application, 
+                planner_widget=self.planner_widget)
+            
             editor.start_task_execution.connect(self.start_group_task_execution)
             return editor
 
         if column_name == "Actions" and item.task_class == "PackageDefinition":
-            editor = PackageDefinitionWidget(data_item=item, parent=self.parent(), application=self.application)
-            # editor.start_task_execution.connect(self.start_group_task_execution)
+            editor = PackageDefinitionWidget(
+                data_item=item, 
+                parent=self.parent(), 
+                application=self.application)
+
+            editor.save_feature_button.hide()
             return editor
         
 
@@ -49,14 +63,6 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
             super().setEditorData(editor, index)
 
     def setModelData(self, editor, model, index):
-        # column_name = self.model_data.headerData(index.column())
-        # item = index.internalPointer()
-        # if column_name == "Type" and item.task_class == "TaskItem":
-        #     text = self.items[editor.currentIndex()]
-        #     model.setData(index, text, Qt.ItemDataRole.EditRole)
-        # else:
-        #     super().setModelData(editor, model, index)
-        # print("setting data?")
         super().setModelData(editor, model, index)
 
     def paint(self, painter, option, index):
@@ -141,12 +147,9 @@ class ExecutionPlannerItem(QFrame):
 class GroupActionWidget(ExecutionPlannerItem):
     def __init__(self, data_item, tree_view, application, planner_widget, parent=None):
         super().__init__(data_item=data_item, tree_view=tree_view, application=application, planner_widget=planner_widget, parent=parent)
-
-    def refresh_data(self):
-        super().refresh_data()
         self.setProperty("ExecutionPlannerWidget", "GroupItem")
         self.button1.setText("Start Group")
-
+        
 
 class ItemActionWidget(ExecutionPlannerItem):
     def __init__(self, data_item, tree_view, application, planner_widget, parent=None):
@@ -157,34 +160,63 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.button1.setText("Start Task")
 
         """ Add Custom Widgets """
-        self.transport_type_label = QLabel(self)
+        self.task_type_label = QLabel(self)
+        self.task_state_label = QLabel(self)
+        self.task_compiler_label = QLabel(self)
+        self.task_autoupdate_label = QLabel(self)
+        self.connection_box_label = QLabel("Use Connection:")
         self.task_execution_import = QRadioButton("Run Import Task")
         self.task_execution_export = QRadioButton("Run Export Task")
-        self.connection_box_label = QLabel("Use Connection:")
+
         self.connection_box = QComboBox(self)
         connections = list(self.application.sessions.keys())
         self.connection_box.addItems(connections)
 
-        task_params_layout = QHBoxLayout()
-        # spacer = QSpacerItem()
-        # spacer.set
+        self.run_status = QLabel(self)
+        
+        type_label = QLabel("Type: ")
+        state_label = QLabel("State: ")
+        compiler_label = QLabel("Compiler Option: ")
+        autoupdate_label = QLabel("AutoUpdate: ")
 
+        """ Set Properties for Labels """
+        type_label.setProperty("Label", "PropertyName")
+        state_label.setProperty("Label", "PropertyName")
+        compiler_label.setProperty("Label", "PropertyName")
+        autoupdate_label.setProperty("Label", "PropertyName")
+        self.connection_box_label.setProperty("Label", "PropertyName")
+
+        self.task_execution_import.setProperty("Label", "PropertyValue")
+        self.task_execution_export.setProperty("Label", "PropertyValue")
+        self.task_type_label.setProperty("Label", "PropertyValue")
+        self.task_state_label.setProperty("Label", "PropertyValue")
+        self.task_compiler_label.setProperty("Label", "PropertyValue")
+        self.task_autoupdate_label.setProperty("Label", "PropertyValue")
+        
+
+        """ Add Widgets to the layouts """
+        task_details_layout = QHBoxLayout()
+        task_details_layout.addWidget(type_label)
+        task_details_layout.addWidget(self.task_type_label)
+        task_details_layout.addWidget(state_label)
+        task_details_layout.addWidget(self.task_state_label)
+        task_details_layout.addWidget(compiler_label)
+        task_details_layout.addWidget(self.task_compiler_label)
+        task_details_layout.addWidget(autoupdate_label)
+        task_details_layout.addWidget(self.task_autoupdate_label)
+        task_details_layout.addStretch(2)
+
+        task_params_layout = QHBoxLayout()
         task_params_layout.addStretch(2)
         task_params_layout.addWidget(self.task_execution_import)
         task_params_layout.addWidget(self.task_execution_export)
         task_params_layout.addWidget(self.connection_box_label)
         task_params_layout.addWidget(self.connection_box)
         task_params_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
-
-        self.run_status = QLabel(self)
-
-        """ Add Widgets to the layout """
+        
         self.layout.addLayout(task_params_layout, 0, 1, 1, 3)
-        self.layout.addWidget(self.transport_type_label, 2, 0)
+        self.layout.addLayout(task_details_layout, 2, 0, 1, 3)
         self.layout.addWidget(self.run_status, 2, 4)
-        # self.layout.addWidget(self.task_execution_export, 2, 2)
-        # self.layout.addWidget(self.connection_box_label, 2, 3)
-        # self.layout.addWidget(self.connection_box, 2, 4)
 
         """ Refresh state based on the model data """
         self.refresh_model_data(self.data_item)
@@ -196,13 +228,11 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.task_execution_import.toggled.connect(self.set_task_execution_type)
         self.task_execution_export.toggled.connect(self.set_task_execution_type)
         self.connection_box.currentTextChanged.connect(self.set_task_connection)
-        # self.button1.clicked.connect(self.start_task_execution)
 
         self.data_item.data_changed.connect(self.refresh_display)
 
-    # def start_task_execution(self):
-    #     print("start task")
-    #     self.planner_widget.start_task_execution.emit(self.data_item)
+    def refresh_data(self):
+        self.element_label.setText(self.data_item.data("TaskName"))
 
     def refresh_display(self, model_item=None):
         if model_item == self.data_item:
@@ -218,8 +248,14 @@ class ItemActionWidget(ExecutionPlannerItem):
         
         # print("refresh", model_item, self.data_item)
         model_task_type = self.data_item.data("TaskType")
-        task_type_label = f"Task Type: {model_task_type}"
-        self.transport_type_label.setText(task_type_label)
+        model_task_state = self.data_item.data("State")
+        model_task_compiler = self.data_item.data("CompilerOption")
+        model_task_autoupdate = self.data_item.data("AutoUpdate")
+        
+        self.task_type_label.setText(model_task_type)
+        self.task_state_label.setText(model_task_state)
+        self.task_compiler_label.setText(model_task_compiler)
+        self.task_autoupdate_label.setText(model_task_autoupdate)
 
         is_export = self.data_item.data("ExecutionType") == "Export"
         if is_export:
