@@ -22,12 +22,14 @@ include_files = [
 
 options = {
     "build_exe": {
+        "build_exe": "build/TransportManager",
         "packages": packages,
         "includes": includes,
         "excludes": excludes,
         "include_files": include_files,
         "optimize": 2
     }
+    
 }
 
 executables = [Executable("Main.py", target_name="TransportManager.exe", base=base, icon="./icon.ico")]

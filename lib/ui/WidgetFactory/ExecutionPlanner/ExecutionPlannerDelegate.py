@@ -47,6 +47,7 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
                 application=self.application)
 
             editor.save_feature_button.hide()
+            editor.edit_feature_button.hide()
             return editor
         
 

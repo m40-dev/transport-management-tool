@@ -48,4 +48,11 @@ Thumbs.db
 *.mov
 *.wmv
 
+#Local VSCode settings
+.vscode/
+
+# application build directory/scripts
 build
+build.ps1
+
+.vscode/settings.json

@@ -208,7 +208,7 @@ class Transport_Manager(QMainWindow):
         """ Initial transport template object """
         self.new_transport_template()
         self.new_execution_plan()
-        self.load_workdir("C:/Users/m40/Downloads/transport manager test")
+        # self.load_workdir("C:/Users/m40/Downloads/transport manager test")
 
 
     def refresh_ui(self):
@@ -789,7 +789,7 @@ class Transport_Manager(QMainWindow):
                             object_data=None, 
                             xml_object=container_element)
                         task_treewidget_item.addChild(object_container_widget)
-                    self.xml_structure_widgets.append(object_container_widget)
+                        self.xml_structure_widgets.append(object_container_widget)
 
             if task_treewidget_item is None:
                 task_treewidget_item = WidgetFactory.TE_TransportTask_TreeWidgetItem(

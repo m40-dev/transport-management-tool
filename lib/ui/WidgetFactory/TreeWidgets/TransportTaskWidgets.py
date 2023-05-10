@@ -51,7 +51,8 @@ class TE_SQLTransportTask_TreeWidgetItem(TE_TransportTask_TreeWidgetItem):
                 self.setCheckState(1, Qt.CheckState.Unchecked)
 
     def set_task_option(self, option, status):
-        if self.object_data.task_class == "VI.Transport.SQLTransport, VI.Transport":
+
+        if self.xml_object.task_class == "VI.Transport.SQLTransport, VI.Transport":
             self.setCheckState(option, self.checkState(status))
             if option == 1 and self.xml_object:
                 self.xml_object.set_pre_import(status)
