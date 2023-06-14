@@ -10,8 +10,6 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
 
     def __init__(self, model_data, application, planner_widget, parent=None):
         super().__init__(parent)
-        # self.parent = parent
-        # self.items = ["", "Import", "Export"]
         self.application = application
         self.planner_widget = planner_widget
         self.model_data = model_data
@@ -20,7 +18,9 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
         column_name = self.model_data.headerData(index.column())
         item = index.internalPointer()
         
-        if column_name == "Actions" and item.task_class == "TaskItem":
+        if column_name == "Actions" and item.task_class in [
+            "ExecutionPlanner_ExecutionTask", 
+            "PackageManager_TaskDefinition"]:
             editor = ItemActionWidget(
                 data_item=item, 
                 tree_view=self.parent(), 
@@ -30,7 +30,9 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
             editor.start_task_execution.connect(self.start_single_task_execution)
             return editor
         
-        if column_name == "Actions" and item.task_class == "TaskGroup":
+        if column_name == "Actions" and item.task_class in [
+            "ExecutionPlanner_ExecutionGroup", 
+            "PackageManager_PackageDefinition"]:
             editor = GroupActionWidget(
                 data_item=item, 
                 tree_view=self.parent(), 
@@ -40,24 +42,18 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
             editor.start_task_execution.connect(self.start_group_task_execution)
             return editor
 
-        if column_name == "Actions" and item.task_class == "PackageDefinition":
-            editor = PackageDefinitionWidget(
-                data_item=item, 
-                parent=self.parent(), 
-                application=self.application)
-
-            editor.save_feature_button.hide()
-            editor.edit_feature_button.hide()
-            return editor
-        
-
         return super().createEditor(parent, option, index)
 
     def setEditorData(self, editor, index):
         column_name = self.model_data.headerData(index.column())
         item = index.internalPointer()
         
-        if column_name == "Actions" and item.task_class in ["TaskItem", "TaskGroup", "PackageDefinition"]:
+        if column_name == "Actions" and item.task_class in [
+            "ExecutionPlanner_ExecutionGroup", 
+            "ExecutionPlanner_ExecutionTask", 
+            "PackageManager_PackageDefinition",
+            "PackageManager_TaskDefinition"
+            ]:
             viewport = self.parent().viewport()
             editor.setParent(viewport)
         else:
@@ -70,7 +66,11 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
         column_name = self.model_data.headerData(index.column())
         item = index.internalPointer()
 
-        if column_name == "Actions" and item.task_class in ["TaskItem", "TaskGroup", "PackageDefinition"]:
+        if column_name == "Actions" and item.task_class in [
+            "ExecutionPlanner_ExecutionTask", 
+            "ExecutionPlanner_ExecutionGroup", 
+            "PackageManager_PackageDefinition",
+            "PackageManager_TaskDefinition"]:
             widget = self.parent().indexWidget(index)
             if not widget:
                 widget = self.createEditor(self.parent(), option, index)
@@ -88,16 +88,16 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
                 
                 # Set the pen color to the selection color
                 pen = QPen(selection_color)
-                pen.setWidth(2)
+                pen.setWidth(3)
                 painter.setPen(pen)
                 painter.setBrush(selection_color)
 
                 # Set the border color of the item
-                painter.drawRoundedRect(option.rect, 4.0, 4.0, Qt.SizeMode.AbsoluteSize)
+                painter.drawRoundedRect(option.rect, 3.0, 3.0, Qt.SizeMode.AbsoluteSize)
                 # Fill the rounded rectangle with the brush
                 painter_path = QPainterPath()
                 rectf = QRectF(option.rect)
-                painter_path.addRoundedRect(rectf, 4.0, 4.0)
+                painter_path.addRoundedRect(rectf, 3.0, 3.0)
                 painter.fillPath(painter_path, painter.brush())
         else:
             super().paint(painter, option, index)
@@ -141,8 +141,8 @@ class ExecutionPlannerItem(QFrame):
         self.start_task_execution.emit(self.data_item)
 
     def refresh_data(self):
-        self.element_label.setText(self.data_item.data("Name"))
-        self.element_description.setText(self.data_item.data("Description"))
+        self.element_label.setText(self.data_item.display)
+        self.element_description.setText(self.data_item.description)
 
 
 class GroupActionWidget(ExecutionPlannerItem):
@@ -233,7 +233,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.data_item.data_changed.connect(self.refresh_display)
 
     def refresh_data(self):
-        self.element_label.setText(self.data_item.data("TaskName"))
+        self.element_label.setText(self.data_item.display)
 
     def refresh_display(self, model_item=None):
         if model_item == self.data_item:
@@ -245,7 +245,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         if model_item != self.data_item:
             return False
 
-        self.element_label.setText(self.data_item.data("TaskName"))
+        self.element_label.setText(self.data_item.display)
         
         # print("refresh", model_item, self.data_item)
         model_task_type = self.data_item.data("TaskType")

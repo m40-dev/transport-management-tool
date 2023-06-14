@@ -1,0 +1,164 @@
+{
+    "PackageManager_PackageDefinition": 
+        {
+        "FeatureName": 
+            {
+                "FieldType": "StringInput",
+                "Display": "Package Name",
+                "PlaceholderText": "Provide Package Name",
+                "FieldRole": "DisplayRole"
+            },
+        "Description": 
+            {
+                "FieldType": "TextInput",
+                "Display": "Package Description",
+                "PlaceholderText": "Provide Package Description",
+                "FieldRole": "DescriptionRole"
+            },
+        "Tasks": 
+            {
+                "FieldType": "ChildObjectReference",
+                "Class": "PackageManager_TaskDefinition",
+                "ShowInEditor": "False"
+            },
+        "DefinitionFile": 
+            {
+                "FieldType": "FileInput",
+                "Display": "Definition File Name",
+                "DefaultValue": "definition.json",
+                "IsForDataExport": "False",
+                "FileExtension": "*.json",
+                "FilePathMode": "FileName"
+            },
+        "Priority":
+            {
+                "FieldType": "IntegerInput",
+                "FieldRole": "SortOrder",
+                "MinValue": 100,
+                "MaxValue": 999,
+                "DefaultValue": 500,
+                "DistributeEvenly": "True"
+            },
+        "GUID":
+            {
+                "FieldType": "StringInput",
+                "Display": "Definition GUID",
+                "FieldRole": "UniqueIdentifier",
+                "ShowInEditor": "False"
+            }
+
+        },
+    "PackageManager_TaskDefinition":
+        {
+        "TaskName": 
+            {
+                "FieldType": "StringInput",
+                "FieldRole": "DisplayRole"
+            },
+        "Description": 
+            {
+                "FieldType": "TextInput",
+                "FieldRole": "DescriptionRole"
+            },
+        "Order": 
+            {
+                "FieldType": "IntegerInput",
+                "FieldRole": "SortOrder",
+                "MinValue": 1,
+                "MaxValue": 99,
+                "DistributeEvenly": "True"
+            },
+        "TaskType": 
+            {
+                "FieldType": "FixedInput",
+                "Options": {"Transport Package": "Transport", "SQL Script": "SQL"},
+                "DefaultValue": "Transport",
+                "Display": "Task Type"
+            },
+        "DefinitionFile": 
+            {
+                "FieldType": "FileInput"
+            },
+        "ExportFile":
+            {
+                "FieldType": "FileInput"
+            },
+        "ExportFileHash": 
+            {
+                "FieldType": "TextInput",
+                "Display": "Transport Checksum"
+            },
+        "State": 
+            {
+                "FieldType": "FixedInput",
+                "Options": {"Development": "Development", "Testing": "Testing", "Released": "Released"}
+            },
+        "CompilerOption": 
+            {
+                "FieldType": "FixedInput",
+                "Options": {"NONE": "No Compilation", "FULL": "Full Compilation", "NOWEB": "Skip Web Projects Compilation"},
+                "DefaultValue": "NOWEB"
+            },
+        "Environment": 
+            {
+                "FieldType": "FixedInput",
+                "Options": {"DEV": "Development", "TEST": "Test", "PROD": "Production"}
+            },
+        "AutoUpdate": 
+            {
+                "FieldType": "BooleanInput",
+                "DefaultValue": "False"
+            },
+        "TestScript":
+            {
+                "FieldType": "StringInput"
+            },
+        "Tags":
+            {
+                "FieldType": "ListInput"
+            }
+        },
+        
+        "ExecutionPlanner_ExecutionGroup": 
+            {
+            "Name": 
+                {
+                    "FieldType": "StringInput",
+                    "Display": "Group Name",
+                    "PlaceholderText": "Provide Group Name",
+                    "FieldRole": "DisplayRole"
+                },
+            "Description": 
+                {
+                    "FieldType": "TextInput",
+                    "Display": "Package Description",
+                    "PlaceholderText": "Provide Package Description",
+                    "FieldRole": "DescriptionRole"
+                },
+            "ExecutionTasks": 
+                {
+                    "FieldType": "ChildObjectReference",
+                    "Class": "ExecutionPlanner_ExecutionTask",
+                    "ShowInEditor": "False"
+                }
+            },
+        
+        "ExecutionPlanner_ExecutionTask": 
+            {
+            "Name": 
+                {
+                    "FieldType": "StringInput",
+                    "Display": "Group Name",
+                    "PlaceholderText": "Provide Group Name",
+                    "FieldRole": "DisplayRole"
+                },
+            "Description": 
+                {
+                    "FieldType": "TextInput",
+                    "Display": "Package Description",
+                    "PlaceholderText": "Provide Package Description",
+                    "FieldRole": "DescriptionRole"
+                }
+            }
+}
+

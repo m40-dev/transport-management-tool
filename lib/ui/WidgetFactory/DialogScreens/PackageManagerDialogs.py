@@ -1,6 +1,7 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 from pathlib import Path
 import os
+import json
 from copy import deepcopy
 
 class TaskDefinitionDialog(QtWidgets.QDialog):
@@ -30,6 +31,9 @@ class TaskDefinitionDialog(QtWidgets.QDialog):
         self.buttonBox.rejected.connect(self.reject)
         self.layout.setRowStretch(self.layout.rowCount(), 2)
         self.layout.addWidget(self.buttonBox, self.layout.rowCount()+1, 1, 1, 2)
+
+        print(json.dumps(self._form_data))
+
 
     def setup_form(self):
         # print("setup form")

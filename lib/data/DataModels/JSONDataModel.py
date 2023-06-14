@@ -1,20 +1,42 @@
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData
+from PyQt6.QtGui import QStandardItemModel
 import json
 
 class JSONDataModel(QAbstractItemModel):
-    def __init__(self, data, model_item_class, parent=None):
+    def __init__(self, application, data, model_item_class, parent=None):
         super().__init__(parent)
         self.modelDataClass = model_item_class
-        self.rootItem = self.modelDataClass("RootItem")
-        self.setupModelData(data, self.rootItem)
-        self._headers = ["Name", "Description"]
+        self.application = application
+        self.object_definitions = application.object_definitions
+        self.rootItem = self.modelDataClass(application=self.application, task_class="RootItem")
+        self._headers = ["Actions"]
+
+        if data is not None:
+            self.setupModelData(data, self.rootItem)
     
     def setupModelData(self, data, parent):
         """ Main method used to load all data into the model """
         for task_object in data:
             task_class = task_object.get("objectclass", None)
-            task_item = self.modelDataClass(task_class, task_object, parent=parent)
+            task_item = self.modelDataClass(
+                application=self.application,
+                task_class=task_class, 
+                task_data=task_object, 
+                parent=parent
+                )
             parent.addChild(task_item)
+    
+    # def setupModelData(self, data, parent):
+    #     """ Main method used to load all data into the model """
+    #     for task_object in data:
+    #         task_class = task_object.get("objectclass", None)
+    #         task_item = self.modelDataClass(
+    #             application=self.application,
+    #             task_class=task_class, 
+    #             task_data=task_object, 
+    #             parent=parent
+    #             )
+    #         parent.appendRow(task_item)
 
     @property
     def headers(self):
@@ -30,13 +52,13 @@ class JSONDataModel(QAbstractItemModel):
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return None
-        row = index.row()
-        column = index.column()
-        column_name = self.headerData(column)
+        # row = index.row()
+        # column = index.column()
+        # column_name = self.headerData(column)
         item = index.internalPointer()
 
         if role == Qt.ItemDataRole.DisplayRole:
-            return item.data(column_name)
+            return item.display
         return None
 
     def setData(self, index, value, role):
@@ -76,6 +98,18 @@ class JSONDataModel(QAbstractItemModel):
         else:
             return QModelIndex()
 
+    def indexOf(self, data_item):
+        if data_item == self.rootItem or data_item is None:
+            return QModelIndex()
+
+        if data_item is not None:
+            parentItem = data_item.parent()
+            parentIndex = self.indexOf(parentItem)
+            if not parentIndex.isValid():
+                parentIndex = QModelIndex()
+            return self.index(data_item.row(), 0, parentIndex)
+        return QModelIndex()
+
     def parent(self, index):
         if not index.isValid():
             return QModelIndex()
@@ -83,7 +117,7 @@ class JSONDataModel(QAbstractItemModel):
         childItem = index.internalPointer()
         parentItem = childItem.parent()
 
-        if parentItem == self.rootItem:
+        if parentItem == self.rootItem or parentItem is None:
             return QModelIndex()
 
         if parentItem:
@@ -152,10 +186,15 @@ class JSONDataModel(QAbstractItemModel):
             item_uid = dropped_item.get('uid', None)
             if item_uid:
                 dropped_guids.append(item_uid)
-
             task_class = dropped_item.get('objectclass', "JSONDataItem")
-            newTask = self.modelDataClass(task_class, dropped_item, parentItem)
+            # print("dropped item:", dropped_item)
+            newTask = self.modelDataClass(
+                application=self.application, 
+                task_class=task_class, 
+                task_data=dropped_item, 
+                parent=parentItem)
             newItems.append(newTask)
+            newTask.is_saved = False
         
         self.insert_items(parentIndex, newItems, row, column)
 
@@ -163,10 +202,25 @@ class JSONDataModel(QAbstractItemModel):
             item = self.find_item_by_attribute("uid", dropped_guid)
             # print(dropped_guid, item)
             if item:
+                
                 self.remove_item(item)
         # self.exportModelToJson()
         return True
-
+    
+    def insert_item(self, task_class, dict_data, parentIndex):
+        parentItem = self.rootItem
+        if parentIndex.isValid():
+            parentItem = parentIndex.internalPointer()  
+        row = parentItem.row()
+        if row is None:
+            row = -1
+        newTask = [self.modelDataClass(
+            application=self.application, 
+            task_class=task_class, 
+            task_data=dict_data, 
+            parent=parentItem)]
+        self.insert_items(parentIndex, newTask, row)
+    
     def insert_items(self, parentIndex, list_of_items, row=-1, column=-1):
         parentItem = self.rootItem
 
@@ -190,6 +244,7 @@ class JSONDataModel(QAbstractItemModel):
             parentIndex = self.createIndex(parent_row, 0, item_parent)
 
         self.beginRemoveRows(parentIndex, jsondataitem.row(), jsondataitem.row())
+        jsondataitem.is_saved = False
         jsondataitem.removeItem()
         self.endRemoveRows()
 
@@ -213,13 +268,15 @@ class JSONDataModel(QAbstractItemModel):
         """
         for row in range(self.rowCount(parent)):
             index = self.index(row, 0, parent)
-            item = index.internalPointer()
-            column_value = item.task_data.get(column, None)
-            if column_value and (column_value.upper() == value.upper()):
-                return item
+            if index.isValid():
+                item = index.internalPointer()
+                if item.task_data:
+                    column_value = item.task_data.get(column, None)
+                    if column_value and (column_value.upper() == value.upper()):
+                        return item
 
-            if item.childCount() > 0:
-                result = self.find_item_by_attribute(column, value, index)
-                if result:
-                    return result
+                    if item.childCount() > 0:
+                        result = self.find_item_by_attribute(column, value, index)
+                        if result:
+                            return result
         return False

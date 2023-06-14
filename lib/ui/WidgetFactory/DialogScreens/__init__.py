@@ -6,3 +6,4 @@ from .SessionDetailsDialog import *
 from .PackageManagerDialogs import *
 from .ExecutionPlannerConfiguration import * 
 from .ExecutionPlannerGroupDialog import *
+from .FormEditorDialog import *

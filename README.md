@@ -6,9 +6,9 @@ With time, the tool will grow with additional features, but the most focus is se
 
 ## How do I get set up? ##
 
-* Install MSSQL Driver for the database connection support (installer saved in downloads)
+* Install MSSQL Driver for the database connection support (Microsoft: https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16)
 * Extract the 7z file and run the application (TransportManager.exe)
-* Open existing transport template or start building new one
+* Open any existing transport template or start building new one from scratch
 
 # Current Features #
 List of Currently implemented features grouped into feature categories.
@@ -61,6 +61,7 @@ List of Currently implemented features grouped into feature categories.
     * By Name
     * By Description
     * By Base Object UID
+    * By Any Predefined Field
 * Configuration migration functionalities
 * Application Settings View
 * A lot of prompts, messageboxes and action confirmations

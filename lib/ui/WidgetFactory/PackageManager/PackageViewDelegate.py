@@ -1,10 +1,11 @@
 from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout
-from PyQt6.QtCore import Qt, QRectF, pyqtSignal
+from PyQt6.QtCore import Qt, QRectF, pyqtSignal, QEvent
 from PyQt6.QtGui import QPalette, QPen, QPainterPath 
 from lib.ui.Theme import Application_Theme
 import lib.ui.WidgetFactory as WidgetFactory
 import json
 import os
+import pathlib
 
 class PackageViewDelegate(QStyledItemDelegate):
 
@@ -13,16 +14,19 @@ class PackageViewDelegate(QStyledItemDelegate):
         # self.items = ["", "Import", "Export"]
         self.model_data = model_data
         self.application = application
+        self.object_definitions = self.application.object_definitions
+        self.application_palette = self.application.color_theme
+        self.parent().setAlternatingRowColors(False)
 
     def createEditor(self, parent, option, index):
         column_name = self.model_data.headerData(index.column())
         item = index.internalPointer()
-        
-        if column_name == "Actions" and item.task_class == "TaskItem":
+        # print("create editor for column", column_name, item, item.task_class)
+        if column_name == "Actions" and item.task_class == "PackageManager_TaskDefinition":
             editor = TaskDefinitionWidget(data_item=item, application=self.application, parent=self.parent())
             return editor
         
-        if column_name == "Actions" and item.task_class == "PackageDefinition":
+        if column_name == "Actions" and item.task_class == "PackageManager_PackageDefinition":
             editor = PackageDefinitionWidget(data_item=item, application=self.application, parent=self.parent())
             return editor
 
@@ -32,7 +36,7 @@ class PackageViewDelegate(QStyledItemDelegate):
         column_name = self.model_data.headerData(index.column())
         item = index.internalPointer()
         
-        if column_name == "Actions" and item.task_class in ["TaskItem", "PackageDefinition"]:
+        if column_name == "Actions" and item.task_class in ["PackageManager_TaskDefinition", "PackageManager_PackageDefinition"]:
             viewport = self.parent().viewport()
             editor.setParent(viewport)
         else:
@@ -63,14 +67,13 @@ class PackageViewDelegate(QStyledItemDelegate):
             else:
                 widget.setGeometry(option.rect)
             # Check if the item is selected
-            
+
             if option.state & QStyle.StateFlag.State_Selected:
-                palette = Application_Theme()
-                selection_color = palette.color(QPalette.ColorRole.Highlight)
+                selection_color = self.application_palette.color(QPalette.ColorRole.Highlight)
                 
                 # Set the pen color to the selection color
                 pen = QPen(selection_color)
-                pen.setWidth(2)
+                pen.setWidth(3)
                 painter.setPen(pen)
                 painter.setBrush(selection_color)
 
@@ -90,6 +93,7 @@ class PackageManagerItemWidget(QFrame):
         self.application = application
         self.data_item = data_item
         self.treeview = parent
+        self.object_definitions = self.application.object_definitions
 
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(2, 2, 2, 2)
@@ -104,13 +108,28 @@ class PackageManagerItemWidget(QFrame):
         self.layout.addWidget(self.element_label, 0, 0, 1, 2)
         self.layout.addWidget(self.element_description, 1, 0, 1, 5)
         self.data_item.data_changed.connect(self.refresh_data)
-        
+        # self.data_item.filter_object.connect(self.filter_object)
         """ Refresh state based on the model data """
         self.refresh_data()
-    
+
+    # def filter_object(self, show_widget):
+    #     print("filter here", self.data_item.display, show_widget)
+    #     self.setHidden(not show_widget)
+
+
     def refresh_data(self):
-        self.element_label.setText(self.data_item.data("Name"))
-        self.element_description.setText(self.data_item.data("Description"))
+        object_display = self.data_item.display
+
+        self.setProperty("ObjectSaved", str(self.data_item.is_saved))
+        self.setStyleSheet(self.styleSheet())
+
+        # print(self.data_item.display, "is saved", self.data_item.is_saved, self.property("ObjectSaved"))
+
+        if not self.data_item.is_saved:
+            object_display = f"* {object_display}"
+        
+        self.element_label.setText(object_display)
+        self.element_description.setText(self.data_item.description)
 
 
 class PackageDefinitionWidget(PackageManagerItemWidget):
@@ -119,11 +138,11 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
         super().__init__(data_item=data_item, application=application, parent=parent)
 
         self.edit_feature_button = QToolButton()
-        self.edit_feature_button.setText("Edit Feature")
+        self.edit_feature_button.setText("Properties")
         self.edit_feature_button.clicked.connect(self.edit_feature)
 
         self.save_feature_button = QToolButton()
-        self.save_feature_button.setText("Save Feature")
+        self.save_feature_button.setText("Save")
 
         self.layout.addWidget(self.edit_feature_button, 0, 3, 1, 1)
         self.layout.addWidget(self.save_feature_button, 0, 4, 1, 1)
@@ -132,34 +151,27 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
 
         self.save_feature_button.clicked.connect(self.save_feature)
 
-    def refresh_data(self):
-        super().refresh_data()
-        feature_display = self.data_item.data("FeatureName")
-        if not self.data_item.is_saved:
-            feature_display = f"* {feature_display}"
-        self.element_label.setText(feature_display)
-
     def save_feature(self):
         export = self.data_item.export_data
-        if "export_definitions_location" in export.keys():
-            export.pop("export_definitions_location")
-        if "feature_definition" in export.keys():
-            export.pop("feature_definition")
+        if "ExportFilesLocation" in export.keys():
+            export.pop("ExportFilesLocation")
+        if "DefinitionFile" in export.keys():
+            export.pop("DefinitionFile")
 
         export_data = json.dumps(export, indent=4, separators=(',',':'))
-        # print(export_data)
-        definition_file = self.data_item.data("feature_definition")
+        print("Export Data" , export_data)
+        definition_file = self.data_item.data("DefinitionFile")
         if definition_file and self.application.current_workdir:
             export_file = f"{self.application.current_workdir}/{definition_file}"
-            # print("export to: ", export_file)
+            print("export to: ", definition_file, export_file)
+            pathlib.Path(export_file).parent.mkdir(parents=True, exist_ok=True)
             with open(export_file, 'w') as doc:
                 doc.write(export_data)
             self.data_item.save()
     
     def edit_feature(self):
-        dialog = WidgetFactory.TaskDefinitionDialog(self.application, self.data_item)
-        if dialog.exec():
-            self.data_item.update_data(dialog.form_data)
+        index = self.treeview.model().indexOf(self.data_item)
+        self.application.edit_package_definition(index)
 
 
 class TaskDefinitionWidget(PackageManagerItemWidget):
@@ -222,22 +234,17 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
 
 
     def edit_task_definition(self):
-        dialog = WidgetFactory.TaskDefinitionDialog(self.application, self.data_item)
-        if dialog.exec():
-            self.data_item.update_data(dialog.form_data)
+        index = self.treeview.model().indexOf(self.data_item)
+        self.application.edit_task_definition(index)
 
     def edit_task_xml_definition(self):
-        self.application.edit_task_xml_definition(self.data_item)
+        index = self.treeview.model().indexOf(self.data_item)
+        self.application.edit_task_xml_definition(index)
 
     def refresh_data(self):
         super().refresh_data()
 
-        task_display = self.data_item.data("TaskName")
-        if not self.data_item.is_saved:
-            task_display = f"* {task_display}"
-
-        self.element_label.setText(task_display)
-        self.element_description.setText(self.data_item.data("Description"))
+        # self.element_description.setText(self.data_item.data("Description"))
 
         self.task_type_label.setText(self.data_item.data("TaskType"))
         self.task_state_label.setText(self.data_item.data("State"))
@@ -245,7 +252,7 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         self.task_autoupdate_label.setText(self.data_item.data("AutoUpdate"))
 
         self.edit_xml_definition_button.setText("Edit XML")
-        self.edit_task_definition_button.setText("Edit Task")
+        self.edit_task_definition_button.setText("Properties")
         
         """ hide the edit button for non-transport tasks """
         is_transport = self.data_item.data("TaskType") in ["Transport", "FeatureUpdate", "BugFix"]

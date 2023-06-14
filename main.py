@@ -30,6 +30,7 @@ from lib.ui.MainWindow_ui import Ui_MainWindow
 #""" Custom Widgets """
 import lib.ui.WidgetFactory as WidgetFactory
 import lib.ui.WidgetFactory.DialogScreens as DialogScreens
+from lib.ui.ObjectDefinitions import ObjectDefinition
 
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
@@ -42,7 +43,7 @@ from lib.xml.sql_script_container import sql_script_container
 
 from lib.data.DataModels import PackageDefinitionModel
 
-VERSION = '0.4.9'
+VERSION = '0.5'
 XML_PREVIEW_TIMER = 100
         
 class Transport_Manager(QMainWindow):
@@ -50,6 +51,7 @@ class Transport_Manager(QMainWindow):
 
     refresh_widget = pyqtSignal(object)
     xml_structure_changed = pyqtSignal()
+    find_transport_package = pyqtSignal(str)
     
     def __init__(
         self, parent=None, clipboard=None, event_filter=None, qapplication=None
@@ -59,12 +61,15 @@ class Transport_Manager(QMainWindow):
 
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
+        self.qt_app = qapplication
 
         self.setWindowTitle(f"Transport Manager Tool - {VERSION}")
         window_icon = QIcon("./icon.ico")
         self.setWindowIcon(window_icon)
         self.color_theme = Application_Theme()
-        self.setPalette(self.color_theme)
+        self.qt_app.setPalette(self.color_theme)
+
+        self.object_definitions = ObjectDefinition(self)
 
         """ Connect UI signals """
         self.closeEvent = self.close_application
@@ -89,7 +94,8 @@ class Transport_Manager(QMainWindow):
         self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
         self.ui.actionNew_Transport_Template.triggered.connect(self.new_transport_template)
         self.ui.PackageManagerTabWidget.tabCloseRequested.connect(self.close_tab)
-        
+        self.ui.FindPackageButton.clicked.connect(self.find_package)
+
         """ UI Configurations """
         self.ui.XMLEditorWidget = WidgetFactory.CodeEditors.xml_editor(self)
         self.ui.current_file_label = QLabel(self)
@@ -132,14 +138,27 @@ class Transport_Manager(QMainWindow):
         self.ui.FindObjectButton.setEnabled(False)
         self.ui.TableComboBox.setEnabled(False)
 
-
         self.ui.PackageViewTreeView.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.ui.PackageViewTreeView.setDragEnabled(True)
         self.ui.PackageViewTreeView.setAcceptDrops(True)
         self.ui.PackageViewTreeView.setDropIndicatorShown(True)
-        self.ui.PackageViewTreeView.setDragDropMode(QAbstractItemView.DragDropMode.DragOnly)
+        self.ui.PackageViewTreeView.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.ui.PackageViewTreeView.setAlternatingRowColors(True)
         self.ui.PackageViewTreeView.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.ui.PackageViewTreeView.dragMoveEvent = self.PackageViewDragMoveEvent
+
+        data_model = PackageDefinitionModel(
+            application=self,
+            parent=self.ui.PackageViewTreeView, 
+            data=None)
+
+        self.ui.PackageViewTreeView.setModel(data_model)
+        packageViewDelegate = WidgetFactory.PackageManager.PackageViewDelegate(
+            model_data=data_model, 
+            application=self, 
+            parent=self.ui.PackageViewTreeView)
+        self.ui.PackageViewTreeView.setItemDelegate(packageViewDelegate)
+        self.ui.PackageViewTreeView.setHeaderHidden(True)
 
         self.ui.PackageManagerTabWidget.setTabsClosable(True)
 
@@ -208,8 +227,51 @@ class Transport_Manager(QMainWindow):
         """ Initial transport template object """
         self.new_transport_template()
         self.new_execution_plan()
-        # self.load_workdir("C:/Users/m40/Downloads/transport manager test")
+        self.load_workdir("C:/Users/m40/Downloads/transport manager test")
 
+    def find_package(self):
+        search_text = self.ui.SearchPackageLineEdit.text()
+        print(search_text)
+        self.find_transport_package.emit(search_text)
+
+    def PackageViewDragMoveEvent(self, event):
+        move_accept = False
+        source_index = event.source().currentIndex()
+        source_item = source_index.internalPointer()
+
+        QTreeView.dragMoveEvent(self.ui.PackageViewTreeView, event)
+        
+        drop_index = self.ui.PackageViewTreeView.indexAt(event.position().toPoint())
+        drop_item = drop_index.internalPointer()
+
+        dropIndicator = self.ui.PackageViewTreeView.dropIndicatorPosition()
+
+        if drop_item:
+            self.ui.PackageViewTreeView.setDropIndicatorShown(True)
+
+        if dropIndicator == QAbstractItemView.DropIndicatorPosition.OnItem:
+
+            if drop_item._task_class != source_item._task_class:
+                move_accept = True
+            
+            if drop_item and source_item:
+                #do not allow package nesting
+                if source_item._task_class == "PackageManager_PackageDefinition" and drop_item._task_class == "PackageManager_TaskDefinition":
+                    move_accept = False
+
+        if dropIndicator in [QAbstractItemView.DropIndicatorPosition.BelowItem, QAbstractItemView.DropIndicatorPosition.AboveItem]:
+            if drop_item._task_class == source_item._task_class:
+                move_accept = True
+
+        if drop_item is None:
+            # no target item - drop at top level
+            if source_item._task_class == "PackageManager_PackageDefinition":
+                move_accept = True
+
+        if event.mimeData().hasFormat("application/vnd.jsondataitem") and move_accept:
+            event.acceptProposedAction()
+        else:
+            event.ignore()
 
     def refresh_ui(self):
         """ UI style scheme """
@@ -221,8 +283,11 @@ class Transport_Manager(QMainWindow):
             self.restoreGeometry(self.settings.value("geometry"))
         if self.settings.value("windowState") is not None:
             self.restoreState(self.settings.value("windowState"))
-
+        
+        """ Reload Working Directory """
+        self.object_definitions.reload_definition_file()
         self.load_workdir()
+        
 
     """ Execution Planner """
     def configure_execution_planner(self):
@@ -244,7 +309,6 @@ class Transport_Manager(QMainWindow):
         self.ui.PackageManagerTabWidget.setTabText(index, planner_name)
 
     def close_tab(self, index):
-        print("close tab")
         tab_widget = self.ui.PackageManagerTabWidget.widget(index)
         tab_widget.parent = None
         tab_widget.deleteLater()
@@ -285,7 +349,6 @@ class Transport_Manager(QMainWindow):
             self.load_workdir(file_path)
     
     def load_workdir(self, workdir=None):
-        print(workdir)
         if workdir is None and self.current_workdir is not None:
             workdir = self.current_workdir
         
@@ -298,24 +361,34 @@ class Transport_Manager(QMainWindow):
         for file_path in Path(workdir).rglob( '*.json' ):
             if file_path.is_file():
                 feature_definition_location = file_path.parent.relative_to(workdir_path)
+                #TODO: Get the export location from object definition
                 task_definitions_location = str(feature_definition_location) +  "/Export"
                 json_content = self.load_file(file_path.absolute())
+                # print("file found",file_path.absolute())
                 package_definition = json.loads(json_content)
-                package_definition["export_definitions_location"] = task_definitions_location
-                package_definition["feature_definition"] = str(feature_definition_location) + "/" + file_path.name
+                package_definition["ExportFilesLocation"] = task_definitions_location
+                package_definition["DefinitionFile"] = str(feature_definition_location) + "/" + file_path.name
                 definitions.append(package_definition)
         
-        definitions_sorted = sorted(
-                    definitions, 
-                    key=lambda d: (d['FeatureName'])
-                    )
-        data_model =  PackageDefinitionModel(parent=self.ui.PackageViewTreeView, data=definitions_sorted)
-        self.ui.PackageViewTreeView.setModel(data_model)
-        packageViewDelegate = WidgetFactory.PackageManager.PackageViewDelegate(
-            model_data=data_model, 
-            application=self, 
-            parent=self.ui.PackageViewTreeView)
-        self.ui.PackageViewTreeView.setItemDelegate(packageViewDelegate)
+        # definitions_sorted = sorted(
+        #             definitions, 
+        #             key=lambda d: (d['FeatureName'])
+        #             )
+
+        data_model =  PackageDefinitionModel(
+            application=self,
+            parent=self.ui.PackageViewTreeView, 
+            data=definitions)
+
+        proxyModel = WidgetFactory.PackageFilterProxyModel(
+            application=self,
+            parent=self.ui.PackageViewTreeView,
+            source_model=data_model)
+
+        # proxyModel.setSourceModel(data_model)
+        print(proxyModel, proxyModel.sourceModel())
+        self.ui.PackageViewTreeView.setModel(proxyModel)
+        self.ui.SearchPackageLineEdit.textChanged.connect(proxyModel.setFilterString)
 
     def load_file(self, file_path):
         file_content = ""
@@ -374,41 +447,88 @@ class Transport_Manager(QMainWindow):
         self.xml_structure_changed.emit()
 
     """ Package Definition """
-    def add_package_definition(self, source_folder_widget):
-        if isinstance(source_folder_widget, WidgetFactory.PackageManagerXMLFolder):
-            self.new_transport_template()
-            directory = source_folder_widget.path
-            package_details = DialogScreens.TransportPackageDialog(self, directory)
-            if package_details.exec():
-                source_folder_widget.add_file(package_details.file_path)
-                self.transport_template.transport_description.set_text(package_details.description)
-                self.set_current_file(package_details.file_path)
-                self.save_file()
-                self.xml_structure_changed.emit()
-
-    def load_package_definition(self, source_widget=None):
-        if isinstance(source_widget, WidgetFactory.PackageManagerXMLFile):
-            self.open_file(source_widget.path)
-
     def package_definition_context_menu(self, menuPosition):
         clickedIndex = self.ui.PackageViewTreeView.indexAt(menuPosition)
-        clickedItem = clickedIndex.internalPointer()
-        if clickedItem:
-            contextMenu = WidgetFactory.package_definition_context_menu(self, clickedItem)
-            menu_target = self.ui.PackageViewTreeView.mapToGlobal(menuPosition)
+        print(clickedIndex)
+        contextMenu = WidgetFactory.package_definition_context_menu(self, clickedIndex)
+       
+        menu_target = self.ui.PackageViewTreeView.mapToGlobal(menuPosition)
+        contextMenu.add_package_definition.connect(self.add_package_definition)
+        contextMenu.edit_package_definition.connect(self.edit_package_definition)
+        contextMenu.add_task_definition.connect(self.add_task_definition)
+        contextMenu.edit_task_definition.connect(self.edit_task_definition)
+        contextMenu.edit_task_xml_definition.connect(self.edit_task_xml_definition)
+        if len(contextMenu.menu_items) > 0:
+            contextMenu.popup(menu_target)
 
-            contextMenu.add_package_definition.connect(self.add_package_definition)
-            contextMenu.add_task_definition.connect(self.add_task_definition)
-            contextMenu.edit_task_definition.connect(self.edit_task_xml_definition)
-            if len(contextMenu.menu_items) > 0:
-                contextMenu.popup(menu_target)
+    def add_package_definition(self, source_index):
+        print("Add Package Definition", source_index)
 
-    def add_task_definition(self, source_item):
-        print("add task definition for", source_item)
+        # config = self.load_file("./lib/ui/object_definitions.json")
+        # forms_configuration = json.loads(config)
+        # editor_configuration = forms_configuration.get("PackageManager_PackageDefinition", None)
+        editor_configuration = self.object_definitions.get("PackageManager_PackageDefinition")
+        if editor_configuration:
+            dialog = WidgetFactory.FormEditorDialog(self, 
+            form_confguration=editor_configuration, 
+            dialog_name="Package Definition"
+            )
+            if dialog.exec():
+                data = dialog.form_data
+                treeview_model = self.ui.PackageViewTreeView.model()
+                treeview_model.insert_item("PackageManager_PackageDefinition", data, source_index)
 
+    def edit_package_definition(self, source_index):
+        print("Edit Package Definition", source_index)
+        if not source_index.isValid():
+            return False
+
+        editor_configuration = self.object_definitions.get("PackageManager_PackageDefinition")
+        if editor_configuration:
+            dialog = WidgetFactory.FormEditorDialog(self, 
+            form_confguration=editor_configuration, 
+            dialog_name="Package Definition"
+            )
+            dialog.set_form_data(source_index)
+            if dialog.exec():
+                data = dialog.form_data
+                source_item = source_index.internalPointer()
+                source_item.update_data(data)
+
+    def add_task_definition(self, source_index):
+        print("add task definition for", source_index)
+        if not source_index.isValid():
+            return False
+        editor_configuration = self.object_definitions.get("PackageManager_TaskDefinition")
+        if editor_configuration:
+            dialog = WidgetFactory.FormEditorDialog(self, 
+            form_confguration=editor_configuration, 
+            dialog_name="Task Object Definition"
+            )
+            if dialog.exec():
+                data = dialog.form_data
+                treeview_model = self.ui.PackageViewTreeView.model()
+                treeview_model.insert_item("PackageManager_TaskDefinition", data, source_index)
+    
+    def edit_task_definition(self, source_index):
+        if not source_index.isValid():
+            return False
+
+        editor_configuration = self.object_definitions.get("PackageManager_TaskDefinition")
+        if editor_configuration:
+            dialog = WidgetFactory.FormEditorDialog(self, 
+            form_confguration=editor_configuration, 
+            dialog_name="Task Object Definition"
+            )
+            dialog.set_form_data(source_index)
+            if dialog.exec():
+                data = dialog.form_data
+                source_item = source_index.internalPointer()
+                source_item.update_data(data)
 
     def edit_task_xml_definition(self, source_item):
-        definitions_location = source_item.parent().data("export_definitions_location")
+        source_item = source_item.internalPointer()
+        definitions_location = source_item.parent().data("ExportFilesLocation")
         definition_file = source_item.data("DefinitionFile")
         xml_definition = f"{self.current_workdir}/{definitions_location}/{definition_file}"
         
@@ -416,7 +536,6 @@ class Transport_Manager(QMainWindow):
         self.open_file(xml_file_location)
 
     """ Session Data Management """
-
     def get_encryption_key(self, initial=False):
         encryption_key = DialogScreens.EncryptionKeyDialog(self, initial)
         if encryption_key.exec():

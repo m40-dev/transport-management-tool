@@ -1,0 +1,53 @@
+{
+  "FeatureName": "Feature 1",
+  "Description": "Feature 1 Description",
+  "Tasks": [
+    {
+      "TaskName": "Task 2 Name which is rather long for a task name.",
+      "Description": "",
+      "Order": 1,
+      "TaskType": "Transport",
+      "DefinitionFile": "test.xml",
+      "ExportFile": "target_filename.zip",
+      "ExportFileHash": "",
+      "State": "Development",
+      "CompilerOption": "None/Full/NoWeb",
+      "Environment": "Any",
+      "AutoUpdate": "False",
+      "TestScript": "",
+      "Tags": "",
+      "children": [],
+      "uid": "bfc11594-8e5f-4c99-808a-bcc6bd6b5fad",
+      "objectclass": "PackageManager_TaskDefinition",
+      "row": 0
+    }
+  ],
+  "Priority": 102,
+  "GUID": "123",
+  "ExportFilesLocation": "test feature/Export",
+  "DefinitionFile": "test feature/definition.json",
+  "children": [
+    {
+      "TaskName": "Task 2 Name which is rather long for a task name.",
+      "Description": "",
+      "Order": 1,
+      "TaskType": "Transport",
+      "DefinitionFile": "test.xml",
+      "ExportFile": "target_filename.zip",
+      "ExportFileHash": "",
+      "State": "Development",
+      "CompilerOption": "None/Full/NoWeb",
+      "Environment": "Any",
+      "AutoUpdate": "False",
+      "TestScript": "",
+      "Tags": "",
+      "children": [],
+      "uid": "bfc11594-8e5f-4c99-808a-bcc6bd6b5fad",
+      "objectclass": "PackageManager_TaskDefinition",
+      "row": 0
+    }
+  ],
+  "uid": "01eb0c25-adb6-4844-885e-20c2a28f8840",
+  "objectclass": "PackageManager_PackageDefinition",
+  "row": 2
+}

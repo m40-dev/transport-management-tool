@@ -37,19 +37,20 @@ class ProcessRunner(QProcess):
 
     def start_process(self, task_item, queued_task=False):
         task_name = task_item.task_data.get("TaskName", None)
-        action_type = task_item.task_data.get("ExecutionType", None)
-        connection = task_item.task_data.get("Connection", None)
-
-        if queued_task and len(self.task_queue) > 0:
-            self.task_queue.remove(self.task_queue[0])
         
         if self.state() == QProcess.ProcessState.Running:
-            if task_item.task_class == "TaskItem":
+            if task_item.task_class in ["ExecutionPlanner_ExecutionTask", "PackageManager_TaskDefinition"]:
                 self.task_queue.append(task_item)
                 
                 self.message.emit(f"Adding task to the execution queue.. ({task_name})", "Transport Manager")
                 return True
             return False
+        
+        action_type = task_item.task_data.get("ExecutionType", None)
+        connection = task_item.task_data.get("Connection", None)
+
+        if queued_task and len(self.task_queue) > 0:
+            self.task_queue.remove(self.task_queue[0])
 
         self.message.emit(f"Starting task execution ({task_name}). Action: [{action_type}]. Connection: [{connection}]", "Transport Manager")
 

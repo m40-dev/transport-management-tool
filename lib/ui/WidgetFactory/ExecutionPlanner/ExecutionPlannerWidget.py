@@ -10,11 +10,12 @@ from lib.ui.WidgetFactory import ExecutionPlannerGroupDialog
 class ExecutionPlannerWidget(QWidget):
     planner_name_changed = pyqtSignal(object)
 
-    def __init__(self, parent):
+    def __init__(self, application):
         super(ExecutionPlannerWidget, self).__init__()
 
-        self.parent = parent
-        self.application = parent
+        self.parent = application
+        self.application = application
+        self.object_definitions = self.application.object_definitions
         self.ProcessRunner = ProcessRunner(self)
         self.ProcessRunner.message.connect(self.log_message)
         self.ProcessRunner.stateChanged.connect(self.process_runner_state_handler)
@@ -53,14 +54,14 @@ class ExecutionPlannerWidget(QWidget):
         data = [
             {
                 "Name": "Group 1",
-                "objectclass": "TaskGroup",
+                "objectclass": "ExecutionPlanner_ExecutionGroup",
                 "Description": "Default Execution Planner tasks group.",
-                "Tasks": [   
+                "ExecutionTasks": [   
                 ]
             }
         ]
 
-        self.model_data = TaskExecutionModel(data)
+        self.model_data = TaskExecutionModel(data=data, application=self.application)
         self.treeview.setModel(self.model_data)
 
         custom_item_delegate = ExecutionPlannerDelegate(
@@ -74,6 +75,7 @@ class ExecutionPlannerWidget(QWidget):
         custom_item_delegate.start_group_task_execution.connect(self.run_planner_tasks_group)
 
         self.treeview.setItemDelegate(custom_item_delegate)
+        self.treeview.setHeaderHidden(True)
 
         self.treeview.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
@@ -116,10 +118,8 @@ class ExecutionPlannerWidget(QWidget):
     def add_execution_group(self, parent):
         new_group = {
                 "Name": "Group Name",
-                "objectclass": "TaskGroup",
-                "Description": "New Execution Group Description.",
-                "Tasks": [
-                ]
+                "objectclass": "ExecutionPlanner_ExecutionGroup",
+                "Description": "New Execution Group Description."
             }
         dialog = ExecutionPlannerGroupDialog(self.application, form_data=new_group)
         dialog.setupForm()
@@ -145,13 +145,12 @@ class ExecutionPlannerWidget(QWidget):
     def run_planner_tasks_group(self, task_item):
         self.console.show()
         for child_task in task_item._children:
-
-            if child_task.task_class == "TaskItem":
+            print("Start task", child_task.task_class)
+            if child_task.task_class in ["ExecutionPlanner_ExecutionTask", "PackageManager_TaskDefinition"]:
                 self.ProcessRunner.start_process(child_task)
 
             if child_task.childCount() > 0:
                 self.run_planner_tasks_group(child_task)
-        
 
     def log_message(self, message, severity=None):
         if len(message.strip()) == 0:
@@ -176,8 +175,6 @@ class ExecutionPlannerWidget(QWidget):
 
         dropIndicator = self.treeview.dropIndicatorPosition()
 
-        # print("Drop Event:", drop_index, drop_item, source_index, source_item)
-
         if drop_item:
             self.treeview.setDropIndicatorShown(True)
 
@@ -188,7 +185,7 @@ class ExecutionPlannerWidget(QWidget):
             
             if drop_item and source_item:
                 #allow group nesting
-                if source_item._task_class == "TaskGroup" and drop_item._task_class == "TaskGroup":
+                if source_item._task_class == "ExecutionPlanner_ExecutionGroup" and drop_item._task_class == "ExecutionPlanner_ExecutionGroup":
                     move_accept = True
 
         if dropIndicator in [QAbstractItemView.DropIndicatorPosition.BelowItem, QAbstractItemView.DropIndicatorPosition.AboveItem]:
@@ -197,10 +194,10 @@ class ExecutionPlannerWidget(QWidget):
 
         if drop_item is None:
             # no target item - drop at top level
-            if source_item._task_class == "TaskGroup":
+            if source_item._task_class == "ExecutionPlanner_ExecutionGroup":
                 move_accept = True
 
-        if event.mimeData().hasFormat("application/vnd.jsondataitem") and move_accept:
+        if (event.mimeData().hasFormat("application/vnd.jsondataitem") or event.mimeData().hasFormat("application/vnd.ExecutionPlannerItem")) and move_accept:
             event.acceptProposedAction()
         else:
             event.ignore()

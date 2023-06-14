@@ -9,13 +9,11 @@ class Application_Theme(QPalette):
     def __init__(self):
         QPalette.__init__(self)
 
-        self.highlight_color = QColor(201, 242, 222, 250)
-
-        brush = QBrush(QColor(235, 235, 235))
+        brush = QBrush(QColor(250, 250, 250))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.Base, brush)
 
-        brush = QBrush(QColor(155, 155, 155))
+        brush = QBrush(QColor(220, 220, 220, 190))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.All, QPalette.ColorRole.Dark, brush)
 
@@ -27,15 +25,15 @@ class Application_Theme(QPalette):
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.Window, brush)
         
-        brush = QBrush(QColor(201, 242, 222, 120))
+        brush = QBrush(QColor(211, 255, 246, 120))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.Highlight, brush)
         
-        brush = QBrush(QColor(220, 226, 230, 95))
+        brush = QBrush(QColor(235, 235, 250, 120))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.AlternateBase, brush)
 
-        brush = QBrush(QColor(220, 100, 100, 95))
+        brush = QBrush(QColor(220, 100, 100, 80))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText, brush)
         
@@ -43,7 +41,7 @@ class Application_Theme(QPalette):
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Button, brush)
         
-        brush = QBrush(QColor(255, 255, 255))
+        brush = QBrush(QColor(245, 245, 245, 120))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Base, brush)
         
@@ -63,7 +61,7 @@ class Application_Theme(QPalette):
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Button, brush)
         
-        brush = QBrush(QColor(255, 255, 255))
+        brush = QBrush(QColor(245, 245, 245, 120))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Base, brush)
         

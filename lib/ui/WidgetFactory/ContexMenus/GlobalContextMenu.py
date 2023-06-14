@@ -87,35 +87,43 @@ class package_definition_context_menu(QMenu):
     """ Custom QMenu used to manage relation items """
     
     add_package_definition = pyqtSignal(object)
+    edit_package_definition = pyqtSignal(object)
     add_task_definition = pyqtSignal(object)
+    edit_task_xml_definition = pyqtSignal(object)
     edit_task_definition = pyqtSignal(object)
 
 
-    def __init__(self, parent, source_item):
+    def __init__(self, parent, source_index):
         super(package_definition_context_menu, self).__init__(parent)
         self.parent = parent
 
         self.menu_items = []
-
+        source_item = source_index.internalPointer()
 
         action_add_package_definition = self.addAction("Add Package Definition")
-        action_add_package_definition.triggered.connect(lambda: self.add_package_definition.emit(source_item) )
+        action_add_package_definition.triggered.connect(lambda: self.add_package_definition.emit(source_index) )
+        self.menu_items.append(action_add_package_definition)
 
         if source_item:
-            print(source_item.task_class)
-        if source_item.task_class == "PackageDefinition":
-            action_add_task_definition = self.addAction("Add Task Definition")
-            action_add_task_definition.triggered.connect(lambda: self.add_task_definition.emit(source_item) )
-            self.menu_items.append(action_add_task_definition)
+            if source_item.task_class == "PackageManager_PackageDefinition":
+                action_add_package_definition = self.addAction("Add Task Definition")
+                action_add_package_definition.triggered.connect(lambda: self.add_task_definition.emit(source_index) )
+                
+                action_edit_package_definition = self.addAction("Edit Package Definition")
+                action_edit_package_definition.triggered.connect(lambda: self.edit_package_definition.emit(source_index))
 
-        if source_item.task_class == "TaskItem":
-            action_edit_task_definition = self.addAction("Edit Task Definition")
-            action_edit_task_definition.triggered.connect(lambda: self.edit_task_definition.emit(source_item) )
-            self.menu_items.append(action_edit_task_definition)
+                self.menu_items.append(action_add_package_definition)
+                self.menu_items.append(action_edit_package_definition)
 
-        self.menu_items.append(action_add_package_definition)
-            
-            
+            if source_item.task_class == "PackageManager_TaskDefinition":
+                action_edit_task_definition = self.addAction("Edit Task")
+                action_edit_task_definition.triggered.connect(lambda: self.edit_task_definition.emit(source_index))
+                self.menu_items.append(action_edit_task_definition)
+
+                action_edit_task_xml_definition = self.addAction("Edit Task Definition")
+                action_edit_task_xml_definition.triggered.connect(lambda: self.edit_task_xml_definition.emit(source_index))
+                self.menu_items.append(action_edit_task_xml_definition)
+        
 class ExecutionPlannerContextMenu(QMenu):
     """ Custom QMenu used to manage relation items """
     add_execution_group = pyqtSignal(object)
