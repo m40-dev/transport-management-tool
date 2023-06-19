@@ -1,11 +1,12 @@
-from . import JSONDataItem, JSONDataModel
+from . import JSONDataItem, JSONDataModel,pyqtSignal
 from copy import deepcopy
 
 class PackageDefinitionModel(JSONDataModel):
-    def __init__(self, application, data, parent=None):
+
+    def __init__(self, application, data, parent_widget=None):
         super().__init__(
             application=application,
-            parent=parent, 
+            parent_widget=parent_widget, 
             data=data, 
             model_item_class=PackageDefinitionItem
             )
@@ -13,15 +14,16 @@ class PackageDefinitionModel(JSONDataModel):
         
 
 class PackageDefinitionItem(JSONDataItem):
-    def __init__(self, application, task_class="PackageManager_PackageDefinition", task_data=None, parent=None):
+    def __init__(self, application, task_class="PackageManager_PackageDefinition", task_data=None, parent=None, model_reference=None):
         super().__init__(
             application=application,
             parent=parent, 
             task_class=task_class, 
-            task_data=task_data)
+            task_data=task_data,
+            model_reference=model_reference)
         
-        if task_data is not None and self.data("Description") is None:
-            self.setData("Description", "")
+        # if task_data is not None and self.data("Description") is None:
+        #     self.setData("Description", "")
         
         if task_class is None:
             self._task_class = "PackageManager_PackageDefinition"
@@ -44,7 +46,8 @@ class PackageDefinitionItem(JSONDataItem):
                     application=self.application, 
                     task_class=task_class, 
                     task_data=task_object, 
-                    parent=self)
+                    parent=self,
+                    model_reference=self.model_reference)
                 self.addChild(task_item)
 
     # @property

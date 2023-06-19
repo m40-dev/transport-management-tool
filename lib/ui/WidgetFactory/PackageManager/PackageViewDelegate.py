@@ -9,8 +9,8 @@ import pathlib
 
 class PackageViewDelegate(QStyledItemDelegate):
 
-    def __init__(self, model_data, application, parent=None):
-        super().__init__(parent)
+    def __init__(self, model_data, application, parent_widget=None):
+        super().__init__(parent_widget)
         # self.items = ["", "Import", "Export"]
         self.model_data = model_data
         self.application = application

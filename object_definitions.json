@@ -77,7 +77,8 @@
             },
         "DefinitionFile": 
             {
-                "FieldType": "FileInput"
+                "FieldType": "FileInput",
+                "FilePathMode": "Relative"
             },
         "ExportFile":
             {
@@ -115,7 +116,8 @@
             },
         "Tags":
             {
-                "FieldType": "ListInput"
+                "FieldType": "ListInput",
+                "Separator": ";"
             }
         },
         

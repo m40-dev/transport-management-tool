@@ -58,6 +58,7 @@ class ProcessRunner(QProcess):
         workdir = self.application.current_workdir
         variables_script = f"$WORKDIR='{workdir}'\r\n"
         for param_name, param_value in task_item.task_data.items():
+            print(param_name, param_value)
             variables_script += f"${param_name} = '{param_value}'\r\n"
         variables_script += "\r\n"
 

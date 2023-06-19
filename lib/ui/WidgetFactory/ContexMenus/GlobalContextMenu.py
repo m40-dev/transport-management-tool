@@ -10,18 +10,18 @@ class relation_widget_context_menu(QMenu):
     
     follow_table_relations = pyqtSignal(object)
 
-    def __init__(self, parent, source_widget):
+    def __init__(self, parent, source_widget_item):
         super(relation_widget_context_menu, self).__init__(parent)
         self.parent = parent
 
-        if source_widget:
+        if source_widget_item:
             
-            if isinstance(source_widget, TE_Table_TreeWidgetItem):
-                action_follow_table_relations = self.addAction(f"Add Table Relations: {source_widget.follow_table}")
-                action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget) )
-            if isinstance(source_widget, TE_RelationColumn_TreeWidgetItem):
-                action_follow_table_relations = self.addAction(f"Add Table Relations: {source_widget.follow_table}")
-                action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget) )
+            if isinstance(source_widget_item, TE_Table_TreeWidgetItem):
+                action_follow_table_relations = self.addAction(f"Add Table Relations: {source_widget_item.follow_table}")
+                action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget_item) )
+            if isinstance(source_widget_item, TE_RelationColumn_TreeWidgetItem):
+                action_follow_table_relations = self.addAction(f"Add Table Relations: {source_widget_item.follow_table}")
+                action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget_item) )
 
 class xml_structure_context_menu(QMenu):
     """ Custom QMenu used to manage relation items """
@@ -33,46 +33,46 @@ class xml_structure_context_menu(QMenu):
     edit_sql_script = pyqtSignal(object)
     add_sql_script = pyqtSignal(object, str)
 
-    def __init__(self, parent, source_widget):
+    def __init__(self, parent, source_widget_item):
         super(xml_structure_context_menu, self).__init__(parent)
         self.parent = parent
         self.menu_items = []
 
-        if isinstance(source_widget, TE_ObjectContainer_TreeWidgetItem):
+        if isinstance(source_widget_item, TE_ObjectContainer_TreeWidgetItem):
 
             action_list_related_objects = self.addAction("List Related Objects")
-            action_list_related_objects.triggered.connect(lambda: self.list_related_objects.emit(source_widget) )
+            action_list_related_objects.triggered.connect(lambda: self.list_related_objects.emit(source_widget_item) )
             
             self.addSeparator()
 
-            if isinstance(source_widget.xml_object, transport_template_custom_object) and source_widget.object_data is None:
+            if isinstance(source_widget_item.xml_object, transport_template_custom_object) and source_widget_item.object_data is None:
                 action_load_from_database = self.addAction("Load Object From Database")
-                action_load_from_database.triggered.connect(lambda: self.load_object_from_database.emit(source_widget) )
+                action_load_from_database.triggered.connect(lambda: self.load_object_from_database.emit(source_widget_item) )
                 self.menu_items.append(action_load_from_database)
 
-            if source_widget.object_data is not None:
+            if source_widget_item.object_data is not None:
                 action_save_preset = self.addAction("Save Relations as Preset")
-                action_save_preset.triggered.connect(lambda: self.save_relation_preset.emit(source_widget) )
+                action_save_preset.triggered.connect(lambda: self.save_relation_preset.emit(source_widget_item) )
                 self.menu_items.append(action_save_preset)
 
-        if isinstance(source_widget, TE_SQLScriptContainer_TreeWidgetItem):
+        if isinstance(source_widget_item, TE_SQLScriptContainer_TreeWidgetItem):
             action_edit_script = self.addAction("Edit SQL Script")
-            action_edit_script.triggered.connect(lambda: self.edit_sql_script.emit(source_widget))
+            action_edit_script.triggered.connect(lambda: self.edit_sql_script.emit(source_widget_item))
             self.menu_items.append(action_edit_script)
 
-        if isinstance(source_widget, TE_SQLTransportTask_TreeWidgetItem):
-            if isinstance(source_widget.xml_object, sql_script_transport_task):
-                if source_widget.xml_object.common_sql is None:
+        if isinstance(source_widget_item, TE_SQLTransportTask_TreeWidgetItem):
+            if isinstance(source_widget_item.xml_object, sql_script_transport_task):
+                if source_widget_item.xml_object.common_sql is None:
                     action_add_common_sql_script = self.addAction("Add System SQL Script (CommonSQL)")
-                    action_add_common_sql_script.triggered.connect(lambda: self.add_sql_script.emit(source_widget, "CommonSQL"))
+                    action_add_common_sql_script.triggered.connect(lambda: self.add_sql_script.emit(source_widget_item, "CommonSQL"))
                     self.menu_items.append(action_add_common_sql_script)
                 
-                if source_widget.xml_object.payload_sql is None:
+                if source_widget_item.xml_object.payload_sql is None:
                     action_add_payload_sql_script = self.addAction("Add User Data SQL Script (PayloadSQL)")
-                    action_add_payload_sql_script.triggered.connect(lambda: self.add_sql_script.emit(source_widget, "PayloadSQL"))
+                    action_add_payload_sql_script.triggered.connect(lambda: self.add_sql_script.emit(source_widget_item, "PayloadSQL"))
                     self.menu_items.append(action_add_payload_sql_script)
 
-        if source_widget is None:
+        if source_widget_item is None:
             transport_menu = self.addMenu("Add Transport Task")
             self.menu_items.append(transport_menu)
 

@@ -3,10 +3,10 @@ from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData
 import json
 
 class TaskExecutionModel(JSONDataModel):
-    def __init__(self, application, data, parent=None):
+    def __init__(self, application, data, parent_widget=None):
         super().__init__(
             application=application,
-            parent=parent, 
+            parent_widget=parent_widget, 
             data=data, 
             model_item_class=TaskExecutionItem
             )
@@ -21,7 +21,8 @@ class TaskExecutionModel(JSONDataModel):
             application=self.application,
             task_class="ExecutionPlanner_ExecutionGroup", 
             task_data=task_data, 
-            parent=parent_item
+            parent=parent_item,
+            model_reference=self
             )
         self.insert_items(parentIndex, [new_item])
     
@@ -62,12 +63,13 @@ class TaskExecutionModel(JSONDataModel):
         return super().dropMimeData(data, action, row, column, parentIndex)
 
 class TaskExecutionItem(JSONDataItem):
-    def __init__(self, application, task_class="ExecutionPlanner_ExecutionTask", task_data=None, parent=None):
+    def __init__(self, application, task_class="ExecutionPlanner_ExecutionTask", task_data=None, parent=None, model_reference=None):
         super().__init__(
             application=application,
             parent=parent, 
             task_class=task_class, 
-            task_data=task_data
+            task_data=task_data,
+            model_reference=model_reference
             )
 
         self.migrate(task_class)

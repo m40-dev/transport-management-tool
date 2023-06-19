@@ -94,7 +94,7 @@ class Transport_Manager(QMainWindow):
         self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
         self.ui.actionNew_Transport_Template.triggered.connect(self.new_transport_template)
         self.ui.PackageManagerTabWidget.tabCloseRequested.connect(self.close_tab)
-        self.ui.FindPackageButton.clicked.connect(self.find_package)
+        # self.ui.FindPackageButton.clicked.connect(self.find_package)
 
         """ UI Configurations """
         self.ui.XMLEditorWidget = WidgetFactory.CodeEditors.xml_editor(self)
@@ -149,14 +149,14 @@ class Transport_Manager(QMainWindow):
 
         data_model = PackageDefinitionModel(
             application=self,
-            parent=self.ui.PackageViewTreeView, 
+            parent_widget=self.ui.PackageViewTreeView, 
             data=None)
 
         self.ui.PackageViewTreeView.setModel(data_model)
         packageViewDelegate = WidgetFactory.PackageManager.PackageViewDelegate(
             model_data=data_model, 
             application=self, 
-            parent=self.ui.PackageViewTreeView)
+            parent_widget=self.ui.PackageViewTreeView)
         self.ui.PackageViewTreeView.setItemDelegate(packageViewDelegate)
         self.ui.PackageViewTreeView.setHeaderHidden(True)
 
@@ -227,12 +227,7 @@ class Transport_Manager(QMainWindow):
         """ Initial transport template object """
         self.new_transport_template()
         self.new_execution_plan()
-        self.load_workdir("C:/Users/m40/Downloads/transport manager test")
-
-    def find_package(self):
-        search_text = self.ui.SearchPackageLineEdit.text()
-        print(search_text)
-        self.find_transport_package.emit(search_text)
+        self.load_workdir("C:/Users/m40/Downloads/transport manager test/Cleaned")
 
     def PackageViewDragMoveEvent(self, event):
         move_accept = False
@@ -377,18 +372,25 @@ class Transport_Manager(QMainWindow):
 
         data_model =  PackageDefinitionModel(
             application=self,
-            parent=self.ui.PackageViewTreeView, 
+            parent_widget=self.ui.PackageViewTreeView, 
             data=definitions)
 
-        proxyModel = WidgetFactory.PackageFilterProxyModel(
-            application=self,
-            parent=self.ui.PackageViewTreeView,
-            source_model=data_model)
+        # proxyModel = WidgetFactory.PackageFilterProxyModel(
+        #     application=self,
+        #     parent_widget=self.ui.PackageViewTreeView,
+        #     source_model=data_model)
+        
+        self.ui.PackageViewTreeView.setModel(data_model)
+        # print(data_model.rowCount(), proxyModel.rowCount())
 
-        # proxyModel.setSourceModel(data_model)
-        print(proxyModel, proxyModel.sourceModel())
-        self.ui.PackageViewTreeView.setModel(proxyModel)
-        self.ui.SearchPackageLineEdit.textChanged.connect(proxyModel.setFilterString)
+        # packageViewDelegate = WidgetFactory.PackageManager.PackageViewDelegate(
+        #     model_data=data_model, 
+        #     application=self, 
+        #     parent_widget=self.ui.PackageViewTreeView)
+        # self.ui.PackageViewTreeView.setItemDelegate(packageViewDelegate)
+
+        # self.ui.SearchPackageLineEdit.textChanged.connect(proxyModel.setFilterString)
+        self.ui.SearchPackageLineEdit.textChanged.connect(data_model.setFilterString)
 
     def load_file(self, file_path):
         file_content = ""
@@ -678,21 +680,21 @@ class Transport_Manager(QMainWindow):
         if select_element is not None:
             self.select_source_object(select_element)
 
-    def save_relation_preset(self, source_widget):
+    def save_relation_preset(self, source_widget_item):
         relation_dialog = DialogScreens.RelationPresetDialog(self)
-        if isinstance(source_widget, WidgetFactory.TE_ObjectContainer_TreeWidgetItem):
-            relation_dialog.relations = copy.deepcopy(source_widget.object_relations)
+        if isinstance(source_widget_item, WidgetFactory.TE_ObjectContainer_TreeWidgetItem):
+            relation_dialog.relations = copy.deepcopy(source_widget_item.object_relations)
 
         if relation_dialog.exec():
             preset_dict = {relation_dialog.name: relation_dialog.preset_data}
-            if source_widget.table_name not in self.relation_presets.keys():
-                self.relation_presets[source_widget.table_name] = preset_dict
+            if source_widget_item.table_name not in self.relation_presets.keys():
+                self.relation_presets[source_widget_item.table_name] = preset_dict
 
-            if relation_dialog.name not in self.relation_presets[source_widget.table_name].keys():
-                self.relation_presets[source_widget.table_name][relation_dialog.name] = relation_dialog.preset_data
+            if relation_dialog.name not in self.relation_presets[source_widget_item.table_name].keys():
+                self.relation_presets[source_widget_item.table_name][relation_dialog.name] = relation_dialog.preset_data
             else:
                 """ overwrite existing? """
-                self.relation_presets[source_widget.table_name][relation_dialog.name] = relation_dialog.preset_data
+                self.relation_presets[source_widget_item.table_name][relation_dialog.name] = relation_dialog.preset_data
 
         self.settings.setValue("relation_presets", self.relation_presets)
 
@@ -731,25 +733,25 @@ class Transport_Manager(QMainWindow):
 
     def follow_table_relation(self, relation_widget):
         if relation_widget.follow_table:
-            source_widget_relations = relation_widget.source_widget.object_relations
+            source_widget_item_relations = relation_widget.source_widget_item.object_relations
             new_relations = copy.deepcopy(self.db.table_relations.get(
                 relation_widget.follow_table, 
                 None))
 
             if new_relations is not None:
                 merged_relations = self.extend_table_relations(
-                    current_relations=source_widget_relations, 
+                    current_relations=source_widget_item_relations, 
                     new_relations=new_relations)
                 
-                relation_widget.source_widget.object_relations = merged_relations
+                relation_widget.source_widget_item.object_relations = merged_relations
 
-                if isinstance(relation_widget.source_widget, 
+                if isinstance(relation_widget.source_widget_item, 
                               WidgetFactory.TemplateEditorTreeWidgetItem):
-                    relation_widget.source_widget.refresh()
+                    relation_widget.source_widget_item.refresh()
 
                 self.load_table_relations(
                     relations=new_relations, 
-                    source_widget=relation_widget.source_widget, 
+                    source_widget_item=relation_widget.source_widget_item, 
                     append_to_existing_widget=relation_widget)
 
     def extend_table_relations(self, current_relations, new_relations):
@@ -775,16 +777,16 @@ class Transport_Manager(QMainWindow):
         clickedItem = self.ui.XMLStructureTreeWidget.itemAt(menuPosition)
         contextMenu = WidgetFactory.xml_structure_context_menu(
             parent=self, 
-            source_widget=clickedItem)
+            source_widget_item=clickedItem)
         
         contextMenu.list_related_objects.connect(lambda: self.list_related_objects(
-            source_widget = clickedItem, 
+            source_widget_item = clickedItem, 
             override = True))
         contextMenu.load_object_from_database.connect(
             lambda: self.load_objects_from_database(source_widget_item=clickedItem))
         
         contextMenu.save_relation_preset.connect(
-            lambda: self.save_relation_preset(source_widget=clickedItem))
+            lambda: self.save_relation_preset(source_widget_item=clickedItem))
         
         contextMenu.add_transport_task.connect(self.add_transport_task)
         contextMenu.edit_sql_script.connect(self.edit_sql_script)
@@ -802,7 +804,7 @@ class Transport_Manager(QMainWindow):
 
     def xml_structure_move_event(self, event):
         move_accept = True
-        source_widget = event.source().currentItem()
+        source_widget_item = event.source().currentItem()
 
         QTreeWidget.dragMoveEvent(self.ui.XMLStructureTreeWidget, event)
 
@@ -823,7 +825,7 @@ class Transport_Manager(QMainWindow):
                 move_accept = False
 
             if (isinstance(dropItem, WidgetFactory.TE_TransportTask_TreeWidgetItem) 
-                and isinstance(source_widget, WidgetFactory.TE_TransportTask_TreeWidgetItem)):
+                and isinstance(source_widget_item, WidgetFactory.TE_TransportTask_TreeWidgetItem)):
                 move_accept = False
 
         if dropIndicator == QAbstractItemView.DropIndicatorPosition.BelowItem:
@@ -971,24 +973,24 @@ class Transport_Manager(QMainWindow):
         for table_name in self.db.table_info.keys():
             self.ui.TableComboBox.addItem(table_name)
 
-    def select_source_object(self, source_widget):
-        if isinstance(source_widget, WidgetFactory.TemplateEditorListWidgetItem):
-            self.last_widget_clicked = source_widget.listWidget()
+    def select_source_object(self, source_widget_item):
+        if isinstance(source_widget_item, WidgetFactory.TemplateEditorListWidgetItem):
+            self.last_widget_clicked = source_widget_item.listWidget()
         
-        if isinstance(source_widget, WidgetFactory.TE_ObjectContainer_TreeWidgetItem):
-            self.last_widget_clicked = source_widget.treeWidget()
+        if isinstance(source_widget_item, WidgetFactory.TE_ObjectContainer_TreeWidgetItem):
+            self.last_widget_clicked = source_widget_item.treeWidget()
 
-        if isinstance(source_widget, WidgetFactory.TE_ObjectContainer_TreeWidgetItem) or isinstance(source_widget, WidgetFactory.TemplateEditorListWidgetItem):
-            relations = source_widget.object_relations
+        if isinstance(source_widget_item, WidgetFactory.TE_ObjectContainer_TreeWidgetItem) or isinstance(source_widget_item, WidgetFactory.TemplateEditorListWidgetItem):
+            relations = source_widget_item.object_relations
             self.ui.RelationsViewTreeWidget.clear()
 
             if relations is not None:
-                self.load_table_relations(relations, source_widget)  
+                self.load_table_relations(relations, source_widget_item)  
 
-            if isinstance(source_widget, WidgetFactory.TE_ObjectContainer_TreeWidgetItem):
-                self.ui.XMLEditorWidget.find_text(source_widget.search_text)
+            if isinstance(source_widget_item, WidgetFactory.TE_ObjectContainer_TreeWidgetItem):
+                self.ui.XMLEditorWidget.find_text(source_widget_item.search_text)
             
-            self.load_table_relation_presets(source_widget.table_name)
+            self.load_table_relation_presets(source_widget_item.table_name)
 
 
     def add_transport_task(self, task_type):
@@ -1011,8 +1013,8 @@ class Transport_Manager(QMainWindow):
         return task_item
     
     def select_object_for_transport(self, add_without_relations=False):
-        selected_source_widgets = self.ui.SearchResultsListWidget.selectedItems()
-        if selected_source_widgets is not None:
+        selected_source_widget_items = self.ui.SearchResultsListWidget.selectedItems()
+        if selected_source_widget_items is not None:
             selected_target_widgets = self.ui.XMLStructureTreeWidget.selectedItems()
             task_item = None
             if len(selected_target_widgets) == 0:
@@ -1027,17 +1029,17 @@ class Transport_Manager(QMainWindow):
                         widget = widget.parent()
                     break
 
-            for source_widget in selected_source_widgets:
+            for source_widget_item in selected_source_widget_items:
                 """ Add all selected objects to selected Task Container """
-                if isinstance(source_widget, WidgetFactory.TemplateEditorListWidgetItem):
+                if isinstance(source_widget_item, WidgetFactory.TemplateEditorListWidgetItem):
                     pk_columns_dict = {}
-                    for pk_column in source_widget.pk_columns:
+                    for pk_column in source_widget_item.pk_columns:
                         if pk_column is not None and pk_column not in pk_columns_dict.keys():
-                            pk_columns_dict[pk_column] = source_widget.get_value(pk_column)
+                            pk_columns_dict[pk_column] = source_widget_item.get_value(pk_column)
 
-                    container_element = task_item.xml_object.add_container(base_table=source_widget.table_name, display_name=source_widget.display_name, delete_residual_objects=str(int(self.ui.DeleteResidualCheckBox.isChecked())), pk_columns=pk_columns_dict, relations=source_widget.object_relations)
+                    container_element = task_item.xml_object.add_container(base_table=source_widget_item.table_name, display_name=source_widget_item.display_name, delete_residual_objects=str(int(self.ui.DeleteResidualCheckBox.isChecked())), pk_columns=pk_columns_dict, relations=source_widget_item.object_relations)
 
-                    object_container = WidgetFactory.TE_ObjectContainer_TreeWidgetItem(self, object_data=source_widget.object_data, xml_object=container_element, source_widget=source_widget, table_name=source_widget.table_name)
+                    object_container = WidgetFactory.TE_ObjectContainer_TreeWidgetItem(self, object_data=source_widget_item.object_data, xml_object=container_element, source_widget_item=source_widget_item, table_name=source_widget_item.table_name)
                     
                     container_element.relations = object_container.object_relations
 
@@ -1134,7 +1136,7 @@ class Transport_Manager(QMainWindow):
 
         self.load_db_objects(data_rows=data_rows)
 
-    def load_table_relations(self, relations, source_widget, append_to_existing_widget=None):
+    def load_table_relations(self, relations, source_widget_item, append_to_existing_widget=None):
         if append_to_existing_widget is None:
             self.ui.RelationsViewTreeWidget.clear()
 
@@ -1148,15 +1150,15 @@ class Transport_Manager(QMainWindow):
 
             ui_parent_table_name = child_table_name
 
-            if parent_table_name == child_table_name and child_table_name != source_widget.table_name:
-            # if parent_table_name == source_widget.table_name:
+            if parent_table_name == child_table_name and child_table_name != source_widget_item.table_name:
+            # if parent_table_name == source_widget_item.table_name:
                 ui_parent_table_name = parent_table_name
 
-            if ui_parent_table_name == source_widget.table_name and append_to_existing_widget is not None:
+            if ui_parent_table_name == source_widget_item.table_name and append_to_existing_widget is not None:
                 """ skip relations referenced to the base table of the object """
                 continue
             
-            child_widget = WidgetFactory.TE_RelationColumn_TreeWidgetItem(self, relation, source_widget=source_widget)
+            child_widget = WidgetFactory.TE_RelationColumn_TreeWidgetItem(self, relation, source_widget_item=source_widget_item)
             
             if append_to_existing_widget is not None and ui_parent_table_name == append_to_existing_widget.follow_table:
                 if ui_parent_table_name not in tree_widgets.keys():
@@ -1166,7 +1168,7 @@ class Transport_Manager(QMainWindow):
                 table_info = ui_parent_table_name
                 if self.db:
                     table_info = self.db.table_info.get(ui_parent_table_name, ui_parent_table_name)
-                parent_widget = WidgetFactory.TE_Table_TreeWidgetItem(self, table_info, source_widget=source_widget)
+                parent_widget = WidgetFactory.TE_Table_TreeWidgetItem(self, table_info, source_widget_item=source_widget_item)
                 tree_widgets[ui_parent_table_name] = parent_widget
             else:
                 parent_widget = tree_widgets[ui_parent_table_name]
@@ -1190,7 +1192,7 @@ class Transport_Manager(QMainWindow):
 
         self.ui.ShowAllColumnsCheckBox.stateChanged.emit(int(self.ui.ShowAllColumnsCheckBox.isChecked()))
 
-        table_widget = tree_widgets.get(source_widget.table_name, None)
+        table_widget = tree_widgets.get(source_widget_item.table_name, None)
 
         if isinstance(table_widget, WidgetFactory.TE_Table_TreeWidgetItem):
             table_widget.setExpanded(True)

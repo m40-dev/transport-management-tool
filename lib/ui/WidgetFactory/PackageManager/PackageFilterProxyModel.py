@@ -1,56 +1,60 @@
 from PyQt6 import QtCore
-from PyQt6.QtCore import QModelIndex
+from PyQt6.QtCore import QModelIndex, Qt, pyqtSignal
 
-class PackageFilterProxyModel(QtCore.QSortFilterProxyModel):
-    def __init__(self, application, source_model, parent):
-        super().__init__(parent=parent)
+class PackageFilterProxyModel(QtCore.QAbstractProxyModel):
+    filterStringChanged = pyqtSignal(str)
+
+    def __init__(self, application, source_model, parent_widget):
+        super().__init__(parent_widget)
         self.application = application
         self.filterString = ""
-        self.setRecursiveFilteringEnabled(True)
-        self.rootItem = source_model.modelDataClass(application=application, task_class="RootItem")
+        self.treeview = parent_widget
         self.setSourceModel(source_model)
-
-    def setFilterString(self, string):
-        self.filterString = string
-        self.invalidateFilter()
-
-    def filterAcceptsRow(self, source_row, source_parent):
-        if len(self.filterString) <= 3:
-            return True
+        self.rootItem = self.sourceModel().rootItem
         
-        model = self.sourceModel()
-        index = model.index(source_row, 0, source_parent)
-        # index = self.index(source_row, 0, source_parent)
+    def setFilterString(self, filter_string):
+        self.filterString = filter_string
+        self.sourceModel().filterStringChanged.emit(filter_string)
+        # self.layoutAboutToBeChanged.emit()
+        self.filterRowItems(self.rootItem)
+        # self.invalidateRowsFilter()
+        self.layoutChanged.emit()
+
+    def columnCount(self, index):
+        return 1
+
+    def rowCount(self, index=QModelIndex()):
         if index.isValid():
-            item = index.internalPointer()
-            return self.check_conditions(item)
-        return False
+            data_item = index.internalPointer()
+            if data_item:
+                return data_item.filter_childCount()
+        return self.rootItem.filter_childCount()
 
-    def check_conditions(self, item):
-        item_match = self.filterString.lower() in item.display.lower()
+    def headerData(self, section, orientation=Qt.Orientation.Horizontal, role=Qt.ItemDataRole.DisplayRole):
+        return self.sourceModel().headerData(section, orientation, role)
 
-        print("checking:", item.display, "filter:", self.filterString, "match:", item_match)
+    # def filterAcceptsRow(self, source_row, source_parent):
+    #     source_index = self.sourceModel().index(source_row, 0, source_parent)
+    #     source_item = source_index.internalPointer()
+    #     if source_item:
+    #         return source_item.filter_match
+    #     return True
 
-        if item_match:
-            return True
-        return False
+    def filterRowItems(self, parent_item):
+        row = 0
+        proxy_parent_index = self.mapFromSource(self.indexOf(parent_item))
+        if parent_item.filter_childCount() > 0:
+            for child_item in parent_item.filter_childItems():
+                self.filterRowItems(child_item)
 
-    #Example from stackoverflow
-    # def index(self, row, column, parent=QtCore.QModelIndex()):
-    #     return self.createIndex(row, column)
+    # def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+    #     # print("get proxy data", index, index.model())
+    #     source_index = self.mapToSource(index)
+    #     return self.sourceModel().data(source_index, role)
 
-    # def mapFromSource(self, sourceIndex):
-    #     if sourceIndex.isValid()  and 0 <= sourceIndex.row() < self.rowCount():
-    #         ix = self.sourceModel().index(sourceIndex.row(), 0)
-    #         return self.index(int(ix.data()), sourceIndex.column())
-    #     return QtCore.QModelIndex()
-
-    # def mapToSource(self, proxyIndex):
-    #     res = self.sourceModel().match(self.sourceModel().index(0, 0), QtCore.Qt.ItemDataRole.DisplayRole, proxyIndex.row(), flags=QtCore.Qt.MatchFlag.MatchExactly)
-    #     if res:
-    #         return res[0].sibling(res[0].row(), proxyIndex.column())
-    #     return QtCore.QModelIndex()
-
+    # def setData(self, index, value, role):
+    #     source_index = self.mapToSource(index)
+    #     return self.sourceModel().setData(source_index, value, role)
     
     def index(self, row, column, parent=QModelIndex()):
         if not self.hasIndex(row, column, parent):
@@ -58,43 +62,75 @@ class PackageFilterProxyModel(QtCore.QSortFilterProxyModel):
 
         if not parent.isValid():
             # return QModelIndex()
-            parentItem = self.sourceModel().rootItem
+            parentItem = self.rootItem
         else:
             parentItem = parent.internalPointer()
 
         childItem = parentItem.child(row)
         if childItem:
-            return self.createIndex(row, 0, childItem)
-
-        return QModelIndex()
+            # print("create index for", row, column, childItem, childItem.display)
+            return self.createIndex(row, column, childItem)
+        return self.createIndex(row, column)
+        # return QModelIndex()
 
     def mapFromSource(self, sourceIndex):
         if sourceIndex.isValid():
-            # return sourceIndex
             source_item = sourceIndex.internalPointer()
-            proxy_item = self.sourceModel().find_item_by_attribute("uid", source_item.uid)
-            if proxy_item:
-                proxy_index = self.sourceModel().indexOf(proxy_item)
-                return proxy_index
-            return sourceIndex
+            source_item_parent = source_item.parent()
+            if source_item and source_item_parent:
+                if source_item in source_item_parent.filter_childItems():
+                    filter_index = source_item_parent.filter_childItems().index(source_item)
+                    return self.index(filter_index, 0, self.mapFromSource(sourceIndex.parent()))
+                else:
+                    return QModelIndex() 
+            # return self.index(sourceIndex.row(), 0, self.mapFromSource(sourceIndex.parent()))
+            return QModelIndex()
         return QModelIndex()
-        
 
     def mapToSource(self, proxyIndex):
         if proxyIndex.isValid():
-            proxy_item = proxyIndex.internalPointer()
+            proxy_index = self.index(proxyIndex.row(), 0, proxyIndex.parent())
+            proxy_item = proxy_index.internalPointer()
             if proxy_item:
-                # print("map to source: ", proxy_item.display, proxy_item.uid, proxy_item, proxyIndex)
-                source_item = self.sourceModel().find_item_by_attribute("uid", proxy_item.uid)
-                if source_item:
-                    source_index = self.sourceModel().indexOf(source_item)
-                    # print("source item found:", source_item, "index: ", source_index)
-                    if source_index.isValid():
-                        return source_index
-                # return proxyIndex
+                # print(proxy_item.display, "map TO source", proxy_index.row(), proxy_index.parent())
+                return self.sourceModel().indexOf(proxy_item)
         return QModelIndex()
     
     #Program crashing without parent method, possibly should point to proxy index instead of source model?
-    def parent(self, index):
-        return self.sourceModel().parent(index)
+    def parent(self, child_index):
+        model_parent = self.sourceModel().parent(child_index)
+        return self.mapFromSource(model_parent)
 
+    def indexOf(self, data_item):
+        if data_item == self.rootItem or data_item is None:
+            return QModelIndex()
+
+        if data_item is not None:
+            parentItem = data_item.parent()
+            parentIndex = self.indexOf(parentItem)
+            if not parentIndex.isValid():
+                parentIndex = QModelIndex()
+            return self.index(data_item.row(), 0, parentIndex)
+        return QModelIndex()
+
+    def find_index_by_attribute(self, column, value, parent=QModelIndex()):
+        """
+        Finds the first item in the model with a matching attribute value in the given column.
+        """
+        if not value:
+            return False
+
+        for row in range(self.rowCount(parent)):
+            index = self.index(row, 0, parent)
+            if index.isValid():
+                item_data = index.internalPointer()
+                if item_data:
+                    column_value = item_data.data(column)
+                    if column_value and (column_value.upper() == value.upper()):
+                        return index
+
+                    if item_data.childCount() > 0:
+                        result = self.find_index_by_attribute(column, value, index)
+                        if result:
+                            return result
+        return QModelIndex()

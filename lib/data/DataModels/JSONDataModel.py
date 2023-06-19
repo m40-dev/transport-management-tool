@@ -1,19 +1,33 @@
-from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData
+from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData, pyqtSignal
 from PyQt6.QtGui import QStandardItemModel
 import json
 
 class JSONDataModel(QAbstractItemModel):
-    def __init__(self, application, data, model_item_class, parent=None):
-        super().__init__(parent)
+    filterStringChanged = pyqtSignal(str) 
+
+    def __init__(self, application, data, model_item_class, parent_widget=None):
+        super().__init__(parent_widget)
         self.modelDataClass = model_item_class
         self.application = application
         self.object_definitions = application.object_definitions
-        self.rootItem = self.modelDataClass(application=self.application, task_class="RootItem")
+        self.rootItem = self.modelDataClass(application=self.application, task_class="RootItem", model_reference=self)
         self._headers = ["Actions"]
-
-        if data is not None:
+        self.treeview = parent_widget
+        if data:
             self.setupModelData(data, self.rootItem)
-    
+
+    def setFilterString(self, filter_string):
+        self.filterString = filter_string
+        self.filterStringChanged.emit(filter_string)
+        self.filterRowItems(self.rootItem)
+        self.layoutChanged.emit()
+        self.treeview.expandAll()
+
+    def filterRowItems(self, parent_item):
+        if parent_item.filter_childCount() > 0:
+            for child_item in parent_item.filter_childItems():
+                self.filterRowItems(child_item)
+
     def setupModelData(self, data, parent):
         """ Main method used to load all data into the model """
         for task_object in data:
@@ -22,21 +36,9 @@ class JSONDataModel(QAbstractItemModel):
                 application=self.application,
                 task_class=task_class, 
                 task_data=task_object, 
-                parent=parent
-                )
+                parent=parent,
+                model_reference=self)
             parent.addChild(task_item)
-    
-    # def setupModelData(self, data, parent):
-    #     """ Main method used to load all data into the model """
-    #     for task_object in data:
-    #         task_class = task_object.get("objectclass", None)
-    #         task_item = self.modelDataClass(
-    #             application=self.application,
-    #             task_class=task_class, 
-    #             task_data=task_object, 
-    #             parent=parent
-    #             )
-    #         parent.appendRow(task_item)
 
     @property
     def headers(self):
@@ -95,8 +97,7 @@ class JSONDataModel(QAbstractItemModel):
         childItem = parentItem.child(row)
         if childItem:
             return self.createIndex(row, column, childItem)
-        else:
-            return QModelIndex()
+        return self.createIndex(row, column)
 
     def indexOf(self, data_item):
         if data_item == self.rootItem or data_item is None:
@@ -128,13 +129,14 @@ class JSONDataModel(QAbstractItemModel):
     def rowCount(self, parent=QModelIndex()):
         if parent.column() > 0:
             return 0
+        parentItem = self.rootItem
 
-        if not parent.isValid():
-            parentItem = self.rootItem
-        else:
+        if parent.isValid():
             parentItem = parent.internalPointer()
 
-        return parentItem.childCount()
+        if parentItem:
+            return parentItem.childCount()
+        return 0
 
     # Drag and Drop
     def supportedDropActions(self):
@@ -280,3 +282,25 @@ class JSONDataModel(QAbstractItemModel):
                         if result:
                             return result
         return False
+
+    def find_index_by_attribute(self, column, value, parent=QModelIndex()):
+        """
+        Finds the first item in the model with a matching attribute value in the given column.
+        """
+        if not value:
+            return False
+
+        for row in range(self.rowCount(parent)):
+            index = self.index(row, 0, parent)
+            if index.isValid():
+                item_data = index.internalPointer()
+                if item_data:
+                    column_value = item_data.data(column)
+                    if column_value and (column_value.upper() == value.upper()):
+                        return index
+
+                    if item_data.childCount() > 0:
+                        result = self.find_index_by_attribute(column, value, index)
+                        if result:
+                            return result
+        return QModelIndex()
