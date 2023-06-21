@@ -72,7 +72,12 @@ class transport_template(transport_template_custom_object):
             return False
 
         xml_parser = etree.XMLParser(remove_comments=False, remove_blank_text=True)
-        xmlObj = etree.parse(xml_file, parser=xml_parser)
+        try:
+            xmlObj = etree.parse(xml_file, parser=xml_parser)
+        except:
+            #TODO: fix temporary handling of file parsing issues
+            self.application.new_transport_template(xml_file)
+            return False
 
         if xmlObj is not None:
             self.data = xmlObj

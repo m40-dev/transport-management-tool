@@ -1,6 +1,10 @@
 import uuid
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, pyqtSignal
 from PyQt6.QtGui import QStandardItem
+from copy import deepcopy
+
+
+FILTER_MIN_LEN = 1
 
 class JSONDataItem(QObject):
     data_changed = pyqtSignal()
@@ -13,10 +17,13 @@ class JSONDataItem(QObject):
         self._task_class = task_class
         self._parent = parent
         self._children = []
+        self._filtered_children = []
         self._task_data = task_data
         self._uid = str(uuid.uuid4())
         self._is_saved = True
         self._filter_match = True
+        self.filter_string = ""
+        self.object_configuration = self.object_definitions.get(self.task_class)
 
         if model_reference:
             model_reference.filterStringChanged.connect(self.handleFilterStringChanged)
@@ -34,35 +41,156 @@ class JSONDataItem(QObject):
     def filter_match(self, value):
         self._filter_match = value
         if value and self.parent():
-            self.parent().filter_match = value
+            self.parent().filter_match = True
 
     def handleFilterStringChanged(self, filter_string):
         filter_match = self.check_filter_conditions(filter_string)
         self.filter_match = filter_match
 
-    def check_filter_conditions(self, filter_string):
-        #Initially set filter to true (show all items)
-        item_match = True
-
-        if not filter_string or len(filter_string.strip()) == 0:
-            return item_match
-        
-        #General display match condition
-        item_match = (filter_string.lower() in self.display.lower())
-
-        #Return final verification state
-        return item_match 
-
     def filter_childCount(self):
         return len(self.filter_childItems())
 
+    def totalChildCount(self):
+        total_childitems = self._children + self._filtered_children
+        return len(total_childitems)
+
     def filter_childItems(self):
+        # Iterate over child items, if any of them is matching the filter criterias
+        # add child item to temporary list and reset the children list
         filter_rows = []
-        for data_item in self.children():
+        hidden_rows = []
+        all_items = self._children + self._filtered_children
+        for data_item in all_items:
             if data_item.filter_match:
-                filter_rows.append(data_item) 
-        self._children = filter_rows
-        return filter_rows
+                filter_rows.append(data_item)
+            else:
+                hidden_rows.append(data_item)
+
+        #temporary assign filtered rows as item children
+        sorted_filter_rows = sorted(filter_rows, key=lambda item: item.sortOrder)
+        # for item in sorted_filter_rows:
+        #     print(f"sorted {item.display}")
+
+        self._children = sorted_filter_rows
+        self._filtered_children = hidden_rows
+
+        #return filtered rows
+        return sorted_filter_rows, hidden_rows
+    @property
+    def sortOrder(self):
+        if self.object_configuration:
+            for column, column_configuration in self.object_configuration.items():
+                if column_configuration.get("FieldRole", None) == "SortOrder":
+                    sortOrder = self.data(column)
+                    # print(self.display, "sort items by object column: ", column, "Item sort Order:", sortOrder)
+                    if sortOrder:
+                        return str(sortOrder)
+        return str(self.row())
+
+    def check_filter_conditions(self, filter_string):
+        #Initially set filter to true (show all items) if no filter is provided
+        self.filter_string = filter_string
+        if not filter_string or len(filter_string.strip()) <= FILTER_MIN_LEN:
+            return True
+        
+        filter_configuration = self.parse_filter(filter_string)
+
+        #initially turn off visibility, this flag will be switched during validation
+        item_match = False
+
+        #criteria matching starts at 0, every filter criteria that matches for the item will increase this number by 1 
+        criteria_match = 0
+
+        #General freetext display/description match condition
+        if "freetext" in filter_configuration.keys():
+            filter_values = filter_configuration.get("freetext", [])
+            #since filter text can have multiple values, check each of them separately
+            for filter_text in filter_values:
+                #simple display name and description comparison
+                value_check = (filter_text.lower() in self.display.lower() 
+                                or filter_text.lower() in self.description.lower())
+                #if any of the entries matches, mark the result and exit the loop
+                if value_check:
+                    criteria_match += 1
+                    break
+
+        #check object properties according to the object configuration
+        if self.object_configuration:
+            for object_data_column in self.object_configuration.keys():
+                
+                #filter values if  object configuration column is detected in the filter
+                if object_data_column.lower() in filter_configuration.keys():
+                    
+                    #filter configuration always returns column names in lower case
+                    filter_values = filter_configuration.get(object_data_column.lower(), [])
+
+                    #filtered attribuets might have multiple values provided, each value is checked separately
+                    for filter_text in filter_values:
+
+                        # validating only if the filter text is provided
+                        if len(filter_text) > 0:
+
+                            #read current object value
+                            object_value = self._task_data.get(object_data_column, None)
+
+                            #continue filtering only if we have the object value (is not None) 
+                            if object_value:
+
+                                #in case of lists, concatenate values for comparison
+                                if isinstance(object_value, list):
+                                    object_value = ", ".join(object_value)
+
+                                #simple string comparison
+                                value_check = filter_text.lower() in object_value.lower()
+                                if value_check:
+                                    #mark the criteria and break the ineration over the filter values, at least one entry matches
+                                    criteria_match += 1
+                                    break
+        # if the criteria match is equal to the number of provided filters, it is considered as match
+        if criteria_match == len(filter_configuration.keys()):
+            item_match = True
+        
+        #Return final verification state
+        return item_match 
+
+    def parse_filter(self, filter_string):
+        #Create empty filter configuration
+        filter_configuration = {}
+        #Split the initial filter conditions
+        conditions = filter_string.split(";")
+
+        #iterate over defined conditions
+        for condition in conditions:
+            #ignore empty spaces in the condition element
+            if len(condition.strip()) == 0:
+                continue
+            
+            #define the filter column as freetext initially
+            column = "freetext"
+            values_list = [condition.strip()]
+            
+            #check for the column condition markers, colon marks the column: value pairs in the filter
+            if ":" in condition:
+                column, values = condition.split(":")[:2]
+                #initially put the values into a new list
+                values_list = [values]
+                #check for the value separation markers. values divided by comma will be evaluated separately
+                if "," in values:
+                    values_list = values.split(",")
+            else:
+                #if we do not have the column marker, but freetext is separated with comma, treat them as separate values 
+                if "," in condition:
+                    values_list = condition.split(",")
+            
+            #make the column lower case for easier comparison later on, also remove whitespaces from column and values
+            column = column.lower().strip()
+            values_list = list(map(str.strip, values_list))
+            if column not in filter_configuration.keys():
+                #remove whitespaces from the values and save them in the freetext filter 
+                filter_configuration[column] = values_list
+            else:
+                filter_configuration[column] = filter_configuration[column] + values_list
+        return filter_configuration
 
     def loadChildren(self, child_tasks):
         if child_tasks:
@@ -86,6 +214,7 @@ class JSONDataItem(QObject):
     @task_class.setter
     def task_class(self, value):
         self._task_class = value
+        self.object_configuration = self.object_definitions.get(value)
 
     @property
     def uid(self):
@@ -100,7 +229,7 @@ class JSONDataItem(QObject):
 
     @property
     def display(self):
-        configuration = self.object_definitions.get(self.task_class)
+        configuration = self.object_configuration
         
         if configuration is None:
             return ""
@@ -118,7 +247,7 @@ class JSONDataItem(QObject):
     
     @display.setter
     def display(self, value):
-        configuration = self.object_definitions.get(self.task_class)
+        configuration = self.object_configuration
         
         if configuration is None:
             return ""
@@ -132,7 +261,7 @@ class JSONDataItem(QObject):
 
     @property
     def description(self):
-        configuration = self.object_definitions.get(self.task_class)
+        configuration = self.object_configuration
         
         if configuration is None:
             return ""
@@ -150,7 +279,7 @@ class JSONDataItem(QObject):
 
     @description.setter
     def description(self, value):
-        configuration = self.object_definitions.get(self.task_class)
+        configuration = self.object_configuration
         
         if configuration is None:
             return ""
@@ -169,7 +298,7 @@ class JSONDataItem(QObject):
     #     self._parent = parent
 
     def addChild(self, child, row=None):
-        if row is not None:
+        if row is not None and row <= self.childCount():
             # print('insert at', row)
             self._children.insert(row, child)
         else:
@@ -177,9 +306,13 @@ class JSONDataItem(QObject):
             self._children.append(child)
 
     def removeChild(self, row):
-        if row >= 0 and row < len(self._children):
-            # print(self._children)
+        if row >= 0 and row <= len(self._children):
             return self._children.pop(row)
+
+    def removeChildItem(self, childItem):
+        if childItem in self._children:
+            child_index = self._children.index(childItem)
+            return self._children.pop(child_index)
 
     def removeItem(self):
         parent_item = self.parent()
@@ -215,7 +348,7 @@ class JSONDataItem(QObject):
             row = 0
         
         for element in child_objects:
-            # print("add child", element.name)
+            # print("add child", element.display)
             self.addChild(element, row)
             row +=1
 
@@ -233,7 +366,7 @@ class JSONDataItem(QObject):
     def save(self):
         self.is_saved = True
         self.data_changed.emit()
-        for child_node in self.children():
+        for child_node in self._children:
             child_node.save()
 
     @property
@@ -248,12 +381,16 @@ class JSONDataItem(QObject):
             child_data = child_item.task_data
             children.append(child_data)
 
-        self._task_data['children'] = children
-        self._task_data['uid'] = self.uid
-        self._task_data['objectclass'] = self.task_class
-        self._task_data['row'] = self.row()
-
-        return(self._task_data)
+        # self._task_data['children'] = children
+        task_data = deepcopy(self._task_data)
+        task_data['children'] = children
+        task_data['uid'] = self.uid
+        task_data['objectclass'] = self.task_class
+        task_data['row'] = self.row()
+        if self.parent():
+            if self.parent().task_class == "PackageManager_PackageDefinition":
+                task_data['PARENT_DEF'] = self.parent().export_data
+        return task_data
 
     @property
     def edit_data(self):
@@ -262,3 +399,61 @@ class JSONDataItem(QObject):
     def update_data(self, dict_data):
         for key, value in dict_data.items():
             self.setData(key, value)
+
+    @property
+    def export_data(self):
+        if self._task_data is None:
+            return self._task_data
+        
+        configuration = self.object_configuration
+        
+        export_data = {}
+        
+        if configuration is None:
+            return export_data
+
+        for field, field_configuration in configuration.items():
+            is_for_export = field_configuration.get("IsForDataExport", "True") == "True"
+            if not is_for_export:
+                continue
+            
+            export_data[field] = self._task_data.get(field, "")
+
+            field_type = field_configuration.get("FieldType", None)
+            field_role = field_configuration.get("FieldRole", None)
+            
+            min_value = field_configuration.get("MinValue", 1)
+            max_value = field_configuration.get("MaxValue", 255)
+            value_range = max_value - min_value
+            
+            
+            if field_role and field_role == "SortOrder":
+                treeview_order = self.row()
+                if field_configuration.get("DistributeEvenly", "False") == "True":
+                    sibling_count = self.parent().childCount()
+                    if sibling_count == 0:
+                        sibling_count = 1
+                    sorting_step = value_range / sibling_count
+                    export_data[field] = round(sorting_step * treeview_order ) + min_value
+                else:
+                    if treeview_order >= max_value:
+                        export_data[field] = max_value
+                    else:
+                        export_data[field] = treeview_order + min_value
+
+            if field_type and field_type == "ChildObjectReference":
+                child_class = field_configuration.get("Class", None)
+                children = []
+                for i in range(self.childCount()):
+                    child_item = self.child(i)
+                    if child_item.task_class == child_class:
+                        child_data = child_item.export_data
+                        children.append(child_data)
+                export_data[field] = children
+
+            if field_type and field_type == "ListInput":
+                 object_data = self._task_data.get(field, "")
+                 if not isinstance(object_data, list):
+                    export_data[field] = [object_data]
+
+        return export_data

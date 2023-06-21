@@ -22,7 +22,8 @@ from pathlib import Path
 
 from lib.ui.Theme import Application_Theme
 
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, QPropertyAnimation, QEasingCurve, QAbstractAnimation
+from PyQt6.QtWidgets import QGraphicsOpacityEffect
 
 #""" Main UI import """
 from lib.ui.MainWindow_ui import Ui_MainWindow
@@ -45,6 +46,7 @@ from lib.data.DataModels import PackageDefinitionModel
 
 VERSION = '0.5'
 XML_PREVIEW_TIMER = 100
+FILTER_EXEC_TIMER = 700
         
 class Transport_Manager(QMainWindow):
     """Main window class for session launcher"""
@@ -94,7 +96,7 @@ class Transport_Manager(QMainWindow):
         self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
         self.ui.actionNew_Transport_Template.triggered.connect(self.new_transport_template)
         self.ui.PackageManagerTabWidget.tabCloseRequested.connect(self.close_tab)
-        # self.ui.FindPackageButton.clicked.connect(self.find_package)
+        self.ui.FindPackageButton.clicked.connect(self.filter_packages)
 
         """ UI Configurations """
         self.ui.XMLEditorWidget = WidgetFactory.CodeEditors.xml_editor(self)
@@ -141,6 +143,8 @@ class Transport_Manager(QMainWindow):
         self.ui.PackageViewTreeView.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.ui.PackageViewTreeView.setDragEnabled(True)
         self.ui.PackageViewTreeView.setAcceptDrops(True)
+        # self.ui.PackageViewTreeView.setAnimated(True)
+        self.ui.PackageViewTreeView.setUniformRowHeights(False)
         self.ui.PackageViewTreeView.setDropIndicatorShown(True)
         self.ui.PackageViewTreeView.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.ui.PackageViewTreeView.setAlternatingRowColors(True)
@@ -176,6 +180,10 @@ class Transport_Manager(QMainWindow):
         self.xml_preview_timer.setSingleShot(True)
         self.xml_preview_timer.timeout.connect(self.load_xml_preview)
 
+        self.package_filter_timer = QTimer(self)
+        self.package_filter_timer.setSingleShot(True)
+        self.package_filter_timer.timeout.connect(self.filter_packages)
+
         self.current_workdir = None
         self.current_file = None
         self.xml_structure_widgets = []
@@ -189,12 +197,13 @@ class Transport_Manager(QMainWindow):
 
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.remove_selected_nodes)
+        QShortcut(QKeySequence.StandardKey.InsertParagraphSeparator, self, self.enter_shortcut)
         QShortcut(QKeySequence.StandardKey.Refresh, self, self.refresh_ui)
         QShortcut(QKeySequence("Ctrl+0"), self, self.ui.XMLEditorWidget.expand_by_level)
         QShortcut(QKeySequence("Ctrl+9"), self, self.ui.XMLEditorWidget.fold_by_level)
 
         self.refresh_ui()
-        self.show()
+        
 
         """ Program variables """
         self.db = None
@@ -219,6 +228,20 @@ class Transport_Manager(QMainWindow):
                 print("session details were not loaded")
                 self.sessions = {}
         
+        # effect = QGraphicsOpacityEffect(self)
+        # self.setGraphicsEffect(effect)
+        # animation = QPropertyAnimation(self)
+        # animation.setPropertyName(bytes("opacity", "utf-8"))
+        # animation.setTargetObject(effect)
+        # animation.setDuration(500)
+        # animation.setStartValue(0)
+        # animation.setEndValue(1)
+        
+        # animation.setEasingCurve(QEasingCurve.Type.OutInCubic)
+        # animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
+        
+        self.show()
+        
         """ Saved relation presets data """
         self.relation_presets = self.settings.value("relation_presets")
         if self.relation_presets is None:
@@ -228,6 +251,10 @@ class Transport_Manager(QMainWindow):
         self.new_transport_template()
         self.new_execution_plan()
         self.load_workdir("C:/Users/m40/Downloads/transport manager test/Cleaned")
+
+    def enter_shortcut(self):
+        if self.ui.SearchPackageLineEdit.hasFocus():
+            self.filter_packages(self.ui.SearchPackageLineEdit.text())
 
     def PackageViewDragMoveEvent(self, event):
         move_accept = False
@@ -333,6 +360,13 @@ class Transport_Manager(QMainWindow):
             self.reload_ui_data()
 
     """ Workdir and File Operations """
+    def filter_packages(self, text=None):
+        if text:
+            self.package_filter_timer.start(FILTER_EXEC_TIMER)
+            return False
+        #filter from the other signals
+        filter_text = self.ui.SearchPackageLineEdit.text()
+        self.ui.PackageViewTreeView.model().setFilterString(filter_text)
 
     def change_workdir(self):
         dialog = QFileDialog(self, "Transport Manager - Select Working Directory")
@@ -355,42 +389,46 @@ class Transport_Manager(QMainWindow):
         definitions = []
         for file_path in Path(workdir).rglob( '*.json' ):
             if file_path.is_file():
+                #TODO: Get the export location from program configuration
                 feature_definition_location = file_path.parent.relative_to(workdir_path)
-                #TODO: Get the export location from object definition
                 task_definitions_location = str(feature_definition_location) +  "/Export"
+                
                 json_content = self.load_file(file_path.absolute())
-                # print("file found",file_path.absolute())
                 package_definition = json.loads(json_content)
+
+                #store some package definition location info 
                 package_definition["ExportFilesLocation"] = task_definitions_location
+                package_definition["DefinitionDirectory"] = str(feature_definition_location)
                 package_definition["DefinitionFile"] = str(feature_definition_location) + "/" + file_path.name
                 definitions.append(package_definition)
         
-        # definitions_sorted = sorted(
-        #             definitions, 
-        #             key=lambda d: (d['FeatureName'])
-        #             )
+        sort_attribute = ""
+        package_definition_config = self.object_definitions.get("PackageManager_PackageDefinition")
+        if package_definition_config:
+            for column, column_configuration in package_definition_config.items():
+                if column_configuration.get("FieldRole", None) == "SortOrder":
+                    sort_attribute = column
+                    break
+            
+            if len(sort_attribute.strip()) == 0:
+                for column, column_configuration in package_definition_config.items():
+                    if column_configuration.get("FieldRole", None) == "DisplayRole":
+                        sort_attribute = column
+                        break
+        
+        if len(sort_attribute.strip()) > 0:
+            definitions = sorted(
+                    definitions, 
+                    key=lambda d: (d[sort_attribute])
+                    )
 
         data_model =  PackageDefinitionModel(
             application=self,
             parent_widget=self.ui.PackageViewTreeView, 
             data=definitions)
-
-        # proxyModel = WidgetFactory.PackageFilterProxyModel(
-        #     application=self,
-        #     parent_widget=self.ui.PackageViewTreeView,
-        #     source_model=data_model)
         
         self.ui.PackageViewTreeView.setModel(data_model)
-        # print(data_model.rowCount(), proxyModel.rowCount())
-
-        # packageViewDelegate = WidgetFactory.PackageManager.PackageViewDelegate(
-        #     model_data=data_model, 
-        #     application=self, 
-        #     parent_widget=self.ui.PackageViewTreeView)
-        # self.ui.PackageViewTreeView.setItemDelegate(packageViewDelegate)
-
-        # self.ui.SearchPackageLineEdit.textChanged.connect(proxyModel.setFilterString)
-        self.ui.SearchPackageLineEdit.textChanged.connect(data_model.setFilterString)
+        self.ui.SearchPackageLineEdit.textChanged.connect(self.filter_packages)
 
     def load_file(self, file_path):
         file_content = ""
@@ -415,11 +453,15 @@ class Transport_Manager(QMainWindow):
 
     def save_file(self):
         if self.current_file is not None:
-            with open(self.current_file, 'w') as doc:
-                doc.write(self.transport_template.string)
-            return self.current_file
-        else:
-            return self.save_as_other_file()
+            print(Path(self.current_file), Path(self.current_file).is_file())
+
+            if Path(self.current_file).is_file():
+                Path(self.current_file).parent.mkdir(parents=True, exist_ok=True)
+                with open(self.current_file, 'w') as doc:
+                    doc.write(self.transport_template.string)
+                return self.current_file
+            return self.save_as_other_file(self.current_file)
+        return self.save_as_other_file(self.current_workdir)
 
     def save_as_other_file(self, initial_directory=None):
         dialog = QFileDialog(self, "Save As")
@@ -442,8 +484,8 @@ class Transport_Manager(QMainWindow):
             self.current_file = file_path
         self.ui.current_file_label.setText(file_path)
 
-    def new_transport_template(self):
-        self.set_current_file(None)
+    def new_transport_template(self, file_path=None):
+        self.set_current_file(file_path)
         self.transport_template = transport_template(self)
         self.reload_xml_structure()
         self.xml_structure_changed.emit()
@@ -935,9 +977,17 @@ class Transport_Manager(QMainWindow):
                 self.remove_tree_widget_selected_node(tree_widget)
         
         if self.ui.MainTabWidget.currentWidget() == self.ui.MainTabWidget_Transport_Package:
-            current_widget = self.ui.PackageManagerTabWidget.currentWidget()
-            current_widget.remove_selected_items()
+            
+            current_execution_planner_widget = self.ui.PackageManagerTabWidget.currentWidget()
+            current_execution_planner_widget.remove_selected_items()
+
+            if self.ui.PackageViewTreeView.hasFocus():
+                self.remove_selected_package_definitions()
         
+    def remove_selected_package_definitions(self):
+        for item_index in self.ui.PackageViewTreeView.selectedIndexes():
+            item = item_index.internalPointer()
+            item_index.model().remove_item(item)
 
     def remove_tree_widget_selected_node(self, tree_widget):
         if tree_widget.hasFocus():

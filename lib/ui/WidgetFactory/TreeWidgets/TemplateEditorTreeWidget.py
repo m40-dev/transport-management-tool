@@ -11,7 +11,7 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
                  application,
                  object_data, 
                  xml_object=None, 
-                 source_widget=None, 
+                 source_widget_item=None, 
                  table_name=None):
         
         super(TemplateEditorTreeWidgetItem, self).__init__()
@@ -19,7 +19,7 @@ class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
         self.application = application
         self.xml_object = xml_object
         self.object_data = object_data
-        self.source_widget = source_widget
+        self.source_widget_item = source_widget_item
         self.source_table = table_name
         self.object_relations = None
 

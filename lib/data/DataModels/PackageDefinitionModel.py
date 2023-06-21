@@ -1,5 +1,6 @@
 from . import JSONDataItem, JSONDataModel,pyqtSignal
 from copy import deepcopy
+from pathlib import Path
 
 class PackageDefinitionModel(JSONDataModel):
 
@@ -22,12 +23,11 @@ class PackageDefinitionItem(JSONDataItem):
             task_data=task_data,
             model_reference=model_reference)
         
-        # if task_data is not None and self.data("Description") is None:
-        #     self.setData("Description", "")
-        
         if task_class is None:
-            self._task_class = "PackageManager_PackageDefinition"
+            self.task_class = "PackageManager_PackageDefinition"
 
+        self.object_definitions = application.object_definitions
+        
         if task_data:
             child_tasks = task_data.get("children", None)
             if not child_tasks:
@@ -50,78 +50,19 @@ class PackageDefinitionItem(JSONDataItem):
                     model_reference=self.model_reference)
                 self.addChild(task_item)
 
-    # @property
-    # def task_data(self):
-    #     if self._task_data is None:
-    #         return self._task_data
+    def update_data(self, data):
+        if self.task_class == "PackageManager_PackageDefinition":
+            print("update package definition")
+            new_location = data.get("DefinitionFile", "")
+            if self._task_data.get("DefinitionFile", "") != new_location:
+                print("Definition location changed, new location", new_location)
+                workdir_path = Path(self.application.current_workdir).absolute()
+                file_path = Path(self.application.current_workdir + "/" + new_location)
+                if file_path.is_file:
+                    feature_definition_location = file_path.parent.relative_to(workdir_path)
+                    task_definitions_location = str(feature_definition_location) +  "/Export"
+                    print(f"location attributes: ExportFilesLocation:{task_definitions_location} DefinitionDirectory:{feature_definition_location} DefinitionFile: {new_location}")
+                    self._task_data["ExportFilesLocation"] = task_definitions_location
+                    self._task_data["DefinitionDirectory"] = str(feature_definition_location)
 
-    #     children = []
-
-    #     for i in range(self.childCount()):
-    #         child_item = self.child(i)
-    #         child_data = child_item.task_data
-    #         children.append(child_data)
-
-    #     # self._task_data['children'] = children
-    #     task_data = deepcopy(self._task_data)
-    #     task_data['uid'] = self.uid
-    #     task_data['objectclass'] = self.task_class
-    #     task_data['row'] = self.row()
-    #     if self.parent().task_class == "PackageManager_PackageDefinition":
-    #         task_data['FeatureName'] = self.parent().data("FeatureName")
-    
-    #     return task_data
-
-    # @property
-    # def export_data(self):
-    #     if self._task_data is None:
-    #         return self._task_data
-
-    #     export_data = deepcopy(self._task_data)
-    #     if self.task_class == "PackageDefinition":
-    #         children = []
-    #         for i in range(self.childCount()):
-    #             child_item = self.child(i)
-    #             child_data = child_item.export_data
-    #             children.append(child_data)
-            
-    #         export_data["Tasks"] = children
-    #     return export_data
-
-    @property
-    def export_data(self):
-        if self._task_data is None:
-            return self._task_data
-        
-        configuration = self.object_definitions.get(self.task_class)
-        
-        export_data = {}
-        
-        if configuration is None:
-            return export_data
-
-        for field, field_configuration in configuration.items():
-            is_for_export = field_configuration.get("IsForDataExport", "True") == "True"
-            if not is_for_export:
-                continue
-            
-            export_data[field] = self._task_data.get(field, "")
-
-            field_type = field_configuration.get("FieldType", None)
-            field_role = field_configuration.get("FieldRole", None)
-            min_value = field_configuration.get("MinValue", 1)
-
-            if field_role and field_role == "SortOrder":
-                export_data[field] = self.row() + min_value
-
-            if field_type and field_type == "ChildObjectReference":
-                child_class = field_configuration.get("Class", None)
-                children = []
-                for i in range(self.childCount()):
-                    child_item = self.child(i)
-                    if child_item.task_class == child_class:
-                        child_data = child_item.export_data
-                        children.append(child_data)
-                export_data[field] = children
-        return export_data
-    
+        super().update_data(data)

@@ -4,8 +4,8 @@ from lib.xml.transport_task import transport_task, sql_script_transport_task
 
 
 class TE_TransportTask_TreeWidgetItem(TemplateEditorTreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, source_widget=None):
-        super(TE_TransportTask_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget=source_widget)
+    def __init__(self, application, object_data, xml_object=None, source_widget_item=None):
+        super(TE_TransportTask_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item)
 
         self.refresh()
 
@@ -17,13 +17,13 @@ class TE_TransportTask_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         return display
 
 class TE_ObjectTransportTask_TreeWidgetItem(TE_TransportTask_TreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, source_widget=None):
-        super(TE_ObjectTransportTask_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget=source_widget)
+    def __init__(self, application, object_data, xml_object=None, source_widget_item=None):
+        super(TE_ObjectTransportTask_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item)
 
 
 class TE_SQLTransportTask_TreeWidgetItem(TE_TransportTask_TreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, source_widget=None):
-        super(TE_SQLTransportTask_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget=source_widget)
+    def __init__(self, application, object_data, xml_object=None, source_widget_item=None):
+        super(TE_SQLTransportTask_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item)
 
         self.setCheckState(1, Qt.CheckState.Unchecked)  
         self.setText(1, "Run Before Import")

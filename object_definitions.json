@@ -15,12 +15,6 @@
                 "PlaceholderText": "Provide Package Description",
                 "FieldRole": "DescriptionRole"
             },
-        "Tasks": 
-            {
-                "FieldType": "ChildObjectReference",
-                "Class": "PackageManager_TaskDefinition",
-                "ShowInEditor": "False"
-            },
         "DefinitionFile": 
             {
                 "FieldType": "FileInput",
@@ -28,7 +22,7 @@
                 "DefaultValue": "definition.json",
                 "IsForDataExport": "False",
                 "FileExtension": "*.json",
-                "FilePathMode": "FileName"
+                "FilePathMode": "Relative"
             },
         "Priority":
             {
@@ -36,7 +30,7 @@
                 "FieldRole": "SortOrder",
                 "MinValue": 100,
                 "MaxValue": 999,
-                "DefaultValue": 500,
+                "DefaultValue": 100,
                 "DistributeEvenly": "True"
             },
         "GUID":
@@ -44,6 +38,12 @@
                 "FieldType": "StringInput",
                 "Display": "Definition GUID",
                 "FieldRole": "UniqueIdentifier",
+                "ShowInEditor": "False"
+            },
+        "Tasks": 
+            {
+                "FieldType": "ChildObjectReference",
+                "Class": "PackageManager_TaskDefinition",
                 "ShowInEditor": "False"
             }
 
@@ -78,11 +78,12 @@
         "DefinitionFile": 
             {
                 "FieldType": "FileInput",
-                "FilePathMode": "Relative"
+                "FilePathMode": "FileName"
             },
         "ExportFile":
             {
-                "FieldType": "FileInput"
+                "FieldType": "FileInput",
+                "FilePathMode": "FileName"
             },
         "ExportFileHash": 
             {
@@ -92,18 +93,20 @@
         "State": 
             {
                 "FieldType": "FixedInput",
-                "Options": {"Development": "Development", "Testing": "Testing", "Released": "Released"}
+                "Options": {"Development": "Development", "Testing": "Testing", "Released": "Released"},
+                "DefaultValue": "Development"
             },
         "CompilerOption": 
             {
                 "FieldType": "FixedInput",
-                "Options": {"NONE": "No Compilation", "FULL": "Full Compilation", "NOWEB": "Skip Web Projects Compilation"},
+                "Options": {"No Compilation": "NONE", "Full Compilation": "FULL", "Skip Web Projects Compilation":"NOWEB"},
                 "DefaultValue": "NOWEB"
             },
         "Environment": 
             {
                 "FieldType": "FixedInput",
-                "Options": {"DEV": "Development", "TEST": "Test", "PROD": "Production"}
+                "Options": {"Any": "Any", "Development": "DEV", "Test": "TEST", "Production": "PROD"},
+                "DefaultValue": "Any"
             },
         "AutoUpdate": 
             {
@@ -112,12 +115,13 @@
             },
         "TestScript":
             {
-                "FieldType": "StringInput"
+                "FieldType": "FileInput",
+                "FilePathMode": "FileName"
             },
-        "Tags":
+        "Tag":
             {
                 "FieldType": "ListInput",
-                "Separator": ";"
+                "Separator": ","
             }
         },
         
@@ -144,7 +148,6 @@
                     "ShowInEditor": "False"
                 }
             },
-        
         "ExecutionPlanner_ExecutionTask": 
             {
             "Name": 
@@ -160,6 +163,21 @@
                     "Display": "Package Description",
                     "PlaceholderText": "Provide Package Description",
                     "FieldRole": "DescriptionRole"
+                },
+            "TaskName":
+                {
+                    "FieldType": "StringInput",
+                    "Source": "TaskName"
+                },
+            "FeatureName":
+                {
+                    "FieldType": "StringInput",
+                    "Source": "PARENT_DEF.FeatureName"
+                },
+            "ParentDescription":
+                {
+                    "FieldType": "StringInput",
+                    "Source": "PARENT_DEF.Description"
                 }
             }
 }

@@ -8,16 +8,16 @@ from .TableObjectWidget import TE_Table_TreeWidgetItem
 from .ObjectContainerData import TE_ObjectContainerData_TreeWidgetItem
 
 class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, source_widget=None, table_name=None):
-        super(TE_ObjectContainer_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget=source_widget, table_name=table_name)
+    def __init__(self, application, object_data, xml_object=None, source_widget_item=None, table_name=None):
+        super(TE_ObjectContainer_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item, table_name=table_name)
 
         self.setCheckState(1, Qt.CheckState.Unchecked)  
         self.setText(1, "Delete Residual Objects")
         self.setFlags(Qt.ItemFlag.ItemIsDragEnabled | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable |Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsUserCheckable)
         # self.column_data_changed.connect(self.handle_data_change)
         self.object_relations = None
-        if isinstance(source_widget, TemplateEditorListWidgetItem):
-            object_relations = copy.deepcopy(source_widget.object_relations)
+        if isinstance(source_widget_item, TemplateEditorListWidgetItem):
+            object_relations = copy.deepcopy(source_widget_item.object_relations)
             if object_relations is not None:
                 relations_sorted = sorted(object_relations, key=lambda d: (d['ParentTable'],  d['ChildTable'])) 
                 self.object_relations = relations_sorted    

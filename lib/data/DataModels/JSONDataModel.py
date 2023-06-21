@@ -17,15 +17,33 @@ class JSONDataModel(QAbstractItemModel):
             self.setupModelData(data, self.rootItem)
 
     def setFilterString(self, filter_string):
-        self.filterString = filter_string
+        #emit the signal for all model data items to trigger filter comparison
         self.filterStringChanged.emit(filter_string)
+        # self.treeview.collapseAll()
+        
+        #run over the tree objects (starting at top level root item) and filter elements
+        self.treeview.selectionModel().clear()
+        # self.layoutAboutToBeChanged.emit()
         self.filterRowItems(self.rootItem)
-        self.layoutChanged.emit()
+        # self.layoutChanged.emit()
+
+        #expand all treeview nodes to show the results
         self.treeview.expandAll()
+        
+        if len(filter_string) == 0:
+            self.treeview.collapseAll()
 
     def filterRowItems(self, parent_item):
+
         if parent_item.filter_childCount() > 0:
-            for child_item in parent_item.filter_childItems():
+            parent_index = self.indexOf(parent_item)
+            filter_items, hide_items = parent_item.filter_childItems()
+
+            self.beginRemoveRows(parent_index, 0, parent_item.totalChildCount())
+            parent_item._children = filter_items
+            self.endRemoveRows()
+
+            for child_item in filter_items:
                 self.filterRowItems(child_item)
 
     def setupModelData(self, data, parent):
@@ -194,10 +212,11 @@ class JSONDataModel(QAbstractItemModel):
                 application=self.application, 
                 task_class=task_class, 
                 task_data=dropped_item, 
-                parent=parentItem)
+                parent=parentItem,
+                model_reference=self)
             newItems.append(newTask)
             newTask.is_saved = False
-        
+        # print("drop location", row, column, jsondata)
         self.insert_items(parentIndex, newItems, row, column)
 
         for dropped_guid in dropped_guids:
@@ -213,14 +232,14 @@ class JSONDataModel(QAbstractItemModel):
         parentItem = self.rootItem
         if parentIndex.isValid():
             parentItem = parentIndex.internalPointer()  
-        row = parentItem.row()
-        if row is None:
-            row = -1
+        row = parentItem.childCount()
         newTask = [self.modelDataClass(
             application=self.application, 
             task_class=task_class, 
             task_data=dict_data, 
-            parent=parentItem)]
+            parent=parentItem,
+            model_reference=self)]
+        newTask[0].is_saved = False
         self.insert_items(parentIndex, newTask, row)
     
     def insert_items(self, parentIndex, list_of_items, row=-1, column=-1):
@@ -232,6 +251,7 @@ class JSONDataModel(QAbstractItemModel):
         if row == -1 and column == -1:
             row = parentItem.childCount()
             column = 0
+        # print("insert items at location", row, (row + len(list_of_items)-1))
         self.beginInsertRows(parentIndex, row, (row + len(list_of_items)-1) )
         parentItem.insertChildren(row, list_of_items)
         self.endInsertRows()
@@ -240,7 +260,7 @@ class JSONDataModel(QAbstractItemModel):
         item_parent = jsondataitem.parent()
         parent_row = item_parent.row()
 
-        if item_parent == self.rootItem or parent_row is None:
+        if item_parent == self.rootItem:
             parentIndex = QModelIndex()
         else:
             parentIndex = self.createIndex(parent_row, 0, item_parent)

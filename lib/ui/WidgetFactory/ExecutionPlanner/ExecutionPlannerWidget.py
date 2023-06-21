@@ -203,6 +203,7 @@ class ExecutionPlannerWidget(QWidget):
             event.ignore()
 
     def remove_selected_items(self):
-        for item_index in self.treeview.selectedIndexes():
-            item = item_index.internalPointer()
-            item_index.model().remove_item(item)
+        if self.treeview.hasFocus():
+            for item_index in self.treeview.selectedIndexes():
+                item = item_index.internalPointer()
+                item_index.model().remove_item(item)

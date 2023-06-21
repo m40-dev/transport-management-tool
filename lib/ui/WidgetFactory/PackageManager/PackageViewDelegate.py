@@ -1,8 +1,6 @@
-from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout
-from PyQt6.QtCore import Qt, QRectF, pyqtSignal, QEvent
-from PyQt6.QtGui import QPalette, QPen, QPainterPath 
-from lib.ui.Theme import Application_Theme
-import lib.ui.WidgetFactory as WidgetFactory
+from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout, QGraphicsOpacityEffect
+from PyQt6.QtCore import Qt, QRectF, pyqtSignal, QPropertyAnimation, QSize, QEasingCurve, QAbstractAnimation
+from PyQt6.QtGui import QPalette, QPen, QPainterPath
 import json
 import os
 import pathlib
@@ -19,6 +17,8 @@ class PackageViewDelegate(QStyledItemDelegate):
         self.parent().setAlternatingRowColors(False)
 
     def createEditor(self, parent, option, index):
+        if not index.isValid():
+            return False
         column_name = self.model_data.headerData(index.column())
         item = index.internalPointer()
         # print("create editor for column", column_name, item, item.task_class)
@@ -33,6 +33,9 @@ class PackageViewDelegate(QStyledItemDelegate):
         return super().createEditor(parent, option, index)
 
     def setEditorData(self, editor, index):
+        if not index.isValid():
+            return False
+            
         column_name = self.model_data.headerData(index.column())
         item = index.internalPointer()
         
@@ -43,16 +46,14 @@ class PackageViewDelegate(QStyledItemDelegate):
             super().setEditorData(editor, index)
 
     def setModelData(self, editor, model, index):
-        # column_name = self.model_data.headerData(index.column())
-        # item = index.internalPointer()
-        # if column_name == "Type" and item.task_class == "TaskItem":
-        #     text = self.items[editor.currentIndex()]
-        #     model.setData(index, text, Qt.ItemDataRole.EditRole)
-        # else:
-        #     super().setModelData(editor, model, index)
+        if not index.isValid():
+            return False
         super().setModelData(editor, model, index)
 
     def paint(self, painter, option, index):
+        if not index.isValid():
+            return False
+
         column_name = self.model_data.headerData(index.column())
         item = index.internalPointer()
 
@@ -63,9 +64,9 @@ class PackageViewDelegate(QStyledItemDelegate):
                 self.setEditorData(widget, index)
                 self.parent().setIndexWidget(index, widget)
                 widget.setGeometry(option.rect)
-                widget.show()
             else:
                 widget.setGeometry(option.rect)
+            # widget.show()
             # Check if the item is selected
 
             if option.state & QStyle.StateFlag.State_Selected:
@@ -87,12 +88,17 @@ class PackageViewDelegate(QStyledItemDelegate):
         else:
             super().paint(painter, option, index)
 
+    def sizeHint(self, arg1, arg2):
+        return QSize(55, 55)
+
 class PackageManagerItemWidget(QFrame):
-    def __init__(self, data_item, application, parent=None):
+
+    def __init__(self, data_item, application, parent):
         super().__init__(parent=parent)
         self.application = application
         self.data_item = data_item
         self.treeview = parent
+        self.parent = parent
         self.object_definitions = self.application.object_definitions
 
         self.layout = QGridLayout(self)
@@ -112,11 +118,47 @@ class PackageManagerItemWidget(QFrame):
         """ Refresh state based on the model data """
         self.refresh_data()
 
-    # def filter_object(self, show_widget):
-    #     print("filter here", self.data_item.display, show_widget)
-    #     self.setHidden(not show_widget)
+        self.treeview.expanded.connect(self.expand_children)
+        self.treeview.collapsed.connect(self.collapse_children)
+        self.animate()
+    
+    def animate(self, reverse=False):
+        # animate startup
+        effect = QGraphicsOpacityEffect(self)
+        self.setGraphicsEffect(effect)
+        animation = QPropertyAnimation(self)
+        animation.setPropertyName(bytes("opacity", "utf-8"))
+        animation.setTargetObject(effect)
+        animation.setDuration(350)
+        animation.setStartValue(0)
+        animation.setEndValue(1)
+        if reverse:
+            animation.setStartValue(1)
+            animation.setEndValue(0)
+            animation.setDuration(100)
+        
+        animation.setEasingCurve(QEasingCurve.Type.OutInCubic)
+        animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
 
+    def expand_children(self, index):
+        if not index.isValid():
+            return False
+        expanded_item = index.internalPointer()
 
+        if expanded_item != self.data_item.parent():
+            return False
+        self.animate()
+        
+    def collapse_children(self, index):
+        if not index.isValid():
+            return False
+        collapsed_item = index.internalPointer()
+
+        if collapsed_item != self.data_item.parent():
+            return False
+        
+        self.animate(reverse=True)
+        
     def refresh_data(self):
         object_display = self.data_item.display
 
@@ -133,7 +175,7 @@ class PackageManagerItemWidget(QFrame):
 
 
 class PackageDefinitionWidget(PackageManagerItemWidget):
-    def __init__(self, data_item, application, parent=None):
+    def __init__(self, data_item, application, parent):
         
         super().__init__(data_item=data_item, application=application, parent=parent)
 
@@ -155,12 +197,16 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
         export = self.data_item.export_data
         if "ExportFilesLocation" in export.keys():
             export.pop("ExportFilesLocation")
+        if "DefinitionDirectory" in export.keys():
+            export.pop("DefinitionDirectory")
         if "DefinitionFile" in export.keys():
             export.pop("DefinitionFile")
 
         export_data = json.dumps(export, indent=4, separators=(',',':'))
         print("Export Data" , export_data)
+
         definition_file = self.data_item.data("DefinitionFile")
+
         if definition_file and self.application.current_workdir:
             export_file = f"{self.application.current_workdir}/{definition_file}"
             print("export to: ", definition_file, export_file)
@@ -173,14 +219,17 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
         index = self.treeview.model().indexOf(self.data_item)
         self.application.edit_package_definition(index)
 
-
 class TaskDefinitionWidget(PackageManagerItemWidget):
     
     edit_task_definition = pyqtSignal(object)
     
-    def __init__(self, data_item, application, parent=None):
+    def __init__(self, data_item, application, parent):
+
+        """ init parent class """
+        super().__init__(data_item=data_item, application=application, parent=parent)
 
         """ Add Custom Widgets """
+        self.parent=parent
         self.task_type_label = QLabel()
         self.task_state_label = QLabel()
         self.task_compiler_label = QLabel()
@@ -209,10 +258,6 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         task_buttons_layout.addStretch(2)
         task_buttons_layout.addWidget(self.edit_xml_definition_button)
         task_buttons_layout.addWidget(self.edit_task_definition_button)
-
-        """ init parent class """
-
-        super().__init__(data_item=data_item, application=application, parent=parent)
         
         self.setProperty("ExecutionPlannerWidget", "TaskItem")
 
@@ -232,6 +277,8 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         self.layout.addWidget(self.task_autoupdate_label, 3, 3)
         self.layout.setColumnStretch(4, 1)
 
+        self.data_item.data_changed.connect(self.refresh_item_data)
+        self.refresh_item_data()
 
     def edit_task_definition(self):
         index = self.treeview.model().indexOf(self.data_item)
@@ -241,9 +288,8 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         index = self.treeview.model().indexOf(self.data_item)
         self.application.edit_task_xml_definition(index)
 
-    def refresh_data(self):
-        super().refresh_data()
-
+    def refresh_item_data(self):
+        # super().refresh_data()
         # self.element_description.setText(self.data_item.data("Description"))
 
         self.task_type_label.setText(self.data_item.data("TaskType"))

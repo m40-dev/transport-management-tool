@@ -2,18 +2,18 @@ from PyQt6.QtCore import Qt
 from . import TemplateEditorTreeWidgetItem, TemplateEditorListWidgetItem, TE_Table_TreeWidgetItem
 
 class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, source_widget=None):
-        super(TE_RelationColumn_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget=source_widget)
+    def __init__(self, application, object_data, xml_object=None, source_widget_item=None):
+        super(TE_RelationColumn_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item)
 
         self.setFlags(self.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsUserCheckable)
         self.setCheckState(1, Qt.CheckState.Unchecked)
         self.setCheckState(2, Qt.CheckState.Unchecked)
         self.setCheckState(3, Qt.CheckState.Unchecked)
         
-        if isinstance(source_widget, TemplateEditorListWidgetItem) and self.auto_select_default:
+        if isinstance(source_widget_item, TemplateEditorListWidgetItem) and self.auto_select_default:
             self.set_relation_state(self.InitialRelationState)
 
-        if isinstance(source_widget, TemplateEditorListWidgetItem) and self.auto_select_default is False:
+        if isinstance(source_widget_item, TemplateEditorListWidgetItem) and self.auto_select_default is False:
             self.set_relation_state(0)
 
         self.update_relation_status()
@@ -37,7 +37,7 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
 
     @property
     def follow_table(self):
-        if self.TableGroup == self.ParentTable == self.source_widget.table_name:
+        if self.TableGroup == self.ParentTable == self.source_widget_item.table_name:
             return self.ChildTable
         return self.ParentTable
     
@@ -83,11 +83,11 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
     def set_relation_state(self, relation):
         self.object_data["Relation"] = relation
 
-        if isinstance(self.source_widget, TemplateEditorTreeWidgetItem):
-            self.source_widget.refresh()
+        if isinstance(self.source_widget_item, TemplateEditorTreeWidgetItem):
+            self.source_widget_item.refresh()
 
-        if isinstance(self.source_widget, TemplateEditorListWidgetItem):
-            self.source_widget.set_relation_state(self.object_data)
+        if isinstance(self.source_widget_item, TemplateEditorListWidgetItem):
+            self.source_widget_item.set_relation_state(self.object_data)
 
         self.update_relation_status()
 

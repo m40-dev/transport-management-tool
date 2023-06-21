@@ -10,6 +10,7 @@ class ProcessRunner(QProcess):
         super().__init__()
         self.planner_widget = planner_widget
         self.application = self.planner_widget.application
+        self.object_definitions = self.application.object_definitions
         self.readyReadStandardOutput.connect(self.handle_stdout)
         self.readyReadStandardError.connect(self.handle_stderr)
         self.finished.connect(self.process_finished)
@@ -52,16 +53,37 @@ class ProcessRunner(QProcess):
         if queued_task and len(self.task_queue) > 0:
             self.task_queue.remove(self.task_queue[0])
 
-        self.message.emit(f"Starting task execution ({task_name}). Action: [{action_type}]. Connection: [{connection}]", "Transport Manager")
-
+        self.message.emit(
+            f"Starting task execution ({task_name}). Action: [{action_type}]. Connection: [{connection}]",
+            "Transport Manager")
+        task_configuration = self.object_definitions.get("ExecutionPlanner_ExecutionTask")
+        
         self.current_item = task_item
         workdir = self.application.current_workdir
         variables_script = f"$WORKDIR='{workdir}'\r\n"
-        for param_name, param_value in task_item.task_data.items():
-            print(param_name, param_value)
-            variables_script += f"${param_name} = '{param_value}'\r\n"
+
+        if task_configuration:
+            for column, column_confguration in task_configuration.items():
+                column_value = task_item.task_data.get(column, None)
+
+                source_column = column_confguration.get("Source", None)
+                if source_column:
+                    # map column with source object attributes
+                    column_value = self.get_source_value(column, source_column)
+
+                if column_value:
+                    if isinstance(column_value, list):
+                        separator = column_confguration.get("Separator", ",")
+                        column_value = separator.join(column_value).replace(separator, '", "')
+                        variables_script += f'${column} = @("{column_value}")\r\n'
+                        continue
+                    column_value = column_value.strip()
+                    variables_script += f"${column} = '{column_value}'\r\n"
+
         variables_script += "\r\n"
 
+        self.message.emit(f" variables set: {variables_script}", "Transport Manager")
+        
         configuration = self.application.settings.value("ExecutionPlannerSettings")
         initializer_script = configuration.get("ExecutionPreScript", "") + "\r\n"
 
@@ -82,6 +104,20 @@ class ProcessRunner(QProcess):
         mode=QIODeviceBase.OpenModeFlag.ReadWrite)
 
         return True
+
+    def get_source_value(self, column, source_column):
+        # map column with source object attributes
+        source_value = self.current_item.task_data.get(source_column, None)
+        if "PARENT_DEF." in source_column:
+            parent_definition = self.current_item.task_data.get("PARENT_DEF", None)
+            parent_column = source_column.split(".")[1]
+            parent_value = parent_definition.get(parent_column, None)
+            if not parent_value:
+                self.message.emit(
+                f"Unable to map the parent property [{parent_column}] or there is no value to be mapped.",
+                "Transport Manager")
+            source_value = parent_value
+        return source_value
 
     def handle_stderr(self):
         data = self.readAllStandardError()

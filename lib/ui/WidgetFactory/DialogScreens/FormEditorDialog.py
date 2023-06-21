@@ -90,10 +90,13 @@ class FormEditorDialog(QtWidgets.QDialog):
 
         if isinstance(editor_widget, FileInputWidget):
             editor_widget.setCurrentPath(value)
+        
+        if isinstance(editor_widget, ListInputWidget):
+            editor_widget.setValues(value)
 
 
     def get_editor(self, column, column_configuration):
-        supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput"]
+        supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput"]
 
         field_type = column_configuration.get("FieldType", None)
 
@@ -111,12 +114,26 @@ class FormEditorDialog(QtWidgets.QDialog):
         
         if field_type == "FileInput":
             return self.file_input(column, column_configuration)
+
+        if field_type == "ListInput":
+            return self.list_input(column, column_configuration)
         
         return None
 
+    def list_input(self, column, column_configuration):
+        editor = ListInputWidget(
+            application=self.application, 
+            column_name=column, 
+            column_configuration=column_configuration
+            )
+        editor.list_changed.connect(
+            lambda value, column=column: 
+            self.update_form_data(column, value)
+            )
+        return editor
+
     def fixed_input(self, column, column_configuration):
         options = column_configuration.get("Options", {})
-
         editor = QtWidgets.QComboBox()
         
         for key, value in options.items():
@@ -161,28 +178,6 @@ class FormEditorDialog(QtWidgets.QDialog):
         return editor
 
     def file_input(self, column, column_configuration):
-        # editor = QtWidgets.QWidget()
-        # editor_layout=QtWidgets.QHBoxLayout(editor)
-        # button = QtWidgets.QToolButton()
-        # button.setText("...")
-        # # editor.setLayout(editor_layout)
-        # path_input=QtWidgets.QLineEdit()
-        # editor_layout.addWidget(path_input)
-        # editor_layout.addWidget(button)
-
-        # button.clicked.connect(
-        #     lambda column=column, column_configuration=column_configuration: 
-        #     self.get_file_path(column, column_configuration, path_input=path_input)
-        #     )
-
-        # path_input.textChanged.connect(
-        #         lambda value, column=column: 
-        #         self.update_form_data(column, value)
-        #         )
-
-        # editor.setProperty("Widget", "EditorDialog")
-        # path_input.setProperty("Widget", "EditorDialog")
-        # button.setProperty("Widget", "EditorDialog")
         editor = FileInputWidget(
             application=self.application, 
             column_name=column, 
@@ -195,34 +190,76 @@ class FormEditorDialog(QtWidgets.QDialog):
         
         return editor
 
-
-class FileInputWidget(QtWidgets.QWidget):
-    file_path_changed = QtCore.pyqtSignal(str)
-
+class FormEditorWidget(QtWidgets.QWidget):
     def __init__(self, application, column_name, column_configuration):
-        super(FileInputWidget, self).__init__(flags=QtCore.Qt.WindowType.Dialog, parent=application)
-
+        super(FormEditorWidget, self).__init__(
+            flags=QtCore.Qt.WindowType.Dialog, 
+            parent=application)
+        
         self.application = application
-        self._column_confguration = column_configuration
-        placeholder_text = column_configuration.get("PlaceholderText", "")
+        self.column_confguration = column_configuration
+        self.placeholder_text = column_configuration.get("PlaceholderText", "")
 
         self.layout = QtWidgets.QHBoxLayout(self)
         self.layout.setSpacing(2)
         self.layout.setContentsMargins(QtCore.QMargins(0,0,0,0))
+        self.setProperty("Widget", "EditorDialog")
+
+class ListInputWidget(FormEditorWidget):
+    list_changed = QtCore.pyqtSignal(list)
+
+    def __init__(self, application, column_name, column_configuration):
+        super(ListInputWidget, self).__init__(
+            application=application, 
+            column_name=column_name, 
+            column_configuration=column_configuration)
+
+        self.list_input=QtWidgets.QTextEdit()
+        self.list_input.setPlaceholderText(self.placeholder_text)
+        self.list_input.textChanged.connect(self.updateValues)
+        self.layout.addWidget(self.list_input)
+
+        self.list_input.setProperty("Widget", "EditorDialog")
+        self.list_input.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
+
+    def setValues(self, value_list):
+        if value_list is None:
+            return False
+        separator = self.column_confguration.get("Separator", ",")
+        separator += " "
+        self.list_input.setText(separator.join(value_list))
+
+    def getValues(self):
+        separator = self.column_confguration.get("Separator", ",")
+        editor_text = self.list_input.toPlainText()
+        values = editor_text.split(separator)
+        return map(str.strip, values)
+
+    def updateValues(self):
+        self.list_changed.emit(self.getValues())
+
+
+class FileInputWidget(FormEditorWidget):
+    file_path_changed = QtCore.pyqtSignal(str)
+
+    def __init__(self, application, column_name, column_configuration):
+        super(FileInputWidget, self).__init__(
+            application=application, 
+            column_name=column_name, 
+            column_configuration=column_configuration)
 
         self.path_button = QtWidgets.QToolButton()
         self.path_button.setText("...")
 
         self.path_input=QtWidgets.QLineEdit()
-        self.path_input.setPlaceholderText(placeholder_text)
+        self.path_input.setPlaceholderText(self.placeholder_text)
 
         self.layout.addWidget(self.path_input)
         self.layout.addWidget(self.path_button)
 
-        self.setProperty("Widget", "EditorDialog")
         self.path_input.setProperty("Widget", "EditorDialog")
         self.path_button.setProperty("Widget", "EditorDialog")
-
+        self.path_input.textChanged.connect(self.setCurrentPath)
         self.path_button.clicked.connect(
             lambda column=column_name, column_configuration=column_configuration: 
             self.get_file_path(column, column_configuration)
@@ -242,7 +279,6 @@ class FileInputWidget(QtWidgets.QWidget):
                 file_path = Path(file_path).relative_to(self.application.current_workdir)
             if path_mode == "FileName":
                 file_path = Path(file_path).name
-
             self.setCurrentPath(str(file_path))
 
     def setCurrentPath(self, new_path):
