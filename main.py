@@ -44,9 +44,9 @@ from lib.xml.sql_script_container import sql_script_container
 
 from lib.data.DataModels import PackageDefinitionModel
 
-VERSION = '0.5'
+VERSION = '0.5.1'
 XML_PREVIEW_TIMER = 100
-FILTER_EXEC_TIMER = 700
+FILTER_EXEC_TIMER = 650
         
 class Transport_Manager(QMainWindow):
     """Main window class for session launcher"""
@@ -502,8 +502,17 @@ class Transport_Manager(QMainWindow):
         contextMenu.add_task_definition.connect(self.add_task_definition)
         contextMenu.edit_task_definition.connect(self.edit_task_definition)
         contextMenu.edit_task_xml_definition.connect(self.edit_task_xml_definition)
+        contextMenu.save_package_definitions.connect(self.save_package_definition)
+        contextMenu.collapse_all_definitions.connect(self.collapse_all_package_definitions)
+        contextMenu.expand_all_definitions.connect(self.expand_all_package_definitions)
         if len(contextMenu.menu_items) > 0:
             contextMenu.popup(menu_target)
+
+    def collapse_all_package_definitions(self):
+        self.ui.PackageViewTreeView.collapseAll()
+
+    def expand_all_package_definitions(self):
+        self.ui.PackageViewTreeView.expandAll()
 
     def add_package_definition(self, source_index):
         print("Add Package Definition", source_index)
@@ -538,6 +547,16 @@ class Transport_Manager(QMainWindow):
                 data = dialog.form_data
                 source_item = source_index.internalPointer()
                 source_item.update_data(data)
+
+    def save_package_definition(self, source_index):
+        if len(self.ui.PackageViewTreeView.selectedIndexes())>0:
+            for item_index in self.ui.PackageViewTreeView.selectedIndexes():
+                package_definition = item_index.internalPointer()
+                package_definition.save()
+        else:
+            if source_index.isValid():
+                package_definition = item_index.internalPointer()
+                package_definition.save()
 
     def add_task_definition(self, source_index):
         print("add task definition for", source_index)

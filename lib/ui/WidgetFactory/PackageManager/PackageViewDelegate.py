@@ -194,26 +194,7 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
         self.save_feature_button.clicked.connect(self.save_feature)
 
     def save_feature(self):
-        export = self.data_item.export_data
-        if "ExportFilesLocation" in export.keys():
-            export.pop("ExportFilesLocation")
-        if "DefinitionDirectory" in export.keys():
-            export.pop("DefinitionDirectory")
-        if "DefinitionFile" in export.keys():
-            export.pop("DefinitionFile")
-
-        export_data = json.dumps(export, indent=4, separators=(',',':'))
-        print("Export Data" , export_data)
-
-        definition_file = self.data_item.data("DefinitionFile")
-
-        if definition_file and self.application.current_workdir:
-            export_file = f"{self.application.current_workdir}/{definition_file}"
-            print("export to: ", definition_file, export_file)
-            pathlib.Path(export_file).parent.mkdir(parents=True, exist_ok=True)
-            with open(export_file, 'w') as doc:
-                doc.write(export_data)
-            self.data_item.save()
+        self.data_item.save()
     
     def edit_feature(self):
         index = self.treeview.model().indexOf(self.data_item)

@@ -8,6 +8,8 @@ FILTER_MIN_LEN = 1
 
 class JSONDataItem(QObject):
     data_changed = pyqtSignal()
+    locationChanged = pyqtSignal(object) 
+    dataDropped = pyqtSignal(dict)
 
     def __init__(self, application, task_class="JSONDataItem", task_data=None, parent=None, model_reference=None):
         super().__init__(parent=parent)
@@ -32,6 +34,17 @@ class JSONDataItem(QObject):
             children = task_data.get("children", None)
             if children:
                 self.loadChildren(children)
+
+        self.dataDropped.connect(self.itemDataDropped)
+        self.locationChanged.connect(self.itemLocationChanged)
+
+    def itemDataDropped(self, source_dict):
+        # print("foreign model object dropped", source_dict.get("objectclass", None), self.task_class)
+        pass
+
+    def itemLocationChanged(self, source_item):
+        # print("object location changed", source_item.parent().display, self.parent().display)
+        pass
 
     @property
     def filter_match(self):
@@ -291,11 +304,11 @@ class JSONDataItem(QObject):
             self.setData(field, value)
             return True
 
-    # def parent(self):
-    #     return self._parent
+    def parent(self):
+        return self._parent
 
-    # def setParent(self, parent):
-    #     self._parent = parent
+    def setParent(self, parent):
+        self._parent = parent
 
     def addChild(self, child, row=None):
         if row is not None and row <= self.childCount():
@@ -381,16 +394,39 @@ class JSONDataItem(QObject):
             child_data = child_item.task_data
             children.append(child_data)
 
-        # self._task_data['children'] = children
-        task_data = deepcopy(self._task_data)
-        task_data['children'] = children
-        task_data['uid'] = self.uid
-        task_data['objectclass'] = self.task_class
-        task_data['row'] = self.row()
-        if self.parent():
-            if self.parent().task_class == "PackageManager_PackageDefinition":
-                task_data['PARENT_DEF'] = self.parent().export_data
-        return task_data
+        export_data = deepcopy(self._task_data)
+
+        export_data['uid'] = self.uid
+        export_data['objectclass'] = self.task_class
+        export_data['row'] = self.row()
+        export_data['children'] = children
+        export_data['parent'] = self.parent_data
+        
+        # if self.parent():
+        #     if self.parent().task_class == "PackageManager_PackageDefinition":
+        #         export_data['PARENT_DEF'] = self.parent_data
+        return export_data
+
+    @task_data.setter
+    def task_data(self, dict_data):
+        self._task_data = dict_data
+
+    @property
+    def parent_data(self):
+        if not self.parent():
+            return None
+
+        parent = self.parent()
+
+        if parent._task_data is None:
+            return parent._task_data
+        
+        object_data = deepcopy(parent._task_data)
+        object_data['uid'] = parent.uid
+        object_data['objectclass'] = parent.task_class
+        object_data['row'] = parent.row()
+
+        return object_data
 
     @property
     def edit_data(self):

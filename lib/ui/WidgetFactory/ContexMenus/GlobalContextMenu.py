@@ -91,7 +91,9 @@ class package_definition_context_menu(QMenu):
     add_task_definition = pyqtSignal(object)
     edit_task_xml_definition = pyqtSignal(object)
     edit_task_definition = pyqtSignal(object)
-
+    save_package_definitions = pyqtSignal(object)
+    collapse_all_definitions = pyqtSignal()
+    expand_all_definitions = pyqtSignal()
 
     def __init__(self, parent, source_index):
         super(package_definition_context_menu, self).__init__(parent)
@@ -100,9 +102,19 @@ class package_definition_context_menu(QMenu):
         self.menu_items = []
         source_item = source_index.internalPointer()
 
+        action_collapse_all_definitions = self.addAction("Collapse All Items")
+        action_collapse_all_definitions.triggered.connect(self.collapse_all_definitions)
+
+        action_expand_all_definitions = self.addAction("Expand All Items")
+        action_expand_all_definitions.triggered.connect(self.expand_all_definitions)
+
         action_add_package_definition = self.addAction("Add Package Definition")
         action_add_package_definition.triggered.connect(lambda: self.add_package_definition.emit(source_index) )
+        
+        self.menu_items.append(action_expand_all_definitions)
+        self.menu_items.append(action_collapse_all_definitions)
         self.menu_items.append(action_add_package_definition)
+
 
         if source_item:
             if source_item.task_class == "PackageManager_PackageDefinition":
@@ -112,8 +124,12 @@ class package_definition_context_menu(QMenu):
                 action_edit_package_definition = self.addAction("Edit Package Definition")
                 action_edit_package_definition.triggered.connect(lambda: self.edit_package_definition.emit(source_index))
 
+                action_save_package_definition = self.addAction("Save Package Definition(s)")
+                action_save_package_definition.triggered.connect(lambda: self.save_package_definitions.emit(source_index))
+
                 self.menu_items.append(action_add_package_definition)
                 self.menu_items.append(action_edit_package_definition)
+                self.menu_items.append(action_save_package_definition)
 
             if source_item.task_class == "PackageManager_TaskDefinition":
                 action_edit_task_definition = self.addAction("Edit Task")

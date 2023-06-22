@@ -2,6 +2,7 @@ from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData, pyqtSig
 from PyQt6.QtGui import QStandardItemModel
 import json
 
+
 class JSONDataModel(QAbstractItemModel):
     filterStringChanged = pyqtSignal(str) 
 
@@ -169,9 +170,9 @@ class JSONDataModel(QAbstractItemModel):
         for index in indexes:
             if index.isValid():
                 item = index.internalPointer()
-                export = item.task_data
-                if export not in items_data:
-                    items_data.append(export)
+                task_data = item.task_data
+                if task_data not in items_data:
+                    items_data.append(task_data)
         
         items_data_sorted = sorted(
                             items_data, 
@@ -201,31 +202,44 @@ class JSONDataModel(QAbstractItemModel):
         decodedData = bytes(encodedData)
         jsondata = json.loads(decodedData)
         newItems = []
-        dropped_guids = []
+        source_items = []
         for dropped_item in jsondata:
-            item_uid = dropped_item.get('uid', None)
-            if item_uid:
-                dropped_guids.append(item_uid)
+            source_item_uid = dropped_item.get('uid', None)
+            source_item = None
+            if source_item_uid:
+                # find the source Item and save it
+                source_item = self.find_item_by_attribute("uid", source_item_uid)
+                if source_item:
+                    source_items.append(source_item)
+
             task_class = dropped_item.get('objectclass', "JSONDataItem")
+
             # print("dropped item:", dropped_item)
-            newTask = self.modelDataClass(
+            # create new object from the source item data and add it to the list, all dropped items will be inserted at once
+            new_item = self.modelDataClass(
                 application=self.application, 
                 task_class=task_class, 
                 task_data=dropped_item, 
                 parent=parentItem,
                 model_reference=self)
-            newItems.append(newTask)
-            newTask.is_saved = False
-        # print("drop location", row, column, jsondata)
+            newItems.append(new_item)
+            new_item.is_saved = False
+
+            #emit relocation signal for the new item and tell it about its source item from the same model
+            if source_item:
+                new_item.locationChanged.emit(source_item)
+            else:
+                #emit new item from source signal to tell new item about source item data
+                new_item.dataDropped.emit(dropped_item)
+            
+        
+        #insert dropped items at new location
         self.insert_items(parentIndex, newItems, row, column)
 
-        for dropped_guid in dropped_guids:
-            item = self.find_item_by_attribute("uid", dropped_guid)
-            # print(dropped_guid, item)
-            if item:
-                
-                self.remove_item(item)
-        # self.exportModelToJson()
+        #remove source objects at once
+        for source_item in source_items:
+            self.remove_item(source_item)
+
         return True
     
     def insert_item(self, task_class, dict_data, parentIndex):

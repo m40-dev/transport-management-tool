@@ -71,8 +71,36 @@ class TaskExecutionItem(JSONDataItem):
             task_data=task_data,
             model_reference=model_reference
             )
-
+        self._package_definition_data = {}
         self.migrate(task_class)
+
+    def itemDataDropped(self, source_dict):
+        # print("foreign object dropped into task execution view", source_dict.get("objectclass", None), self.task_class)
+        source_object_class = source_dict.get("objectclass", None)
+        if source_object_class == "PackageManager_PackageDefinition":
+            # print("package definition dropped, update child items")
+            for child_task in self.children():
+                child_task.package_definition = source_dict
+        
+        if source_object_class == "PackageManager_TaskDefinition":
+            # print("task definition dropped, update this item with parent data only")
+            parent_object = source_dict.get("parent", None)
+            if parent_object:
+                self.package_definition = parent_object
+
+
+    def itemLocationChanged(self, source_item):
+        print("execution planner item moved")
+        #pass the package definition over to new item
+        self.package_definition = source_item.package_definition
+
+    @property
+    def package_definition(self):
+        return self._package_definition_data
+
+    @package_definition.setter
+    def package_definition(self, value):
+        self._package_definition_data = value
 
     def migrate(self, source_class):
         if source_class in ["ExecutionPlanner_ExecutionTask", "ExecutionPlanner_ExecutionGroup"]:
@@ -93,17 +121,6 @@ class TaskExecutionItem(JSONDataItem):
 
         self.display = source_display
         self.description = source_description
-
-    # def loadChildren(self, child_tasks):
-    #     if child_tasks:
-    #         for task_object in child_tasks:
-    #             task_class = task_object.get("objectclass", "TaskItem")
-    #             # if not task_class:
-    #             #     print("Mandatory task object attribute missing: objectclass")
-    #             #     continue
-
-    #             task_item = TaskExecutionItem(task_class, task_object, parent=self)
-    #             self.addChild(task_item)
 
     # @property
     # def task_data(self):

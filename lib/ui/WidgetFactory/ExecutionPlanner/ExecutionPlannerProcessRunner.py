@@ -109,14 +109,15 @@ class ProcessRunner(QProcess):
         # map column with source object attributes
         source_value = self.current_item.task_data.get(source_column, None)
         if "PARENT_DEF." in source_column:
-            parent_definition = self.current_item.task_data.get("PARENT_DEF", None)
+            parent_definition = self.current_item.package_definition
             parent_column = source_column.split(".")[1]
-            parent_value = parent_definition.get(parent_column, None)
-            if not parent_value:
-                self.message.emit(
-                f"Unable to map the parent property [{parent_column}] or there is no value to be mapped.",
-                "Transport Manager")
-            source_value = parent_value
+            if parent_definition:
+                parent_value = parent_definition.get(parent_column, None)
+                if not parent_value:
+                    self.message.emit(
+                    f"Unable to map the parent property [{parent_column}] or there is no value to be mapped.",
+                    "Transport Manager")
+                source_value = parent_value
         return source_value
 
     def handle_stderr(self):
