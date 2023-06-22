@@ -250,7 +250,7 @@ class Transport_Manager(QMainWindow):
         """ Initial transport template object """
         self.new_transport_template()
         self.new_execution_plan()
-        self.load_workdir("C:/Users/m40/Downloads/transport manager test/Cleaned")
+        # self.load_workdir("C:/Users/m40/Downloads/transport manager test/Cleaned")
 
     def enter_shortcut(self):
         if self.ui.SearchPackageLineEdit.hasFocus():
