@@ -156,11 +156,11 @@ class ExecutionPlannerContextMenu(QMenu):
         action_add_execution_group.triggered.connect(lambda: self.add_execution_group.emit(source_item) )
 
         if clickedItem:
-            if clickedItem.task_class != "TaskItem":
+            if clickedItem.task_class != "ExecutionPlanner_ExecutionTask":
                 # print(clickedItem.task_class)
                 self.menu_items.append(action_add_execution_group)
 
-            if clickedItem.task_class == "TaskGroup":
+            if clickedItem.task_class == "ExecutionPlanner_ExecutionGroup":
                 action_edit_execution_group = self.addAction("Edit Task Execution Group")
                 action_edit_execution_group.triggered.connect(lambda: self.edit_execution_group.emit(source_item) )
                 self.menu_items.append(action_edit_execution_group)

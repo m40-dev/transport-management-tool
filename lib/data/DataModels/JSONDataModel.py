@@ -239,7 +239,6 @@ class JSONDataModel(QAbstractItemModel):
         #remove source objects at once
         for source_item in source_items:
             self.remove_item(source_item)
-
         return True
     
     def insert_item(self, task_class, dict_data, parentIndex):

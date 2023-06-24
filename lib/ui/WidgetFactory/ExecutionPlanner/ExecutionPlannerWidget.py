@@ -194,7 +194,7 @@ class ExecutionPlannerWidget(QWidget):
 
         if drop_item is None:
             # no target item - drop at top level
-            if source_item._task_class == "ExecutionPlanner_ExecutionGroup":
+            if source_item._task_class in ["ExecutionPlanner_ExecutionGroup", "PackageManager_PackageDefinition"]:
                 move_accept = True
 
         if (event.mimeData().hasFormat("application/vnd.jsondataitem") or event.mimeData().hasFormat("application/vnd.ExecutionPlannerItem")) and move_accept:

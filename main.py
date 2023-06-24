@@ -19,6 +19,7 @@ import json
 from cryptography.fernet import Fernet
 import base64
 from pathlib import Path
+import os
 
 from lib.ui.Theme import Application_Theme
 
@@ -250,7 +251,7 @@ class Transport_Manager(QMainWindow):
         """ Initial transport template object """
         self.new_transport_template()
         self.new_execution_plan()
-        # self.load_workdir("C:/Users/m40/Downloads/transport manager test/Cleaned")
+        self.load_workdir("C:/Users/m40/Downloads/transport manager test")
 
     def enter_shortcut(self):
         if self.ui.SearchPackageLineEdit.hasFocus():
@@ -389,17 +390,10 @@ class Transport_Manager(QMainWindow):
         definitions = []
         for file_path in Path(workdir).rglob( '*.json' ):
             if file_path.is_file():
-                #TODO: Get the export location from program configuration
-                feature_definition_location = file_path.parent.relative_to(workdir_path)
-                task_definitions_location = str(feature_definition_location) +  "/Export"
-                
+                feature_definition_location = file_path.relative_to(workdir_path)
                 json_content = self.load_file(file_path.absolute())
                 package_definition = json.loads(json_content)
-
-                #store some package definition location info 
-                package_definition["ExportFilesLocation"] = task_definitions_location
-                package_definition["DefinitionDirectory"] = str(feature_definition_location)
-                package_definition["DefinitionFile"] = str(feature_definition_location) + "/" + file_path.name
+                package_definition["DefinitionFile"] = str(feature_definition_location)
                 definitions.append(package_definition)
         
         sort_attribute = ""
@@ -547,6 +541,7 @@ class Transport_Manager(QMainWindow):
                 data = dialog.form_data
                 source_item = source_index.internalPointer()
                 source_item.update_data(data)
+                print("final task definition path", source_item.get_file_path())
 
     def save_package_definition(self, source_index):
         if len(self.ui.PackageViewTreeView.selectedIndexes())>0:
@@ -588,15 +583,14 @@ class Transport_Manager(QMainWindow):
                 data = dialog.form_data
                 source_item = source_index.internalPointer()
                 source_item.update_data(data)
+                print("final task definition path", source_item.get_file_path())
 
     def edit_task_xml_definition(self, source_item):
         source_item = source_item.internalPointer()
-        definitions_location = source_item.parent().data("ExportFilesLocation")
-        definition_file = source_item.data("DefinitionFile")
-        xml_definition = f"{self.current_workdir}/{definitions_location}/{definition_file}"
-        
-        xml_file_location = xml_definition
-        self.open_file(xml_file_location)
+        file_path = source_item.get_file_path()
+        if not file_path.is_file():
+            file_path.touch()
+        self.open_file(str(file_path))
 
     """ Session Data Management """
     def get_encryption_key(self, initial=False):

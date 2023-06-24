@@ -10,6 +10,7 @@ class JSONDataItem(QObject):
     data_changed = pyqtSignal()
     locationChanged = pyqtSignal(object) 
     dataDropped = pyqtSignal(dict)
+    itemAdded = pyqtSignal(object)
 
     def __init__(self, application, task_class="JSONDataItem", task_data=None, parent=None, model_reference=None):
         super().__init__(parent=parent)
@@ -317,6 +318,7 @@ class JSONDataItem(QObject):
         else:
             # print('append to the end')
             self._children.append(child)
+        self.itemAdded.emit(child)
 
     def removeChild(self, row):
         if row >= 0 and row <= len(self._children):
@@ -345,8 +347,9 @@ class JSONDataItem(QObject):
     
     def setData(self, column, value):
         # print("set data", column, value)
-        prev_value = self._task_data.get(column, None)
+        prev_value = self._task_data.get(column, "")
         if prev_value != value:
+            print(f"set item data for column with new value, {column}, previous value {prev_value}, new value {value}")
             self._task_data[column] = value
             self.is_saved = False
             self.data_changed.emit()
@@ -401,10 +404,52 @@ class JSONDataItem(QObject):
         export_data['row'] = self.row()
         export_data['children'] = children
         export_data['parent'] = self.parent_data
-        
-        # if self.parent():
-        #     if self.parent().task_class == "PackageManager_PackageDefinition":
-        #         export_data['PARENT_DEF'] = self.parent_data
+
+        configuration = self.object_configuration
+        for field, field_configuration in configuration.items():
+
+            field_type = field_configuration.get("FieldType", None)
+            field_role = field_configuration.get("FieldRole", None)
+            
+            min_value = field_configuration.get("MinValue", 1)
+            max_value = field_configuration.get("MaxValue", 255)
+            value_range = max_value - min_value
+            
+            if field_role and field_role == "SortOrder":
+                treeview_order = self.row()
+                if field_configuration.get("DistributeEvenly", "False") == "True":
+                    sibling_count = self.parent().childCount()
+                    if sibling_count == 0:
+                        sibling_count = 1
+                    sorting_step = value_range / sibling_count
+                    treeview_order = round(sorting_step * treeview_order ) + min_value
+                else:
+                    if treeview_order >= max_value:
+                        treeview_order = max_value
+                    else:
+                        treeview_order = treeview_order + min_value
+                #set export data value
+                export_data[field] = treeview_order
+
+                #update task data with newly generated value
+                self._task_data[field] = treeview_order
+                    
+            
+            if field_type and field_type == "ChildObjectReference":
+                child_class = field_configuration.get("Class", None)
+                children = []
+                for i in range(self.childCount()):
+                    child_item = self.child(i)
+                    if child_item.task_class == child_class:
+                        child_data = child_item.export_data
+                        children.append(child_data)
+                export_data[field] = children
+
+            if field_type and field_type == "ListInput":
+                 object_data = self._task_data.get(field, "")
+                 if not isinstance(object_data, list):
+                    export_data[field] = [object_data]
+                    self._task_data[field] = [object_data]
         return export_data
 
     @task_data.setter
@@ -430,7 +475,7 @@ class JSONDataItem(QObject):
 
     @property
     def edit_data(self):
-        return self._task_data
+        return self.task_data
 
     def update_data(self, dict_data):
         for key, value in dict_data.items():
@@ -444,52 +489,57 @@ class JSONDataItem(QObject):
         configuration = self.object_configuration
         
         export_data = {}
+        object_data = self.task_data
         
         if configuration is None:
-            return export_data
+            return object_data
 
         for field, field_configuration in configuration.items():
             is_for_export = field_configuration.get("IsForDataExport", "True") == "True"
             if not is_for_export:
                 continue
+            object_field_value = object_data.get(field, "")
             
-            export_data[field] = self._task_data.get(field, "")
+            #export only items that have value set
+            # if object_field_value:
+                # export_data[field] = object_field_value
+                # continue
 
-            field_type = field_configuration.get("FieldType", None)
-            field_role = field_configuration.get("FieldRole", None)
+            export_data[field] = object_field_value
+            # field_type = field_configuration.get("FieldType", None)
+            # field_role = field_configuration.get("FieldRole", None)
             
-            min_value = field_configuration.get("MinValue", 1)
-            max_value = field_configuration.get("MaxValue", 255)
-            value_range = max_value - min_value
+            # min_value = field_configuration.get("MinValue", 1)
+            # max_value = field_configuration.get("MaxValue", 255)
+            # value_range = max_value - min_value
             
-            
-            if field_role and field_role == "SortOrder":
-                treeview_order = self.row()
-                if field_configuration.get("DistributeEvenly", "False") == "True":
-                    sibling_count = self.parent().childCount()
-                    if sibling_count == 0:
-                        sibling_count = 1
-                    sorting_step = value_range / sibling_count
-                    export_data[field] = round(sorting_step * treeview_order ) + min_value
-                else:
-                    if treeview_order >= max_value:
-                        export_data[field] = max_value
-                    else:
-                        export_data[field] = treeview_order + min_value
+            # if field_role and field_role == "SortOrder":
+            #     treeview_order = self.row()
+            #     if field_configuration.get("DistributeEvenly", "False") == "True":
+            #         sibling_count = self.parent().childCount()
+            #         if sibling_count == 0:
+            #             sibling_count = 1
+            #         sorting_step = value_range / sibling_count
+            #         export_data[field] = round(sorting_step * treeview_order ) + min_value
+            #     else:
+            #         if treeview_order >= max_value:
+            #             export_data[field] = max_value
+            #         else:
+            #             export_data[field] = treeview_order + min_value
 
-            if field_type and field_type == "ChildObjectReference":
-                child_class = field_configuration.get("Class", None)
-                children = []
-                for i in range(self.childCount()):
-                    child_item = self.child(i)
-                    if child_item.task_class == child_class:
-                        child_data = child_item.export_data
-                        children.append(child_data)
-                export_data[field] = children
+            # if field_type and field_type == "ChildObjectReference":
+            #     child_class = field_configuration.get("Class", None)
+            #     children = []
+            #     for i in range(self.childCount()):
+            #         child_item = self.child(i)
+            #         if child_item.task_class == child_class:
+            #             child_data = child_item.export_data
+            #             children.append(child_data)
+            #     export_data[field] = children
 
-            if field_type and field_type == "ListInput":
-                 object_data = self._task_data.get(field, "")
-                 if not isinstance(object_data, list):
-                    export_data[field] = [object_data]
+            # if field_type and field_type == "ListInput":
+            #      object_data = self._task_data.get(field, "")
+            #      if not isinstance(object_data, list):
+            #         export_data[field] = [object_data]
 
         return export_data

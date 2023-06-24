@@ -22,7 +22,7 @@
                 "DefaultValue": "definition.json",
                 "IsForDataExport": "False",
                 "FileExtension": "*.json",
-                "FilePathMode": "Relative"
+                "FileSelectionMode": "Relative"
             },
         "Priority":
             {
@@ -78,12 +78,18 @@
         "DefinitionFile": 
             {
                 "FieldType": "FileInput",
-                "FilePathMode": "FileName"
+                "FileSelectionMode": "FileName",
+                "RedirectDirectoryStatic": "Export",
+                "RedirectDirectoryRelativeTo": "Parent",
+                "RedirectDirectoryDynamic": "TaskName"
             },
         "ExportFile":
             {
                 "FieldType": "FileInput",
-                "FilePathMode": "FileName"
+                "FileSelectionMode": "FileName",
+                "RedirectDirectoryStatic": "Data",
+                "RedirectDirectoryRelativeTo": "Parent",
+                "RedirectDirectoryDynamic": "TaskName/TaskType"
             },
         "ExportFileHash": 
             {
@@ -116,7 +122,7 @@
         "TestScript":
             {
                 "FieldType": "FileInput",
-                "FilePathMode": "FileName"
+                "FileSelectionMode": "FileName"
             },
         "Tag":
             {

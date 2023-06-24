@@ -11,6 +11,7 @@ class FormEditorDialog(QtWidgets.QDialog):
         self.application = application
         self._form_confguration = form_confguration
         self._form_data = {}
+        self._base_object_data = None
         self.setMinimumSize(400, 400)
 
         self.setWindowTitle(f"{self.application.windowTitle()} - {dialog_name}") 
@@ -33,6 +34,11 @@ class FormEditorDialog(QtWidgets.QDialog):
         self.layout.setRowStretch(self.layout.rowCount(), 2)
         self.layout.addWidget(self.buttonBox, self.layout.rowCount()+1, 1, 1, 2)
 
+    def accept(self):
+        print("vaildate and accept")
+        # print("form data", self.form_data)
+        super().accept()
+
     def setup_form(self):
         # print("setup form")
         # print(self._form_data)
@@ -47,8 +53,10 @@ class FormEditorDialog(QtWidgets.QDialog):
             if field_role and field_role == "UniqueIdentifier":
                 default_value = str(uuid.uuid4())
 
-            #set default value
-            self._form_data[column] = default_value
+            #set default value only if available. This ensures that only required fields will be updated with the form data
+            # having too many columns that are not editable might result in data overwrites where this is not desired (e.g. children data)
+            if default_value:
+                self.update_form_data(column, default_value)
 
             if not widget_required:
                 continue
@@ -63,23 +71,32 @@ class FormEditorDialog(QtWidgets.QDialog):
 
     def update_form_data(self, column, value):
         # print("update form data", column, value)
-        self._form_data[column] = value
+        if column:
+            self._form_data[column] = value
 
     @property
     def form_data(self):
-        print("return form data", self._form_data)
+        # print("return form data", self._form_data)
         return self._form_data
 
     def set_form_data(self, source_index):
+        #configures the editors based on the source data of the object
+        #sets the values for any hidden items as well
         source_item = None
         if source_index.isValid():
             source_item = source_index.internalPointer()
         else:
             return False
-
+        self._base_object_data = source_item.edit_data
         for column, value in source_item.edit_data.items():
+            # self.form_data[column]=value
             editor_widget = self.editors.get(column, None)
-            self.set_editor_data(editor_widget, value)
+            if editor_widget:
+                #configure the widget with base object value
+                self.set_editor_data(editor_widget, value)
+            form_column = self.form_data.get(column, None)
+            if form_column and len(str(value).strip()) > 0:
+                self.update_form_data(column, value)
 
     def set_editor_data(self, editor_widget, value):
         if isinstance(editor_widget, (QtWidgets.QLineEdit, QtWidgets.QTextEdit)):
@@ -93,7 +110,6 @@ class FormEditorDialog(QtWidgets.QDialog):
         
         if isinstance(editor_widget, ListInputWidget):
             editor_widget.setValues(value)
-
 
     def get_editor(self, column, column_configuration):
         supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput"]
@@ -259,7 +275,7 @@ class FileInputWidget(FormEditorWidget):
 
         self.path_input.setProperty("Widget", "EditorDialog")
         self.path_button.setProperty("Widget", "EditorDialog")
-        self.path_input.textChanged.connect(self.setCurrentPath)
+        self.path_input.textChanged.connect(self.file_path_changed)
         self.path_button.clicked.connect(
             lambda column=column_name, column_configuration=column_configuration: 
             self.get_file_path(column, column_configuration)
@@ -267,7 +283,7 @@ class FileInputWidget(FormEditorWidget):
 
     def get_file_path(self, column, column_configuration):
         file_filter = column_configuration.get("FileExtension", "*")
-        path_mode = column_configuration.get("FilePathMode", "Absolute")
+        path_mode = column_configuration.get("FileSelectionMode", "Absolute")
         dialog = QtWidgets.QFileDialog(self, "Transport Manager - Get File Path", 
             self.application.current_workdir)
 
