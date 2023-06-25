@@ -6,7 +6,8 @@
                 "FieldType": "StringInput",
                 "Display": "Package Name",
                 "PlaceholderText": "Provide Package Name",
-                "FieldRole": "DisplayRole"
+                "FieldRole": "DisplayRole",
+                "isMandatory": "True"
             },
         "Description": 
             {
@@ -22,7 +23,8 @@
                 "DefaultValue": "definition.json",
                 "IsForDataExport": "False",
                 "FileExtension": "*.json",
-                "FileSelectionMode": "Relative"
+                "FileSelectionMode": "FileName",
+                "RedirectDirectoryDynamic": "Cleaned/%FeatureName%"
             },
         "Priority":
             {
@@ -80,16 +82,13 @@
                 "FieldType": "FileInput",
                 "FileSelectionMode": "FileName",
                 "RedirectDirectoryStatic": "Export",
-                "RedirectDirectoryRelativeTo": "Parent",
-                "RedirectDirectoryDynamic": "TaskName"
+                "RedirectDirectoryRelativeTo": "Parent"
             },
         "ExportFile":
             {
                 "FieldType": "FileInput",
                 "FileSelectionMode": "FileName",
-                "RedirectDirectoryStatic": "Data",
-                "RedirectDirectoryRelativeTo": "Parent",
-                "RedirectDirectoryDynamic": "TaskName/TaskType"
+                "RedirectDirectoryDynamic": "Data/%Parent.FeatureName%/%TaskType%"
             },
         "ExportFileHash": 
             {

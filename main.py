@@ -32,7 +32,7 @@ from lib.ui.MainWindow_ui import Ui_MainWindow
 #""" Custom Widgets """
 import lib.ui.WidgetFactory as WidgetFactory
 import lib.ui.WidgetFactory.DialogScreens as DialogScreens
-from lib.ui.ObjectDefinitions import ObjectDefinition
+from lib.ProgramConfiguration import ProgramConfiguration, ObjectConfiguration
 
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
@@ -72,7 +72,8 @@ class Transport_Manager(QMainWindow):
         self.color_theme = Application_Theme()
         self.qt_app.setPalette(self.color_theme)
 
-        self.object_definitions = ObjectDefinition(self)
+        self.program_configuration = ProgramConfiguration(self)
+        self.object_configuration = ObjectConfiguration(self)
 
         """ Connect UI signals """
         self.closeEvent = self.close_application
@@ -308,7 +309,8 @@ class Transport_Manager(QMainWindow):
             self.restoreState(self.settings.value("windowState"))
         
         """ Reload Working Directory """
-        self.object_definitions.reload_definition_file()
+        self.object_configuration.reload_configuration_file()
+        self.program_configuration.reload_configuration_file()
         self.load_workdir()
         
 
@@ -384,20 +386,10 @@ class Transport_Manager(QMainWindow):
         
         if workdir is None:
             return False
-
-        self.current_workdir = workdir
-        workdir_path = Path(workdir).absolute()
-        definitions = []
-        for file_path in Path(workdir).rglob( '*.json' ):
-            if file_path.is_file():
-                feature_definition_location = file_path.relative_to(workdir_path)
-                json_content = self.load_file(file_path.absolute())
-                package_definition = json.loads(json_content)
-                package_definition["DefinitionFile"] = str(feature_definition_location)
-                definitions.append(package_definition)
         
         sort_attribute = ""
-        package_definition_config = self.object_definitions.get("PackageManager_PackageDefinition")
+        package_definition_config = self.object_configuration.get("PackageManager_PackageDefinition")
+        mandatory_columns = []
         if package_definition_config:
             for column, column_configuration in package_definition_config.items():
                 if column_configuration.get("FieldRole", None) == "SortOrder":
@@ -409,8 +401,71 @@ class Transport_Manager(QMainWindow):
                     if column_configuration.get("FieldRole", None) == "DisplayRole":
                         sort_attribute = column
                         break
+
+            for column, column_configuration in package_definition_config.items():
+                    if column_configuration.get("isMandatory", None) == "True":
+                        mandatory_columns.append(column)
+        sort_attribute = sort_attribute.strip()
+        self.current_workdir = workdir
+        workdir_path = Path(workdir).absolute()
+        definitions = []
+        skipped_definitions = []
+        package_manager_configuration = self.program_configuration.get("Package Manager")
+
+        for file_path in Path(workdir).rglob( '*.json' ):
+            if file_path.is_file():
+                feature_definition_location = file_path.relative_to(workdir_path)
+                json_content = self.load_file(file_path.absolute())
+                package_definition = json.loads(json_content)
+                
+                #keep relative path by default
+                package_definition["DefinitionFile"] = str(feature_definition_location)
+
+                definition_config = self.object_configuration.get_column_configuration("PackageManager_PackageDefinition", "DefinitionFile")
+                if definition_config and definition_config.get("FileSelectionMode", "") == "FileName":
+                    #keep just the file name, location to be calculated dynamically
+                    package_definition["DefinitionFile"] = str(feature_definition_location.name)
+                # check the mandatory fields of the object to determine if file matches the definition
+                accept = True
+
+                if package_manager_configuration and accept:
+                    whitelist_directories = package_manager_configuration.get("WorkdirDirectoryWhitelist", None)
+                    if whitelist_directories:
+                        accept = False
+                        for directory in whitelist_directories:
+                            print(f"checking whitelist, {str(feature_definition_location)} compared with whitelist directory: {directory}", str(feature_definition_location).lower().startswith(directory.lower()))
+                            if str(feature_definition_location).lower().startswith(directory.lower()):
+                                accept = True
+
+                    excluded_files = package_manager_configuration.get("ExcludedFiles", None)
+                    if excluded_files and feature_definition_location.name in excluded_files:
+                        accept = False
+                    
+                    if accept:
+                        blacklist_directories = package_manager_configuration.get("WorkdirDirectoryBlacklist", None)
+                        for directory in blacklist_directories:
+                            if str(feature_definition_location).startswith(directory):
+                                accept = False
+                    if not accept:
+                        # program configuration excluded the file, continue
+                        continue
+
+                # check the definition file mandatory columns
+                for column_name in mandatory_columns:
+                    if column_name not in package_definition.keys():
+                        #skip entry with missing mandatory definition data
+                        accept = False
+                        break
+
+                if accept and len(sort_attribute) > 0 and sort_attribute not in package_definition.keys():
+                    package_definition[sort_attribute] = -1
+                
+                if accept:
+                    definitions.append(package_definition)
+                else:
+                    skipped_definitions.append(str(package_definition))
         
-        if len(sort_attribute.strip()) > 0:
+        if len(sort_attribute) > 0:
             definitions = sorted(
                     definitions, 
                     key=lambda d: (d[sort_attribute])
@@ -423,6 +478,13 @@ class Transport_Manager(QMainWindow):
         
         self.ui.PackageViewTreeView.setModel(data_model)
         self.ui.SearchPackageLineEdit.textChanged.connect(self.filter_packages)
+        
+        # Show the summary of skipped data files
+        if len(skipped_definitions)>0:
+            definition_list = "\r\n".join(skipped_definitions)
+            file_count = len(skipped_definitions)
+            WidgetFactory.MsgBox(self, "Some JSON definition files were ignored due to missing mandatory data.\r\nIf this file should be ignored, please configure the filters in program configuration.", 
+                f"Mandatory columns: {mandatory_columns}.\r\nSkipped Entries: {file_count}, skipped data:\r\n{definition_list}")
 
     def load_file(self, file_path):
         file_content = ""
@@ -510,11 +572,7 @@ class Transport_Manager(QMainWindow):
 
     def add_package_definition(self, source_index):
         print("Add Package Definition", source_index)
-
-        # config = self.load_file("./lib/ui/object_definitions.json")
-        # forms_configuration = json.loads(config)
-        # editor_configuration = forms_configuration.get("PackageManager_PackageDefinition", None)
-        editor_configuration = self.object_definitions.get("PackageManager_PackageDefinition")
+        editor_configuration = self.object_configuration.get("PackageManager_PackageDefinition")
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(self, 
             form_confguration=editor_configuration, 
@@ -530,7 +588,7 @@ class Transport_Manager(QMainWindow):
         if not source_index.isValid():
             return False
 
-        editor_configuration = self.object_definitions.get("PackageManager_PackageDefinition")
+        editor_configuration = self.object_configuration.get("PackageManager_PackageDefinition")
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(self, 
             form_confguration=editor_configuration, 
@@ -541,7 +599,6 @@ class Transport_Manager(QMainWindow):
                 data = dialog.form_data
                 source_item = source_index.internalPointer()
                 source_item.update_data(data)
-                print("final task definition path", source_item.get_file_path())
 
     def save_package_definition(self, source_index):
         if len(self.ui.PackageViewTreeView.selectedIndexes())>0:
@@ -557,7 +614,7 @@ class Transport_Manager(QMainWindow):
         print("add task definition for", source_index)
         if not source_index.isValid():
             return False
-        editor_configuration = self.object_definitions.get("PackageManager_TaskDefinition")
+        editor_configuration = self.object_configuration.get("PackageManager_TaskDefinition")
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(self, 
             form_confguration=editor_configuration, 
@@ -572,7 +629,7 @@ class Transport_Manager(QMainWindow):
         if not source_index.isValid():
             return False
 
-        editor_configuration = self.object_definitions.get("PackageManager_TaskDefinition")
+        editor_configuration = self.object_configuration.get("PackageManager_TaskDefinition")
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(self, 
             form_confguration=editor_configuration, 
@@ -583,12 +640,12 @@ class Transport_Manager(QMainWindow):
                 data = dialog.form_data
                 source_item = source_index.internalPointer()
                 source_item.update_data(data)
-                print("final task definition path", source_item.get_file_path())
 
     def edit_task_xml_definition(self, source_item):
         source_item = source_item.internalPointer()
         file_path = source_item.get_file_path()
         if not file_path.is_file():
+            file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.touch()
         self.open_file(str(file_path))
 

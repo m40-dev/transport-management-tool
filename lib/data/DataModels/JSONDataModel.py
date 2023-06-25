@@ -10,7 +10,7 @@ class JSONDataModel(QAbstractItemModel):
         super().__init__(parent_widget)
         self.modelDataClass = model_item_class
         self.application = application
-        self.object_definitions = application.object_definitions
+        self.object_configuration = application.object_configuration
         self.rootItem = self.modelDataClass(application=self.application, task_class="RootItem", model_reference=self)
         self._headers = ["Actions"]
         self.treeview = parent_widget
@@ -227,6 +227,7 @@ class JSONDataModel(QAbstractItemModel):
 
             #emit relocation signal for the new item and tell it about its source item from the same model
             if source_item:
+                new_item._previous_task_data = source_item._previous_task_data
                 new_item.locationChanged.emit(source_item)
             else:
                 #emit new item from source signal to tell new item about source item data

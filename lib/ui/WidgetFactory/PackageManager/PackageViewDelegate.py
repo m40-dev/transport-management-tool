@@ -12,7 +12,7 @@ class PackageViewDelegate(QStyledItemDelegate):
         # self.items = ["", "Import", "Export"]
         self.model_data = model_data
         self.application = application
-        self.object_definitions = self.application.object_definitions
+        self.object_configuration = self.application.object_configuration
         self.application_palette = self.application.color_theme
         self.parent().setAlternatingRowColors(False)
 
@@ -99,7 +99,7 @@ class PackageManagerItemWidget(QFrame):
         self.data_item = data_item
         self.treeview = parent
         self.parent = parent
-        self.object_definitions = self.application.object_definitions
+        self.object_configuration = self.application.object_configuration
 
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(2, 2, 2, 2)

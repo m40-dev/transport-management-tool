@@ -15,7 +15,7 @@ class ExecutionPlannerWidget(QWidget):
 
         self.parent = application
         self.application = application
-        self.object_definitions = self.application.object_definitions
+        self.object_configuration = self.application.object_configuration
         self.ProcessRunner = ProcessRunner(self)
         self.ProcessRunner.message.connect(self.log_message)
         self.ProcessRunner.stateChanged.connect(self.process_runner_state_handler)

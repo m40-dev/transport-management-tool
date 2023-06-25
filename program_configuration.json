@@ -1,0 +1,8 @@
+{
+    "Package Manager":
+    {
+        "WorkdirDirectoryBlacklist": [],
+        "WorkdirDirectoryWhitelist": [],
+        "ExcludedFiles": []
+    }
+}

@@ -11,22 +11,24 @@ class JSONDataItem(QObject):
     locationChanged = pyqtSignal(object) 
     dataDropped = pyqtSignal(dict)
     itemAdded = pyqtSignal(object)
+    columnValueChanged = pyqtSignal(str, str, str)
 
     def __init__(self, application, task_class="JSONDataItem", task_data=None, parent=None, model_reference=None):
         super().__init__(parent=parent)
         self.application = application
-        self.object_definitions = application.object_definitions
+        self.object_configuration = application.object_configuration
         self.model_reference = model_reference
         self._task_class = task_class
         self._parent = parent
         self._children = []
         self._filtered_children = []
         self._task_data = task_data
+        self._previous_task_data = None
         self._uid = str(uuid.uuid4())
         self._is_saved = True
         self._filter_match = True
         self.filter_string = ""
-        self.object_configuration = self.object_definitions.get(self.task_class)
+        self.item_class_configuration = self.object_configuration.get(self.task_class)
 
         if model_reference:
             model_reference.filterStringChanged.connect(self.handleFilterStringChanged)
@@ -35,6 +37,7 @@ class JSONDataItem(QObject):
             children = task_data.get("children", None)
             if children:
                 self.loadChildren(children)
+            
 
         self.dataDropped.connect(self.itemDataDropped)
         self.locationChanged.connect(self.itemLocationChanged)
@@ -92,8 +95,8 @@ class JSONDataItem(QObject):
         return sorted_filter_rows, hidden_rows
     @property
     def sortOrder(self):
-        if self.object_configuration:
-            for column, column_configuration in self.object_configuration.items():
+        if self.item_class_configuration:
+            for column, column_configuration in self.item_class_configuration.items():
                 if column_configuration.get("FieldRole", None) == "SortOrder":
                     sortOrder = self.data(column)
                     # print(self.display, "sort items by object column: ", column, "Item sort Order:", sortOrder)
@@ -129,8 +132,8 @@ class JSONDataItem(QObject):
                     break
 
         #check object properties according to the object configuration
-        if self.object_configuration:
-            for object_data_column in self.object_configuration.keys():
+        if self.item_class_configuration:
+            for object_data_column in self.item_class_configuration.keys():
                 
                 #filter values if  object configuration column is detected in the filter
                 if object_data_column.lower() in filter_configuration.keys():
@@ -228,7 +231,7 @@ class JSONDataItem(QObject):
     @task_class.setter
     def task_class(self, value):
         self._task_class = value
-        self.object_configuration = self.object_definitions.get(value)
+        self.item_class_configuration = self.object_configuration.get(value)
 
     @property
     def uid(self):
@@ -243,7 +246,7 @@ class JSONDataItem(QObject):
 
     @property
     def display(self):
-        configuration = self.object_configuration
+        configuration = self.item_class_configuration
         
         if configuration is None:
             return ""
@@ -261,7 +264,7 @@ class JSONDataItem(QObject):
     
     @display.setter
     def display(self, value):
-        configuration = self.object_configuration
+        configuration = self.item_class_configuration
         
         if configuration is None:
             return ""
@@ -275,7 +278,7 @@ class JSONDataItem(QObject):
 
     @property
     def description(self):
-        configuration = self.object_configuration
+        configuration = self.item_class_configuration
         
         if configuration is None:
             return ""
@@ -293,7 +296,7 @@ class JSONDataItem(QObject):
 
     @description.setter
     def description(self, value):
-        configuration = self.object_configuration
+        configuration = self.item_class_configuration
         
         if configuration is None:
             return ""
@@ -349,14 +352,19 @@ class JSONDataItem(QObject):
         # print("set data", column, value)
         prev_value = self._task_data.get(column, "")
         if prev_value != value:
-            print(f"set item data for column with new value, {column}, previous value {prev_value}, new value {value}")
+            # print(f"set item data for column with new value, {column}, previous value {prev_value}, new value {value}")
             self._task_data[column] = value
             self.is_saved = False
             self.data_changed.emit()
+            self.columnValueChanged.emit(column, prev_value, value)
     
-    def data(self, column):
+    def data(self, column, previous_state=False):
+        if previous_state and self._previous_task_data:
+            return self._previous_task_data.get(column,  None)
+
         if self._task_data:
             return self._task_data.get(column,  None)
+            
         super().data(column)
 
     def insertChildren(self, row, child_objects):
@@ -380,8 +388,10 @@ class JSONDataItem(QObject):
             self.parent().data_changed.emit()
 
     def save(self):
+        self._previous_task_data = None
         self.is_saved = True
         self.data_changed.emit()
+        
         for child_node in self._children:
             child_node.save()
 
@@ -405,7 +415,7 @@ class JSONDataItem(QObject):
         export_data['children'] = children
         export_data['parent'] = self.parent_data
 
-        configuration = self.object_configuration
+        configuration = self.item_class_configuration
         for field, field_configuration in configuration.items():
 
             field_type = field_configuration.get("FieldType", None)
@@ -478,6 +488,10 @@ class JSONDataItem(QObject):
         return self.task_data
 
     def update_data(self, dict_data):
+        if self._previous_task_data is None:
+            # store the original data in case we want to restore it
+            self._previous_task_data = deepcopy(self.task_data)
+
         for key, value in dict_data.items():
             self.setData(key, value)
 
@@ -486,7 +500,7 @@ class JSONDataItem(QObject):
         if self._task_data is None:
             return self._task_data
         
-        configuration = self.object_configuration
+        configuration = self.item_class_configuration
         
         export_data = {}
         object_data = self.task_data

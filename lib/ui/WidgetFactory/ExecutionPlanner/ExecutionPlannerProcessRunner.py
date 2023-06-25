@@ -10,7 +10,7 @@ class ProcessRunner(QProcess):
         super().__init__()
         self.planner_widget = planner_widget
         self.application = self.planner_widget.application
-        self.object_definitions = self.application.object_definitions
+        self.object_configuration = self.application.object_configuration
         self.readyReadStandardOutput.connect(self.handle_stdout)
         self.readyReadStandardError.connect(self.handle_stderr)
         self.finished.connect(self.process_finished)
@@ -56,7 +56,7 @@ class ProcessRunner(QProcess):
         self.message.emit(
             f"Starting task execution ({task_name}). Action: [{action_type}]. Connection: [{connection}]",
             "Transport Manager")
-        task_configuration = self.object_definitions.get("ExecutionPlanner_ExecutionTask")
+        task_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionTask")
         
         self.current_item = task_item
         workdir = self.application.current_workdir
