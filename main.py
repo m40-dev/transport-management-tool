@@ -45,7 +45,7 @@ from lib.xml.sql_script_container import sql_script_container
 
 from lib.data.DataModels import PackageDefinitionModel
 
-VERSION = '0.5.1'
+VERSION = '0.5.2'
 XML_PREVIEW_TIMER = 100
 FILTER_EXEC_TIMER = 650
         
@@ -252,7 +252,7 @@ class Transport_Manager(QMainWindow):
         """ Initial transport template object """
         self.new_transport_template()
         self.new_execution_plan()
-        self.load_workdir("C:/Users/m40/Downloads/transport manager test")
+        # self.load_workdir("C:/Users/m40/Downloads/transport manager test")
 
     def enter_shortcut(self):
         if self.ui.SearchPackageLineEdit.hasFocus():

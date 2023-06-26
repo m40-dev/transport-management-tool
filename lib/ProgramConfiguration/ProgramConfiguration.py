@@ -2,7 +2,7 @@ from PyQt6.QtCore import QObject
 import json
 
 CONFIGURATION_FILE = "./program_configuration.json"
-DEFINITION_FILE = "./object_definitions.json"
+DEFINITION_FILE = "./object_configuration.json"
 
 class ProgramConfiguration(QObject):
     def __init__(self, application, configuration_file=CONFIGURATION_FILE):

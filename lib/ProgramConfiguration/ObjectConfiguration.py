@@ -1,6 +1,6 @@
 from . import ProgramConfiguration
 
-DEFINITION_FILE = "./object_definitions.json"
+DEFINITION_FILE = "./object_configuration.json"
 
 class ObjectConfiguration(ProgramConfiguration):
     def __init__(self, application, configuration_file=DEFINITION_FILE):
