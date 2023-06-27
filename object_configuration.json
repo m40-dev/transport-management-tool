@@ -7,14 +7,15 @@
                 "Display": "Package Name",
                 "PlaceholderText": "Provide Package Name",
                 "FieldRole": "DisplayRole",
-                "isMandatory": "True"
+                "IsMandatory": "True"
             },
         "Description": 
             {
                 "FieldType": "TextInput",
                 "Display": "Package Description",
                 "PlaceholderText": "Provide Package Description",
-                "FieldRole": "DescriptionRole"
+                "FieldRole": "DescriptionRole",
+                "IsMandatory": "True"
             },
         "DefinitionFile": 
             {
@@ -24,7 +25,8 @@
                 "IsForDataExport": "False",
                 "FileExtension": "*.json",
                 "FileSelectionMode": "FileName",
-                "RedirectDirectoryDynamic": "Cleaned/%FeatureName%"
+                "RedirectDirectoryDynamic": "Cleaned/%FeatureName%",
+                "IsMandatory": "True"
             },
         "Priority":
             {
@@ -33,7 +35,8 @@
                 "MinValue": 100,
                 "MaxValue": 999,
                 "DefaultValue": 100,
-                "DistributeEvenly": "True"
+                "DistributeEvenly": "True", 
+                "IsMandatory": "True"
             },
         "GUID":
             {

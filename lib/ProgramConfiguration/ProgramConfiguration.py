@@ -2,7 +2,8 @@ from PyQt6.QtCore import QObject
 import json
 
 CONFIGURATION_FILE = "./program_configuration.json"
-DEFINITION_FILE = "./object_configuration.json"
+# DEFINITION_FILE = "./object_configuration.json"
+BACKUP_FILE = "./program_configuration_default.json"
 
 class ProgramConfiguration(QObject):
     def __init__(self, application, configuration_file=CONFIGURATION_FILE):
@@ -28,6 +29,7 @@ class ProgramConfiguration(QObject):
     def reload_configuration_file(self, file_path=None):
         if not file_path:
             file_path = self.configuration_file
+            
 
         json_data  = self.load_file(file_path)
         if len(json_data.strip()) > 0:

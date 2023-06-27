@@ -7,6 +7,7 @@ With time, the tool will grow with additional features, but the most focus is se
 ## How do I get set up? ##
 
 * Install MSSQL Driver for the database connection support (Microsoft: https://learn.microsoft.com/en-us/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16)
+* Download the Tranport Manager package (OneDrive: https://1drv.ms/f/s!Akr0z8DYbnwriDPk4ZlRjnwSyPMc?e=whDMvU)
 * Extract the 7z file and run the application (TransportManager.exe)
 * Open any existing transport template or start building new one from scratch
 

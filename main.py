@@ -1,5 +1,5 @@
 #""" Required QT Libraries """
-from PyQt6.QtCore import Qt, QSettings, QTimer
+from PyQt6.QtCore import Qt, QSettings, QTimer, QSize, QEvent
 from PyQt6.QtWidgets import (
     QMainWindow, QApplication, QMenu, QHeaderView, 
     QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator, 
@@ -77,6 +77,7 @@ class Transport_Manager(QMainWindow):
 
         """ Connect UI signals """
         self.closeEvent = self.close_application
+        self.installEventFilter(self)
         self.ui.actionAdd_DatabaseConnection.triggered.connect(self.get_session_details)
         self.ui.FindObjectButton.clicked.connect(self.find_objects)
         self.ui.TableComboBox.currentTextChanged.connect(self.load_db_objects)
@@ -379,6 +380,8 @@ class Transport_Manager(QMainWindow):
         if file_path != "":
             self.current_workdir = file_path
             self.load_workdir(file_path)
+            return True
+        return False
     
     def load_workdir(self, workdir=None):
         if workdir is None and self.current_workdir is not None:
@@ -403,7 +406,7 @@ class Transport_Manager(QMainWindow):
                         break
 
             for column, column_configuration in package_definition_config.items():
-                    if column_configuration.get("isMandatory", None) == "True":
+                    if column_configuration.get("IsMandatory", None) == "True":
                         mandatory_columns.append(column)
         sort_attribute = sort_attribute.strip()
         self.current_workdir = workdir
@@ -572,10 +575,14 @@ class Transport_Manager(QMainWindow):
 
     def add_package_definition(self, source_index):
         print("Add Package Definition", source_index)
+        if not self.current_workdir:
+            WidgetFactory.MsgBox(self, "Working Directory is not configured.\n\nPlease configure working directory location first to create any package definition.\n\nWithout working directory, program will not be able to generate the paths and save the files.")
+            if not self.change_workdir():
+                return False
         editor_configuration = self.object_configuration.get("PackageManager_PackageDefinition")
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(self, 
-            form_confguration=editor_configuration, 
+            configuration_class="PackageManager_PackageDefinition", 
             dialog_name="Package Definition"
             )
             if dialog.exec():
@@ -591,7 +598,7 @@ class Transport_Manager(QMainWindow):
         editor_configuration = self.object_configuration.get("PackageManager_PackageDefinition")
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(self, 
-            form_confguration=editor_configuration, 
+            configuration_class="PackageManager_PackageDefinition",
             dialog_name="Package Definition"
             )
             dialog.set_form_data(source_index)
@@ -617,7 +624,7 @@ class Transport_Manager(QMainWindow):
         editor_configuration = self.object_configuration.get("PackageManager_TaskDefinition")
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(self, 
-            form_confguration=editor_configuration, 
+            configuration_class="PackageManager_TaskDefinition",
             dialog_name="Task Object Definition"
             )
             if dialog.exec():
@@ -632,7 +639,7 @@ class Transport_Manager(QMainWindow):
         editor_configuration = self.object_configuration.get("PackageManager_TaskDefinition")
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(self, 
-            form_confguration=editor_configuration, 
+            configuration_class="PackageManager_TaskDefinition",
             dialog_name="Task Object Definition"
             )
             dialog.set_form_data(source_index)
@@ -1055,9 +1062,60 @@ class Transport_Manager(QMainWindow):
                 self.remove_selected_package_definitions()
         
     def remove_selected_package_definitions(self):
-        for item_index in self.ui.PackageViewTreeView.selectedIndexes():
-            item = item_index.internalPointer()
-            item_index.model().remove_item(item)
+
+        question = WidgetFactory.MsgBox(self, 
+                        message=f"Do you want to delete selected items? ({len(self.ui.PackageViewTreeView.selectedIndexes())} item(s))",
+                        window_mode=WidgetFactory.MsgBox.QUESTION)
+        if question.accepted:
+            files_to_delete = {}
+            for item_index in self.ui.PackageViewTreeView.selectedIndexes():
+                item = item_index.internalPointer()
+                if self.current_workdir:
+                    # attempt file operations only if the workdir is set
+                    files_to_delete = item.get_all_files(recursive=True, use_display_keys=True)
+                    
+                    if len(files_to_delete) > 0:
+                        export_data = json.dumps(files_to_delete, indent=4, separators=(',',':'))
+                        detailed_message = f"Data lookup returned following files related to the selected object:\r\n {export_data}"
+                        question = WidgetFactory.MsgBox(self, 
+                            message=f"Existing system files detected for item {item.display} or its child items, do you also want to delete these data files?", 
+                            detailed_message=detailed_message, 
+                            window_mode=WidgetFactory.MsgBox.QUESTION)
+                        if question.accepted:
+                            #delete data files
+                            for file_list in files_to_delete.values():
+                                for file_path in file_list:
+                                    self.delete_data_file(file_path)
+
+                #remove item from model
+                item_index.model().remove_item(item)
+
+    def delete_data_file(self, file_path):
+        print(file_path)
+        file_path = Path(file_path)
+        if file_path.is_file():
+            file_path.unlink()
+            parent_directory = file_path.parent
+            self.delete_empty_directory(parent_directory)
+
+    def delete_empty_directory(self, directory_path):
+        print("check if directory can be deleted:", directory_path)
+        if not self.current_workdir:
+            # do not delete anything if there is no working directory
+            return False
+
+        if self.current_workdir:
+            workdir_path = Path(str(self.current_workdir))
+            if directory_path.absolute() <= workdir_path.absolute():
+                # never go beyond the working directory
+                print("do not cross the working directory, breaking")
+                return False
+
+        if len(list(directory_path.rglob('*'))) == 0:
+            # print("delete empty directory:", directory_path)
+            directory_path.rmdir()
+            if directory_path.parent:
+                self.delete_empty_directory(directory_path.parent)
 
     def remove_tree_widget_selected_node(self, tree_widget):
         if tree_widget.hasFocus():
@@ -1111,7 +1169,6 @@ class Transport_Manager(QMainWindow):
                 self.ui.XMLEditorWidget.find_text(source_widget_item.search_text)
             
             self.load_table_relation_presets(source_widget_item.table_name)
-
 
     def add_transport_task(self, task_type):
         """ Create XML Node """
@@ -1317,8 +1374,17 @@ class Transport_Manager(QMainWindow):
         if isinstance(table_widget, WidgetFactory.TE_Table_TreeWidgetItem):
             table_widget.setExpanded(True)
 
-    """ Application close """
+    def eventFilter(self, source, event):
+        if source == self:
+            if event.type() == QEvent.Type.Move:
+                self.saveMainWindowState()
+        return super().eventFilter(source, event)
 
+    def saveMainWindowState(self):
+        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.setValue("windowState", self.saveState())
+
+    """ Application close """
     def close_application(self, event, force=False):
         self.settings.setValue("geometry", self.saveGeometry())
         self.settings.setValue("windowState", self.saveState())

@@ -107,7 +107,7 @@ class package_definition_context_menu(QMenu):
 
         action_expand_all_definitions = self.addAction("Expand All Items")
         action_expand_all_definitions.triggered.connect(self.expand_all_definitions)
-
+        
         action_add_package_definition = self.addAction("Add Package Definition")
         action_add_package_definition.triggered.connect(lambda: self.add_package_definition.emit(source_index) )
         

@@ -4,6 +4,7 @@ from PyQt6.QtGui import QPalette, QPen, QPainterPath
 import json
 import os
 import pathlib
+from lib.ui.WidgetFactory import MsgBox
 
 class PackageViewDelegate(QStyledItemDelegate):
 
@@ -88,8 +89,8 @@ class PackageViewDelegate(QStyledItemDelegate):
         else:
             super().paint(painter, option, index)
 
-    def sizeHint(self, arg1, arg2):
-        return QSize(55, 55)
+    # def sizeHint(self, arg1, arg2):
+    #     return QSize(55, 55)
 
 class PackageManagerItemWidget(QFrame):
 
@@ -194,7 +195,10 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
         self.save_feature_button.clicked.connect(self.save_feature)
 
     def save_feature(self):
-        self.data_item.save()
+        if self.application.current_workdir:
+            self.data_item.save()
+            return True
+        MsgBox(self.application, "Workdir not set. Please configure workdir location first.")
     
     def edit_feature(self):
         index = self.treeview.model().indexOf(self.data_item)

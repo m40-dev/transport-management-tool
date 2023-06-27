@@ -52,7 +52,6 @@ Thumbs.db
 .vscode/
 
 # application build directory/scripts
-build
-build.ps1
+build/
 
 .vscode/settings.json

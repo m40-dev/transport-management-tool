@@ -513,47 +513,31 @@ class JSONDataItem(QObject):
             if not is_for_export:
                 continue
             object_field_value = object_data.get(field, "")
-            
-            #export only items that have value set
-            # if object_field_value:
-                # export_data[field] = object_field_value
-                # continue
-
             export_data[field] = object_field_value
-            # field_type = field_configuration.get("FieldType", None)
-            # field_role = field_configuration.get("FieldRole", None)
-            
-            # min_value = field_configuration.get("MinValue", 1)
-            # max_value = field_configuration.get("MaxValue", 255)
-            # value_range = max_value - min_value
-            
-            # if field_role and field_role == "SortOrder":
-            #     treeview_order = self.row()
-            #     if field_configuration.get("DistributeEvenly", "False") == "True":
-            #         sibling_count = self.parent().childCount()
-            #         if sibling_count == 0:
-            #             sibling_count = 1
-            #         sorting_step = value_range / sibling_count
-            #         export_data[field] = round(sorting_step * treeview_order ) + min_value
-            #     else:
-            #         if treeview_order >= max_value:
-            #             export_data[field] = max_value
-            #         else:
-            #             export_data[field] = treeview_order + min_value
-
-            # if field_type and field_type == "ChildObjectReference":
-            #     child_class = field_configuration.get("Class", None)
-            #     children = []
-            #     for i in range(self.childCount()):
-            #         child_item = self.child(i)
-            #         if child_item.task_class == child_class:
-            #             child_data = child_item.export_data
-            #             children.append(child_data)
-            #     export_data[field] = children
-
-            # if field_type and field_type == "ListInput":
-            #      object_data = self._task_data.get(field, "")
-            #      if not isinstance(object_data, list):
-            #         export_data[field] = [object_data]
 
         return export_data
+
+    def get_all_files(self, recursive=False, use_display_keys=False):
+        # get the object_uid: file_path pairs from item
+        file_configurations = {}
+        parent_configurations = {}
+        key_column = self.uid
+        if use_display_keys:
+            key_column = self.display
+        for column in self.object_configuration.get_columns_configuration_by_type(self.task_class, "FileInput"):
+            file_path = self.get_file_path(file_column=column)
+
+            if file_path and file_path.is_file():
+                if key_column not in parent_configurations.keys():
+                    parent_configurations[key_column] = [str(file_path)]
+                else:
+                    parent_configurations[key_column].append(str(file_path))
+        
+        file_configurations = parent_configurations
+        
+        if recursive and self.childCount() > 0:
+            for child_item in self._children:
+                child_configuration = child_item.get_all_files(recursive, use_display_keys)
+                file_configurations = file_configurations | child_configuration
+        
+        return file_configurations

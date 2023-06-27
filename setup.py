@@ -16,7 +16,8 @@ excludes = ["tcl", "tk", "Tkinter", "tkinter"]
 include_files = [
     "./icon.ico",
     "./Application.qss",
-    "object_configuration.json", "program_configuration.json",
+    ("object_configuration.json", "object_configuration_default.json"),
+    ("program_configuration.json", "program_configuration_default.json"),
     ("./lib/ui/img", "./lib/ui/img")
 ]
 

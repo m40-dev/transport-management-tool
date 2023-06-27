@@ -2,14 +2,17 @@ from PyQt6 import QtCore, QtWidgets
 from pathlib import Path
 import json
 import uuid
+from .MessageBox import MsgBox
 
 class FormEditorDialog(QtWidgets.QDialog):
 
-    def __init__(self, application, form_confguration={}, dialog_name="Data Editor"):
+    def __init__(self, application, configuration_class, dialog_name="Data Editor"):
         super(FormEditorDialog, self).__init__(flags=QtCore.Qt.WindowType.Dialog, parent=application)
 
         self.application = application
-        self._form_confguration = form_confguration
+        self.configuration_class = configuration_class
+        self.object_configuration = self.application.object_configuration
+        self._form_confguration = self.object_configuration.get(configuration_class)
         self._form_data = {}
         self._base_object_data = None
         self.setMinimumSize(400, 400)
@@ -33,11 +36,55 @@ class FormEditorDialog(QtWidgets.QDialog):
         self.buttonBox.rejected.connect(self.reject)
         self.layout.setRowStretch(self.layout.rowCount(), 2)
         self.layout.addWidget(self.buttonBox, self.layout.rowCount()+1, 1, 1, 2)
+        self.restoreWindowState()
+
+    def restoreWindowState(self):
+        """ Restore window settings """
+        # print("restore window")
+        self.settings = self.application.settings
+        if self.settings.value("EditorDialogGeometry") is not None:
+            self.restoreGeometry(self.settings.value("EditorDialogGeometry"))
+        # if self.settings.value("EditorDialogState") is not None:
+        #     self.restoreState(self.settings.value("EditorDialogState"))
+
+    def saveWindowState(self):
+        # print("save window")
+        self.application.settings.setValue("EditorDialogGeometry", self.saveGeometry())
+        # self.application.settings.setValue("EditorDialogState", self.saveState())
 
     def accept(self):
+        self.saveWindowState()
+        validation_errors = {}
+        validation_errors = self.check_mandatory_columns()
         print("vaildate and accept")
+        if len(validation_errors) > 0:
+            string_data = json.dumps(validation_errors, indent=4, separators=(',',':'))
+            MsgBox(self.application, "Form validation returned errors", string_data)
+            return False
         # print("form data", self.form_data)
         super().accept()
+
+    def check_mandatory_columns(self, error_message = "Mandatory column not set."):
+        mandatory_columns = self.object_configuration.get_columns_configuration_by_setting(self.configuration_class, "IsMandatory")
+        validation_errors = {}
+        if len(mandatory_columns) > 0:
+            for column, column_configuration in mandatory_columns.items():
+                if column_configuration.get("ShowInEditor", "True") == "False":
+                    # column not visible to user
+                    print(column, "column not visible to user")
+                    continue
+                    
+                if column not in self.editors.keys():
+                    # column does not have the editor support
+                    print(column, "column does not have the editor support")
+                    continue
+
+                if len(self.form_data.get(column, "").strip()) == 0:
+                    if column not in validation_errors.keys():
+                        validation_errors[column] = error_message
+                    else:
+                        validation_errors[column].append(error_message) 
+        return validation_errors
 
     def setup_form(self):
         # print("setup form")
@@ -70,7 +117,6 @@ class FormEditorDialog(QtWidgets.QDialog):
                 self.set_editor_data(editor, default_value)
 
     def update_form_data(self, column, value):
-        # print("update form data", column, value)
         if column:
             self._form_data[column] = value
 
@@ -103,7 +149,8 @@ class FormEditorDialog(QtWidgets.QDialog):
             editor_widget.setText(value)
 
         if isinstance(editor_widget, QtWidgets.QComboBox):
-            editor_widget.setCurrentText(value)
+            index = editor_widget.findData(value, QtCore.Qt.ItemDataRole.UserRole)
+            editor_widget.setCurrentIndex(index)
 
         if isinstance(editor_widget, FileInputWidget):
             editor_widget.setCurrentPath(value)

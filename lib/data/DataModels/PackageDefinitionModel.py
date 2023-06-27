@@ -96,7 +96,7 @@ class PackageDefinitionItem(JSONDataItem):
                 for column, column_configuration in object_configuration.items():
                     if (column_configuration.get("FieldType", None) == "FileInput"):
                         file_name = self.data(column, previous_state=True)
-                        if len(file_name.strip()) > 0:
+                        if file_name and len(file_name.strip()) > 0:
                             self.moveChildFile(file_column=column)
                         # pass
     
