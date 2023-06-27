@@ -10,6 +10,7 @@ class TaskExecutionModel(JSONDataModel):
             data=data, 
             model_item_class=TaskExecutionItem
             )
+
         self.headers = ["Actions"]
         
     def addExecutionGroup(self, task_data, parentIndex):
@@ -73,6 +74,10 @@ class TaskExecutionItem(JSONDataItem):
             )
         self._package_definition_data = {}
         self.migrate(task_class)
+        #Configure Default Value
+        if task_data: 
+            if not task_data.get("ExecutionType", None):
+                self.setData("ExecutionType", "Export")
 
     def itemDataDropped(self, source_dict):
         # print("foreign object dropped into task execution view", source_dict.get("objectclass", None), self.task_class)
@@ -121,23 +126,3 @@ class TaskExecutionItem(JSONDataItem):
 
         self.display = source_display
         self.description = source_description
-
-    # @property
-    # def task_data(self):
-    #     if self._task_data is None:
-    #         return self._task_data
-
-    #     children = []
-
-    #     for i in range(self.childCount()):
-    #         child_item = self.child(i)
-    #         child_data = child_item.task_data
-    #         children.append(child_data)
-
-    #     # self._task_data['children'] = children
-    #     self._task_data['Tasks'] = children
-    #     self._task_data['uid'] = self.uid
-    #     self._task_data['objectclass'] = self.task_class
-    #     self._task_data['row'] = self.row()
-    
-    #     return(self._task_data)

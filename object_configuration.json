@@ -35,8 +35,8 @@
                 "MinValue": 100,
                 "MaxValue": 999,
                 "DefaultValue": 100,
-                "DistributeEvenly": "True", 
-                "IsMandatory": "True"
+                "DistributeEvenly": "True",
+                "ShowInTreeView": "True"
             },
         "GUID":
             {
@@ -58,7 +58,9 @@
         "TaskName": 
             {
                 "FieldType": "StringInput",
-                "FieldRole": "DisplayRole"
+                "FieldRole": "DisplayRole",
+                "ShowInTreeView": "True",
+                "IsMandatory": "True"
             },
         "Description": 
             {
@@ -71,21 +73,25 @@
                 "FieldRole": "SortOrder",
                 "MinValue": 1,
                 "MaxValue": 99,
-                "DistributeEvenly": "True"
+                "DistributeEvenly": "True",
+                "ShowInTreeView": "True"
             },
         "TaskType": 
             {
                 "FieldType": "FixedInput",
                 "Options": {"Transport Package": "Transport", "SQL Script": "SQL"},
                 "DefaultValue": "Transport",
-                "Display": "Task Type"
+                "Display": "Task Type",
+                "ShowInTreeView": "True",
+                "IsMandatory": "True"
             },
         "DefinitionFile": 
             {
                 "FieldType": "FileInput",
                 "FileSelectionMode": "FileName",
                 "RedirectDirectoryStatic": "Export",
-                "RedirectDirectoryRelativeTo": "Parent"
+                "RedirectDirectoryRelativeTo": "Parent",
+                "IsMandatory": "True"
             },
         "ExportFile":
             {
@@ -102,19 +108,22 @@
             {
                 "FieldType": "FixedInput",
                 "Options": {"Development": "Development", "Testing": "Testing", "Released": "Released"},
-                "DefaultValue": "Development"
+                "DefaultValue": "Development",
+                "ShowInTreeView": "True"
             },
         "CompilerOption": 
             {
                 "FieldType": "FixedInput",
-                "Options": {"No Compilation": "NONE", "Full Compilation": "FULL", "Skip Web Projects Compilation":"NOWEB"},
-                "DefaultValue": "NOWEB"
+                "Options": {"No Compilation": "None", "Full Compilation": "Full", "Skip Web Projects Compilation":"NoWeb"},
+                "DefaultValue": "NoWeb",
+                "ShowInTreeView": "True"
             },
         "Environment": 
             {
                 "FieldType": "FixedInput",
                 "Options": {"Any": "Any", "Development": "DEV", "Test": "TEST", "Production": "PROD"},
-                "DefaultValue": "Any"
+                "DefaultValue": "Any",
+                "ShowInTreeView": "True"
             },
         "AutoUpdate": 
             {
@@ -185,6 +194,10 @@
                 {
                     "FieldType": "StringInput",
                     "Source": "PARENT_DEF.Description"
+                },
+            "Connection":
+                {
+                    "FieldType": "StringInput"   
                 }
             }
 }

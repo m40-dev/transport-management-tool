@@ -2,7 +2,7 @@ import uuid
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, pyqtSignal
 from PyQt6.QtGui import QStandardItem
 from copy import deepcopy
-
+import time
 
 FILTER_MIN_LEN = 1
 
@@ -41,6 +41,7 @@ class JSONDataItem(QObject):
 
         self.dataDropped.connect(self.itemDataDropped)
         self.locationChanged.connect(self.itemLocationChanged)
+        self.locationChanged.connect(self.updateSortOrder)
 
     def itemDataDropped(self, source_dict):
         # print("foreign model object dropped", source_dict.get("objectclass", None), self.task_class)
@@ -93,16 +94,68 @@ class JSONDataItem(QObject):
 
         #return filtered rows
         return sorted_filter_rows, hidden_rows
+    
     @property
     def sortOrder(self):
+        treeview_order = self.row()
         if self.item_class_configuration:
-            for column, column_configuration in self.item_class_configuration.items():
-                if column_configuration.get("FieldRole", None) == "SortOrder":
-                    sortOrder = self.data(column)
-                    # print(self.display, "sort items by object column: ", column, "Item sort Order:", sortOrder)
-                    if sortOrder:
-                        return str(sortOrder)
-        return str(self.row())
+            sort_column_configuration = self.object_configuration.get_columns_configuration_by_role(self.task_class, "SortOrder")
+            if len(sort_column_configuration) == 0:
+                return str(treeview_order)
+            sort_column = list(sort_column_configuration.keys())[0]
+            sort_order = self.data(sort_column)
+            if sort_order:
+                treeview_order = sort_order
+        return str(treeview_order)
+
+    def updateSortOrder(self, validate_siblings=True):
+        # print("update sort order")
+        treeview_order = self.row()
+        sort_column_configuration = self.object_configuration.get_columns_configuration_by_role(self.task_class, "SortOrder")
+        if len(sort_column_configuration) == 0:
+            return treeview_order
+        
+        sort_column = list(sort_column_configuration.keys())[0]
+        sort_column_configuration = list(sort_column_configuration.values())[0]
+        
+        if sort_column_configuration:
+            min_value = sort_column_configuration.get("MinValue", 1)
+            max_value = sort_column_configuration.get("MaxValue", 255)
+            sibling_count = self.parent().childCount()
+            if sibling_count <= 0:
+                sibling_count = 1
+            value_range = (max_value - min_value)
+                            
+            if sort_column_configuration.get("DistributeEvenly", "False") == "True":
+                sorting_step = value_range / sibling_count
+                treeview_order = round(sorting_step * treeview_order )
+            
+            if validate_siblings:
+                sibling_above = self.parent().child(self.row()-1)
+                sibling_below = self.parent().child(self.row()+1)
+                
+                if sibling_above and sibling_below:
+                    gap = int(sibling_below.sortOrder) - int(sibling_above.sortOrder) 
+                    treeview_order = round(gap / 2) + int(sibling_above.sortOrder)
+                else:
+                    #just one sibling around, stick to the range
+                    if sibling_above and int(sibling_above.sortOrder) >= treeview_order:
+                        treeview_order = max_value
+                    
+                    if sibling_below and int(sibling_below.sortOrder) <= treeview_order:
+                        treeview_order = min_value
+        
+        if treeview_order <= min_value:
+            treeview_order = min_value
+
+        if treeview_order >= max_value:
+            treeview_order = max_value
+
+        if treeview_order != self.data(sort_column):
+            self.setData(sort_column, treeview_order)
+        
+        return treeview_order
+
 
     def check_filter_conditions(self, filter_string):
         #Initially set filter to true (show all items) if no filter is provided
@@ -344,8 +397,11 @@ class JSONDataItem(QObject):
         return len(self._children)
 
     def row(self):
-        if self._parent is not None and self in self._parent._children:
-            return self._parent._children.index(self)
+        if self.parent() and self in self.parent()._children:
+            return self.parent()._children.index(self)
+        else:
+            if self in self.model_reference.rootItem._children:
+                return self.model_reference.rootItem._children.index(self)
         return 0
     
     def setData(self, column, value):
@@ -356,7 +412,7 @@ class JSONDataItem(QObject):
             self._task_data[column] = value
             self.is_saved = False
             self.data_changed.emit()
-            self.columnValueChanged.emit(column, prev_value, value)
+            self.columnValueChanged.emit(column, str(prev_value), str(value))
     
     def data(self, column, previous_state=False):
         if previous_state and self._previous_task_data:
@@ -395,65 +451,51 @@ class JSONDataItem(QObject):
         for child_node in self._children:
             child_node.save()
 
+    def get_children_data(self, task_class=None):
+        children = []
+        if self.childCount() == 0:
+            return children
+
+        for child_item in self._children:
+            child_data = child_item.export_data
+            child_data['uid'] = child_item.uid
+            child_data['objectclass'] = child_item.task_class
+            child_data['row'] = child_item.row()
+            
+            if task_class and child_item.task_class == task_class:
+                children.append(child_data)
+            
+            if task_class is None:
+                children.append(child_data)
+        return children
+
     @property
     def task_data(self):
         if self._task_data is None:
             return self._task_data
 
-        children = []
-
-        for i in range(self.childCount()):
-            child_item = self.child(i)
-            child_data = child_item.task_data
-            children.append(child_data)
-
         export_data = deepcopy(self._task_data)
-
         export_data['uid'] = self.uid
         export_data['objectclass'] = self.task_class
         export_data['row'] = self.row()
-        export_data['children'] = children
+        export_data['children'] = self.get_children_data()
         export_data['parent'] = self.parent_data
 
         configuration = self.item_class_configuration
         for field, field_configuration in configuration.items():
-
             field_type = field_configuration.get("FieldType", None)
             field_role = field_configuration.get("FieldRole", None)
             
-            min_value = field_configuration.get("MinValue", 1)
-            max_value = field_configuration.get("MaxValue", 255)
-            value_range = max_value - min_value
-            
             if field_role and field_role == "SortOrder":
-                treeview_order = self.row()
-                if field_configuration.get("DistributeEvenly", "False") == "True":
-                    sibling_count = self.parent().childCount()
-                    if sibling_count == 0:
-                        sibling_count = 1
-                    sorting_step = value_range / sibling_count
-                    treeview_order = round(sorting_step * treeview_order ) + min_value
-                else:
-                    if treeview_order >= max_value:
-                        treeview_order = max_value
-                    else:
-                        treeview_order = treeview_order + min_value
-                #set export data value
-                export_data[field] = treeview_order
+                #set sort order
+                export_data[field] = int(self.sortOrder)
 
                 #update task data with newly generated value
-                self._task_data[field] = treeview_order
-                    
+                # self._task_data[field] = int(self.sortOrder)
             
             if field_type and field_type == "ChildObjectReference":
                 child_class = field_configuration.get("Class", None)
-                children = []
-                for i in range(self.childCount()):
-                    child_item = self.child(i)
-                    if child_item.task_class == child_class:
-                        child_data = child_item.export_data
-                        children.append(child_data)
-                export_data[field] = children
+                export_data[field] = self.get_children_data(child_class)
 
             if field_type and field_type == "ListInput":
                  object_data = self._task_data.get(field, "")

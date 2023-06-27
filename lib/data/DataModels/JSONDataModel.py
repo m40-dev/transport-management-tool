@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData, pyqtSignal
 from PyQt6.QtGui import QStandardItemModel
 import json
-
+import time
 
 class JSONDataModel(QAbstractItemModel):
     filterStringChanged = pyqtSignal(str) 
@@ -196,13 +196,14 @@ class JSONDataModel(QAbstractItemModel):
             parentItem = self.rootItem
         else:
             parentItem = parentIndex.internalPointer()
-
+        # start = time.time()
         encodedData = data.data("application/vnd.jsondataitem")
         
         decodedData = bytes(encodedData)
         jsondata = json.loads(decodedData)
         newItems = []
         source_items = []
+        
         for dropped_item in jsondata:
             source_item_uid = dropped_item.get('uid', None)
             source_item = None
@@ -213,7 +214,7 @@ class JSONDataModel(QAbstractItemModel):
                     source_items.append(source_item)
 
             task_class = dropped_item.get('objectclass', "JSONDataItem")
-
+            
             # print("dropped item:", dropped_item)
             # create new object from the source item data and add it to the list, all dropped items will be inserted at once
             new_item = self.modelDataClass(
@@ -224,7 +225,8 @@ class JSONDataModel(QAbstractItemModel):
                 model_reference=self)
             newItems.append(new_item)
             new_item.is_saved = False
-
+            
+            
             #emit relocation signal for the new item and tell it about its source item from the same model
             if source_item:
                 new_item._previous_task_data = source_item._previous_task_data
@@ -232,14 +234,19 @@ class JSONDataModel(QAbstractItemModel):
             else:
                 #emit new item from source signal to tell new item about source item data
                 new_item.dataDropped.emit(dropped_item)
-            
         
         #insert dropped items at new location
         self.insert_items(parentIndex, newItems, row, column)
+        
+        for new_item in newItems:
+            new_item.updateSortOrder()
 
         #remove source objects at once
         for source_item in source_items:
             self.remove_item(source_item)
+        # end = time.time()
+        # print("drop event handling", end - start, len(decodedData))
+
         return True
     
     def insert_item(self, task_class, dict_data, parentIndex):

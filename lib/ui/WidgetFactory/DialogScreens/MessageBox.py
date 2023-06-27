@@ -73,9 +73,9 @@ class MsgBox(QtWidgets.QDialog):
         # self.application.settings.setValue("EditorDialogState", self.saveState())
     
     def toggle_details(self, state):
-        print(state)
+        # print(state)
         self.textinput.setVisible(not self.textinput.isVisible())
-        self.adjustSize()
+        # self.adjustSize()
 
     def accept(self):
         self.saveWindowState()

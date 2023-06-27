@@ -168,6 +168,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.connection_box_label = QLabel("Use Connection:")
         self.task_execution_import = QRadioButton("Run Import Task")
         self.task_execution_export = QRadioButton("Run Export Task")
+        self.task_execution_export.setChecked(True)
 
         self.connection_box = QComboBox(self)
         connections = list(self.application.sessions.keys())

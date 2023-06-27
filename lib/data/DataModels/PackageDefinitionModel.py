@@ -53,14 +53,14 @@ class PackageDefinitionItem(JSONDataItem):
     
     def itemLocationChanged(self, source_item):
         print("object location changed", source_item.parent().display, self.parent().display)
-        object_configuration = self.object_configuration.get(self.task_class)
-        if object_configuration and self.parent():
-            for column, column_configuration in object_configuration.items():
-                if (column_configuration.get("FieldType", None) == "FileInput"): 
-                    source_file = source_item.get_file_path(file_column=column, previous_state=True)
-                    target_file = self.get_file_path(file_column=column, previous_state=True)
-                    if source_file != target_file:
-                        self.moveFile(source_file, target_file)
+        column_configurations = self.object_configuration.get_columns_configuration_by_type(self.task_class, "FileInput")
+        if column_configurations:
+            for column in column_configurations.keys():
+                source_file = source_item.get_file_path(file_column=column, previous_state=True)
+                target_file = self.get_file_path(file_column=column, previous_state=True)
+                if source_file != target_file:
+                    self.moveFile(source_file, target_file)
+
 
     def dataChangeHandler(self, previous_data):
         print("data change handler")
@@ -80,7 +80,7 @@ class PackageDefinitionItem(JSONDataItem):
                     
                     # print(f"{column} column value changed, old location", str(current_location))
                     # print(f"{column} column value changed, new location", str(new_location))
-                    if current_location != new_location:
+                    if current_location and new_location and current_location != new_location:
                         self.objectFileLocationChanged.emit(current_location, new_location, column)
 
     def fileLocationChangeHandler(self, source_path, target_path, file_column):

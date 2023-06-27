@@ -305,5 +305,13 @@ QWidget[ObjectSaved="False"]{
 	border-left: 3px solid rgba(233, 181, 12, 0.575);
 }
 
+QLabel[PropertyEditor="IsMandatory"]{
+	font: bold;
+	padding: 0px;
+	margin: 0px;
+	color: rgba(184, 30, 30, 0.856);
+	text-align: center;
+}
+
 
 

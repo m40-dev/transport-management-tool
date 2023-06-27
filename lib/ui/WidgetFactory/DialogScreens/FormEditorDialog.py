@@ -1,4 +1,4 @@
-from PyQt6 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtWidgets, QtGui
 from pathlib import Path
 import json
 import uuid
@@ -55,7 +55,9 @@ class FormEditorDialog(QtWidgets.QDialog):
     def accept(self):
         self.saveWindowState()
         validation_errors = {}
-        validation_errors = self.check_mandatory_columns()
+        self.check_mandatory_columns(validation_errors)
+        # self.check_mandatory_columns(validation_errors, "Some Additional Error")
+        
         print("vaildate and accept")
         if len(validation_errors) > 0:
             string_data = json.dumps(validation_errors, indent=4, separators=(',',':'))
@@ -64,24 +66,23 @@ class FormEditorDialog(QtWidgets.QDialog):
         # print("form data", self.form_data)
         super().accept()
 
-    def check_mandatory_columns(self, error_message = "Mandatory column not set."):
+    def check_mandatory_columns(self, validation_errors={}, error_message = "Mandatory column not set."):
         mandatory_columns = self.object_configuration.get_columns_configuration_by_setting(self.configuration_class, "IsMandatory")
-        validation_errors = {}
         if len(mandatory_columns) > 0:
             for column, column_configuration in mandatory_columns.items():
                 if column_configuration.get("ShowInEditor", "True") == "False":
                     # column not visible to user
-                    print(column, "column not visible to user")
+                    # print(column, "column not visible to user")
                     continue
                     
                 if column not in self.editors.keys():
                     # column does not have the editor support
-                    print(column, "column does not have the editor support")
+                    # print(column, "column does not have the editor support")
                     continue
 
-                if len(self.form_data.get(column, "").strip()) == 0:
+                if len(str(self.form_data.get(column, "")).strip()) == 0:
                     if column not in validation_errors.keys():
-                        validation_errors[column] = error_message
+                        validation_errors[column] = [error_message]
                     else:
                         validation_errors[column].append(error_message) 
         return validation_errors
@@ -107,13 +108,19 @@ class FormEditorDialog(QtWidgets.QDialog):
 
             if not widget_required:
                 continue
-
+            
+            is_mandatory = column_configuration.get("IsMandatory", "False") == "True"
             label = QtWidgets.QLabel(str(display_name))
+            if is_mandatory:
+                mandatory_flag = QtWidgets.QLabel("*")
+                mandatory_flag.setProperty("PropertyEditor","IsMandatory")
+                self.layout.addWidget(mandatory_flag, row_id, 1)
+
             editor = self.get_editor(column, column_configuration)
             if editor:
                 self.editors[column] = editor
                 self.layout.addWidget(label, row_id, 0)
-                self.layout.addWidget(editor, row_id, 1)
+                self.layout.addWidget(editor, row_id, 2)
                 self.set_editor_data(editor, default_value)
 
     def update_form_data(self, column, value):
@@ -146,7 +153,7 @@ class FormEditorDialog(QtWidgets.QDialog):
 
     def set_editor_data(self, editor_widget, value):
         if isinstance(editor_widget, (QtWidgets.QLineEdit, QtWidgets.QTextEdit)):
-            editor_widget.setText(value)
+            editor_widget.setText(str(value))
 
         if isinstance(editor_widget, QtWidgets.QComboBox):
             index = editor_widget.findData(value, QtCore.Qt.ItemDataRole.UserRole)
@@ -159,9 +166,10 @@ class FormEditorDialog(QtWidgets.QDialog):
             editor_widget.setValues(value)
 
     def get_editor(self, column, column_configuration):
-        supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput"]
+        supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput", "IntegerInput"]
 
         field_type = column_configuration.get("FieldType", None)
+        
 
         if field_type is None or field_type not in supported_types:
             return None
@@ -181,7 +189,20 @@ class FormEditorDialog(QtWidgets.QDialog):
         if field_type == "ListInput":
             return self.list_input(column, column_configuration)
         
+        if field_type == "IntegerInput":
+            editor = self.integer_input(column, column_configuration)
+            return editor
+        
         return None
+
+    def integer_input(self, column, column_configuration):
+        editor = self.string_input(column, column_configuration)
+        min_value = column_configuration.get("MinValue", 1)
+        max_value = column_configuration.get("MaxValue", 255)
+        range_validator = QtGui.QIntValidator(min_value, max_value, self)
+        editor.setValidator(range_validator)
+        return editor
+
 
     def list_input(self, column, column_configuration):
         editor = ListInputWidget(

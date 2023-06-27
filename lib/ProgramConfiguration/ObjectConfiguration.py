@@ -24,6 +24,16 @@ class ObjectConfiguration(ProgramConfiguration):
                     columns[column] = column_configuration
         return columns
 
+    def get_columns_configuration_by_role(self, definition_class, field_role):
+        object_configuration = self.get(definition_class)
+        columns = {}
+        if object_configuration:
+            for column, column_configuration in object_configuration.items():
+                column_field_type = column_configuration.get("FieldRole", None)
+                if column_field_type and column_field_type == field_role:
+                    columns[column] = column_configuration
+        return columns
+
     def get_columns_configuration_by_setting(self, definition_class, setting):
         object_configuration = self.get(definition_class)
         columns = {}

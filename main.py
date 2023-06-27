@@ -45,7 +45,7 @@ from lib.xml.sql_script_container import sql_script_container
 
 from lib.data.DataModels import PackageDefinitionModel
 
-VERSION = '0.5.2'
+VERSION = '0.5.3'
 XML_PREVIEW_TIMER = 100
 FILTER_EXEC_TIMER = 650
         
