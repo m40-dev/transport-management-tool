@@ -45,7 +45,7 @@ from lib.xml.sql_script_container import sql_script_container
 
 from lib.data.DataModels import PackageDefinitionModel
 
-VERSION = '0.5.3'
+VERSION = '0.5.4'
 XML_PREVIEW_TIMER = 100
 FILTER_EXEC_TIMER = 650
         
@@ -1072,27 +1072,26 @@ class Transport_Manager(QMainWindow):
                 item = item_index.internalPointer()
                 if self.current_workdir:
                     # attempt file operations only if the workdir is set
-                    files_to_delete = item.get_all_files(recursive=True, use_display_keys=True)
-                    
+                    files_to_delete = item.get_all_files(recursive=True)
                     if len(files_to_delete) > 0:
-                        export_data = json.dumps(files_to_delete, indent=4, separators=(',',':'))
-                        detailed_message = f"Data lookup returned following files related to the selected object:\r\n {export_data}"
+                        export_data = "\n".join(map(str, files_to_delete))
+                        # export_data = json.dumps(files_to_delete, indent=4, separators=(',',':'))
+                        detailed_message = f"Data lookup returned following files related to the selected object:\n{export_data}"
                         question = WidgetFactory.MsgBox(self, 
                             message=f"Existing system files detected for item {item.display} or its child items, do you also want to delete these data files?", 
                             detailed_message=detailed_message, 
                             window_mode=WidgetFactory.MsgBox.QUESTION)
                         if question.accepted:
                             #delete data files
-                            for file_list in files_to_delete.values():
-                                for file_path in file_list:
-                                    self.delete_data_file(file_path)
+                            for file_path in files_to_delete:
+                                self.delete_data_file(file_path)
 
                 #remove item from model
                 item_index.model().remove_item(item)
 
     def delete_data_file(self, file_path):
-        print(file_path)
-        file_path = Path(file_path)
+        print("file to delete", file_path)
+        # file_path = Path(file_path)
         if file_path.is_file():
             file_path.unlink()
             parent_directory = file_path.parent
@@ -1104,12 +1103,11 @@ class Transport_Manager(QMainWindow):
             # do not delete anything if there is no working directory
             return False
 
-        if self.current_workdir:
-            workdir_path = Path(str(self.current_workdir))
-            if directory_path.absolute() <= workdir_path.absolute():
-                # never go beyond the working directory
-                print("do not cross the working directory, breaking")
-                return False
+        workdir_path = Path(str(self.current_workdir))
+        if directory_path.absolute() <= workdir_path.absolute():
+            # never go beyond the working directory
+            print("do not cross the working directory, breaking")
+            return False
 
         if len(list(directory_path.rglob('*'))) == 0:
             # print("delete empty directory:", directory_path)
