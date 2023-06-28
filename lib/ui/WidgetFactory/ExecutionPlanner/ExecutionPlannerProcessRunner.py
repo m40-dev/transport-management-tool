@@ -26,7 +26,7 @@ class ProcessRunner(QProcess):
 
     def execute_planner_tasks(self, task_items):
         for task_item in task_items:
-            task_data = task_item.task_data
+            task_data = task_item.task_data()
             print("execute stuff here:", task_data)
             self.start_process(task_item)
 
@@ -37,7 +37,7 @@ class ProcessRunner(QProcess):
         return file_content
 
     def start_process(self, task_item, queued_task=False):
-        task_name = task_item.task_data.get("TaskName", None)
+        task_name = task_item.task_data().get("TaskName", None)
         
         if self.state() == QProcess.ProcessState.Running:
             if task_item.task_class in ["ExecutionPlanner_ExecutionTask", "PackageManager_TaskDefinition"]:
@@ -47,8 +47,8 @@ class ProcessRunner(QProcess):
                 return True
             return False
         
-        action_type = task_item.task_data.get("ExecutionType", None)
-        connection = task_item.task_data.get("Connection", None)
+        action_type = task_item.task_data().get("ExecutionType", None)
+        connection = task_item.task_data().get("Connection", None)
 
         if queued_task and len(self.task_queue) > 0:
             self.task_queue.remove(self.task_queue[0])
@@ -64,7 +64,7 @@ class ProcessRunner(QProcess):
 
         if task_configuration:
             for column, column_confguration in task_configuration.items():
-                column_value = task_item.task_data.get(column, None)
+                column_value = task_item.task_data().get(column, None)
 
                 source_column = column_confguration.get("Source", None)
                 if source_column:
@@ -107,7 +107,7 @@ class ProcessRunner(QProcess):
 
     def get_source_value(self, column, source_column):
         # map column with source object attributes
-        source_value = self.current_item.task_data.get(source_column, None)
+        source_value = self.current_item.task_data().get(source_column, None)
         if "PARENT_DEF." in source_column:
             parent_definition = self.current_item.package_definition
             parent_column = source_column.split(".")[1]

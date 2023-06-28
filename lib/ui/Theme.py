@@ -33,7 +33,7 @@ class Application_Theme(QPalette):
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.AlternateBase, brush)
 
-        brush = QBrush(QColor(220, 100, 100, 80))
+        brush = QBrush(QColor(20, 20, 20, 250))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText, brush)
         

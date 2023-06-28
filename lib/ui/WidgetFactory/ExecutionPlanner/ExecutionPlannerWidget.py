@@ -129,7 +129,7 @@ class ExecutionPlannerWidget(QWidget):
         
     def edit_execution_group(self, index):
         item = index.internalPointer()
-        form_data = item.task_data
+        form_data = item.task_data()
         dialog = ExecutionPlannerGroupDialog(self.application, form_data=form_data)
         dialog.setupForm()
         if dialog.exec():

@@ -36,7 +36,7 @@ class TaskExecutionModel(JSONDataModel):
         for index in indexes:
             if index.isValid():
                 item = index.internalPointer()
-                export = item.task_data
+                export = item.task_data()
                 if export not in items_data:
                     items_data.append(export)
         

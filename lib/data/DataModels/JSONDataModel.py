@@ -170,7 +170,8 @@ class JSONDataModel(QAbstractItemModel):
         for index in indexes:
             if index.isValid():
                 item = index.internalPointer()
-                task_data = item.task_data
+                task_data = item.task_data()
+                task_data["parent"] = item.get_parent_data()
                 if task_data not in items_data:
                     items_data.append(task_data)
         
@@ -246,6 +247,7 @@ class JSONDataModel(QAbstractItemModel):
             self.remove_item(source_item)
         # end = time.time()
         # print("drop event handling", end - start, len(decodedData))
+        print("drop event handling", len(decodedData))
 
         return True
     
@@ -300,7 +302,7 @@ class JSONDataModel(QAbstractItemModel):
         root = self.rootItem
         for i in range(root.childCount()):
             group_item = root.child(i)
-            group_data = group_item.task_data
+            group_data = group_item.task_data()
             data.append(group_data)
         jsondata = json.dumps(data, indent=4)
         print(jsondata)
@@ -313,8 +315,8 @@ class JSONDataModel(QAbstractItemModel):
             index = self.index(row, 0, parent)
             if index.isValid():
                 item = index.internalPointer()
-                if item.task_data:
-                    column_value = item.task_data.get(column, None)
+                if item.task_data():
+                    column_value = item.task_data().get(column, None)
                     if column_value and (column_value.upper() == value.upper()):
                         return item
 

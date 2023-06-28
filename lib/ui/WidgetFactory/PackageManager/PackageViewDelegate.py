@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout, QGraphicsOpacityEffect
+from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout, QGraphicsOpacityEffect, QSizePolicy, QWidget
 from PyQt6.QtCore import Qt, QRectF, pyqtSignal, QPropertyAnimation, QSize, QEasingCurve, QAbstractAnimation
 from PyQt6.QtGui import QPalette, QPen, QPainterPath
 import json
@@ -89,9 +89,6 @@ class PackageViewDelegate(QStyledItemDelegate):
         else:
             super().paint(painter, option, index)
 
-    # def sizeHint(self, arg1, arg2):
-    #     return QSize(55, 55)
-
 class PackageManagerItemWidget(QFrame):
 
     def __init__(self, data_item, application, parent):
@@ -114,7 +111,7 @@ class PackageManagerItemWidget(QFrame):
 
         self.layout.addWidget(self.element_label, 0, 0, 1, 2)
         self.layout.addWidget(self.element_description, 1, 0, 1, 5)
-
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         self.dynamic_property_labels = {}
         dynamic_property_columns = self.application.object_configuration.get_columns_configuration_by_setting(self.data_item.task_class, "ShowInTreeView")
         # lay out items in columns (labels and values)
@@ -148,6 +145,10 @@ class PackageManagerItemWidget(QFrame):
         self.treeview.collapsed.connect(self.collapse_children)
         self.animate()
     
+    def sizeHint(self):
+        # print("getting size hint for widget", self.layout.sizeHint())
+        return self.layout.sizeHint()
+
     def animate(self, reverse=False):
         # animate startup
         effect = QGraphicsOpacityEffect(self)
@@ -199,7 +200,7 @@ class PackageManagerItemWidget(QFrame):
         
         self.element_label.setText(object_display)
         self.element_description.setText(self.data_item.description)
-
+        self.treeview.model().layoutChanged.emit()
 
 class PackageDefinitionWidget(PackageManagerItemWidget):
     def __init__(self, data_item, application, parent):
@@ -224,7 +225,7 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
         if self.application.current_workdir:
             self.data_item.save()
             return True
-        MsgBox(self.application, "Workdir not set. Please configure workdir location first.")
+        MsgBox(self.application, "Working directory is not set. Please configure the work location first.")
     
     def edit_feature(self):
         index = self.treeview.model().indexOf(self.data_item)

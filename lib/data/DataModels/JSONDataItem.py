@@ -29,16 +29,17 @@ class JSONDataItem(QObject):
         self._filter_match = True
         self.filter_string = ""
         self.item_class_configuration = self.object_configuration.get(self.task_class)
-
+        self.source_files = None
+        
         if model_reference:
             model_reference.filterStringChanged.connect(self.handleFilterStringChanged)
-
+        
         if task_data:
             children = task_data.get("children", None)
             if children:
                 self.loadChildren(children)
-            
-
+        
+        self.source_files = self.get_file_data(reload_data=True)
         self.dataDropped.connect(self.itemDataDropped)
         self.locationChanged.connect(self.itemLocationChanged)
         self.locationChanged.connect(self.updateSortOrder)
@@ -451,74 +452,47 @@ class JSONDataItem(QObject):
         for child_node in self._children:
             child_node.save()
 
-    def get_children_data(self, task_class=None):
+    def get_children_data(self, task_class=None, export_data=False):
         children = []
         if self.childCount() == 0:
             return children
 
         for child_item in self._children:
-            child_data = child_item.export_data
-            child_data['uid'] = child_item.uid
-            child_data['objectclass'] = child_item.task_class
-            child_data['row'] = child_item.row()
+            if export_data:
+                child_data = child_item.export_data()
+            else:
+                child_data = child_item.task_data()
             
             if task_class and child_item.task_class == task_class:
                 children.append(child_data)
+                continue
             
             if task_class is None:
                 children.append(child_data)
         return children
 
-    @property
     def task_data(self):
         if self._task_data is None:
             return self._task_data
 
         export_data = deepcopy(self._task_data)
+        # export_data = self._task_data
         export_data['uid'] = self.uid
         export_data['objectclass'] = self.task_class
         export_data['row'] = self.row()
         export_data['children'] = self.get_children_data()
-        export_data['parent'] = self.parent_data
-
-        configuration = self.item_class_configuration
-        for field, field_configuration in configuration.items():
-            field_type = field_configuration.get("FieldType", None)
-            field_role = field_configuration.get("FieldRole", None)
-            
-            if field_role and field_role == "SortOrder":
-                #set sort order
-                export_data[field] = int(self.sortOrder)
-
-                #update task data with newly generated value
-                # self._task_data[field] = int(self.sortOrder)
-            
-            if field_type and field_type == "ChildObjectReference":
-                child_class = field_configuration.get("Class", None)
-                export_data[field] = self.get_children_data(child_class)
-
-            if field_type and field_type == "ListInput":
-                 object_data = self._task_data.get(field, "")
-                 if not isinstance(object_data, list):
-                    export_data[field] = [object_data]
-                    self._task_data[field] = [object_data]
         return export_data
 
-    @task_data.setter
-    def task_data(self, dict_data):
-        self._task_data = dict_data
-
-    @property
-    def parent_data(self):
+    def get_parent_data(self):
         if not self.parent():
             return None
 
         parent = self.parent()
-
-        if parent._task_data is None:
-            return parent._task_data
+        if parent._task_data is None or parent.task_class=="RootItem":
+            return {}
         
         object_data = deepcopy(parent._task_data)
+        # object_data = parent._task_data
         object_data['uid'] = parent.uid
         object_data['objectclass'] = parent.task_class
         object_data['row'] = parent.row()
@@ -527,17 +501,16 @@ class JSONDataItem(QObject):
 
     @property
     def edit_data(self):
-        return self.task_data
+        return self.task_data()
 
     def update_data(self, dict_data):
         if self._previous_task_data is None:
             # store the original data in case we want to restore it
-            self._previous_task_data = deepcopy(self.task_data)
+            self._previous_task_data = deepcopy(self.task_data())
 
         for key, value in dict_data.items():
             self.setData(key, value)
 
-    @property
     def export_data(self):
         if self._task_data is None:
             return self._task_data
@@ -545,7 +518,7 @@ class JSONDataItem(QObject):
         configuration = self.item_class_configuration
         
         export_data = {}
-        object_data = self.task_data
+        object_data = self.task_data()
         
         if configuration is None:
             return object_data
@@ -557,29 +530,42 @@ class JSONDataItem(QObject):
             object_field_value = object_data.get(field, "")
             export_data[field] = object_field_value
 
+            field_type = field_configuration.get("FieldType", None)
+            field_role = field_configuration.get("FieldRole", None)
+            
+            if field_role and field_role == "SortOrder":
+                #set sort order
+                export_data[field] = int(self.sortOrder)
+            
+            if field_type and field_type == "ChildObjectReference":
+                child_class = field_configuration.get("Class", None)
+                export_data[field] = self.get_children_data(task_class=child_class, export_data=True)
+
+            if field_type and field_type == "ListInput":
+                 object_value = self._task_data.get(field, [])
+                 if not isinstance(object_value, list):
+                    export_data[field] = [str(object_value)]
+                    self._task_data[field] = [str(object_value)]
         return export_data
 
-    def get_all_files(self, recursive=False, use_display_keys=False):
+    def get_file_data(self, reload_data=False):
         # get the object_uid: file_path pairs from item
-        file_configurations = {}
-        parent_configurations = {}
-        key_column = self.uid
-        if use_display_keys:
-            key_column = self.display
-        for column in self.object_configuration.get_columns_configuration_by_type(self.task_class, "FileInput"):
-            file_path = self.get_file_path(file_column=column)
+        if self.source_files and not reload_data:
+            return self.source_files
 
+        file_configurations = {}
+        column_configurations = self.object_configuration.get_columns_configuration_by_type(self.task_class, "FileInput")
+        for column in column_configurations:
+            file_path = self.get_file_path(file_column=column)
             if file_path and file_path.is_file():
-                if key_column not in parent_configurations.keys():
-                    parent_configurations[key_column] = [str(file_path)]
-                else:
-                    parent_configurations[key_column].append(str(file_path))
-        
-        file_configurations = parent_configurations
-        
+                file_configurations[column] = file_path
+        return file_configurations
+
+    def get_all_files(self, recursive=False):
+        file_configurations = list(self.get_file_data().values())
         if recursive and self.childCount() > 0:
             for child_item in self._children:
-                child_configuration = child_item.get_all_files(recursive, use_display_keys)
-                file_configurations = file_configurations | child_configuration
-        
+                child_configuration = child_item.get_all_files(recursive)
+                if len(child_configuration) > 0:
+                    file_configurations = file_configurations + child_configuration
         return file_configurations

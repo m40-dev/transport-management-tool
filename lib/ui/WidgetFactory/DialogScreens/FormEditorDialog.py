@@ -154,6 +154,7 @@ class FormEditorDialog(QtWidgets.QDialog):
     def set_editor_data(self, editor_widget, value):
         if isinstance(editor_widget, (QtWidgets.QLineEdit, QtWidgets.QTextEdit)):
             editor_widget.setText(str(value))
+            editor_widget.adjustSize()
 
         if isinstance(editor_widget, QtWidgets.QComboBox):
             index = editor_widget.findData(value, QtCore.Qt.ItemDataRole.UserRole)
@@ -256,7 +257,7 @@ class FormEditorDialog(QtWidgets.QDialog):
                 self.update_form_data(column, editor.toPlainText())
                 )
         
-        editor.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
+        editor.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         editor.setProperty("Widget", "EditorDialog")
         
         return editor

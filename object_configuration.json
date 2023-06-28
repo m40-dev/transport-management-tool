@@ -91,7 +91,8 @@
                 "FileSelectionMode": "FileName",
                 "RedirectDirectoryStatic": "Export",
                 "RedirectDirectoryRelativeTo": "Parent",
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "ShowInTreeView": "True"
             },
         "ExportFile":
             {
