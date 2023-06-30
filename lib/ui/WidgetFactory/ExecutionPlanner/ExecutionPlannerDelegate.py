@@ -171,7 +171,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.task_execution_export.setChecked(True)
 
         self.connection_box = QComboBox(self)
-        connections = list(self.application.sessions.keys())
+        connections = list(self.application.connections.keys())
         self.connection_box.addItems(connections)
 
         self.run_status = QLabel(self)
@@ -221,7 +221,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.layout.addWidget(self.run_status, 2, 4)
 
         """ Refresh state based on the model data """
-        self.refresh_model_data(self.data_item)
+        self.refresh_model_data()
 
         """ Set initial values """
         self.configure_model_data()
@@ -236,16 +236,12 @@ class ItemActionWidget(ExecutionPlannerItem):
     def refresh_data(self):
         self.element_label.setText(self.data_item.display)
 
-    def refresh_display(self, model_item=None):
-        if model_item == self.data_item:
-            self.is_refresh = True
-            self.refresh_model_data(model_item)
-            self.is_refresh = False
+    def refresh_display(self):
+        self.is_refresh = True
+        self.refresh_model_data()
+        self.is_refresh = False
 
-    def refresh_model_data(self, model_item=None):
-        if model_item != self.data_item:
-            return False
-
+    def refresh_model_data(self):
         self.element_label.setText(self.data_item.display)
         
         # print("refresh", model_item, self.data_item)

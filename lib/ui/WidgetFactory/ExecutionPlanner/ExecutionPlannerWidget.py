@@ -192,6 +192,13 @@ class ExecutionPlannerWidget(QWidget):
             if drop_item._task_class == source_item._task_class:
                 move_accept = True
 
+            if drop_item._task_class == "ExecutionPlanner_ExecutionTask" and source_item._task_class == "PackageManager_TaskDefinition":
+                move_accept = True
+            
+            if source_item._task_class == "PackageManager_PackageDefinition":
+                move_accept = True
+
+
         if drop_item is None:
             # no target item - drop at top level
             if source_item._task_class in ["ExecutionPlanner_ExecutionGroup", "PackageManager_PackageDefinition"]:

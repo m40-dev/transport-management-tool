@@ -15,29 +15,71 @@ class DatabaseConnection(object):
         self.table_relations = {}
         self.child_table_relations = {}
 
-        self.connect_db()
+        # self.connect_db()
 
     def connect_db(self):
         # Some other example server values are
-        # server = 'localhost\sqlexpress' # for a named instance
-        # server = 'myserver,port' # to specify an alternate port
-        # server = 'tcp:myserver.database.windows.net' 
-        # database = 'mydb' 
-        # username = 'myusername' 
-        # password = 'mypassword' 
-
-        server = self.connection_parameters["server_address"]
-        database = self.connection_parameters["database_name"]
-        username = self.connection_parameters["user_name"]
-        password = self.connection_parameters["user_password"]
-
         # ENCRYPT defaults to yes starting in ODBC Driver 18. It's good to always specify ENCRYPT=yes on the client side to avoid MITM attacks.
-        connection = pyodbc.connect('DRIVER={ODBC Driver 18 for SQL Server};SERVER='+server+';DATABASE='+database+';ENCRYPT=no;UID='+username+';PWD='+ password)
+        connection_string = self.get_db_connection_string()
+        if connection_string:
+            connection = pyodbc.connect(connection_string)
         
-        if connection:
-            self.db_session = connection
-            self.db_cursor = connection.cursor()
+            if connection:
+                self.db_session = connection
+                self.db_cursor = connection.cursor()
+                return True
+        return False
     
+    def get_db_connection_string(self):
+        # 'DRIVER={ODBC Driver 18 for SQL Server};SERVER='+server+';DATABASE='+database+';ENCRYPT=no;UID='+username+';PWD='+ password
+        connection_string = None
+        EncryptConnection = self.connection_parameters.get("EncryptConnection", True)
+        
+        if EncryptConnection:
+            EncryptConnection = "yes"
+        else:
+            EncryptConnection = "no"
+
+        ServerAddress = self.connection_parameters.get("ServerAddress", None)
+        DatabaseName = self.connection_parameters.get("DatabaseName", None)
+        SQLUserName = self.connection_parameters.get("SQLUserName", None)
+        SQLPassword = self.connection_parameters.get("SQLPassword", None)
+
+        if ServerAddress and DatabaseName and SQLUserName and SQLPassword:
+            connection_string = "DRIVER={ODBC Driver 18 for SQL Server};" + f"SERVER={ServerAddress};DATABASE={DatabaseName};ENCRYPT={EncryptConnection};UID={SQLUserName};PWD={SQLPassword}"
+        return connection_string
+
+    def get_connection_string(self):
+        # "Data Source=<Database server>;Initial Catalog=<Database name>;User ID=<Database user>;Password=<Password>"
+        connection_string = None
+        EncryptConnection = self.connection_parameters.get("EncryptConnection", True)
+        
+        if EncryptConnection:
+            EncryptConnection = "yes"
+        else:
+            EncryptConnection = "no"
+
+        ServerAddress = self.connection_parameters.get("ServerAddress", None)
+        DatabaseName = self.connection_parameters.get("DatabaseName", None)
+        SQLUserName = self.connection_parameters.get("SQLUserName", None)
+        SQLPassword = self.connection_parameters.get("SQLPassword", None)
+
+        if ServerAddress and DatabaseName and SQLUserName and SQLPassword:
+            connection_string = f'Data Source={ServerAddress};Initial Catalog={DatabaseName};User ID="{SQLUserName}";Password="{SQLPassword}"'
+        return connection_string
+
+
+    def get_authentication_string(self):
+
+        authentication_string = None
+
+        ApplicationUserName = self.connection_parameters.get("ApplicationUserName", None)
+        ApplicationPassword = self.connection_parameters.get("ApplicationPassword", None)
+
+        if ApplicationUserName and ApplicationPassword:
+            authentication_string = f"Module=DialogUser;User={ApplicationUserName};Password={ApplicationPassword}"
+        return authentication_string
+
     @property
     def is_connected(self):
         if self.db_session is not None:

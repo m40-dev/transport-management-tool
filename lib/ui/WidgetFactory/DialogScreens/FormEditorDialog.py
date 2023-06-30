@@ -132,6 +132,18 @@ class FormEditorDialog(QtWidgets.QDialog):
         # print("return form data", self._form_data)
         return self._form_data
 
+    def set_dictionary_data(self, dict_data):
+        if not dict_data:
+            return False
+        for column, value in dict_data.items():
+            editor_widget = self.editors.get(column, None)
+            if editor_widget:
+                #configure the widget with base object value
+                self.set_editor_data(editor_widget, value)
+            form_column = self.form_data.get(column, None)
+            if form_column and len(str(value).strip()) > 0:
+                self.update_form_data(column, value)
+
     def set_form_data(self, source_index):
         #configures the editors based on the source data of the object
         #sets the values for any hidden items as well
@@ -165,13 +177,16 @@ class FormEditorDialog(QtWidgets.QDialog):
         
         if isinstance(editor_widget, ListInputWidget):
             editor_widget.setValues(value)
+        
+        if isinstance(editor_widget, QtWidgets.QCheckBox):
+            state = str(value) == "2"
+            editor_widget.setChecked(state)
 
     def get_editor(self, column, column_configuration):
-        supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput", "IntegerInput"]
+        supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput", "IntegerInput", "BooleanInput"]
 
         field_type = column_configuration.get("FieldType", None)
         
-
         if field_type is None or field_type not in supported_types:
             return None
 
@@ -194,7 +209,23 @@ class FormEditorDialog(QtWidgets.QDialog):
             editor = self.integer_input(column, column_configuration)
             return editor
         
+        if field_type == "BooleanInput":
+            editor = self.boolean_input(column, column_configuration)
+            return editor
+        
         return None
+
+    def boolean_input(self, column, column_configuration):
+
+        editor = QtWidgets.QCheckBox()
+        
+        editor.stateChanged.connect(
+                lambda value, column=column: 
+                self.update_form_data(column, value)
+                )
+
+        editor.setProperty("Widget", "EditorDialog")
+        return editor
 
     def integer_input(self, column, column_configuration):
         editor = self.string_input(column, column_configuration)
@@ -242,7 +273,10 @@ class FormEditorDialog(QtWidgets.QDialog):
                 lambda value, column=column: 
                 self.update_form_data(column, value)
                 )
-
+        
+        is_sensitive = column_configuration.get("IsSensitive", "False") == "True"
+        if is_sensitive:
+            editor.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
         editor.setProperty("Widget", "EditorDialog")
         return editor
 
@@ -258,6 +292,9 @@ class FormEditorDialog(QtWidgets.QDialog):
                 )
         
         editor.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        is_sensitive = column_configuration.get("IsSensitive", "False") == "True"
+        if is_sensitive:
+            editor.setEchoMode(QtWidgets.QTextEdit.EchoMode.Password)
         editor.setProperty("Widget", "EditorDialog")
         
         return editor
@@ -301,6 +338,10 @@ class ListInputWidget(FormEditorWidget):
 
         self.list_input=QtWidgets.QTextEdit()
         self.list_input.setPlaceholderText(self.placeholder_text)
+        is_sensitive = column_configuration.get("IsSensitive", "False") == "True"
+        if is_sensitive:
+            self.list_input.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
+
         self.list_input.textChanged.connect(self.updateValues)
         self.layout.addWidget(self.list_input)
 
@@ -338,6 +379,9 @@ class FileInputWidget(FormEditorWidget):
 
         self.path_input=QtWidgets.QLineEdit()
         self.path_input.setPlaceholderText(self.placeholder_text)
+        is_sensitive = column_configuration.get("IsSensitive", "False") == "True"
+        if is_sensitive:
+            self.path_input.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
 
         self.layout.addWidget(self.path_input)
         self.layout.addWidget(self.path_button)
@@ -356,7 +400,13 @@ class FileInputWidget(FormEditorWidget):
         dialog = QtWidgets.QFileDialog(self, "Transport Manager - Get File Path", 
             self.application.current_workdir)
 
-        file_path = dialog.getSaveFileName(filter=file_filter)
+        dialog = QtWidgets.QFileDialog(self, "Transport Manager - Get Path", 
+        self.application.current_workdir)
+
+        if path_mode == "DirectoryPath":
+            file_path = [dialog.getExistingDirectory()]
+        else:
+            file_path = dialog.getSaveFileName(filter=file_filter)
 
         if file_path[0] != "":
             file_path = file_path[0]

@@ -79,7 +79,7 @@
         "TaskType": 
             {
                 "FieldType": "FixedInput",
-                "Options": {"Transport Package": "Transport", "SQL Script": "SQL"},
+                "Options": {"Transport Package": "Transport", "SQL Script": "SQL", "Schema Extension": "Schema", "Bug Fix Package": "BugFix"},
                 "DefaultValue": "Transport",
                 "Display": "Task Type",
                 "ShowInTreeView": "True",
@@ -186,6 +186,14 @@
                     "FieldType": "StringInput",
                     "Source": "TaskName"
                 },
+            "TaskType":
+                {
+                    "FieldType": "StringInput",
+                    "Source": "TaskType",
+                    "Transporter": ["Transport", "BugFix"],
+                    "SQLScript": ["SQL"],
+                    "SchemaExtension": ["Schema"]
+                },
             "FeatureName":
                 {
                     "FieldType": "StringInput",
@@ -199,6 +207,66 @@
             "Connection":
                 {
                     "FieldType": "StringInput"   
+                }
+            },
+        "Connection_Configuration": 
+            {
+            "ConnectionName": 
+                {
+                    "FieldType": "StringInput",
+                    "Display": "Connection Name",
+                    "PlaceholderText": "Provide Connection Name",
+                    "FieldRole": "DisplayRole",
+                    "IsMandatory": "True"
+                },
+            "Description": 
+                {
+                    "FieldType": "TextInput",
+                    "Display": "Connection Description",
+                    "PlaceholderText": "Connection Description",
+                    "FieldRole": "DescriptionRole"
+                },
+            "ServerAddress":
+                {
+                    "FieldType": "StringInput",
+                    "IsMandatory": "True"
+                },
+            "DatabaseName":
+                {
+                    "FieldType": "StringInput",
+                    "IsMandatory": "True"
+                },
+            "SQLUserName":
+                {
+                    "FieldType": "StringInput",
+                    "IsMandatory": "True"
+                },
+            "SQLPassword":
+                {
+                    "FieldType": "StringInput",
+                    "IsSensitive": "True" ,
+                    "IsMandatory": "True"
+                },
+            "ApplicationUserName":
+                {
+                    "FieldType": "StringInput",
+                    "IsMandatory": "True"
+                },
+            "ApplicationPassword":
+                {
+                    "FieldType": "StringInput",
+                    "IsSensitive": "True",
+                    "IsMandatory": "True"
+                },
+            "EncryptConnection":
+                {
+                    "FieldType": "BooleanInput",
+                    "DefaultValue": "True"
+                },
+            "ToolsDirectory":
+                {
+                    "FieldType": "FileInput",
+                    "FileSelectionMode": "DirectoryPath"
                 }
             }
 }

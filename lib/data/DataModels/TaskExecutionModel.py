@@ -74,14 +74,24 @@ class TaskExecutionItem(JSONDataItem):
             )
         self._package_definition_data = {}
         self.migrate(task_class)
+        self.source_files_data = None
+        self.export_file_path = None
+        self.definition_file_path = None
         #Configure Default Value
         if task_data: 
+            self.source_files_data = task_data.get("source_file_data", {})
+            if self.source_files_data:
+                self.definition_file_path = self.source_files_data.get("DefinitionFile")
+                self.export_file_path = self.source_files_data.get("ExportFile")
+            
             if not task_data.get("ExecutionType", None):
                 self.setData("ExecutionType", "Export")
 
     def itemDataDropped(self, source_dict):
         # print("foreign object dropped into task execution view", source_dict.get("objectclass", None), self.task_class)
         source_object_class = source_dict.get("objectclass", None)
+        print("source data dropped")
+        print(source_dict.get("source_file_data", {}))
         if source_object_class == "PackageManager_PackageDefinition":
             # print("package definition dropped, update child items")
             for child_task in self.children():
@@ -92,12 +102,15 @@ class TaskExecutionItem(JSONDataItem):
             parent_object = source_dict.get("parent", None)
             if parent_object:
                 self.package_definition = parent_object
-
+        self.source_files_data = source_dict.get("source_file_data", {})
 
     def itemLocationChanged(self, source_item):
         print("execution planner item moved")
         #pass the package definition over to new item
+        super().itemLocationChanged(source_item)
         self.package_definition = source_item.package_definition
+        self.source_files_data = source_item.source_files_data
+        
 
     @property
     def package_definition(self):

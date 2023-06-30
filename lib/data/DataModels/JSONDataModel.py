@@ -230,7 +230,6 @@ class JSONDataModel(QAbstractItemModel):
             
             #emit relocation signal for the new item and tell it about its source item from the same model
             if source_item:
-                new_item._previous_task_data = source_item._previous_task_data
                 new_item.locationChanged.emit(source_item)
             else:
                 #emit new item from source signal to tell new item about source item data

@@ -50,7 +50,7 @@ XML_PREVIEW_TIMER = 100
 FILTER_EXEC_TIMER = 650
         
 class Transport_Manager(QMainWindow):
-    """Main window class for session launcher"""
+    """Main window class for connection launcher"""
 
     refresh_widget = pyqtSignal(object)
     xml_structure_changed = pyqtSignal()
@@ -78,7 +78,7 @@ class Transport_Manager(QMainWindow):
         """ Connect UI signals """
         self.closeEvent = self.close_application
         self.installEventFilter(self)
-        self.ui.actionAdd_DatabaseConnection.triggered.connect(self.get_session_details)
+        self.ui.actionAdd_DatabaseConnection.triggered.connect(self.get_connection_details)
         self.ui.FindObjectButton.clicked.connect(self.find_objects)
         self.ui.TableComboBox.currentTextChanged.connect(self.load_db_objects)
         self.ui.AddSelectedObjectsWithRelationsButton.clicked.connect(self.select_object_for_transport)
@@ -213,23 +213,23 @@ class Transport_Manager(QMainWindow):
         self.encryption_key = None
         self.last_widget_clicked = None
 
-        """ Saved Session data """
-        self.sessions = self.settings.value("sessions")
-        if self.sessions is None:
-            self.sessions = {}
+        """ Saved connection data """
+        self.connections = self.settings.value("connections")
+        if self.connections is None:
+            self.connections = {}
 
-        if len(self.sessions) > 0:
+        if len(self.connections) > 0:
             encryption_key = self.get_encryption_key()
             if encryption_key:
                 self.encryption_key = encryption_key
-                if self.decrypt_session_details():
-                    self.load_saved_sessions()
+                if self.decrypt_connection_details():
+                    self.load_saved_connections()
                 else:
-                    print("session data decryption failed")
-                    self.sessions = {}
+                    print("connection data decryption failed")
+                    self.connections = {}
             else:
-                print("session details were not loaded")
-                self.sessions = {}
+                print("connection details were not loaded")
+                self.connections = {}
         
         # effect = QGraphicsOpacityEffect(self)
         # self.setGraphicsEffect(effect)
@@ -340,24 +340,25 @@ class Transport_Manager(QMainWindow):
         tab_widget.deleteLater()
         self.ui.PackageManagerTabWidget.removeTab(index)
     
-    """ Database Session Management """
+    """ Database connection Management """
 
-    def connect_database(self, session_name):
-        if not isinstance(self.sessions, dict):
+    def connect_database(self, connection_name):
+        if not isinstance(self.connections, dict):
             return False
         
-        if session_name not in self.sessions.keys():
+        if connection_name not in self.connections.keys():
             return False
         
-        self.ui.statusbar.showMessage(f"Using session info: {session_name}")
+        self.ui.statusbar.showMessage(f"Using connection info: {connection_name}")
 
-        session_params = self.sessions[session_name]
+        connection_params = self.connections[connection_name]
 
         if self.db is not None:
             self.db.disconnect_db()
             self.db = None
 
-        self.db = DatabaseConnection(session_params)
+        self.db = DatabaseConnection(connection_params)
+        self.db.connect_db()
         
         if self.db is not None:
             self.db.load_session_data()
@@ -656,7 +657,7 @@ class Transport_Manager(QMainWindow):
             file_path.touch()
         self.open_file(str(file_path))
 
-    """ Session Data Management """
+    """ connection Data Management """
     def get_encryption_key(self, initial=False):
         encryption_key = DialogScreens.EncryptionKeyDialog(self, initial)
         if encryption_key.exec():
@@ -664,9 +665,9 @@ class Transport_Manager(QMainWindow):
             return enc.hexdigest()
         return False
         
-    def decrypt_session_details(self):
-        encrypted_session_details = self.sessions
-        if isinstance(encrypted_session_details, dict):
+    def decrypt_connection_details(self):
+        encrypted_connection_details = self.connections
+        if isinstance(encrypted_connection_details, dict):
             return True
 
         if self.encryption_key is None:
@@ -677,22 +678,22 @@ class Transport_Manager(QMainWindow):
 
         crypto = Fernet(b64_byte_key)
         try:
-            decrypted_session_details = crypto.decrypt(encrypted_session_details)
+            decrypted_connection_details = crypto.decrypt(encrypted_connection_details)
         except:
             return False
 
-        session_data = json.loads(decrypted_session_details)
-        if session_data:
-            self.sessions = session_data
+        connection_data = json.loads(decrypted_connection_details)
+        if connection_data:
+            self.connections = connection_data
             return True
         return False
 
-    def save_session_details(self):
-        if len(self.sessions) == 0:
-            self.settings.setValue("sessions", {})
+    def save_connection_details(self):
+        if len(self.connections) == 0:
+            self.settings.setValue("connections", {})
             return True
         
-        encoded_session_data = json.dumps(self.sessions).encode('utf-8')
+        encoded_connection_data = json.dumps(self.connections).encode('utf-8')
 
         if self.encryption_key is None:
             self.encryption_key = self.get_encryption_key(initial=True)
@@ -701,56 +702,67 @@ class Transport_Manager(QMainWindow):
         b64_byte_key = base64.urlsafe_b64encode(byte_key)
 
         crypto = Fernet(b64_byte_key)
-        encrypted_session_details = crypto.encrypt(encoded_session_data)
+        encrypted_connection_details = crypto.encrypt(encoded_connection_data)
 
-        self.settings.setValue("sessions", encrypted_session_details)
+        self.settings.setValue("connections", encrypted_connection_details)
 
-    def load_saved_sessions(self):
-        if self.sessions is not None:
-            if isinstance(self.sessions, dict):
-                for session_name in self.sessions.keys():
-                    self.add_session_to_menu(session_name)
+    def load_saved_connections(self):
+        if self.connections is not None:
+            if isinstance(self.connections, dict):
+                for connection_name in self.connections.keys():
+                    self.add_connection_to_menu(connection_name)
 
-    def get_session_details(self, session_name=None):
-        session_data = self.sessions.get(session_name, None)
-        dialog = DialogScreens.SessionDetailsDialog(self, session_data)
-        if dialog.exec():
-            if dialog.session_name not in self.sessions.keys() and not session_name:
-                self.add_session_to_menu(dialog.session_name)
+    def get_connection_details(self, connection_name=None):
+        connection_data = self.connections.get(connection_name, None)
 
-            if session_name and dialog.session_name != session_name:
-                source_session = self.ui.menuConnections.findChildren(QMenu, session_name, Qt.FindChildOption.FindDirectChildrenOnly)
-                if len(source_session) == 1:
-                    source_session = source_session[0]
-                    source_session.setObjectName(dialog.session_name)
-                    source_session.setTitle(dialog.session_name)
-                    self.sessions.pop(session_name)
+        editor_configuration = self.object_configuration.get("Connection_Configuration")
+        if editor_configuration:
+            dialog = WidgetFactory.FormEditorDialog(self, 
+            configuration_class="Connection_Configuration",
+            dialog_name="Connection Configuration"
+            )
+            dialog.set_dictionary_data(connection_data)
+            if dialog.exec():
+                data = dialog.form_data
+                print(data)
+                dialog_connection_name = data.get("ConnectionName", None)
 
-            self.sessions[dialog.session_name] = dialog.form_values
-            self.save_session_details()
+                if dialog_connection_name and dialog_connection_name not in self.connections.keys() and not connection_name:
+                    self.add_connection_to_menu(dialog_connection_name)
 
-    def add_session_to_menu(self, session_name):
-        NewMenuItem = self.ui.menuConnections.addMenu(session_name)
-        NewMenuItem.setObjectName(session_name)
+                if connection_name and dialog_connection_name != connection_name:
+                    source_connection = self.ui.menuConnections.findChildren(QMenu, connection_name, Qt.FindChildOption.FindDirectChildrenOnly)
+                    if len(source_connection) == 1:
+                        source_connection = source_connection[0]
+                        source_connection.setObjectName(dialog_connection_name)
+                        source_connection.setTitle(dialog_connection_name)
+                        self.connections.pop(connection_name)
+
+                self.connections[dialog_connection_name] = data
+                self.save_connection_details()
+
+    def add_connection_to_menu(self, connection_name):
+        NewMenuItem = self.ui.menuConnections.addMenu(connection_name)
+        NewMenuItem.setObjectName(connection_name)
         ConnectAction = NewMenuItem.addAction("Connect")
         EditAction = NewMenuItem.addAction("Edit")
         NewMenuItem.addSeparator()
         DeleteAction = NewMenuItem.addAction("Delete")
 
         ConnectAction.triggered.connect(lambda: self.connect_database(NewMenuItem.objectName()))
-        EditAction.triggered.connect(lambda: self.get_session_details(NewMenuItem.objectName()))
-        DeleteAction.triggered.connect(lambda: self.delete_session(NewMenuItem))
+        EditAction.triggered.connect(lambda: self.get_connection_details(NewMenuItem.objectName()))
+        DeleteAction.triggered.connect(lambda: self.delete_connection(NewMenuItem))
 
-    def delete_session(self, session_menu_object):
-        session_name = session_menu_object.title()
+    def delete_connection(self, connection_menu_object):
+        connection_name = connection_menu_object.title()
 
-        decision = QMessageBox.question(self, "Confirm Session Delete", f"Are you sure to delete session info: {session_name}?")
+        decision = QMessageBox.question(self, "Confirm connection Delete", f"Are you sure to delete connection info: {connection_name}?")
         if decision == QMessageBox.StandardButton.Yes:
-            action = session_menu_object.menuAction()
+            action = connection_menu_object.menuAction()
             self.ui.menuConnections.removeAction(action)
             
-            self.sessions.pop(session_name)
-            self.save_session_details()
+            self.connections.pop(connection_name)
+            self.save_connection_details()
 
     """ Relations Management """
 
@@ -1388,8 +1400,8 @@ class Transport_Manager(QMainWindow):
         self.settings.setValue("windowState", self.saveState())
         self.settings.setValue("relation_presets", self.relation_presets)
 
-        if len(self.sessions) > 0:
-            self.save_session_details()
+        if len(self.connections) > 0:
+            self.save_connection_details()
 
         if event:
             event.accept()
