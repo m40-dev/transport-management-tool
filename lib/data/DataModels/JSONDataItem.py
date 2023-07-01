@@ -502,6 +502,8 @@ class JSONDataItem(QObject):
         object_data['uid'] = parent.uid
         object_data['objectclass'] = parent.task_class
         object_data['row'] = parent.row()
+        if "children" in object_data:
+            object_data.pop("children")
 
         return object_data
 
@@ -577,7 +579,8 @@ class JSONDataItem(QObject):
         for column in column_configurations:
             file_path = self.get_file_path(file_column=column)
             if file_path and file_path.is_file():
-                file_configurations[column] = str(file_path)
+                relative_location = file_path.relative_to(self.application.current_workdir)
+                file_configurations[column] = str(relative_location)
         return file_configurations
 
     def get_all_files(self, recursive=False):

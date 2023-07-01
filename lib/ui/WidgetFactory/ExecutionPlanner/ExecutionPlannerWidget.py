@@ -5,7 +5,7 @@ from lib.ui.WidgetFactory import ExecutionPlannerContextMenu
 from lib.data.DataModels import TaskExecutionModel
 from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
 from .ExecutionPlannerProcessRunner import ProcessRunner
-from lib.ui.WidgetFactory import ExecutionPlannerGroupDialog
+from lib.ui.WidgetFactory import ExecutionPlannerGroupDialog, FormEditorDialog
 
 class ExecutionPlannerWidget(QWidget):
     planner_name_changed = pyqtSignal(object)
@@ -109,34 +109,43 @@ class ExecutionPlannerWidget(QWidget):
         menu_target = self.treeview.mapToGlobal(menuPosition)
 
         """ Connect Signals """
-        contextMenu.add_execution_group.connect(self.add_execution_group)
-        contextMenu.edit_execution_group.connect(self.edit_execution_group)
+        contextMenu.add_execution_group.connect(self.add_to_execution_planner)
+        contextMenu.edit_execution_group.connect(self.edit_execution_item)
+        contextMenu.edit_execution_task.connect(self.edit_execution_item)
+
 
         if len(contextMenu.menu_items) > 0:
             contextMenu.popup(menu_target)
 
-    def add_execution_group(self, parent):
-        new_group = {
-                "Name": "Group Name",
-                "objectclass": "ExecutionPlanner_ExecutionGroup",
-                "Description": "New Execution Group Description."
-            }
-        dialog = ExecutionPlannerGroupDialog(self.application, form_data=new_group)
-        dialog.setupForm()
-        if dialog.exec():
-            group_details = dialog.form_data
-            self.model_data.addExecutionGroup(task_data=group_details, parentIndex=parent)
+    def add_to_execution_planner(self, source_index, object_class):
+        print("Add Package Definition", source_index)
+        editor_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionGroup")
+        if editor_configuration:
+            dialog = FormEditorDialog(self.application, 
+            configuration_class="ExecutionPlanner_ExecutionGroup", 
+            dialog_name="Execution Group Definition"
+            )
+            if dialog.exec():
+                data = dialog.form_data
+                treeview_model = self.treeview.model()
+                treeview_model.insert_item("ExecutionPlanner_ExecutionGroup", data, source_index)
         
-    def edit_execution_group(self, index):
-        item = index.internalPointer()
-        form_data = item.task_data()
-        dialog = ExecutionPlannerGroupDialog(self.application, form_data=form_data)
-        dialog.setupForm()
-        if dialog.exec():
-            group_details = dialog.form_data
-            item._task_data = group_details
-            item.data_changed.emit(item)
-
+    def edit_execution_item(self, source_index, object_class):
+        print("Edit Execution Planner Definition", source_index)
+        if not source_index.isValid():
+            return False
+            
+        editor_configuration = self.object_configuration.get(object_class)
+        if editor_configuration:
+            dialog = FormEditorDialog(self.application, 
+            configuration_class=object_class,
+            dialog_name="Execution Planner Object Definition"
+            )
+            dialog.set_form_data(source_index)
+            if dialog.exec():
+                data = dialog.form_data
+                source_item = source_index.internalPointer()
+                source_item.update_data(data)
 
     def run_planner_task(self, task_item):
         self.ProcessRunner.start_process(task_item)

@@ -18,6 +18,7 @@ class ProcessRunner(QProcess):
         self.readyReadStandardError.connect(self.handle_stderr)
         self.finished.connect(self.process_finished)
         self.stateChanged.connect(self.handle_state)
+        self.current_workdir = self.application.current_workdir
         
         self.is_running = False
         self.current_item = None
@@ -27,6 +28,7 @@ class ProcessRunner(QProcess):
     def stop_planner_execution(self):
         self.task_queue = []
         self.kill()
+        self.sql_thread.terminate()
 
     def execute_planner_tasks(self, task_items):
         for task_item in task_items:
@@ -46,10 +48,25 @@ class ProcessRunner(QProcess):
         action_type = task_data.get("ExecutionType", None)
         task_type = task_data.get("TaskType", None)
         configuration_task_type = self.check_task_type(task_type)
+
+        # Get the up-to-date workdir configuration
+        if not self.current_workdir and self.application.current_workdir:
+            self.current_workdir = self.application.current_workdir
+
+        if not self.current_workdir:
+            self.message.emit(
+            f"Task execution ({task_name}) cannot be started, working directory was not set.",
+            "Transport Manager")
+            return False
+
         if action_type == "Import" and configuration_task_type == "SQLScript":
-            script_definition = task_item.source_files_data.get("DefinitionFile", None)
+            script_definition = task_data.get("DefinitionFile", None)
             if script_definition:
-                script_content = self.load_file(script_definition)
+                script_path = pathlib.Path("/".join([self.current_workdir, script_definition]))
+                script_content = ""
+                if script_path.is_file():
+                    script_content = self.load_file(str(script_path))
+                
                 if len(script_content.strip()) == 0:
                     self.message.emit(f"SQL script execution task skipped ({task_name}). There is no content in the sql script definition file.", "Transport Manager")
                     return False
@@ -64,6 +81,14 @@ class ProcessRunner(QProcess):
                 if not confirmation_dialog.accepted:
                     return False
         
+        if action_type == "Export":
+            export_file = task_data.get("ExportFile", "")
+            definition_file = task_data.get("DefinitionFile", "")
+
+            if definition_file and export_file and len(export_file.strip()) == 0 or len(definition_file.strip()) == 0:
+                self.message.emit(f"Export task execution skipped ({task_name}). There is no source or/and export file configured.", "Transport Manager")
+                return False
+
         if self.state() == QProcess.ProcessState.Running:
             if task_item.task_class in ["ExecutionPlanner_ExecutionTask", "PackageManager_TaskDefinition"]:
                 self.task_queue.append(task_item)
@@ -77,7 +102,6 @@ class ProcessRunner(QProcess):
         
         # prepare some task variables
         self.current_item = task_item
-        
         
         connection_name = task_data.get("Connection", None)
         
@@ -116,10 +140,7 @@ class ProcessRunner(QProcess):
                 #no overwrite for the import/export commands
                 command = self.get_execution_command(task_item, action_type, connection_name)
                 if not command:
-                    # task type not supported, copy the files to target directory if this is an export task
-                    if action_type == "Export":
-                        self.message.emit(f"Task type not supported: [{task_type}]. Source File will be copied over to export destination.", "Transport Manager")
-                        self.copy_definition_file()
+                    # there is no command available to run the process so just skip this and move on
                     self.process_finished()
                     return False
 
@@ -159,14 +180,19 @@ class ProcessRunner(QProcess):
         return variables_script
 
     def copy_definition_file(self):
-        export_file = self.current_item.source_files_data.get("ExportFile", None)
-        definition_file = self.current_item.source_files_data.get("DefinitionFile", None)
-        if definition_file and export_file:
-            definition_path = pathlib.Path(definition_file)
-            export_path = pathlib.Path(export_file)
+        task_data = self.current_item.task_data()
+        export_file = task_data.get("ExportFile", None)
+        definition_file = task_data.get("DefinitionFile", None)
+        if definition_file and export_file and self.current_workdir:
+            definition_path = pathlib.Path("/".join([self.current_workdir, definition_file]))
+            export_path = pathlib.Path("/".join([self.current_workdir, export_file]))
             if definition_path.is_file():
                 #copy only if the source file exists
+                self.message.emit(
+                f"Copy {str(definition_path)} to {str(export_path)}.",
+                "Transport Manager")
                 shutil.copy(definition_path, export_path)
+
 
     def get_execution_command(self, task_item, action_type, connection_name):
         #get the direct command the task execution
@@ -187,15 +213,22 @@ class ProcessRunner(QProcess):
         is_schema_extension = configuration_task_type == "SchemaExtension"
         is_sql = configuration_task_type == "SQLScript"
 
-        if not task_item.source_files_data:
+        if not task_data.get("DefinitionFile", None) or not task_data.get("ExportFile", None):
             self.message.emit(
             f"Task execution ({task_name}) cannot be started, source/destination files are not configured.",
             "Transport Manager")
             return False
 
         connection_data = self.application.connections.get(connection_name, None)
-        export_file = task_item.source_files_data.get("ExportFile", None)
-        definition_file = task_item.source_files_data.get("DefinitionFile", None)
+        export_file = task_data.get("ExportFile", None)
+        definition_file = task_data.get("DefinitionFile", None)
+
+        # Re-map the relative paths to absolute paths
+        if definition_file:
+            definition_file = "/".join([self.current_workdir, definition_file])
+
+        if export_file:
+            export_file = "/".join([self.current_workdir, export_file])
 
         if is_transport and connection_data:
             return self.get_transporter_command(
@@ -212,6 +245,7 @@ class ProcessRunner(QProcess):
                 connection_data=connection_data)
         
         if is_sql and connection_data and action_type == "Import":
+            #run scripts
             self.sql_thread = SQLThread(
                     action_type=action_type,
                     definition_file=definition_file,
@@ -220,19 +254,15 @@ class ProcessRunner(QProcess):
                     call_back=self.process_finished)
             self.sql_thread.start()
 
-            # self.run_sql_script(
-            #     action_type=action_type,
-            #     definition_file=definition_file,
-            #     connection_data=connection_data)
-            #returning False, so there is no powershell subprocess started
+            #returning False so there is no powershell subprocess started
             return False
+
+        # task type is not supported, copy the files to target directory if this is an export task
+        if action_type == "Export":
+            self.message.emit(f"Task type was not handled with known configuration: Task Type: [{task_type}] Task Name: {task_name}. Source File will be copied over to export destination.", "Transport Manager")
+            self.copy_definition_file()
+
         return command
-    
-    # def continue_queue(self):
-    #     print("restarting queue")
-    #     if len(self.task_queue) > 0:
-    #         next_task = self.task_queue[0]
-    #         self.start_process(next_task)
     
     def check_task_type(self, task_type):
         task_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionTask")
@@ -254,6 +284,7 @@ class ProcessRunner(QProcess):
         return None
 
     def run_sql_script(self, action_type, definition_file, connection_data):
+        self.stateChanged.emit(QProcess.ProcessState.Running)
         print("Running SQL Script")
         if action_type != "Import":
             return False
@@ -265,7 +296,7 @@ class ProcessRunner(QProcess):
 
         if len(sql_script.strip()) == 0:
             self.message.emit(
-            f"SQL Script could not be loaded or have no content ({definition_file}). Breaking execution.",
+            f"SQL Script could not be loaded or have no content ({definition_file}). Operation cancelled.",
             "Transport Manager")
             return False
 
@@ -319,7 +350,7 @@ class ProcessRunner(QProcess):
         temp_db = DatabaseConnection(connection_data)
         conn_string = temp_db.get_connection_string()
         auth_string = temp_db.get_authentication_string()
-        
+
         if action_type and action_type == "Import":
             command = f'{program} /Definition="{definition_file}" /Conn="{conn_string}" /Auth="{auth_string}"'
         return command

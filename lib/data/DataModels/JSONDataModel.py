@@ -171,7 +171,7 @@ class JSONDataModel(QAbstractItemModel):
             if index.isValid():
                 item = index.internalPointer()
                 task_data = item.task_data()
-                task_data["parent"] = item.get_parent_data()
+                task_data["PARENT_DEF"] = item.get_parent_data()
                 if task_data not in items_data:
                     items_data.append(task_data)
         

@@ -207,6 +207,16 @@
             "Connection":
                 {
                     "FieldType": "StringInput"   
+                },
+            "DefinitionFile":
+                {
+                    "FieldType": "FileInput",
+                    "FileSelectionMode": "Relative"
+                },
+            "ExportFile":
+                {
+                    "FieldType": "FileInput",
+                    "FileSelectionMode": "Relative"
                 }
             },
         "Connection_Configuration": 
