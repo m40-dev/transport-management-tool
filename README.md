@@ -98,17 +98,17 @@ This software has been built with maximum usability in mind and will have its ow
 The goal is to have the overall structure of the whole application and work around the parts that are the most difficult/troubling to work with.
 Any exception that program will catch is going to be thrown on the screen in the dedicated message box. This can help with bug fixing and understanding the issues system runs into.
 
-**What I know does not work too well right now:**
+## What I know does not work too well right now ##
 * Connecting to the database with wrong connection data will freeze the program until the timeout is reached
 * If you do not decrypt the session data correctly and then create new connection, any previously saved session will be overwritten. There is no warning to that.
-* There is totally no support for any other xml format than the one with structure of the transport template. Program will treat this as empty transport template. 
+* There is totally no support for any other xml format than the one with structure of the transport template. Program will treat this as empty transport template.
 * SQL script can be edited, but any XML comments left inside the text node will be deleted
 * In some cases the comment descriptions above the containers are not deleted
 * There is almost no validation to what you move around the xml structure - for now you need to know better not to add transport task into another transport task or sql task into object transport container.
 * Object Relations cluster is sometimes weird in what it does (especially selecting relations using the database model). Also there is no hint on which relations you edit (database object or template oblect). This will get updated and organised better. 
-* Working directory is currently heavily used to work with package definitions, templates and should be always selected as first thing. There might be cases that it is not validated yet and program ends up calculating paths out of the transport management tool location instead of expected workdir. 
+* Working directory is currently heavily used to work with package definitions, templates and should be always selected as first thing. There might be cases that it is not validated yet and program ends up calculating paths out of the transport management tool location instead of expected workdir.
 * There is no prompt when selecting different transport template and not saving the previous one
 * There is no indication that you have some unsaved changes in the template comparing to the original file.
-* There is no auto save. You need to save each changed package definition manually when you move tasks across packages (multi select works though). 
+* There is no auto save. You need to save each changed package definition manually when you move tasks across packages (multi select works though).
 * Searching can sometimes break in syntax parsing (difficult to reproduce). Program might need a restart if that occurs. 
 * There is no aid in adjusting program or object configuration files yet, they need to be edited manually at the moment.
