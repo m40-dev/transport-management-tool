@@ -1,5 +1,3 @@
-![<img src="./lib/ui/img/icons/icon2.png" width="80">]()
-
 Transport Manager Tool is an attempt to provide some UI to the XML template definitions and also simplify or automate some transport related activities in One Identity Manager.
 
 With time, the tool will grow with additional features, but the most focus is set on the usability and aid in the typical day to day applications.
