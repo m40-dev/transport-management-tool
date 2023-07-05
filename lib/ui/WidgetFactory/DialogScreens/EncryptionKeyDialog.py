@@ -9,6 +9,8 @@ class EncryptionKeyDialog(QtWidgets.QDialog):
         self.application = application
 
         self.setWindowTitle(self.application.windowTitle() + " - Encryption Key") 
+        # self.setWindowFlags(self.windowFlags())
+        self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
 
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("layout")

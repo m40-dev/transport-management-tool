@@ -1,12 +1,11 @@
 #""" Required QT Libraries """
-from PyQt6.QtCore import Qt, QSettings, QTimer, QSize, QEvent
+from PyQt6.QtCore import Qt, QSettings, QTimer, QEvent
 from PyQt6.QtWidgets import (
     QMainWindow, QApplication, QMenu, QHeaderView, 
     QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator, 
     QFileDialog, QMessageBox, QLabel, QTreeView
     )
 from PyQt6.QtGui import QShortcut, QKeySequence, QIcon
-
 
 #""" qt traceback handling"""
 import traceback
@@ -23,8 +22,7 @@ import os
 
 from lib.ui.Theme import Application_Theme
 
-from PyQt6.QtCore import pyqtSignal, QPropertyAnimation, QEasingCurve, QAbstractAnimation
-from PyQt6.QtWidgets import QGraphicsOpacityEffect
+from PyQt6.QtCore import pyqtSignal
 
 #""" Main UI import """
 from lib.ui.MainWindow_ui import Ui_MainWindow
@@ -45,7 +43,7 @@ from lib.xml.sql_script_container import sql_script_container
 
 from lib.data.DataModels import PackageDefinitionModel
 
-VERSION = '0.5.4'
+VERSION = '0.6'
 XML_PREVIEW_TIMER = 100
 FILTER_EXEC_TIMER = 650
         
@@ -206,7 +204,6 @@ class Transport_Manager(QMainWindow):
         QShortcut(QKeySequence("Ctrl+9"), self, self.ui.XMLEditorWidget.fold_by_level)
 
         self.refresh_ui()
-        
 
         """ Program variables """
         self.db = None
@@ -231,20 +228,6 @@ class Transport_Manager(QMainWindow):
                 print("connection details were not loaded")
                 self.connections = {}
         
-        # effect = QGraphicsOpacityEffect(self)
-        # self.setGraphicsEffect(effect)
-        # animation = QPropertyAnimation(self)
-        # animation.setPropertyName(bytes("opacity", "utf-8"))
-        # animation.setTargetObject(effect)
-        # animation.setDuration(500)
-        # animation.setStartValue(0)
-        # animation.setEndValue(1)
-        
-        # animation.setEasingCurve(QEasingCurve.Type.OutInCubic)
-        # animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
-        
-        self.show()
-        
         """ Saved relation presets data """
         self.relation_presets = self.settings.value("relation_presets")
         if self.relation_presets is None:
@@ -253,7 +236,6 @@ class Transport_Manager(QMainWindow):
         """ Initial transport template object """
         self.new_transport_template()
         self.new_execution_plan()
-        # self.load_workdir("C:/Users/m40/Downloads/transport manager test")
 
     def enter_shortcut(self):
         if self.ui.SearchPackageLineEdit.hasFocus():
@@ -542,10 +524,11 @@ class Transport_Manager(QMainWindow):
         self.current_file = None
         if file_path:
             self.current_file = file_path
-        self.ui.current_file_label.setText(file_path)
+        self.ui.current_file_label.setText(str(file_path))
 
     def new_transport_template(self, file_path=None):
-        self.set_current_file(file_path)
+        if file_path:
+            self.set_current_file(file_path)
         self.transport_template = transport_template(self)
         self.reload_xml_structure()
         self.xml_structure_changed.emit()
@@ -879,7 +862,6 @@ class Transport_Manager(QMainWindow):
                 if isinstance(relation_widget.source_widget_item, 
                               WidgetFactory.TemplateEditorTreeWidgetItem):
                     relation_widget.source_widget_item.refresh()
-
                 self.load_table_relations(
                     relations=new_relations, 
                     source_widget_item=relation_widget.source_widget_item, 
@@ -1320,7 +1302,6 @@ class Transport_Manager(QMainWindow):
             else:
                 query = f"select * from {table_name}"
                 data_rows += self.db.run_db_query(query)
-
         self.load_db_objects(data_rows=data_rows)
 
     def load_table_relations(self, relations, source_widget_item, append_to_existing_widget=None):
@@ -1424,9 +1405,15 @@ if __name__ == "__main__":
 
     app = QApplication(sys.argv)
 
+    # splash = QSplashScreen()
+    # splash.show()
+    
     a = Transport_Manager(
         clipboard=app.clipboard(), event_filter=None, qapplication=app
     )
+    
+    # splash.finish(a)
+    a.show()
 
     sys.excepthook = a.qt_exception_hook
     app.exec()

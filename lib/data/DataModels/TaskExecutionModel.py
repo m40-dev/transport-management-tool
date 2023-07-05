@@ -77,6 +77,7 @@ class TaskExecutionItem(JSONDataItem):
         #Configure Default Value
         if task_data: 
             source_files_data = task_data.get("source_file_data", {})
+
             if source_files_data:
                 for column, value in source_files_data.items():
                     self.setData(column, value)
@@ -90,9 +91,6 @@ class TaskExecutionItem(JSONDataItem):
         self.migrate(task_class)
 
     def itemDataDropped(self, source_dict):
-    #     # print("foreign object dropped into task execution view", source_dict.get("objectclass", None), self.task_class)
-    #     # source_object_class = source_dict.get("objectclass", None)
-        # print("source data dropped")
         if source_dict.get("children", None):
             for child_task in self.children():
                 # child_task.setData("PARENT_DEF", source_dict)
@@ -103,8 +101,6 @@ class TaskExecutionItem(JSONDataItem):
         #pass the package definition over to new item
         super().itemLocationChanged(source_item)
         self.package_definition = source_item.package_definition
-        # self.source_files_data = source_item.source_files_data
-        
 
     @property
     def package_definition(self):
@@ -117,8 +113,7 @@ class TaskExecutionItem(JSONDataItem):
     def migrate(self, source_class):
         if source_class in ["ExecutionPlanner_ExecutionTask", "ExecutionPlanner_ExecutionGroup"]:
             return False
-
-        # print("migrate source class object to execution planner object", source_class)
+            
         source_display = self.display
         source_description = self.description
         

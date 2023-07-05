@@ -161,10 +161,6 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.button1.setText("Start Task")
 
         """ Add Custom Widgets """
-        self.task_type_label = QLabel(self)
-        self.task_state_label = QLabel(self)
-        self.task_compiler_label = QLabel(self)
-        self.task_autoupdate_label = QLabel(self)
         self.connection_box_label = QLabel("Use Connection:")
         self.task_execution_import = QRadioButton("Run Import Task")
         self.task_execution_export = QRadioButton("Run Export Task")
@@ -176,38 +172,33 @@ class ItemActionWidget(ExecutionPlannerItem):
 
         self.run_status = QLabel(self)
         
-        type_label = QLabel("Type: ")
-        state_label = QLabel("State: ")
-        compiler_label = QLabel("Compiler Option: ")
-        autoupdate_label = QLabel("AutoUpdate: ")
+        self.dynamic_property_labels = {}
+        dynamic_property_columns = self.application.object_configuration.get_columns_configuration_by_setting(self.data_item.task_class, "ShowInTreeView")
+        # lay out items in columns (labels and values)
+        layout_columns = 6
+        task_details_layout = QGridLayout()
+        # task_details_layout.setColumnStretch(layout_columns, 2)
+        
+        if len(dynamic_property_columns) > 0:
+            row = task_details_layout.rowCount()
+            column_count = 0
+            for column, column_configuration in dynamic_property_columns.items():
+                label = QLabel(f"{column}:")
+                label.setProperty("Label", "PropertyName")
+                value = QLabel()
+                value.setProperty("Label", "PropertyValue")
 
-        """ Set Properties for Labels """
-        type_label.setProperty("Label", "PropertyName")
-        state_label.setProperty("Label", "PropertyName")
-        compiler_label.setProperty("Label", "PropertyName")
-        autoupdate_label.setProperty("Label", "PropertyName")
-        self.connection_box_label.setProperty("Label", "PropertyName")
-
-        self.task_execution_import.setProperty("Label", "PropertyValue")
-        self.task_execution_export.setProperty("Label", "PropertyValue")
-        self.task_type_label.setProperty("Label", "PropertyValue")
-        self.task_state_label.setProperty("Label", "PropertyValue")
-        self.task_compiler_label.setProperty("Label", "PropertyValue")
-        self.task_autoupdate_label.setProperty("Label", "PropertyValue")
+                task_details_layout.addWidget(label, row, column_count)
+                task_details_layout.addWidget(value, row, column_count+1)
+                self.dynamic_property_labels[column] = value
+                # add 2 added columns to the counter
+                column_count += 2
+                if column_count >= layout_columns:
+                    row += 1
+                    column_count = 0
         
 
         """ Add Widgets to the layouts """
-        task_details_layout = QHBoxLayout()
-        task_details_layout.addWidget(type_label)
-        task_details_layout.addWidget(self.task_type_label)
-        task_details_layout.addWidget(state_label)
-        task_details_layout.addWidget(self.task_state_label)
-        task_details_layout.addWidget(compiler_label)
-        task_details_layout.addWidget(self.task_compiler_label)
-        task_details_layout.addWidget(autoupdate_label)
-        task_details_layout.addWidget(self.task_autoupdate_label)
-        task_details_layout.addStretch(2)
-
         task_params_layout = QHBoxLayout()
         task_params_layout.addStretch(2)
         task_params_layout.addWidget(self.task_execution_import)
@@ -218,6 +209,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         
         self.layout.addLayout(task_params_layout, 0, 1, 1, 3)
         self.layout.addLayout(task_details_layout, 2, 0, 1, 3)
+        # self.layout.setColumnStretch(3, 1)
         self.layout.addWidget(self.run_status, 2, 4)
 
         """ Refresh state based on the model data """
@@ -230,7 +222,6 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.task_execution_import.toggled.connect(self.set_task_execution_type)
         self.task_execution_export.toggled.connect(self.set_task_execution_type)
         self.connection_box.currentTextChanged.connect(self.set_task_connection)
-
         self.data_item.data_changed.connect(self.refresh_display)
 
     def refresh_data(self):
@@ -243,17 +234,9 @@ class ItemActionWidget(ExecutionPlannerItem):
 
     def refresh_model_data(self):
         self.element_label.setText(self.data_item.display)
-        
-        # print("refresh", model_item, self.data_item)
-        model_task_type = self.data_item.data("TaskType")
-        model_task_state = self.data_item.data("State")
-        model_task_compiler = self.data_item.data("CompilerOption")
-        model_task_autoupdate = self.data_item.data("AutoUpdate")
-        
-        self.task_type_label.setText(model_task_type)
-        self.task_state_label.setText(model_task_state)
-        self.task_compiler_label.setText(model_task_compiler)
-        self.task_autoupdate_label.setText(model_task_autoupdate)
+
+        for column, label_widget in self.dynamic_property_labels.items():
+            label_widget.setText(str(self.data_item.data(column)))
 
         is_export = self.data_item.data("ExecutionType") == "Export"
         if is_export:
@@ -262,7 +245,6 @@ class ItemActionWidget(ExecutionPlannerItem):
             self.task_execution_import.setChecked(True)
         
         self.connection_box.setCurrentText(self.data_item.data("Connection"))
-
         self.run_status.setText(self.data_item.data("task_execution_status"))
 
     def set_task_execution_type(self):

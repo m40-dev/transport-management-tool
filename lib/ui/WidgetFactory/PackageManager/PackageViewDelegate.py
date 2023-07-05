@@ -275,6 +275,13 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         self.edit_task_definition_button.setText("Properties")
         
         """ hide the edit button for non-transport tasks """
-        is_transport = self.data_item.data("TaskType") in ["Transport", "FeatureUpdate", "BugFix"]
+        is_transport = False
+        task_type = self.data_item.data("TaskType") 
+        task_type_configuration = self.object_configuration.get("TaskType", None)
+        if task_type_configuration:
+            template_configuration = task_type_configuration.get("XMLTemplateTypes", None)
+            if template_configuration:
+                is_transport = task_type in template_configuration
+                
         self.edit_xml_definition_button.setVisible(is_transport)
 

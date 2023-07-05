@@ -53,7 +53,7 @@ class ExecutionPlannerWidget(QWidget):
 
         data = [
             {
-                "Name": "Group 1",
+                "GroupName": "Group 1",
                 "objectclass": "ExecutionPlanner_ExecutionGroup",
                 "Description": "Default Execution Planner tasks group.",
                 "ExecutionTasks": [   

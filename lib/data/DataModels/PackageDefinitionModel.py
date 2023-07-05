@@ -36,13 +36,12 @@ class PackageDefinitionItem(JSONDataItem):
             self.source_files_text = self.get_file_strings(reload_data=True)
             # children object handling
             child_tasks = task_data.get("children", None)
-            if not child_tasks:
-                #TODO: get child task column from the object configuration
-                child_tasks = task_data.get("Tasks", None)
-                if child_tasks:
-                    # self._task_class = "PackageManager_PackageDefinition"
-                    self.loadChildren(child_tasks)
-
+            children_columns_configuration = self.object_configuration.get_columns_configuration_by_type(self.task_class, "ChildObjectReference")
+            if not child_tasks and children_columns_configuration:
+                for column in children_columns_configuration.keys():
+                    child_tasks = task_data.get(column, None)
+                    if child_tasks:
+                        self.loadChildren(child_tasks)
 
     def loadChildren(self, child_tasks):
         if child_tasks:

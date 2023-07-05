@@ -42,6 +42,39 @@ class ProcessRunner(QProcess):
             file_content = f.read()
         return file_content
 
+    def check_task_type(self, task_type):
+        task_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionTask")
+        task_type_configuration = task_configuration.get("TaskType", None)
+        # configure task according to the task type settings
+        if task_configuration and task_type_configuration:
+            transporter_configuration = task_type_configuration.get("Transporter", [])
+            if task_type in transporter_configuration:
+                return "Transport"
+            
+            schema_configuration = task_type_configuration.get("SchemaExtension", [])
+            if task_type in schema_configuration:
+                return "SchemaExtension"
+            
+            sql_script_configuration = task_type_configuration.get("SQLScript", [])
+            if task_type in sql_script_configuration:
+                return "SQLScript"
+        return None
+
+    def get_source_value(self, column, source_column):
+        # map column with source object attributes
+        source_value = self.current_item.task_data().get(source_column, None)
+        if "PARENT_DEF." in source_column:
+            parent_definition = self.current_item.package_definition
+            parent_column = source_column.split(".")[1]
+            if parent_definition:
+                parent_value = parent_definition.get(parent_column, None)
+                if not parent_value:
+                    self.message.emit(
+                    f"Unable to map the parent property [{parent_column}] or there is no value to be mapped.",
+                    "Transport Manager")
+                source_value = parent_value
+        return source_value
+
     def start_process(self, task_item, queued_task=False):
         task_name = task_item.display
         task_data = task_item.task_data()
@@ -127,6 +160,7 @@ class ProcessRunner(QProcess):
 
         command = ""
         execution_command = ""
+        post_processing_commands = ""
         
         if action_type is not None:
             # check for planner configuration, if there are preferred commands, use this
@@ -143,15 +177,49 @@ class ProcessRunner(QProcess):
                     # there is no command available to run the process so just skip this and move on
                     self.process_finished()
                     return False
-
+                
+                if action_type.upper() == "IMPORT":
+                    post_processing_commands = self.get_post_processing_commands(task_item, action_type, connection_name)
+    
         command += execution_command + "\r\n"
 
         self.message.emit("Execution command ready.", "Transport Manager")
+        
+        if len(post_processing_commands) > 0:
+            self.message.emit("Post processing commands ready.", "Transport Manager")
 
         self.start("powershell", 
-        [variables_script, initializer_script, command], 
+        [variables_script, initializer_script, command, post_processing_commands], 
         mode=QIODeviceBase.OpenModeFlag.ReadWrite)
+
         return True
+
+    def handle_stderr(self):
+        data = self.readAllStandardError()
+        stderr = bytes(data).decode("cp1252")
+        self.message.emit(stderr, "Error")
+
+    def handle_stdout(self):
+        data = self.readAllStandardOutput()
+        stdout = bytes(data).decode("cp1252")
+        self.message.emit(stdout, "")
+
+    def handle_state(self, state):
+        states = {
+            QProcess.ProcessState.NotRunning: 'Not running',
+            QProcess.ProcessState.Starting: 'Starting',
+            QProcess.ProcessState.Running: 'Running',
+        }
+        state_name = states[state]
+        self.current_item.setData("task_execution_status", state_name)
+        self.message.emit(f"State changed: {state_name}", "Transport Manager")
+
+    def process_finished(self):
+        self.message.emit("Process finished.", "Transport Manager")
+        self.current_item.setData("task_execution_status", "Finished")
+        self.is_running = False
+        if len(self.task_queue) > 0:
+            self.start_process(self.task_queue[0], queued_task=True)
 
     def get_variables_script(self, task_data):
         task_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionTask")
@@ -174,25 +242,44 @@ class ProcessRunner(QProcess):
                         column_value = separator.join(column_value).replace(separator, '", "')
                         variables_script += f'${column} = @("{column_value}")\r\n'
                         continue
-                    column_value = column_value.strip()
+                    column_value = str(column_value).strip()
                     variables_script += f"${column} = '{column_value}'\r\n"
         variables_script += "\r\n"
         return variables_script
 
-    def copy_definition_file(self):
-        task_data = self.current_item.task_data()
-        export_file = task_data.get("ExportFile", None)
-        definition_file = task_data.get("DefinitionFile", None)
-        if definition_file and export_file and self.current_workdir:
-            definition_path = pathlib.Path("/".join([self.current_workdir, definition_file]))
-            export_path = pathlib.Path("/".join([self.current_workdir, export_file]))
-            if definition_path.is_file():
-                #copy only if the source file exists
-                self.message.emit(
-                f"Copy {str(definition_path)} to {str(export_path)}.",
-                "Transport Manager")
-                shutil.copy(definition_path, export_path)
+    def get_post_processing_commands(self, task_item, action_type, connection_name):
+        commands = []
+        # only continue for the Import action types for now
+        if action_type.upper() != "IMPORT":
+            return ""
+        
+        connection_data = self.application.connections.get(connection_name, None)
+        if not connection_data:
+            # connection data not available
+            return ""
 
+        task_name = task_item.display
+        task_data = task_item.task_data()
+        run_auto_update = task_data.get("AutoUpdate", "False") == 2
+        if run_auto_update:
+            command = self.get_autoupdate_command(
+                connection_data=connection_data)
+            if command:
+                self.message.emit(
+                f"({task_name}) - adding AutoUpdate execution to the post processing commands.",
+                "Transport Manager")
+                commands.append(command)
+        
+        compiler_setting = task_data.get("CompilerOption", "None")
+        if compiler_setting.upper() != "NONE":
+            # some compiler options were provided
+            command = self.get_compiler_command(compiler_setting=compiler_setting, connection_data=connection_data)
+            if command:
+                self.message.emit(
+                f"({task_name}) - adding compilation ({compiler_setting}) to the post processing commands.",
+                "Transport Manager")
+                commands.append(command)
+        return "\r\n".join(commands)
 
     def get_execution_command(self, task_item, action_type, connection_name):
         #get the direct command the task execution
@@ -229,6 +316,9 @@ class ProcessRunner(QProcess):
 
         if export_file:
             export_file = "/".join([self.current_workdir, export_file])
+            #create required directories
+            if action_type.upper() == "EXPORT":
+                pathlib.Path(export_file).parent.mkdir(parents=True, exist_ok=True)
 
         if is_transport and connection_data:
             return self.get_transporter_command(
@@ -263,58 +353,6 @@ class ProcessRunner(QProcess):
             self.copy_definition_file()
 
         return command
-    
-    def check_task_type(self, task_type):
-        task_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionTask")
-        task_type_configuration = task_configuration.get("TaskType", None)
-        # configure task according to the task type settings
-        if task_configuration and task_type_configuration:
-            transporter_configuration = task_type_configuration.get("Transporter", [])
-            if task_type in transporter_configuration:
-                return "Transport"
-            
-            schema_configuration = task_type_configuration.get("SchemaExtension", [])
-            if task_type in schema_configuration:
-                return "SchemaExtension"
-            
-            sql_script_configuration = task_type_configuration.get("SQLScript", [])
-            if task_type in sql_script_configuration:
-                return "SQLScript"
-        
-        return None
-
-    def run_sql_script(self, action_type, definition_file, connection_data):
-        self.stateChanged.emit(QProcess.ProcessState.Running)
-        print("Running SQL Script")
-        if action_type != "Import":
-            return False
-        sql_script = ""
-        if definition_file:
-            definition_path = pathlib.Path(definition_file)
-            if definition_path.is_file():
-                sql_script = self.load_file(definition_file)
-
-        if len(sql_script.strip()) == 0:
-            self.message.emit(
-            f"SQL Script could not be loaded or have no content ({definition_file}). Operation cancelled.",
-            "Transport Manager")
-            return False
-
-        connection = DatabaseConnection(connection_data)
-        if connection.connect_db():
-            # run script if connected
-            self.message.emit(
-            "Starting SQL Script.",
-            "Transport Manager")
-            response = connection.run_db_query(sql_script)
-            response_data = []
-            for row in response:
-                row_to_list = [str(elem) for elem in row]
-                response_data.append("\t".join(row_to_list))
-            self.message.emit(
-            "\n".join(response_data),
-            "SQL Script Result")
-        return False
 
     def get_transporter_command(self, action_type, export_file, definition_file, connection_data):
         tools_directory = connection_data.get("ToolsDirectory", None)
@@ -355,47 +393,92 @@ class ProcessRunner(QProcess):
             command = f'{program} /Definition="{definition_file}" /Conn="{conn_string}" /Auth="{auth_string}"'
         return command
 
-    def get_source_value(self, column, source_column):
-        # map column with source object attributes
-        source_value = self.current_item.task_data().get(source_column, None)
-        if "PARENT_DEF." in source_column:
-            parent_definition = self.current_item.package_definition
-            parent_column = source_column.split(".")[1]
-            if parent_definition:
-                parent_value = parent_definition.get(parent_column, None)
-                if not parent_value:
-                    self.message.emit(
-                    f"Unable to map the parent property [{parent_column}] or there is no value to be mapped.",
-                    "Transport Manager")
-                source_value = parent_value
-        return source_value
+    def get_compiler_command(self, compiler_setting, connection_data):
+        tools_directory = connection_data.get("ToolsDirectory", None)
+        connection_name = connection_data.get("ConnectionName", "")
+        if not tools_directory:
+            self.message.emit(
+            f"Task execution cannot be started, tools directory is not configured for this connection ({connection_name})",
+            "Transport Manager")
+            return False
+        
+        command = ""
+        program = f'& "{tools_directory}\DBCompilerCMD.exe"'
+        temp_db = DatabaseConnection(connection_data)
+        conn_string = temp_db.get_connection_string()
+        auth_string = temp_db.get_authentication_string()
+        command = f'{program} /Conn="{conn_string}" /Auth="{auth_string}"'
+        
+        if compiler_setting.upper() == "NOWEB":
+            blacklist = f"CompileWebServices CompileApiProjects CompileHtmlApps CompileWebProjects"
+            command = f'{program} -W /Conn="{conn_string}" /Auth="{auth_string}" /Blacklist={blacklist}'
+        return command
 
-    def handle_stderr(self):
-        data = self.readAllStandardError()
-        stderr = bytes(data).decode("utf8")
-        self.message.emit(stderr, "Error")
+    def get_autoupdate_command(self, connection_data):
+        tools_directory = connection_data.get("ToolsDirectory", None)
+        connection_name = connection_data.get("ConnectionName", "")
+        if not tools_directory:
+            self.message.emit(
+            f"Task execution cannot be started, tools directory is not configured for this connection ({connection_name})",
+            "Transport Manager")
+            return False
+        
+        command = ""
+        
+        program = f'& "{tools_directory}\AutoUpdate.exe"'
+        temp_db = DatabaseConnection(connection_data)
+        conn_string = temp_db.get_connection_string()
 
-    def handle_stdout(self):
-        data = self.readAllStandardOutput()
-        stdout = bytes(data).decode("utf8")
-        self.message.emit(stdout, "")
+        command = f'{program} /conn="{conn_string}" --install="{tools_directory}"'
+        return command
 
-    def handle_state(self, state):
-        states = {
-            QProcess.ProcessState.NotRunning: 'Not running',
-            QProcess.ProcessState.Starting: 'Starting',
-            QProcess.ProcessState.Running: 'Running',
-        }
-        state_name = states[state]
-        self.current_item.setData("task_execution_status", state_name)
-        self.message.emit(f"State changed: {state_name}", "Transport Manager")
+    def copy_definition_file(self):
+        task_data = self.current_item.task_data()
+        export_file = task_data.get("ExportFile", None)
+        definition_file = task_data.get("DefinitionFile", None)
+        if definition_file and export_file and self.current_workdir:
+            definition_path = pathlib.Path("/".join([self.current_workdir, definition_file]))
+            export_path = pathlib.Path("/".join([self.current_workdir, export_file]))
+            export_path.parent.mkdir(parents=True, exist_ok=True)
+            if definition_path.is_file():
+                #copy only if the source file exists
+                self.message.emit(
+                f"Copy {str(definition_path)} to {str(export_path)}.",
+                "Transport Manager")
+                shutil.copy(definition_path, export_path)
 
-    def process_finished(self):
-        self.message.emit("Process finished.", "Transport Manager")
-        self.current_item.setData("task_execution_status", "Finished")
-        self.is_running = False
-        if len(self.task_queue) > 0:
-            self.start_process(self.task_queue[0], queued_task=True)
+    def run_sql_script(self, action_type, definition_file, connection_data):
+        self.stateChanged.emit(QProcess.ProcessState.Running)
+        print("Running SQL Script")
+        if action_type != "Import":
+            return False
+        sql_script = ""
+        if definition_file:
+            definition_path = pathlib.Path(definition_file)
+            if definition_path.is_file():
+                sql_script = self.load_file(definition_file)
+
+        if len(sql_script.strip()) == 0:
+            self.message.emit(
+            f"SQL Script could not be loaded or have no content ({definition_file}). Operation cancelled.",
+            "Transport Manager")
+            return False
+
+        connection = DatabaseConnection(connection_data)
+        if connection.connect_db():
+            # run script if connected
+            self.message.emit(
+            "Starting SQL Script.",
+            "Transport Manager")
+            response = connection.run_db_query(sql_script)
+            response_data = []
+            for row in response:
+                row_to_list = [str(elem) for elem in row]
+                response_data.append("\t".join(row_to_list))
+            self.message.emit(
+            "\n".join(response_data),
+            "SQL Script Result")
+        return False
 
 class SQLThread(QThread):
     def __init__(self, action_type, definition_file, connection_data, target_function, call_back):

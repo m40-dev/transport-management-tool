@@ -125,6 +125,10 @@ class FormEditorDialog(QtWidgets.QDialog):
 
     def update_form_data(self, column, value):
         if column:
+            column_configuration = self._form_confguration.get(column, None)
+            if column_configuration:
+                if column_configuration.get("FieldType", None) == "BooleanInput":
+                    value = (str(value) == "2" or str(value) == "True") 
             self._form_data[column] = value
 
     @property
@@ -179,7 +183,7 @@ class FormEditorDialog(QtWidgets.QDialog):
             editor_widget.setValues(value)
         
         if isinstance(editor_widget, QtWidgets.QCheckBox):
-            state = str(value) == "2"
+            state = str(value) == "2" or str(value) == "True"
             editor_widget.setChecked(state)
 
     def get_editor(self, column, column_configuration):
@@ -216,14 +220,11 @@ class FormEditorDialog(QtWidgets.QDialog):
         return None
 
     def boolean_input(self, column, column_configuration):
-
         editor = QtWidgets.QCheckBox()
-        
         editor.stateChanged.connect(
                 lambda value, column=column: 
                 self.update_form_data(column, value)
                 )
-
         editor.setProperty("Widget", "EditorDialog")
         return editor
 
@@ -234,7 +235,6 @@ class FormEditorDialog(QtWidgets.QDialog):
         range_validator = QtGui.QIntValidator(min_value, max_value, self)
         editor.setValidator(range_validator)
         return editor
-
 
     def list_input(self, column, column_configuration):
         editor = ListInputWidget(

@@ -1,7 +1,7 @@
 {
     "PackageManager_PackageDefinition": 
         {
-        "FeatureName": 
+        "PackageName": 
             {
                 "FieldType": "StringInput",
                 "Display": "Package Name",
@@ -25,10 +25,10 @@
                 "IsForDataExport": "False",
                 "FileExtension": "*.json",
                 "FileSelectionMode": "FileName",
-                "RedirectDirectoryDynamic": "Cleaned/%FeatureName%",
+                "RedirectDirectoryDynamic": "Source_Files/%PackageName%",
                 "IsMandatory": "True"
             },
-        "Priority":
+        "SortOrder":
             {
                 "FieldType": "IntegerInput",
                 "FieldRole": "SortOrder",
@@ -38,14 +38,7 @@
                 "DistributeEvenly": "True",
                 "ShowInTreeView": "True"
             },
-        "GUID":
-            {
-                "FieldType": "StringInput",
-                "Display": "Definition GUID",
-                "FieldRole": "UniqueIdentifier",
-                "ShowInEditor": "False"
-            },
-        "Tasks": 
+        "ChildTasks": 
             {
                 "FieldType": "ChildObjectReference",
                 "Class": "PackageManager_TaskDefinition",
@@ -67,7 +60,7 @@
                 "FieldType": "TextInput",
                 "FieldRole": "DescriptionRole"
             },
-        "Order": 
+        "SortOrder": 
             {
                 "FieldType": "IntegerInput",
                 "FieldRole": "SortOrder",
@@ -83,13 +76,14 @@
                 "DefaultValue": "Transport",
                 "Display": "Task Type",
                 "ShowInTreeView": "True",
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "XMLTemplateTypes": ["Transport", "BugFix"]
             },
         "DefinitionFile": 
             {
                 "FieldType": "FileInput",
                 "FileSelectionMode": "FileName",
-                "RedirectDirectoryStatic": "Export",
+                "RedirectDirectoryStatic": "Task_Definitions",
                 "RedirectDirectoryRelativeTo": "Parent",
                 "IsMandatory": "True",
                 "ShowInTreeView": "True"
@@ -98,19 +92,7 @@
             {
                 "FieldType": "FileInput",
                 "FileSelectionMode": "FileName",
-                "RedirectDirectoryDynamic": "Data/%Parent.FeatureName%/%TaskType%"
-            },
-        "ExportFileHash": 
-            {
-                "FieldType": "TextInput",
-                "Display": "Transport Checksum"
-            },
-        "State": 
-            {
-                "FieldType": "FixedInput",
-                "Options": {"Development": "Development", "Testing": "Testing", "Released": "Released"},
-                "DefaultValue": "Development",
-                "ShowInTreeView": "True"
+                "RedirectDirectoryDynamic": "Package_Data/%Parent.PackageName%/%TaskType%"
             },
         "CompilerOption": 
             {
@@ -119,32 +101,15 @@
                 "DefaultValue": "NoWeb",
                 "ShowInTreeView": "True"
             },
-        "Environment": 
-            {
-                "FieldType": "FixedInput",
-                "Options": {"Any": "Any", "Development": "DEV", "Test": "TEST", "Production": "PROD"},
-                "DefaultValue": "Any",
-                "ShowInTreeView": "True"
-            },
         "AutoUpdate": 
             {
                 "FieldType": "BooleanInput",
                 "DefaultValue": "False"
-            },
-        "TestScript":
-            {
-                "FieldType": "FileInput",
-                "FileSelectionMode": "FileName"
-            },
-        "Tag":
-            {
-                "FieldType": "ListInput",
-                "Separator": ","
             }
         },
         "ExecutionPlanner_ExecutionGroup": 
             {
-            "Name": 
+            "GroupName": 
                 {
                     "FieldType": "StringInput",
                     "Display": "Group Name",
@@ -167,12 +132,13 @@
             },
         "ExecutionPlanner_ExecutionTask": 
             {
-            "Name": 
+            "TaskName": 
                 {
                     "FieldType": "StringInput",
-                    "Display": "Group Name",
-                    "PlaceholderText": "Provide Group Name",
-                    "FieldRole": "DisplayRole"
+                    "Display": "Task Name",
+                    "PlaceholderText": "Provide Task Name",
+                    "FieldRole": "DisplayRole",
+                    "Source": "TaskName"
                 },
             "Description": 
                 {
@@ -181,23 +147,19 @@
                     "PlaceholderText": "Provide Package Description",
                     "FieldRole": "DescriptionRole"
                 },
-            "TaskName":
-                {
-                    "FieldType": "StringInput",
-                    "Source": "TaskName"
-                },
             "TaskType":
                 {
                     "FieldType": "StringInput",
                     "Source": "TaskType",
                     "Transporter": ["Transport", "BugFix"],
                     "SQLScript": ["SQL"],
-                    "SchemaExtension": ["Schema"]
+                    "SchemaExtension": ["Schema"],
+                    "ShowInTreeView": "True"
                 },
-            "FeatureName":
+            "PackageName":
                 {
                     "FieldType": "StringInput",
-                    "Source": "PARENT_DEF.FeatureName"
+                    "Source": "PARENT_DEF.PackageName"
                 },
             "ParentDescription":
                 {
@@ -217,6 +179,19 @@
                 {
                     "FieldType": "FileInput",
                     "FileSelectionMode": "Relative"
+                },
+            "CompilerOption": 
+                {
+                    "FieldType": "FixedInput",
+                    "Options": {"No Compilation": "None", "Full Compilation": "Full", "Skip Web Projects Compilation":"NoWeb"},
+                    "DefaultValue": "NoWeb",
+                    "ShowInTreeView": "True"
+                },
+            "AutoUpdate":
+                {
+                    "FieldType": "BooleanInput",
+                    "DefaultValue": "False",
+                    "ShowInTreeView": "True"
                 }
             },
         "Connection_Configuration": 

@@ -565,8 +565,7 @@ class JSONDataItem(QObject):
         column_configurations = self.object_configuration.get_columns_configuration_by_type(self.task_class, "FileInput")
         for column in column_configurations:
             file_path = self.get_file_path(file_column=column)
-            if file_path and file_path.is_file():
-                file_configurations[column] = file_path
+            file_configurations[column] = file_path
         return file_configurations
     
     def get_file_strings(self, reload_data=False):
@@ -578,7 +577,7 @@ class JSONDataItem(QObject):
         column_configurations = self.object_configuration.get_columns_configuration_by_type(self.task_class, "FileInput")
         for column in column_configurations:
             file_path = self.get_file_path(file_column=column)
-            if file_path and file_path.is_file():
+            if file_path:
                 relative_location = file_path.relative_to(self.application.current_workdir)
                 file_configurations[column] = str(relative_location)
         return file_configurations
@@ -676,7 +675,6 @@ class JSONDataItem(QObject):
         matches = re.findall(regex_pattern, string_pattern)
         replacement_dict = self.get_replacement_values(matches, previous_state)
         parsed_string = re.sub(regex_pattern, lambda match: replacement_dict.get(match.group(1), match.group(0)), string_pattern)
-
         return parsed_string
 
     def moveFile(self, source_path, destination_path):
