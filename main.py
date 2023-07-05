@@ -97,6 +97,7 @@ class Transport_Manager(QMainWindow):
         self.ui.actionNew_Transport_Template.triggered.connect(self.new_transport_template)
         self.ui.PackageManagerTabWidget.tabCloseRequested.connect(self.close_tab)
         self.ui.FindPackageButton.clicked.connect(self.filter_packages)
+        self.ui.AddPackageButton.clicked.connect(self.add_package_definition)
 
         """ UI Configurations """
         self.ui.XMLEditorWidget = WidgetFactory.CodeEditors.xml_editor(self)
