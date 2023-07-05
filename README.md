@@ -1,4 +1,4 @@
-# README #
+![](./lib/ui/img/icons/icon2.png)
 
 Transport Manager Tool is an attempt to provide some UI to the XML template definitions and also simplify or automate some transport related activities in One Identity Manager.
 
