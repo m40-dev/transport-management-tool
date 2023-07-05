@@ -1,18 +1,21 @@
 from PyQt6.QtCore import QObject
 import json
-
-CONFIGURATION_FILE = "./program_configuration.json"
-# DEFINITION_FILE = "./object_configuration.json"
-BACKUP_FILE = "./program_configuration_default.json"
+from pathlib import Path
 
 class ProgramConfiguration(QObject):
-    def __init__(self, application, configuration_file=CONFIGURATION_FILE):
+    CONFIGURATION_FILE = "./program_configuration.json"
+    BACKUP_FILE = "./program_configuration_default.json"
+
+    def __init__(self, application):
         super().__init__()
         self.application = application
         self.is_loaded = False
         self.configuration = None
-        self.configuration_file = configuration_file
-        
+
+        self.configuration_file = self.CONFIGURATION_FILE
+        if not Path(self.configuration_file).is_file():
+            self.configuration_file = self.BACKUP_FILE
+            
         self.reload_configuration_file()
 
     def load_file(self, file_path):

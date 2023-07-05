@@ -1,10 +1,12 @@
-from PyQt6.Qsci import QsciScintilla, QsciLexerXML, QsciAPIs, QsciLexerSQL, QsciLexer
+from PyQt6.Qsci import QsciScintilla, QsciLexerXML
 from PyQt6.QtGui import QColor, QFont
 
 class BaseCodeEditor(QsciScintilla):
     def __init__(self, parent):
         self.parent = parent
         QsciScintilla.__init__(self, parent)
+        self.application = parent
+        self.program_configuration = self.application.program_configuration
         #font
         self.font = QFont()
         self.font.setFamily('Consolas')
@@ -12,10 +14,7 @@ class BaseCodeEditor(QsciScintilla):
         self.font.setPointSize(10)
         
         # self.setFont(font)
-
         self.setMarginsFont(self.font)
-
-        self.light_mode = True
 
         # AutoIndentation
         self.setAutoIndent(True)
@@ -27,8 +26,8 @@ class BaseCodeEditor(QsciScintilla):
         self.setMarginWidth(0, 0)
         self.setWrapMode(QsciScintilla.WrapMode.WrapWord)
 
-        lexer = QsciLexerXML()
-        self.setLexer(lexer)
+        self.lexer = QsciLexerXML()
+        self.setLexer(self.lexer)
 
         #line color
         self.setCaretLineVisible(True)
@@ -44,32 +43,40 @@ class BaseCodeEditor(QsciScintilla):
         self.setFolding(QsciScintilla.FoldStyle.PlainFoldStyle)
         self.SCN_MODIFIED = self.modify
 
-        self.reconfigure_editor(lexer)
+        self.reconfigure_editor()
         self.expand_level = 10
 
-    def reconfigure_editor(self, lexer):
+    @property
+    def dark_mode(self):
+        theme_configuration = self.program_configuration.get("Appearance")
+        if theme_configuration:
+            dark_theme_config = theme_configuration.get("UseDarkTheme", False)
+            return dark_theme_config
+
+    def reconfigure_editor(self):
+        lexer = self.lexer
         editor_bg_color = QColor("#fff")
-        editor_text_color = QColor("#333")
+        editor_text_color = QColor("#222")
         caret_bg_color = QColor("#eee")
 
-        
-        if not self.light_mode:
+        if self.dark_mode:
             editor_bg_color = QColor("#1e1f1c")
             editor_text_color = QColor("#eee")
             caret_bg_color = QColor("#555")
-            lexer.setColor(editor_text_color)
-
+            
+        lexer.setColor(editor_text_color)
         lexer.setFont(self.font)
         lexer.setDefaultPaper(editor_bg_color)
         lexer.setPaper(editor_bg_color)
+        self.setLexer(lexer)
 
         self.setMarginsBackgroundColor(editor_bg_color)
         self.setMarginsForegroundColor(editor_text_color)
         self.setCaretLineBackgroundColor(caret_bg_color)
-        
+
         self.SendScintilla(QsciScintilla.SCI_SETFOLDMARGINHICOLOUR, True, editor_bg_color)
         self.SendScintilla(QsciScintilla.SCI_SETFOLDMARGINCOLOUR, True, editor_bg_color)
-
+        
 
     def find_text(self, text):
         if text == self.text_to_find:

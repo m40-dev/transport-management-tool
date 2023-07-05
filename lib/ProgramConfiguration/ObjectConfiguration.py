@@ -1,12 +1,13 @@
 from . import ProgramConfiguration
+from pathlib import Path
 
-DEFINITION_FILE = "./object_configuration.json"
-BACKUP_FILE = "./object_configuration_default.json"
 
 class ObjectConfiguration(ProgramConfiguration):
-    def __init__(self, application, configuration_file=DEFINITION_FILE):
-        super().__init__(application=application, configuration_file=configuration_file)
+    CONFIGURATION_FILE = "./object_configuration.json"
+    BACKUP_FILE = "./object_configuration_default.json"
 
+    def __init__(self, application):
+        super().__init__(application=application)
 
     def get_column_configuration(self, definition_class, column):
         object_configuration = self.get(definition_class)

@@ -18,7 +18,6 @@ import json
 from cryptography.fernet import Fernet
 import base64
 from pathlib import Path
-import os
 
 from lib.ui.Theme import Application_Theme
 
@@ -46,7 +45,7 @@ from lib.data.DataModels import PackageDefinitionModel
 VERSION = '0.6'
 XML_PREVIEW_TIMER = 100
 FILTER_EXEC_TIMER = 650
-        
+
 class Transport_Manager(QMainWindow):
     """Main window class for connection launcher"""
 
@@ -192,7 +191,6 @@ class Transport_Manager(QMainWindow):
         planner_menu = self.ui.menubar.addMenu("Execution Planner")
         new_plan_action = planner_menu.addAction("Add New Plan")
         config_action = planner_menu.addAction("Configure")
-
         config_action.triggered.connect(self.configure_execution_planner)
         new_plan_action.triggered.connect(self.new_execution_plan)
 
@@ -294,6 +292,7 @@ class Transport_Manager(QMainWindow):
         """ Reload Working Directory """
         self.object_configuration.reload_configuration_file()
         self.program_configuration.reload_configuration_file()
+        self.ui.XMLEditorWidget.reconfigure_editor()
         self.load_workdir()
         
 
@@ -536,7 +535,6 @@ class Transport_Manager(QMainWindow):
     """ Package Definition """
     def package_definition_context_menu(self, menuPosition):
         clickedIndex = self.ui.PackageViewTreeView.indexAt(menuPosition)
-        print(clickedIndex)
         contextMenu = WidgetFactory.package_definition_context_menu(self, clickedIndex)
        
         menu_target = self.ui.PackageViewTreeView.mapToGlobal(menuPosition)
@@ -698,11 +696,12 @@ class Transport_Manager(QMainWindow):
     def get_connection_details(self, connection_name=None):
         connection_data = self.connections.get(connection_name, None)
 
-        editor_configuration = self.object_configuration.get("Connection_Configuration")
+        editor_configuration = self.program_configuration.get("Connection_Configuration")
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(self, 
             configuration_class="Connection_Configuration",
-            dialog_name="Connection Configuration"
+            dialog_name="Connection Configuration",
+            form_configuration=editor_configuration
             )
             dialog.set_dictionary_data(connection_data)
             if dialog.exec():
@@ -748,7 +747,6 @@ class Transport_Manager(QMainWindow):
             self.save_connection_details()
 
     """ Relations Management """
-
     def relation_context_menu(self, menuPosition):
         clickedItem = self.ui.RelationsViewTreeWidget.itemAt(menuPosition)
         if clickedItem:

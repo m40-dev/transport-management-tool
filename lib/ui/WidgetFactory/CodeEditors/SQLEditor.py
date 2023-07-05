@@ -7,6 +7,6 @@ class sql_editor(BaseCodeEditor):
         self.parent = parent
         BaseCodeEditor.__init__(self, parent)
 
-        lexer = QsciLexerSQL()
-        self.setLexer(lexer)
-        self.reconfigure_editor(lexer)
+        self.lexer = QsciLexerSQL()
+        self.setLexer(self.lexer)
+        self.reconfigure_editor()

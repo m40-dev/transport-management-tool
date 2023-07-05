@@ -6,13 +6,15 @@ from .MessageBox import MsgBox
 
 class FormEditorDialog(QtWidgets.QDialog):
 
-    def __init__(self, application, configuration_class, dialog_name="Data Editor"):
+    def __init__(self, application, configuration_class, dialog_name="Data Editor", form_configuration=None):
         super(FormEditorDialog, self).__init__(flags=QtCore.Qt.WindowType.Dialog, parent=application)
 
         self.application = application
         self.configuration_class = configuration_class
         self.object_configuration = self.application.object_configuration
         self._form_confguration = self.object_configuration.get(configuration_class)
+        if form_configuration is not None:
+            self._form_confguration = form_configuration
         self._form_data = {}
         self._base_object_data = None
         self.setMinimumSize(400, 400)

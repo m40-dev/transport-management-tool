@@ -193,66 +193,6 @@
                     "DefaultValue": "False",
                     "ShowInTreeView": "True"
                 }
-            },
-        "Connection_Configuration": 
-            {
-            "ConnectionName": 
-                {
-                    "FieldType": "StringInput",
-                    "Display": "Connection Name",
-                    "PlaceholderText": "Provide Connection Name",
-                    "FieldRole": "DisplayRole",
-                    "IsMandatory": "True"
-                },
-            "Description": 
-                {
-                    "FieldType": "TextInput",
-                    "Display": "Connection Description",
-                    "PlaceholderText": "Connection Description",
-                    "FieldRole": "DescriptionRole"
-                },
-            "ServerAddress":
-                {
-                    "FieldType": "StringInput",
-                    "IsMandatory": "True"
-                },
-            "DatabaseName":
-                {
-                    "FieldType": "StringInput",
-                    "IsMandatory": "True"
-                },
-            "SQLUserName":
-                {
-                    "FieldType": "StringInput",
-                    "IsMandatory": "True"
-                },
-            "SQLPassword":
-                {
-                    "FieldType": "StringInput",
-                    "IsSensitive": "True" ,
-                    "IsMandatory": "True"
-                },
-            "ApplicationUserName":
-                {
-                    "FieldType": "StringInput",
-                    "IsMandatory": "True"
-                },
-            "ApplicationPassword":
-                {
-                    "FieldType": "StringInput",
-                    "IsSensitive": "True",
-                    "IsMandatory": "True"
-                },
-            "EncryptConnection":
-                {
-                    "FieldType": "BooleanInput",
-                    "DefaultValue": "True"
-                },
-            "ToolsDirectory":
-                {
-                    "FieldType": "FileInput",
-                    "FileSelectionMode": "DirectoryPath"
-                }
             }
 }
 

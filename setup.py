@@ -10,7 +10,7 @@ from main import VERSION
 
 packages = []
 
-includes = ["os", "sys", "PyQt6", "PyQt6.Qsci", "lxml"]
+includes = ["os", "sys", "PyQt6.QtCore", "PyQt6.QtGui", "PyQt6.QtWidgets", "PyQt6.Qsci", "lxml", "pyodbc"]
 excludes = ["tcl", "tk", "Tkinter", "tkinter"]
 
 include_files = [

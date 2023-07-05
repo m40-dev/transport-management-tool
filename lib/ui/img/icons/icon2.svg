@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="icon2.svg"
+   inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\icon2.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.38885732"
+     inkscape:cx="140.15423"
+     inkscape:cy="762.49046"
+     inkscape:window-width="3440"
+     inkscape:window-height="1369"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1-1" />
+  <defs
+     id="defs2">
+    <marker
+       style="overflow:visible"
+       id="SemiCircleIn"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="SemiCircleIn"
+       inkscape:isstock="true">
+      <path
+         transform="scale(0.6)"
+         style="fill-rule:evenodd;fill:context-stroke;stroke:context-stroke;stroke-width:1.0pt"
+         d="M -0.37450702,-0.045692580 C -0.37450702,2.7143074 1.8654930,4.9543074 4.6254930,4.9543074 L 4.6254930,-5.0456926 C 1.8654930,-5.0456926 -0.37450702,-2.8056926 -0.37450702,-0.045692580 z "
+         id="path1065" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Tail"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Tail"
+       inkscape:isstock="true">
+      <g
+         transform="scale(-1.2)"
+         id="g935">
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.8;stroke-linecap:round"
+           d="M -3.8048674,-3.9585227 L 0.54352094,0"
+           id="path923" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.8;stroke-linecap:round"
+           d="M -1.2866832,-3.9585227 L 3.0617053,0"
+           id="path925" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.8;stroke-linecap:round"
+           d="M 1.3053582,-3.9585227 L 5.6537466,0"
+           id="path927" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.8;stroke-linecap:round"
+           d="M -3.8048674,4.1775838 L 0.54352094,0.21974226"
+           id="path929" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.8;stroke-linecap:round"
+           d="M -1.2866832,4.1775838 L 3.0617053,0.21974226"
+           id="path931" />
+        <path
+           style="fill:none;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.8;stroke-linecap:round"
+           d="M 1.3053582,4.1775838 L 5.6537466,0.21974226"
+           id="path933" />
+      </g>
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="Arrow1Mstart"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mstart"
+       inkscape:isstock="true">
+      <path
+         transform="scale(0.4) translate(10,0)"
+         style="fill-rule:evenodd;fill:context-stroke;stroke:context-stroke;stroke-width:1.0pt"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         id="path893" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker15060"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Lstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(1.1,0,0,1.1,1.1,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.625;stroke-linejoin:round"
+         id="path15058" />
+    </marker>
+    <marker
+       style="overflow:visible"
+       id="marker15050"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow2Lstart"
+       inkscape:isstock="true">
+      <path
+         transform="matrix(1.1,0,0,1.1,1.1,0)"
+         d="M 8.7185878,4.0337352 -2.2072895,0.01601326 8.7185884,-4.0017078 c -1.7454984,2.3720609 -1.7354408,5.6174519 -6e-7,8.035443 z"
+         style="fill:context-stroke;fill-rule:evenodd;stroke:context-stroke;stroke-width:0.625;stroke-linejoin:round"
+         id="path15048" />
+    </marker>
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <g
+       inkscape:label="Layer 1"
+       id="layer1-1"
+       transform="translate(-6.3875712,49.661183)">
+      <rect
+         style="fill:#ffffff;fill-opacity:0.81839079;stroke:none;stroke-width:2.91948;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:23.3558, 23.3558;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect15170"
+         width="57.504215"
+         height="52.233158"
+         x="68.876213"
+         y="41.010841"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300"
+         ry="0" />
+      <rect
+         style="fill:#000000;fill-opacity:0.746988;stroke:none;stroke-width:1.49467;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:11.9574, 11.9574;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect15170-6"
+         width="45.807747"
+         height="17.186893"
+         x="75.03035"
+         y="70.765923"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300" />
+      <rect
+         style="fill:#000000;fill-opacity:0.746988;stroke:none;stroke-width:1.55788;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:12.4631, 12.4631;stroke-dashoffset:0;stroke-opacity:1"
+         id="rect15170-6-9"
+         width="45.807747"
+         height="18.671055"
+         x="75.030357"
+         y="46.125923"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.671;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 126.29875,59.97213 0.0816,-18.94365 -19.45779,-0.05793"
+         id="path20683"
+         sodipodi:nodetypes="ccc"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.671;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="m 106.03613,93.167957 20.34429,0.07604 0.0622,-18.118185"
+         id="path20683-4"
+         sodipodi:nodetypes="ccc"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.671;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 68.957859,74.300352 68.876209,93.24399 88.334,93.30188"
+         id="path20683-3"
+         sodipodi:nodetypes="ccc"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300" />
+      <path
+         style="fill:none;fill-opacity:1;stroke:#000000;stroke-width:1.671;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         d="M 89.220482,41.08687 68.876205,41.010835 68.814039,59.12902"
+         id="path20683-3-1"
+         sodipodi:nodetypes="ccc"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300" />
+    </g>
+  </g>
+</svg>
