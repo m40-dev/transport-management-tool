@@ -1,5 +1,5 @@
 To create your first connection, use the **Connections** Menu and click on Add New Connection
-![](./screenshots/Pasted%20image%2020230705213847.png)
+![](./Pasted%20image%2020230705213847.png)
 
 When first connection is being saved, you will be asked to provide the encryption key. 
 This key is then used to encrypt the connection details that will be stored on your local computer.
