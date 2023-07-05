@@ -25,44 +25,52 @@
         "ServerAddress":
             {
                 "FieldType": "StringInput",
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "Display": "Server Address"
             },
         "DatabaseName":
             {
                 "FieldType": "StringInput",
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "Display": "Database Name"
             },
         "SQLUserName":
             {
                 "FieldType": "StringInput",
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "Display": "SQL User Name"
             },
         "SQLPassword":
             {
                 "FieldType": "StringInput",
                 "IsSensitive": "True" ,
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "Display": "SQL User Password"
             },
         "ApplicationUserName":
             {
                 "FieldType": "StringInput",
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "Display": "Application User Name"
             },
         "ApplicationPassword":
             {
                 "FieldType": "StringInput",
                 "IsSensitive": "True",
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "Display": "Application User Password"
             },
         "EncryptConnection":
             {
                 "FieldType": "BooleanInput",
-                "DefaultValue": "True"
+                "DefaultValue": "True",
+                "Display": "Force Encryption"
             },
         "ToolsDirectory":
             {
                 "FieldType": "FileInput",
-                "FileSelectionMode": "DirectoryPath"
+                "FileSelectionMode": "DirectoryPath",
+                "Display": "Identity Manager Tools Location"
             }
         },
     "Appearance":
