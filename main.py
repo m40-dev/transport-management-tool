@@ -3,9 +3,11 @@ from PyQt6.QtCore import Qt, QSettings, QTimer, QEvent
 from PyQt6.QtWidgets import (
     QMainWindow, QApplication, QMenu, QHeaderView, 
     QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator, 
-    QFileDialog, QMessageBox, QLabel, QTreeView
+    QFileDialog, QMessageBox, QLabel, QTreeView, QWidget, QSizePolicy
     )
 from PyQt6.QtGui import QShortcut, QKeySequence, QIcon
+
+from lib.ui.PackageManagerWidget import PackageManagerWidget
 
 #""" qt traceback handling"""
 import traceback
@@ -105,6 +107,7 @@ class Transport_Manager(QMainWindow):
         self.ui.current_file_label.setProperty("Widget", "FilePathLabel")
         self.ui.current_file_label.setTextInteractionFlags(
             Qt.TextInteractionFlag.TextSelectableByMouse|Qt.TextInteractionFlag.TextSelectableByKeyboard)
+        self.ui.current_file_label.setWordWrap(True)
         self.ui.XMLEditorLayout.insertWidget(0, self.ui.current_file_label)
         self.ui.XMLEditorLayout.insertWidget(1, self.ui.XMLEditorWidget)
 
@@ -201,6 +204,11 @@ class Transport_Manager(QMainWindow):
         QShortcut(QKeySequence.StandardKey.Refresh, self, self.refresh_ui)
         QShortcut(QKeySequence("Ctrl+0"), self, self.ui.XMLEditorWidget.expand_by_level)
         QShortcut(QKeySequence("Ctrl+9"), self, self.ui.XMLEditorWidget.fold_by_level)
+
+
+        # new_tab = PackageManagerWidget(self)
+        # self.ui.MainTabWidget.addTab(new_tab, "Test")
+
 
         self.refresh_ui()
 
@@ -397,29 +405,18 @@ class Transport_Manager(QMainWindow):
         definitions = []
         skipped_definitions = []
         package_manager_configuration = self.program_configuration.get("Package Manager")
+        whitelist_directories = package_manager_configuration.get("WorkdirDirectoryWhitelist", None)
 
         for file_path in Path(workdir).rglob( '*.json' ):
             if file_path.is_file():
                 feature_definition_location = file_path.relative_to(workdir_path)
-                json_content = self.load_file(file_path.absolute())
-                package_definition = json.loads(json_content)
-                
-                #keep relative path by default
-                package_definition["DefinitionFile"] = str(feature_definition_location)
-
-                definition_config = self.object_configuration.get_column_configuration("PackageManager_PackageDefinition", "DefinitionFile")
-                if definition_config and definition_config.get("FileSelectionMode", "") == "FileName":
-                    #keep just the file name, location to be calculated dynamically
-                    package_definition["DefinitionFile"] = str(feature_definition_location.name)
-                # check the mandatory fields of the object to determine if file matches the definition
                 accept = True
 
                 if package_manager_configuration and accept:
-                    whitelist_directories = package_manager_configuration.get("WorkdirDirectoryWhitelist", None)
                     if whitelist_directories:
                         accept = False
                         for directory in whitelist_directories:
-                            print(f"checking whitelist, {str(feature_definition_location)} compared with whitelist directory: {directory}", str(feature_definition_location).lower().startswith(directory.lower()))
+                            # print(f"checking whitelist, {str(feature_definition_location)} compared with whitelist directory: {directory}", str(feature_definition_location).lower().startswith(directory.lower()))
                             if str(feature_definition_location).lower().startswith(directory.lower()):
                                 accept = True
 
@@ -435,6 +432,19 @@ class Transport_Manager(QMainWindow):
                     if not accept:
                         # program configuration excluded the file, continue
                         continue
+                
+                #file went through the whitelist/blacklist configurations
+                json_content = self.load_file(file_path.absolute())
+                package_definition = json.loads(json_content)
+                
+                #keep relative path by default
+                package_definition["DefinitionFile"] = str(feature_definition_location)
+
+                definition_config = self.object_configuration.get_column_configuration("PackageManager_PackageDefinition", "DefinitionFile")
+                if definition_config and definition_config.get("FileSelectionMode", "") == "FileName":
+                    #keep just the file name, location to be calculated dynamically
+                    package_definition["DefinitionFile"] = str(feature_definition_location.name)
+                # check the mandatory fields of the object to determine if file matches the definition
 
                 # check the definition file mandatory columns
                 for column_name in mandatory_columns:
@@ -495,7 +505,7 @@ class Transport_Manager(QMainWindow):
 
     def save_file(self):
         if self.current_file is not None:
-            print(Path(self.current_file), Path(self.current_file).is_file())
+            # print(Path(self.current_file), Path(self.current_file).is_file())
 
             if Path(self.current_file).is_file():
                 Path(self.current_file).parent.mkdir(parents=True, exist_ok=True)

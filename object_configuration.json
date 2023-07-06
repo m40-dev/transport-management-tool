@@ -24,7 +24,7 @@
                 "DefaultValue": "definition.json",
                 "IsForDataExport": "False",
                 "FileExtension": "*.json",
-                "FileSelectionMode": "FileName",
+                "FileSelectionMode": "Relative",
                 "RedirectDirectoryDynamic": "Source_Files/%PackageName%",
                 "IsMandatory": "True"
             },
