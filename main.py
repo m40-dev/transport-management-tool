@@ -3,11 +3,9 @@ from PyQt6.QtCore import Qt, QSettings, QTimer, QEvent
 from PyQt6.QtWidgets import (
     QMainWindow, QApplication, QMenu, QHeaderView, 
     QTreeWidget, QAbstractItemView, QTreeWidgetItemIterator, 
-    QFileDialog, QMessageBox, QLabel, QTreeView, QWidget, QSizePolicy
+    QFileDialog, QMessageBox, QLabel, QTreeView
     )
 from PyQt6.QtGui import QShortcut, QKeySequence, QIcon
-
-from lib.ui.PackageManagerWidget import PackageManagerWidget
 
 #""" qt traceback handling"""
 import traceback
@@ -42,8 +40,6 @@ from lib.xml.transport_template_custom_object import transport_template_custom_o
 from lib.xml.object_container import object_container
 from lib.xml.sql_script_container import sql_script_container
 
-from lib.data.DataModels import PackageDefinitionModel
-
 VERSION = '0.6'
 XML_PREVIEW_TIMER = 100
 FILTER_EXEC_TIMER = 650
@@ -68,11 +64,19 @@ class Transport_Manager(QMainWindow):
         self.setWindowTitle(f"Transport Manager Tool - {VERSION}")
         window_icon = QIcon("./icon.ico")
         self.setWindowIcon(window_icon)
+
         self.color_theme = Application_Theme()
         self.qt_app.setPalette(self.color_theme)
 
         self.program_configuration = ProgramConfiguration(self)
         self.object_configuration = ObjectConfiguration(self)
+
+        # Bring in the Main Tab Widgets
+        self.PackageManager = WidgetFactory.PackageManager(self)
+        self.XMLTemplateEditor = WidgetFactory.XMLTemplateEditor(self)
+
+        self.ui.MainTabWidget.addTab(self.PackageManager, "Package Manager")
+        self.ui.MainTabWidget.addTab(self.XMLTemplateEditor, "XML Template Editor")
 
         """ Connect UI signals """
         self.closeEvent = self.close_application
@@ -87,19 +91,16 @@ class Transport_Manager(QMainWindow):
         self.ui.XMLStructureTreeWidget.itemChanged.connect(self.handle_data_change)
         self.ui.XMLStructureTreeWidget.dragMoveEvent = self.xml_structure_move_event
         self.ui.XMLStructureTreeWidget.dropEvent = self.xml_structure_drop_event
-        self.ui.actionSaveFile.triggered.connect(self.save_file)
-        self.ui.actionSave_As.triggered.connect(self.save_as_other_file)
+        self.ui.actionSaveFile.triggered.connect(self.saveXMLTemplate)
+        self.ui.actionSave_As.triggered.connect(self.saveXMLTemplateAs)
         self.ui.actionOpen_File.triggered.connect(
-            lambda: self.open_file())
+            lambda: self.openXMLTemplate())
         self.ui.actionChange_WorkingDirectory.triggered.connect(self.change_workdir)
         self.ui.DeselectAllToolButton.clicked.connect(self.deselect_all_relations)
         self.ui.AddAsSingleObjectsButton.clicked.connect(
             lambda: self.select_object_for_transport(add_without_relations=True))
         self.ui.ApplyPresetToolButton.clicked.connect(self.apply_table_relation_preset)
         self.ui.actionNew_Transport_Template.triggered.connect(self.new_transport_template)
-        self.ui.PackageManagerTabWidget.tabCloseRequested.connect(self.close_tab)
-        self.ui.FindPackageButton.clicked.connect(self.filter_packages)
-        self.ui.AddPackageButton.clicked.connect(self.add_package_definition)
 
         """ UI Configurations """
         self.ui.XMLEditorWidget = WidgetFactory.CodeEditors.xml_editor(self)
@@ -144,49 +145,17 @@ class Transport_Manager(QMainWindow):
         self.ui.FindObjectButton.setEnabled(False)
         self.ui.TableComboBox.setEnabled(False)
 
-        self.ui.PackageViewTreeView.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.ui.PackageViewTreeView.setDragEnabled(True)
-        self.ui.PackageViewTreeView.setAcceptDrops(True)
-        # self.ui.PackageViewTreeView.setAnimated(True)
-        self.ui.PackageViewTreeView.setUniformRowHeights(False)
-        self.ui.PackageViewTreeView.setDropIndicatorShown(True)
-        self.ui.PackageViewTreeView.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
-        self.ui.PackageViewTreeView.setAlternatingRowColors(True)
-        self.ui.PackageViewTreeView.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.ui.PackageViewTreeView.dragMoveEvent = self.PackageViewDragMoveEvent
-
-        data_model = PackageDefinitionModel(
-            application=self,
-            parent_widget=self.ui.PackageViewTreeView, 
-            data=None)
-
-        self.ui.PackageViewTreeView.setModel(data_model)
-        packageViewDelegate = WidgetFactory.PackageManager.PackageViewDelegate(
-            model_data=data_model, 
-            application=self, 
-            parent_widget=self.ui.PackageViewTreeView)
-        self.ui.PackageViewTreeView.setItemDelegate(packageViewDelegate)
-        self.ui.PackageViewTreeView.setHeaderHidden(True)
-
-        self.ui.PackageManagerTabWidget.setTabsClosable(True)
-
         """ Context Menu """
         self.ui.RelationsViewTreeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.ui.XMLStructureTreeWidget.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.ui.PackageViewTreeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
         self.ui.RelationsViewTreeWidget.customContextMenuRequested.connect(self.relation_context_menu)
         self.ui.XMLStructureTreeWidget.customContextMenuRequested.connect(self.xml_structure_context_menu)
-        self.ui.PackageViewTreeView.customContextMenuRequested.connect(self.package_definition_context_menu)
 
         self.xml_structure_changed.connect(self.reload_xml_preview)
         self.xml_preview_timer = QTimer(self)
         self.xml_preview_timer.setSingleShot(True)
         self.xml_preview_timer.timeout.connect(self.load_xml_preview)
-
-        self.package_filter_timer = QTimer(self)
-        self.package_filter_timer.setSingleShot(True)
-        self.package_filter_timer.timeout.connect(self.filter_packages)
 
         self.current_workdir = None
         self.current_file = None
@@ -196,7 +165,7 @@ class Transport_Manager(QMainWindow):
         new_plan_action = planner_menu.addAction("Add New Plan")
         config_action = planner_menu.addAction("Configure")
         config_action.triggered.connect(self.configure_execution_planner)
-        new_plan_action.triggered.connect(self.new_execution_plan)
+        new_plan_action.triggered.connect(self.PackageManager.addExecutionPlan)
 
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.remove_selected_nodes)
@@ -204,11 +173,6 @@ class Transport_Manager(QMainWindow):
         QShortcut(QKeySequence.StandardKey.Refresh, self, self.refresh_ui)
         QShortcut(QKeySequence("Ctrl+0"), self, self.ui.XMLEditorWidget.expand_by_level)
         QShortcut(QKeySequence("Ctrl+9"), self, self.ui.XMLEditorWidget.fold_by_level)
-
-
-        # new_tab = PackageManagerWidget(self)
-        # self.ui.MainTabWidget.addTab(new_tab, "Test")
-
 
         self.refresh_ui()
 
@@ -242,50 +206,11 @@ class Transport_Manager(QMainWindow):
 
         """ Initial transport template object """
         self.new_transport_template()
-        self.new_execution_plan()
+        self.PackageManager.addExecutionPlan()
 
     def enter_shortcut(self):
         if self.ui.SearchPackageLineEdit.hasFocus():
             self.filter_packages(self.ui.SearchPackageLineEdit.text())
-
-    def PackageViewDragMoveEvent(self, event):
-        move_accept = False
-        source_index = event.source().currentIndex()
-        source_item = source_index.internalPointer()
-
-        QTreeView.dragMoveEvent(self.ui.PackageViewTreeView, event)
-        
-        drop_index = self.ui.PackageViewTreeView.indexAt(event.position().toPoint())
-        drop_item = drop_index.internalPointer()
-
-        dropIndicator = self.ui.PackageViewTreeView.dropIndicatorPosition()
-
-        if drop_item:
-            self.ui.PackageViewTreeView.setDropIndicatorShown(True)
-
-        if dropIndicator == QAbstractItemView.DropIndicatorPosition.OnItem:
-
-            if drop_item._task_class != source_item._task_class:
-                move_accept = True
-            
-            if drop_item and source_item:
-                #do not allow package nesting
-                if source_item._task_class == "PackageManager_PackageDefinition" and drop_item._task_class == "PackageManager_TaskDefinition":
-                    move_accept = False
-
-        if dropIndicator in [QAbstractItemView.DropIndicatorPosition.BelowItem, QAbstractItemView.DropIndicatorPosition.AboveItem]:
-            if drop_item._task_class == source_item._task_class:
-                move_accept = True
-
-        if drop_item is None:
-            # no target item - drop at top level
-            if source_item._task_class == "PackageManager_PackageDefinition":
-                move_accept = True
-
-        if event.mimeData().hasFormat("application/vnd.jsondataitem") and move_accept:
-            event.acceptProposedAction()
-        else:
-            event.ignore()
 
     def refresh_ui(self):
         """ UI style scheme """
@@ -303,7 +228,22 @@ class Transport_Manager(QMainWindow):
         self.program_configuration.reload_configuration_file()
         self.ui.XMLEditorWidget.reconfigure_editor()
         self.load_workdir()
-        
+    
+    def getObjectData(self, object_class, dialog_name="Object Data", source_index=None):
+        editor_configuration = self.object_configuration.get(object_class)
+        if editor_configuration:
+            dialog = WidgetFactory.FormEditorDialog(
+                application=self, 
+                configuration_class=object_class, 
+                dialog_name=dialog_name,
+                form_configuration=editor_configuration
+                )
+            if source_index:
+                dialog.set_form_data(source_index)
+            if dialog.exec():
+                data = dialog.form_data
+                return data
+        return None
 
     """ Execution Planner """
     def configure_execution_planner(self):
@@ -313,22 +253,6 @@ class Transport_Manager(QMainWindow):
         if new_configuration.exec():
             new_config_data = new_configuration.to_dict
             self.settings.setValue("ExecutionPlannerSettings", new_config_data)
-    
-    def new_execution_plan(self):
-        tabwidget = WidgetFactory.ExecutionPlannerWidget(self)
-        tabwidget.planner_name_changed.connect(self.update_planner_tab_name)
-        self.ui.PackageManagerTabWidget.addTab(tabwidget, "New Execution Plan...")
-
-    def update_planner_tab_name(self, planner_widget):
-        index = self.ui.PackageManagerTabWidget.indexOf(planner_widget)
-        planner_name = planner_widget.name
-        self.ui.PackageManagerTabWidget.setTabText(index, planner_name)
-
-    def close_tab(self, index):
-        tab_widget = self.ui.PackageManagerTabWidget.widget(index)
-        tab_widget.parent = None
-        tab_widget.deleteLater()
-        self.ui.PackageManagerTabWidget.removeTab(index)
     
     """ Database connection Management """
 
@@ -355,14 +279,6 @@ class Transport_Manager(QMainWindow):
             self.reload_ui_data()
 
     """ Workdir and File Operations """
-    def filter_packages(self, text=None):
-        if text:
-            self.package_filter_timer.start(FILTER_EXEC_TIMER)
-            return False
-        #filter from the other signals
-        filter_text = self.ui.SearchPackageLineEdit.text()
-        self.ui.PackageViewTreeView.model().setFilterString(filter_text)
-
     def change_workdir(self):
         dialog = QFileDialog(self, "Transport Manager - Select Working Directory")
         dialog.setFileMode(QFileDialog.FileMode.Directory)
@@ -380,115 +296,16 @@ class Transport_Manager(QMainWindow):
         
         if workdir is None:
             return False
+
+        self.PackageManager.setupWorkingDirectory(workdir)
         
-        sort_attribute = ""
-        package_definition_config = self.object_configuration.get("PackageManager_PackageDefinition")
-        mandatory_columns = []
-        if package_definition_config:
-            for column, column_configuration in package_definition_config.items():
-                if column_configuration.get("FieldRole", None) == "SortOrder":
-                    sort_attribute = column
-                    break
-            
-            if len(sort_attribute.strip()) == 0:
-                for column, column_configuration in package_definition_config.items():
-                    if column_configuration.get("FieldRole", None) == "DisplayRole":
-                        sort_attribute = column
-                        break
-
-            for column, column_configuration in package_definition_config.items():
-                    if column_configuration.get("IsMandatory", None) == "True":
-                        mandatory_columns.append(column)
-        sort_attribute = sort_attribute.strip()
-        self.current_workdir = workdir
-        workdir_path = Path(workdir).absolute()
-        definitions = []
-        skipped_definitions = []
-        package_manager_configuration = self.program_configuration.get("Package Manager")
-        whitelist_directories = package_manager_configuration.get("WorkdirDirectoryWhitelist", None)
-
-        for file_path in Path(workdir).rglob( '*.json' ):
-            if file_path.is_file():
-                feature_definition_location = file_path.relative_to(workdir_path)
-                accept = True
-
-                if package_manager_configuration and accept:
-                    if whitelist_directories:
-                        accept = False
-                        for directory in whitelist_directories:
-                            # print(f"checking whitelist, {str(feature_definition_location)} compared with whitelist directory: {directory}", str(feature_definition_location).lower().startswith(directory.lower()))
-                            if str(feature_definition_location).lower().startswith(directory.lower()):
-                                accept = True
-
-                    excluded_files = package_manager_configuration.get("ExcludedFiles", None)
-                    if excluded_files and feature_definition_location.name in excluded_files:
-                        accept = False
-                    
-                    if accept:
-                        blacklist_directories = package_manager_configuration.get("WorkdirDirectoryBlacklist", None)
-                        for directory in blacklist_directories:
-                            if str(feature_definition_location).startswith(directory):
-                                accept = False
-                    if not accept:
-                        # program configuration excluded the file, continue
-                        continue
-                
-                #file went through the whitelist/blacklist configurations
-                json_content = self.load_file(file_path.absolute())
-                package_definition = json.loads(json_content)
-                
-                #keep relative path by default
-                package_definition["DefinitionFile"] = str(feature_definition_location)
-
-                definition_config = self.object_configuration.get_column_configuration("PackageManager_PackageDefinition", "DefinitionFile")
-                if definition_config and definition_config.get("FileSelectionMode", "") == "FileName":
-                    #keep just the file name, location to be calculated dynamically
-                    package_definition["DefinitionFile"] = str(feature_definition_location.name)
-                # check the mandatory fields of the object to determine if file matches the definition
-
-                # check the definition file mandatory columns
-                for column_name in mandatory_columns:
-                    if column_name not in package_definition.keys():
-                        #skip entry with missing mandatory definition data
-                        accept = False
-                        break
-
-                if accept and len(sort_attribute) > 0 and sort_attribute not in package_definition.keys():
-                    package_definition[sort_attribute] = -1
-                
-                if accept:
-                    definitions.append(package_definition)
-                else:
-                    skipped_definitions.append(str(package_definition))
-        
-        if len(sort_attribute) > 0:
-            definitions = sorted(
-                    definitions, 
-                    key=lambda d: (d[sort_attribute])
-                    )
-
-        data_model =  PackageDefinitionModel(
-            application=self,
-            parent_widget=self.ui.PackageViewTreeView, 
-            data=definitions)
-        
-        self.ui.PackageViewTreeView.setModel(data_model)
-        self.ui.SearchPackageLineEdit.textChanged.connect(self.filter_packages)
-        
-        # Show the summary of skipped data files
-        if len(skipped_definitions)>0:
-            definition_list = "\r\n".join(skipped_definitions)
-            file_count = len(skipped_definitions)
-            WidgetFactory.MsgBox(self, "Some JSON definition files were ignored due to missing mandatory data.\r\nIf this file should be ignored, please configure the filters in program configuration.", 
-                f"Mandatory columns: {mandatory_columns}.\r\nSkipped Entries: {file_count}, skipped data:\r\n{definition_list}")
-
     def load_file(self, file_path):
         file_content = ""
         with open(file_path, 'rb') as f:
             file_content = f.read()
         return file_content
 
-    def open_file(self, file_path=None):
+    def openXMLTemplate(self, file_path=None):
         if file_path is None:
             dialog = QFileDialog(self, "Open existing template file")
             dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
@@ -503,7 +320,7 @@ class Transport_Manager(QMainWindow):
         self.ui.MainTabWidget.setCurrentWidget(self.ui.MainTabWidget_Transport_Template_Editor)
         self.xml_structure_changed.emit()
 
-    def save_file(self):
+    def saveXMLTemplate(self):
         if self.current_file is not None:
             # print(Path(self.current_file), Path(self.current_file).is_file())
 
@@ -512,10 +329,10 @@ class Transport_Manager(QMainWindow):
                 with open(self.current_file, 'w') as doc:
                     doc.write(self.transport_template.string)
                 return self.current_file
-            return self.save_as_other_file(self.current_file)
-        return self.save_as_other_file(self.current_workdir)
+            return self.saveXMLTemplateAs(self.current_file)
+        return self.saveXMLTemplateAs(self.current_workdir)
 
-    def save_as_other_file(self, initial_directory=None):
+    def saveXMLTemplateAs(self, initial_directory=None):
         dialog = QFileDialog(self, "Save As")
         dialog.setFileMode(QFileDialog.FileMode.AnyFile) 
 
@@ -536,118 +353,38 @@ class Transport_Manager(QMainWindow):
             self.current_file = file_path
         self.ui.current_file_label.setText(str(file_path))
 
+    def deleteFile(self, file_path):
+        print("file to delete", file_path)
+        file_path = Path(str(file_path))
+        if file_path.is_file():
+            file_path.unlink()
+            parent_directory = file_path.parent
+            self.deleteDirectory(parent_directory)
+
+    def deleteDirectory(self, directory_path):
+        print("check if directory can be deleted:", directory_path)
+        if not self.current_workdir:
+            # do not delete anything if there is no working directory
+            return False
+
+        workdir_path = Path(str(self.current_workdir))
+        if directory_path.absolute() <= workdir_path.absolute():
+            # never go beyond the working directory
+            print("do not cross the working directory, breaking")
+            return False
+
+        if len(list(directory_path.rglob('*'))) == 0:
+            # print("delete empty directory:", directory_path)
+            directory_path.rmdir()
+            if directory_path.parent:
+                self.deleteDirectory(directory_path.parent)
+
     def new_transport_template(self, file_path=None):
         if file_path:
             self.set_current_file(file_path)
         self.transport_template = transport_template(self)
         self.reload_xml_structure()
         self.xml_structure_changed.emit()
-
-    """ Package Definition """
-    def package_definition_context_menu(self, menuPosition):
-        clickedIndex = self.ui.PackageViewTreeView.indexAt(menuPosition)
-        contextMenu = WidgetFactory.package_definition_context_menu(self, clickedIndex)
-       
-        menu_target = self.ui.PackageViewTreeView.mapToGlobal(menuPosition)
-        contextMenu.add_package_definition.connect(self.add_package_definition)
-        contextMenu.edit_package_definition.connect(self.edit_package_definition)
-        contextMenu.add_task_definition.connect(self.add_task_definition)
-        contextMenu.edit_task_definition.connect(self.edit_task_definition)
-        contextMenu.edit_task_xml_definition.connect(self.edit_task_xml_definition)
-        contextMenu.save_package_definitions.connect(self.save_package_definition)
-        contextMenu.collapse_all_definitions.connect(self.collapse_all_package_definitions)
-        contextMenu.expand_all_definitions.connect(self.expand_all_package_definitions)
-        if len(contextMenu.menu_items) > 0:
-            contextMenu.popup(menu_target)
-
-    def collapse_all_package_definitions(self):
-        self.ui.PackageViewTreeView.collapseAll()
-
-    def expand_all_package_definitions(self):
-        self.ui.PackageViewTreeView.expandAll()
-
-    def add_package_definition(self, source_index):
-        print("Add Package Definition", source_index)
-        if not self.current_workdir:
-            WidgetFactory.MsgBox(self, "Working Directory is not configured.\n\nPlease configure working directory location first to create any package definition.\n\nWithout working directory, program will not be able to generate the paths and save the files.")
-            if not self.change_workdir():
-                return False
-        editor_configuration = self.object_configuration.get("PackageManager_PackageDefinition")
-        if editor_configuration:
-            dialog = WidgetFactory.FormEditorDialog(self, 
-            configuration_class="PackageManager_PackageDefinition", 
-            dialog_name="Package Definition"
-            )
-            if dialog.exec():
-                data = dialog.form_data
-                treeview_model = self.ui.PackageViewTreeView.model()
-                treeview_model.insert_item("PackageManager_PackageDefinition", data, source_index)
-
-    def edit_package_definition(self, source_index):
-        print("Edit Package Definition", source_index)
-        if not source_index.isValid():
-            return False
-
-        editor_configuration = self.object_configuration.get("PackageManager_PackageDefinition")
-        if editor_configuration:
-            dialog = WidgetFactory.FormEditorDialog(self, 
-            configuration_class="PackageManager_PackageDefinition",
-            dialog_name="Package Definition"
-            )
-            dialog.set_form_data(source_index)
-            if dialog.exec():
-                data = dialog.form_data
-                source_item = source_index.internalPointer()
-                source_item.update_data(data)
-
-    def save_package_definition(self, source_index):
-        if len(self.ui.PackageViewTreeView.selectedIndexes())>0:
-            for item_index in self.ui.PackageViewTreeView.selectedIndexes():
-                package_definition = item_index.internalPointer()
-                package_definition.save()
-        else:
-            if source_index.isValid():
-                package_definition = item_index.internalPointer()
-                package_definition.save()
-
-    def add_task_definition(self, source_index):
-        print("add task definition for", source_index)
-        if not source_index.isValid():
-            return False
-        editor_configuration = self.object_configuration.get("PackageManager_TaskDefinition")
-        if editor_configuration:
-            dialog = WidgetFactory.FormEditorDialog(self, 
-            configuration_class="PackageManager_TaskDefinition",
-            dialog_name="Task Object Definition"
-            )
-            if dialog.exec():
-                data = dialog.form_data
-                treeview_model = self.ui.PackageViewTreeView.model()
-                treeview_model.insert_item("PackageManager_TaskDefinition", data, source_index)
-    
-    def edit_task_definition(self, source_index):
-        if not source_index.isValid():
-            return False
-
-        editor_configuration = self.object_configuration.get("PackageManager_TaskDefinition")
-        if editor_configuration:
-            dialog = WidgetFactory.FormEditorDialog(self, 
-            configuration_class="PackageManager_TaskDefinition",
-            dialog_name="Task Object Definition"
-            )
-            dialog.set_form_data(source_index)
-            if dialog.exec():
-                data = dialog.form_data
-                source_item = source_index.internalPointer()
-                source_item.update_data(data)
-
-    def edit_task_xml_definition(self, source_item):
-        source_item = source_item.internalPointer()
-        file_path = source_item.get_file_path()
-        if not file_path.is_file():
-            file_path.parent.mkdir(parents=True, exist_ok=True)
-            file_path.touch()
-        self.open_file(str(file_path))
 
     """ connection Data Management """
     def get_encryption_key(self, initial=False):
@@ -1063,60 +800,9 @@ class Transport_Manager(QMainWindow):
 
             if self.ui.PackageViewTreeView.hasFocus():
                 self.remove_selected_package_definitions()
-        
-    def remove_selected_package_definitions(self):
 
-        question = WidgetFactory.MsgBox(self, 
-                        message=f"Do you want to delete selected items? ({len(self.ui.PackageViewTreeView.selectedIndexes())} item(s))",
-                        window_mode=WidgetFactory.MsgBox.QUESTION)
-        if question.accepted:
-            files_to_delete = {}
-            for item_index in self.ui.PackageViewTreeView.selectedIndexes():
-                item = item_index.internalPointer()
-                if self.current_workdir:
-                    # attempt file operations only if the workdir is set
-                    files_to_delete = item.get_all_files(recursive=True)
-                    if len(files_to_delete) > 0:
-                        export_data = "\n".join(map(str, files_to_delete))
-                        # export_data = json.dumps(files_to_delete, indent=4, separators=(',',':'))
-                        detailed_message = f"Data lookup returned following files related to the selected object:\n{export_data}"
-                        question = WidgetFactory.MsgBox(self, 
-                            message=f"Existing system files detected for item {item.display} or its child items, do you also want to delete these data files?", 
-                            detailed_message=detailed_message, 
-                            window_mode=WidgetFactory.MsgBox.QUESTION)
-                        if question.accepted:
-                            #delete data files
-                            for file_path in files_to_delete:
-                                self.delete_data_file(file_path)
-
-                #remove item from model
-                item_index.model().remove_item(item)
-
-    def delete_data_file(self, file_path):
-        print("file to delete", file_path)
-        # file_path = Path(file_path)
-        if file_path.is_file():
-            file_path.unlink()
-            parent_directory = file_path.parent
-            self.delete_empty_directory(parent_directory)
-
-    def delete_empty_directory(self, directory_path):
-        print("check if directory can be deleted:", directory_path)
-        if not self.current_workdir:
-            # do not delete anything if there is no working directory
-            return False
-
-        workdir_path = Path(str(self.current_workdir))
-        if directory_path.absolute() <= workdir_path.absolute():
-            # never go beyond the working directory
-            print("do not cross the working directory, breaking")
-            return False
-
-        if len(list(directory_path.rglob('*'))) == 0:
-            # print("delete empty directory:", directory_path)
-            directory_path.rmdir()
-            if directory_path.parent:
-                self.delete_empty_directory(directory_path.parent)
+        if self.ui.MainTabWidget.currentWidget() == self.PackageManager:
+            self.PackageManager.deleteSelectedItems()
 
     def remove_tree_widget_selected_node(self, tree_widget):
         if tree_widget.hasFocus():
@@ -1137,7 +823,6 @@ class Transport_Manager(QMainWindow):
             if tree_widget == self.ui.XMLStructureTreeWidget:
                 self.reset_xml_order()
                 self.xml_structure_changed.emit()
-
 
     def clear_widgets(self):
         self.ui.TableComboBox.clear()

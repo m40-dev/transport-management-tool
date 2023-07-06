@@ -5,8 +5,8 @@ from lib.ui.Theme import Application_Theme
 from lib.ui.WidgetFactory.PackageManager.PackageViewDelegate import PackageDefinitionWidget
 
 class ExecutionPlannerDelegate(QStyledItemDelegate):
-    start_single_task_execution = pyqtSignal(object)
-    start_group_task_execution = pyqtSignal(object)
+    queueExecutionTask = pyqtSignal(object)
+    queueExecutionGroup = pyqtSignal(object)
 
     def __init__(self, model_data, application, planner_widget, parent=None):
         super().__init__(parent)
@@ -27,7 +27,7 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
                 application=self.application, 
                 planner_widget=self.planner_widget)
             
-            editor.start_task_execution.connect(self.start_single_task_execution)
+            editor.taskExecutionRequested.connect(self.queueExecutionTask)
             return editor
         
         if column_name == "Actions" and item.task_class in [
@@ -39,7 +39,7 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
                 application=self.application, 
                 planner_widget=self.planner_widget)
             
-            editor.start_task_execution.connect(self.start_group_task_execution)
+            editor.taskExecutionRequested.connect(self.queueExecutionGroup)
             return editor
 
         return super().createEditor(parent, option, index)
@@ -103,7 +103,7 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
             super().paint(painter, option, index)
 
 class ExecutionPlannerItem(QFrame):
-    start_task_execution = pyqtSignal(object)
+    taskExecutionRequested = pyqtSignal(object)
 
     def __init__(self, data_item, tree_view, application, planner_widget, parent=None):
         super().__init__(parent=parent)
@@ -132,17 +132,19 @@ class ExecutionPlannerItem(QFrame):
         self.layout.addWidget(self.element_label, 0, 0, 1, 2)
         self.layout.addWidget(self.element_description, 1, 0, 1, 4)
         self.layout.addWidget(self.button1, 0, 4)
-        self.data_item.data_changed.connect(self.refresh_data)
-        self.refresh_data()
+        self.data_item.data_changed.connect(self.refreshUI)
+        self.refreshUI()
 
-        self.button1.clicked.connect(self.start_task)
+        self.button1.clicked.connect(self.startTaskExecution)
     
-    def start_task(self):
-        self.start_task_execution.emit(self.data_item)
+    def startTaskExecution(self):
+        self.taskExecutionRequested.emit(self.data_item)
 
-    def refresh_data(self):
+    def refreshUI(self):
         self.element_label.setText(self.data_item.display)
         self.element_description.setText(self.data_item.description)
+        if self.tree_view.model():
+            self.tree_view.model().layoutChanged.emit()
 
 
 class GroupActionWidget(ExecutionPlannerItem):
@@ -197,7 +199,6 @@ class ItemActionWidget(ExecutionPlannerItem):
                     row += 1
                     column_count = 0
         
-
         """ Add Widgets to the layouts """
         task_params_layout = QHBoxLayout()
         task_params_layout.addStretch(2)
@@ -213,26 +214,23 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.layout.addWidget(self.run_status, 2, 4)
 
         """ Refresh state based on the model data """
-        self.refresh_model_data()
+        self.refreshModelData()
 
         """ Set initial values """
-        self.configure_model_data()
+        self.configureTask()
 
         """ Connect Signals """
-        self.task_execution_import.toggled.connect(self.set_task_execution_type)
-        self.task_execution_export.toggled.connect(self.set_task_execution_type)
-        self.connection_box.currentTextChanged.connect(self.set_task_connection)
-        self.data_item.data_changed.connect(self.refresh_display)
+        self.task_execution_import.toggled.connect(self.setExecutionType)
+        self.task_execution_export.toggled.connect(self.setExecutionType)
+        self.connection_box.currentTextChanged.connect(self.setConnection)
+        self.data_item.data_changed.connect(self.refreshTaskUI)
 
-    def refresh_data(self):
-        self.element_label.setText(self.data_item.display)
-
-    def refresh_display(self):
+    def refreshTaskUI(self):
         self.is_refresh = True
-        self.refresh_model_data()
+        self.refreshModelData()
         self.is_refresh = False
 
-    def refresh_model_data(self):
+    def refreshModelData(self):
         self.element_label.setText(self.data_item.display)
 
         for column, label_widget in self.dynamic_property_labels.items():
@@ -247,7 +245,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.connection_box.setCurrentText(self.data_item.data("Connection"))
         self.run_status.setText(self.data_item.data("task_execution_status"))
 
-    def set_task_execution_type(self):
+    def setExecutionType(self):
         if self.is_refresh:
             return False
 
@@ -264,7 +262,7 @@ class ItemActionWidget(ExecutionPlannerItem):
             selected_item.setData("ExecutionType", execution_type)
         # print(self.treeview.selectedIndexes())
         
-    def set_task_connection(self):
+    def setConnection(self):
         connection = self.connection_box.currentText()
         self.data_item.setData("Connection", connection)
 
@@ -272,6 +270,6 @@ class ItemActionWidget(ExecutionPlannerItem):
             selected_item = selected_index.internalPointer()
             selected_item.setData("Connection", connection)
 
-    def configure_model_data(self):
-        self.set_task_connection()
-        self.set_task_execution_type()
+    def configureTask(self):
+        self.setConnection()
+        self.setExecutionType()

@@ -217,7 +217,7 @@ class JSONDataItem(QObject):
                                     object_value = ", ".join(object_value)
 
                                 #simple string comparison
-                                value_check = filter_text.lower() in object_value.lower()
+                                value_check = str(filter_text).lower() in str(object_value).lower()
                                 if value_check:
                                     #mark the criteria and break the ineration over the filter values, at least one entry matches
                                     criteria_match += 1

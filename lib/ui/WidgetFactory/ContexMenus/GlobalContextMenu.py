@@ -83,92 +83,92 @@ class xml_structure_context_menu(QMenu):
             action_add_sql_task.triggered.connect(lambda: self.add_transport_task.emit("VI.Transport.SQLTransport, VI.Transport"))
 
 
-class package_definition_context_menu(QMenu):
-    """ Custom QMenu used to manage relation items """
+# class package_definition_context_menu(QMenu):
+#     """ Custom QMenu used to manage relation items """
     
-    add_package_definition = pyqtSignal(object)
-    edit_package_definition = pyqtSignal(object)
-    add_task_definition = pyqtSignal(object)
-    edit_task_xml_definition = pyqtSignal(object)
-    edit_task_definition = pyqtSignal(object)
-    save_package_definitions = pyqtSignal(object)
-    collapse_all_definitions = pyqtSignal()
-    expand_all_definitions = pyqtSignal()
+#     add_package_definition = pyqtSignal(object)
+#     edit_package_definition = pyqtSignal(object)
+#     add_task_definition = pyqtSignal(object)
+#     edit_task_xml_definition = pyqtSignal(object)
+#     edit_task_definition = pyqtSignal(object)
+#     save_package_definitions = pyqtSignal(object)
+#     collapse_all_definitions = pyqtSignal()
+#     expand_all_definitions = pyqtSignal()
 
-    def __init__(self, parent, source_index):
-        super(package_definition_context_menu, self).__init__(parent)
-        self.parent = parent
+#     def __init__(self, parent, source_index):
+#         super(package_definition_context_menu, self).__init__(parent)
+#         self.parent = parent
 
-        self.menu_items = []
-        source_item = source_index.internalPointer()
+#         self.menu_items = []
+#         source_item = source_index.internalPointer()
 
-        action_collapse_all_definitions = self.addAction("Collapse All Items")
-        action_collapse_all_definitions.triggered.connect(self.collapse_all_definitions)
+#         action_collapse_all_definitions = self.addAction("Collapse All Items")
+#         action_collapse_all_definitions.triggered.connect(self.collapse_all_definitions)
 
-        action_expand_all_definitions = self.addAction("Expand All Items")
-        action_expand_all_definitions.triggered.connect(self.expand_all_definitions)
+#         action_expand_all_definitions = self.addAction("Expand All Items")
+#         action_expand_all_definitions.triggered.connect(self.expand_all_definitions)
         
-        action_add_package_definition = self.addAction("Add Package Definition")
-        action_add_package_definition.triggered.connect(lambda: self.add_package_definition.emit(source_index) )
+#         action_add_package_definition = self.addAction("Add Package Definition")
+#         action_add_package_definition.triggered.connect(lambda: self.add_package_definition.emit(source_index) )
         
-        self.menu_items.append(action_expand_all_definitions)
-        self.menu_items.append(action_collapse_all_definitions)
-        self.menu_items.append(action_add_package_definition)
+#         self.menu_items.append(action_expand_all_definitions)
+#         self.menu_items.append(action_collapse_all_definitions)
+#         self.menu_items.append(action_add_package_definition)
 
 
-        if source_item:
-            if source_item.task_class == "PackageManager_PackageDefinition":
-                action_add_package_definition = self.addAction("Add Task Definition")
-                action_add_package_definition.triggered.connect(lambda: self.add_task_definition.emit(source_index) )
+#         if source_item:
+#             if source_item.task_class == "PackageManager_PackageDefinition":
+#                 action_add_package_definition = self.addAction("Add Task Definition")
+#                 action_add_package_definition.triggered.connect(lambda: self.add_task_definition.emit(source_index) )
                 
-                action_edit_package_definition = self.addAction("Edit Package Definition")
-                action_edit_package_definition.triggered.connect(lambda: self.edit_package_definition.emit(source_index))
+#                 action_edit_package_definition = self.addAction("Edit Package Definition")
+#                 action_edit_package_definition.triggered.connect(lambda: self.edit_package_definition.emit(source_index))
 
-                action_save_package_definition = self.addAction("Save Package Definition(s)")
-                action_save_package_definition.triggered.connect(lambda: self.save_package_definitions.emit(source_index))
+#                 action_save_package_definition = self.addAction("Save Package Definition(s)")
+#                 action_save_package_definition.triggered.connect(lambda: self.save_package_definitions.emit(source_index))
 
-                self.menu_items.append(action_add_package_definition)
-                self.menu_items.append(action_edit_package_definition)
-                self.menu_items.append(action_save_package_definition)
+#                 self.menu_items.append(action_add_package_definition)
+#                 self.menu_items.append(action_edit_package_definition)
+#                 self.menu_items.append(action_save_package_definition)
 
-            if source_item.task_class == "PackageManager_TaskDefinition":
-                action_edit_task_definition = self.addAction("Edit Task")
-                action_edit_task_definition.triggered.connect(lambda: self.edit_task_definition.emit(source_index))
-                self.menu_items.append(action_edit_task_definition)
+#             if source_item.task_class == "PackageManager_TaskDefinition":
+#                 action_edit_task_definition = self.addAction("Edit Task")
+#                 action_edit_task_definition.triggered.connect(lambda: self.edit_task_definition.emit(source_index))
+#                 self.menu_items.append(action_edit_task_definition)
 
-                action_edit_task_xml_definition = self.addAction("Edit Task Definition")
-                action_edit_task_xml_definition.triggered.connect(lambda: self.edit_task_xml_definition.emit(source_index))
-                self.menu_items.append(action_edit_task_xml_definition)
+#                 action_edit_task_xml_definition = self.addAction("Edit Task Definition")
+#                 action_edit_task_xml_definition.triggered.connect(lambda: self.edit_task_xml_definition.emit(source_index))
+#                 self.menu_items.append(action_edit_task_xml_definition)
         
-class ExecutionPlannerContextMenu(QMenu):
-    """ Custom QMenu used to manage relation items """
-    add_execution_group = pyqtSignal(object, str)
-    edit_execution_group = pyqtSignal(object, str)
-    edit_execution_task = pyqtSignal(object, str)
+# class ExecutionPlannerContextMenu(QMenu):
+#     """ Custom QMenu used to manage relation items """
+#     add_execution_group = pyqtSignal(object, str)
+#     edit_execution_group = pyqtSignal(object, str)
+#     edit_execution_task = pyqtSignal(object, str)
 
 
-    def __init__(self, parent, source_item):
-        super(ExecutionPlannerContextMenu, self).__init__(parent)
-        self.parent = parent
-        self.menu_items = []
-        clickedItem = source_item.internalPointer()
+#     def __init__(self, parent, source_item):
+#         super(ExecutionPlannerContextMenu, self).__init__(parent)
+#         self.parent = parent
+#         self.menu_items = []
+#         clickedItem = source_item.internalPointer()
 
-        action_add_execution_group = self.addAction("Add Task Execution Group")
-        action_add_execution_group.triggered.connect(lambda: self.add_execution_group.emit(source_item, "ExecutionPlanner_ExecutionGroup") )
-        self.menu_items.append(action_add_execution_group)
+#         action_add_execution_group = self.addAction("Add Task Execution Group")
+#         action_add_execution_group.triggered.connect(lambda: self.add_execution_group.emit(source_item, "ExecutionPlanner_ExecutionGroup") )
+#         self.menu_items.append(action_add_execution_group)
 
-        if clickedItem:
-            if clickedItem.task_class == "ExecutionPlanner_ExecutionTask":
-                action_edit_execution_task = self.addAction("Edit Execution Task")
-                action_edit_execution_task.triggered.connect(lambda: self.edit_execution_task.emit(source_item, "ExecutionPlanner_ExecutionTask") )
-                self.menu_items.append(action_edit_execution_task)
+#         if clickedItem:
+#             if clickedItem.task_class == "ExecutionPlanner_ExecutionTask":
+#                 action_edit_execution_task = self.addAction("Edit Execution Task")
+#                 action_edit_execution_task.triggered.connect(lambda: self.edit_execution_task.emit(source_item, "ExecutionPlanner_ExecutionTask") )
+#                 self.menu_items.append(action_edit_execution_task)
 
-            if clickedItem.task_class == "ExecutionPlanner_ExecutionGroup":
-                action_edit_execution_group = self.addAction("Edit Task Execution Group")
-                action_edit_execution_group.triggered.connect(lambda: self.edit_execution_group.emit(source_item, "ExecutionPlanner_ExecutionGroup") )
-                self.menu_items.append(action_edit_execution_group)
-        else:
-            self.menu_items.append(action_add_execution_group)
+#             if clickedItem.task_class == "ExecutionPlanner_ExecutionGroup":
+#                 action_edit_execution_group = self.addAction("Edit Task Execution Group")
+#                 action_edit_execution_group.triggered.connect(lambda: self.edit_execution_group.emit(source_item, "ExecutionPlanner_ExecutionGroup") )
+#                 self.menu_items.append(action_edit_execution_group)
+#         else:
+#             self.menu_items.append(action_add_execution_group)
 
         
 

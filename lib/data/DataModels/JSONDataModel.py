@@ -250,7 +250,7 @@ class JSONDataModel(QAbstractItemModel):
 
         return True
     
-    def insert_item(self, task_class, dict_data, parentIndex):
+    def insert_item(self, task_class, dict_data, parentIndex=QModelIndex()):
         parentItem = self.rootItem
         if parentIndex.isValid():
             parentItem = parentIndex.internalPointer()  

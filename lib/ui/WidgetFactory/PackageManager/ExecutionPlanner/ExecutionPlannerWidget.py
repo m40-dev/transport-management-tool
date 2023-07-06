@@ -1,14 +1,14 @@
 from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView, QTextEdit, QSplitter, QLineEdit, QLabel, QToolButton
 from PyQt6.QtCore import Qt, pyqtSignal, QProcess
-from PyQt6.QtGui import QShortcut, QKeySequence
-from lib.ui.WidgetFactory import ExecutionPlannerContextMenu
+
+from .ContextMenu import ExecutionPlannerContextMenu
 from lib.data.DataModels import TaskExecutionModel
 from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
 from .ExecutionPlannerProcessRunner import ProcessRunner
-from lib.ui.WidgetFactory import ExecutionPlannerGroupDialog, FormEditorDialog
+from lib.ui.WidgetFactory import FormEditorDialog
 
 class ExecutionPlannerWidget(QWidget):
-    planner_name_changed = pyqtSignal(object)
+    plannerNameChanged = pyqtSignal(object)
 
     def __init__(self, application):
         super(ExecutionPlannerWidget, self).__init__()
@@ -17,8 +17,8 @@ class ExecutionPlannerWidget(QWidget):
         self.application = application
         self.object_configuration = self.application.object_configuration
         self.ProcessRunner = ProcessRunner(self)
-        self.ProcessRunner.message.connect(self.log_message)
-        self.ProcessRunner.stateChanged.connect(self.process_runner_state_handler)
+        self.ProcessRunner.message.connect(self.logExecutionPlannerMessage)
+        self.ProcessRunner.stateChanged.connect(self.processRunnerStateChanged)
 
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(4, 4, 4, 4)
@@ -28,12 +28,12 @@ class ExecutionPlannerWidget(QWidget):
 
         splitter = QSplitter(Qt.Orientation.Vertical)
         planner_label = QLabel("Planner Name")
-        self.planner_name = QLineEdit("New Execution Plan...")
+        self.executionPlannerNameInput = QLineEdit("New Execution Plan...")
 
         self.stop_execution = QToolButton()
         self.stop_execution.setText("Stop Execution")
         self.stop_execution.setEnabled(False)
-        self.stop_execution.clicked.connect(self.ProcessRunner.stop_planner_execution)
+        self.stop_execution.clicked.connect(self.ProcessRunner.stopExecutionPlanner)
 
         self.treeview = QTreeView()
         self.console = QTextEdit()
@@ -43,11 +43,11 @@ class ExecutionPlannerWidget(QWidget):
         splitter.setSizes([100, 30])
 
         self.layout.addWidget(planner_label, 0, 0, 1, 1)
-        self.layout.addWidget(self.planner_name, 0, 1, 1, 1)
+        self.layout.addWidget(self.executionPlannerNameInput, 0, 1, 1, 1)
         self.layout.addWidget(self.stop_execution, 0, 2, 1, 1)
         
         self.layout.addWidget(splitter, 1, 0, 1, 3)
-        self.planner_name.textChanged.connect(lambda: self.planner_name_changed.emit(self))
+        self.executionPlannerNameInput.textChanged.connect(lambda: self.plannerNameChanged.emit(self))
 
         self.console.hide()
 
@@ -64,17 +64,17 @@ class ExecutionPlannerWidget(QWidget):
         self.model_data = TaskExecutionModel(data=data, application=self.application)
         self.treeview.setModel(self.model_data)
 
-        custom_item_delegate = ExecutionPlannerDelegate(
+        itemDelegate = ExecutionPlannerDelegate(
             model_data=self.model_data, 
             parent=self.treeview, 
             application=self.application, 
             planner_widget=self
             )
         
-        custom_item_delegate.start_single_task_execution.connect(self.run_planner_task)
-        custom_item_delegate.start_group_task_execution.connect(self.run_planner_tasks_group)
+        itemDelegate.queueExecutionTask.connect(self.queueExecutionTask)
+        itemDelegate.queueExecutionGroup.connect(self.queueExecutionGroup)
 
-        self.treeview.setItemDelegate(custom_item_delegate)
+        self.treeview.setItemDelegate(itemDelegate)
         self.treeview.setHeaderHidden(True)
 
         self.treeview.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
@@ -89,9 +89,9 @@ class ExecutionPlannerWidget(QWidget):
         self.treeview.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
         self.treeview.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.treeview.customContextMenuRequested.connect(self.open_context_menu)
+        self.treeview.customContextMenuRequested.connect(self.contextMenuRequested)
 
-    def process_runner_state_handler(self, running_state):
+    def processRunnerStateChanged(self, running_state):
         is_running = True
 
         if running_state == QProcess.ProcessState.NotRunning:
@@ -101,23 +101,22 @@ class ExecutionPlannerWidget(QWidget):
 
     @property
     def name(self):
-        return self.planner_name.text()
+        return self.executionPlannerNameInput.text()
 
-    def open_context_menu(self, menuPosition):
+    def contextMenuRequested(self, menuPosition):
         clickedIndex = self.treeview.indexAt(menuPosition)
         contextMenu = ExecutionPlannerContextMenu(self, clickedIndex)
         menu_target = self.treeview.mapToGlobal(menuPosition)
 
         """ Connect Signals """
-        contextMenu.add_execution_group.connect(self.add_to_execution_planner)
-        contextMenu.edit_execution_group.connect(self.edit_execution_item)
-        contextMenu.edit_execution_task.connect(self.edit_execution_item)
-
+        contextMenu.add_execution_group.connect(self.addPlannerEntry)
+        contextMenu.edit_execution_group.connect(self.editPlannerEntry)
+        contextMenu.edit_execution_task.connect(self.editPlannerEntry)
 
         if len(contextMenu.menu_items) > 0:
             contextMenu.popup(menu_target)
 
-    def add_to_execution_planner(self, source_index, object_class):
+    def addPlannerEntry(self, source_index, object_class):
         print("Add Package Definition", source_index)
         editor_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionGroup")
         if editor_configuration:
@@ -130,7 +129,7 @@ class ExecutionPlannerWidget(QWidget):
                 treeview_model = self.treeview.model()
                 treeview_model.insert_item("ExecutionPlanner_ExecutionGroup", data, source_index)
         
-    def edit_execution_item(self, source_index, object_class):
+    def editPlannerEntry(self, source_index, object_class):
         print("Edit Execution Planner Definition", source_index)
         if not source_index.isValid():
             return False
@@ -147,21 +146,21 @@ class ExecutionPlannerWidget(QWidget):
                 source_item = source_index.internalPointer()
                 source_item.update_data(data)
 
-    def run_planner_task(self, task_item):
-        self.ProcessRunner.start_process(task_item)
+    def queueExecutionTask(self, task_item):
+        self.ProcessRunner.startProcessTask(task_item)
         self.console.show()
         
-    def run_planner_tasks_group(self, task_item):
+    def queueExecutionGroup(self, task_item):
         self.console.show()
         for child_task in task_item._children:
             print("Start task", child_task.task_class)
             if child_task.task_class in ["ExecutionPlanner_ExecutionTask", "PackageManager_TaskDefinition"]:
-                self.ProcessRunner.start_process(child_task)
+                self.ProcessRunner.startProcessTask(child_task)
 
             if child_task.childCount() > 0:
-                self.run_planner_tasks_group(child_task)
+                self.queueExecutionGroup(child_task)
 
-    def log_message(self, message, severity=None):
+    def logExecutionPlannerMessage(self, message, severity=None):
         if len(message.strip()) == 0:
             return False
         if severity:
@@ -218,7 +217,7 @@ class ExecutionPlannerWidget(QWidget):
         else:
             event.ignore()
 
-    def remove_selected_items(self):
+    def deleteSelectedItems(self):
         if self.treeview.hasFocus():
             for item_index in self.treeview.selectedIndexes():
                 item = item_index.internalPointer()
