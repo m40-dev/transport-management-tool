@@ -8,8 +8,8 @@ from .TableObjectWidget import TE_Table_TreeWidgetItem
 from .ObjectContainerData import TE_ObjectContainerData_TreeWidgetItem
 
 class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, source_widget_item=None, table_name=None):
-        super(TE_ObjectContainer_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item, table_name=table_name)
+    def __init__(self, XMLTemplateEditor, application, object_data, xml_object=None, source_widget_item=None, table_name=None):
+        super(TE_ObjectContainer_TreeWidgetItem, self).__init__(XMLTemplateEditor=XMLTemplateEditor, application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item, table_name=table_name)
 
         self.setCheckState(1, Qt.CheckState.Unchecked)  
         self.setText(1, "Delete Residual Objects")
@@ -54,13 +54,13 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
         if int(self.xml_object.delete_residuals) > 0:
             self.setCheckState(1, Qt.CheckState.Checked)
 
-        if self.application.ui.AutoLoadCheckBox.isChecked():
+        if self.XMLTemplateEditor.AutoLoadCheckBox.isChecked():
             self.load_from_database()
 
         self.list_related_objects()
 
     def list_related_objects(self, override=False):
-        if not override and not self.application.ui.AutoListObjectsFromDatabaseCheckBox.isChecked():
+        if not override and not self.XMLTemplateEditor.AutoListObjectsFromDatabaseCheckBox.isChecked():
             return False
         
         if not self.application.db:
@@ -77,11 +77,11 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             if self.application.db:
                 table_display_name = self.application.db.table_info.get(table_name, table_name)
 
-            table_widget = TE_Table_TreeWidgetItem(self.application, table_display_name)
+            table_widget = TE_Table_TreeWidgetItem(self.XMLTemplateEditor, self.application, table_display_name)
 
             self.addChild(table_widget)
             for selected_object in results:
-                selected_object_widget = TE_ObjectContainerData_TreeWidgetItem(self.application, selected_object, table_name=table_name)
+                selected_object_widget = TE_ObjectContainerData_TreeWidgetItem(self.XMLTemplateEditor, self.application, selected_object, table_name=table_name)
                 table_widget.addChild(selected_object_widget)
             table_widget.sortChildren(0, Qt.SortOrder.AscendingOrder)
     
@@ -93,15 +93,15 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             if len(self.object_data) > 0:
                 self.object_data = self.object_data[0]
             
-            db_relations = self.application.get_table_initial_relations(table_name)
+            db_relations = self.XMLTemplateEditor.get_table_initial_relations(table_name)
             loaded_tables = [table_name]
 
             for xml_source_relation in self.object_relations:
                 xml_table = xml_source_relation["ChildTable"]
                 if xml_table not in loaded_tables:
                     loaded_tables.append(xml_table)
-                    new_relations = self.application.get_table_initial_relations(xml_table)
-                    db_relations = self.application.extend_table_relations(db_relations, new_relations)
+                    new_relations = self.XMLTemplateEditor.get_table_initial_relations(xml_table)
+                    db_relations = self.XMLTemplateEditor.extend_table_relations(db_relations, new_relations)
 
             if db_relations is not None:
                 for db_relation in db_relations:
@@ -201,7 +201,7 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             else:
                 self.setCheckState(1, Qt.CheckState.Unchecked)
 
-        self.application.xml_structure_changed.emit()
+        self.XMLTemplateEditor.xml_structure_changed.emit()
 
     def handle_data_change(self, column):
         # print("data change in object container", column)

@@ -13,12 +13,13 @@ class ProcessRunner(QProcess):
         super().__init__()
         self.planner_widget = planner_widget
         self.application = self.planner_widget.application
+        self.current_workdir = self.planner_widget.current_workdir
+
         self.object_configuration = self.application.object_configuration
         self.readyReadStandardOutput.connect(self.handleProcessStdOut)
         self.readyReadStandardError.connect(self.handleProcessStdErr)
         self.finished.connect(self.processExecutionFinished)
         self.stateChanged.connect(self.handleProcessState)
-        self.current_workdir = self.application.current_workdir
         
         self.is_running = False
         self.current_item = None
@@ -77,8 +78,8 @@ class ProcessRunner(QProcess):
         configuration_task_type = self.checkTaskType(task_type)
 
         # Get the up-to-date workdir configuration
-        if not self.current_workdir and self.application.current_workdir:
-            self.current_workdir = self.application.current_workdir
+        if not self.current_workdir and self.planner_widget.current_workdir:
+            self.current_workdir = self.planner_widget.current_workdir
 
         if not self.current_workdir:
             self.message.emit(
@@ -218,7 +219,7 @@ class ProcessRunner(QProcess):
     def prepareProcessVariables(self, task_data):
         task_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionTask")
         
-        workdir = self.application.current_workdir
+        workdir = self.current_workdir
         variables_script = f"$WORKDIR='{workdir}'\r\n"
 
         if task_configuration:

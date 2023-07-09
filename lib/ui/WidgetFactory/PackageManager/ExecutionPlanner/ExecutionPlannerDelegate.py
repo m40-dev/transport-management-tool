@@ -169,8 +169,8 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.task_execution_export.setChecked(True)
 
         self.connection_box = QComboBox(self)
-        connections = list(self.application.connections.keys())
-        self.connection_box.addItems(connections)
+        self.refreshConnections()
+        self.application.connectionDataChanged.connect(self.refreshConnections)
 
         self.run_status = QLabel(self)
         
@@ -214,7 +214,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.layout.addWidget(self.run_status, 2, 4)
 
         """ Refresh state based on the model data """
-        self.refreshModelData()
+        self.refreshTaskUI()
 
         """ Set initial values """
         self.configureTask()
@@ -225,14 +225,13 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.connection_box.currentTextChanged.connect(self.setConnection)
         self.data_item.data_changed.connect(self.refreshTaskUI)
 
+    def refreshConnections(self):
+        connections = list(self.application.connections.keys())
+        self.connection_box.clear()
+        self.connection_box.addItems(connections)
+
     def refreshTaskUI(self):
-        self.is_refresh = True
-        self.refreshModelData()
-        self.is_refresh = False
-
-    def refreshModelData(self):
-        self.element_label.setText(self.data_item.display)
-
+        
         for column, label_widget in self.dynamic_property_labels.items():
             label_widget.setText(str(self.data_item.data(column)))
 
@@ -246,9 +245,6 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.run_status.setText(self.data_item.data("task_execution_status"))
 
     def setExecutionType(self):
-        if self.is_refresh:
-            return False
-
         execution_type = "Export"
         # if self.task_execution_export.isChecked():
         #     execution_type = "Export"

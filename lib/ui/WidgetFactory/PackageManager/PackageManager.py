@@ -1,6 +1,6 @@
 from PyQt6 import QtCore, QtWidgets
 from .ExecutionPlanner import ExecutionPlannerWidget
-from ...WidgetFactory import MsgBox, FormEditorDialog
+from ...WidgetFactory import MsgBox
 from pathlib import Path
 import json
 from lib.data.DataModels import PackageDefinitionModel
@@ -16,6 +16,7 @@ class PackageManager(QtWidgets.QWidget):
         self.application = application
         self.object_configuration = self.application.object_configuration
         self.program_configuration = self.application.program_configuration
+        self.current_workdir = None
 
         self.setupUi()
 
@@ -30,6 +31,9 @@ class PackageManager(QtWidgets.QWidget):
         self.PackageViewTreeView.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragDrop)
         self.PackageViewTreeView.setAlternatingRowColors(False)
         self.PackageViewTreeView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+
+        self.PackageManagerSplitter.setSizes(
+            [round(self.width()*0.2), round(self.width()*0.4)])
 
         # Context Menu
         self.PackageViewTreeView.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -46,6 +50,28 @@ class PackageManager(QtWidgets.QWidget):
         self.queryPackagesTimer = QtCore.QTimer(self)
         self.queryPackagesTimer.setSingleShot(True)
         self.queryPackagesTimer.timeout.connect(self.queryPackages)
+
+    """ Workdir and File Operations """
+    def changeWorkingDirectory(self):
+        dialog = QtWidgets.QFileDialog(self, "Transport Manager - Select Working Directory")
+        dialog.setFileMode(QtWidgets.QFileDialog.FileMode.Directory)
+
+        file_path = dialog.getExistingDirectory(options=QtWidgets.QFileDialog.Option.ReadOnly)
+        if file_path != "":
+            self.current_workdir = file_path
+            self.application.current_workdir = file_path
+            self.loadWorkingDirectory(file_path)
+            return True
+        return False
+    
+    def loadWorkingDirectory(self, workdir=None):
+        if workdir is None and self.current_workdir is not None:
+            workdir = self.current_workdir
+        
+        if workdir is None:
+            return False
+        
+        self.setupWorkingDirectory(workdir)
 
     def setupWorkingDirectory(self, workdir):
         sort_attribute = ""
@@ -158,7 +184,7 @@ class PackageManager(QtWidgets.QWidget):
                 f"Mandatory columns: {mandatory_columns}.\r\nSkipped Entries: {file_count}, skipped data:\r\n{definition_list}")
 
     def addExecutionPlan(self):
-        tabwidget = ExecutionPlannerWidget(self.application)
+        tabwidget = ExecutionPlannerWidget(self, self.application)
         tabwidget.plannerNameChanged.connect(self.setPlannerName)
         self.ExecutionPlannerTabWidget.addTab(tabwidget, "New Execution Plan...")
 
@@ -193,9 +219,9 @@ class PackageManager(QtWidgets.QWidget):
             contextMenu.popup(menu_target)
 
     def addPackageDefinition(self):
-        if not self.application.current_workdir:
+        if not self.current_workdir:
             MsgBox(self.application, "Working Directory is not configured.\n\nPlease configure working directory location first to create any package definition.\n\nWithout working directory, program will not be able to generate the paths and save the files.")
-            if not self.application.change_workdir():
+            if not self.changeWorkingDirectory():
                 return False
         
         form_data = self.application.getObjectData("PackageManager_PackageDefinition", "Add Package Definition")
@@ -215,7 +241,7 @@ class PackageManager(QtWidgets.QWidget):
             source_item.update_data(form_data)
 
     def savePackageDefinition(self, source_index, save_single=False):
-        if not self.application.current_workdir:
+        if not self.current_workdir:
             MsgBox(self.application, "Working directory is not set. Please configure the work location first.")
             return False
 
@@ -254,7 +280,7 @@ class PackageManager(QtWidgets.QWidget):
         if not file_path.is_file():
             file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.touch()
-        self.application.openXMLTemplate(str(file_path))
+        self.application.XMLTemplateEditor.openXMLTemplate(str(file_path))
 
     def collapseAll(self):
         self.PackageViewTreeView.collapseAll()
@@ -288,7 +314,7 @@ class PackageManager(QtWidgets.QWidget):
             files_to_delete = {}
             for item_index in self.PackageViewTreeView.selectedIndexes():
                 item = item_index.internalPointer()
-                if self.application.current_workdir:
+                if self.current_workdir:
                     # attempt file operations only if the workdir is set
                     files_to_delete = item.get_all_files(recursive=True)
                     if len(files_to_delete) > 0:
@@ -302,10 +328,36 @@ class PackageManager(QtWidgets.QWidget):
                         if question.accepted:
                             #delete data files
                             for file_path in files_to_delete:
-                                self.application.deleteFile(file_path)
+                                self.deleteFile(file_path)
                 #remove item from model
                 item_index.model().remove_item(item)
         return True
+
+    def deleteFile(self, file_path):
+        print("file to delete", file_path)
+        file_path = Path(str(file_path))
+        if file_path.is_file():
+            file_path.unlink()
+            parent_directory = file_path.parent
+            self.deleteDirectory(parent_directory)
+
+    def deleteDirectory(self, directory_path):
+        print("check if directory can be deleted:", directory_path)
+        if not self.current_workdir:
+            # do not delete anything if there is no working directory
+            return False
+
+        workdir_path = Path(str(self.current_workdir))
+        if directory_path.absolute() <= workdir_path.absolute():
+            # never go beyond the working directory
+            print("do not cross the working directory, breaking")
+            return False
+
+        if len(list(directory_path.rglob('*'))) == 0:
+            # print("delete empty directory:", directory_path)
+            directory_path.rmdir()
+            if directory_path.parent:
+                self.deleteDirectory(directory_path.parent)
 
     def PackageViewDragMoveEvent(self, event):
         move_accept = False

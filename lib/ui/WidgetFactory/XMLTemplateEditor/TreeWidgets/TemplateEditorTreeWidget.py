@@ -7,15 +7,16 @@ import re
 class TemplateEditorTreeWidgetItem(QTreeWidgetItem):
     column_data_changed = pyqtSignal(int)
 
-    def __init__(self, 
-                 application,
-                 object_data, 
-                 xml_object=None, 
-                 source_widget_item=None, 
-                 table_name=None):
+    def __init__(self,
+                XMLTemplateEditor, 
+                application,
+                object_data, 
+                xml_object=None, 
+                source_widget_item=None, 
+                table_name=None):
         
         super(TemplateEditorTreeWidgetItem, self).__init__()
-
+        self.XMLTemplateEditor = XMLTemplateEditor
         self.application = application
         self.xml_object = xml_object
         self.object_data = object_data

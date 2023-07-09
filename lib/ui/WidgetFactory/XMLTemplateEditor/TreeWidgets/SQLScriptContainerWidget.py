@@ -3,8 +3,8 @@ from . import TemplateEditorTreeWidgetItem
 
 
 class TE_SQLScriptContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None):
-        super(TE_SQLScriptContainer_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object)
+    def __init__(self, XMLTemplateEditor, application, object_data, xml_object=None):
+        super(TE_SQLScriptContainer_TreeWidgetItem, self).__init__(XMLTemplateEditor=XMLTemplateEditor, application=application, object_data=object_data, xml_object=xml_object)
 
         self.setFlags(Qt.ItemFlag.ItemIsDragEnabled | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
         

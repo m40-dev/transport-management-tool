@@ -4,8 +4,8 @@ from . import TemplateEditorTreeWidgetItem
 
 
 class TE_Table_TreeWidgetItem(TemplateEditorTreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, source_widget_item=None):
-        super(TE_Table_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item)
+    def __init__(self, XMLTemplateEditor, application, object_data, xml_object=None, source_widget_item=None):
+        super(TE_Table_TreeWidgetItem, self).__init__(XMLTemplateEditor=XMLTemplateEditor, application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item)
         
         self.setFlags(Qt.ItemFlag.NoItemFlags)
         self.setFlags(Qt.ItemFlag.ItemIsEnabled)

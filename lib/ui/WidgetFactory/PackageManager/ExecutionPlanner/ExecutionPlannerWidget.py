@@ -10,11 +10,12 @@ from lib.ui.WidgetFactory import FormEditorDialog
 class ExecutionPlannerWidget(QWidget):
     plannerNameChanged = pyqtSignal(object)
 
-    def __init__(self, application):
+    def __init__(self, parent, application):
         super(ExecutionPlannerWidget, self).__init__()
 
-        self.parent = application
+        self.parent = parent
         self.application = application
+        self.current_workdir = self.parent.current_workdir
         self.object_configuration = self.application.object_configuration
         self.ProcessRunner = ProcessRunner(self)
         self.ProcessRunner.message.connect(self.logExecutionPlannerMessage)

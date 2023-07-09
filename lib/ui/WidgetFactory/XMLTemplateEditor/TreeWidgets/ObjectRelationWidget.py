@@ -2,8 +2,8 @@ from PyQt6.QtCore import Qt
 from . import TemplateEditorTreeWidgetItem, TemplateEditorListWidgetItem, TE_Table_TreeWidgetItem
 
 class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, source_widget_item=None):
-        super(TE_RelationColumn_TreeWidgetItem, self).__init__(application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item)
+    def __init__(self, XMLTemplateEditor, application, object_data, xml_object=None, source_widget_item=None):
+        super(TE_RelationColumn_TreeWidgetItem, self).__init__(XMLTemplateEditor=XMLTemplateEditor, application=application, object_data=object_data, xml_object=xml_object, source_widget_item=source_widget_item)
 
         self.setFlags(self.flags() | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsUserCheckable)
         self.setCheckState(1, Qt.CheckState.Unchecked)
@@ -21,7 +21,7 @@ class TE_RelationColumn_TreeWidgetItem(TemplateEditorTreeWidgetItem):
 
     @property
     def auto_select_default(self):
-        return self.application.ui.SelectWithDatabaseModelCheckBox.isChecked()
+        return self.XMLTemplateEditor.SelectWithDatabaseModelCheckBox.isChecked()
 
     @property
     def display_name(self):

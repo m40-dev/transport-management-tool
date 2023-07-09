@@ -1,5 +1,3 @@
-from .PackageManager import *
-
 from .TemplateEditorTreeWidget import *
 from .TemplateEditorListWidget import *
 

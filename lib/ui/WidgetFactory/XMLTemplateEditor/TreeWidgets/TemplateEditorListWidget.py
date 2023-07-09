@@ -4,9 +4,9 @@ from pyodbc import Row
 import re
 
 class TemplateEditorListWidgetItem(QListWidgetItem):
-    def __init__(self, application, object_data, xml_object=None, table_name=None):
+    def __init__(self, XMLTemplateEditor, application, object_data, xml_object=None, table_name=None):
         super(TemplateEditorListWidgetItem, self).__init__()
-
+        self.XMLTemplateEditor = XMLTemplateEditor
         self.application = application
         self.xml_object = xml_object
         self.object_data = object_data
@@ -15,7 +15,7 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
         self.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
         self.refresh()
         if self.object_relations is None:
-            self.set_object_relations(self.application.get_table_initial_relations(self.table_name))
+            self.set_object_relations(self.XMLTemplateEditor.get_table_initial_relations(self.table_name))
 
     def set_object_relations(self, object_relations_list):
         self.object_relations = object_relations_list
@@ -137,7 +137,7 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
 
     @property
     def delete_residual_objects(self):
-        return str(int(self.application.ui.DeleteResidualCheckBox.isChecked()))
+        return str(int(self.XMLTemplateEditor.DeleteResidualCheckBox.isChecked()))
 
     def setDisplayName(self, display_text):
         self.setText(display_text)

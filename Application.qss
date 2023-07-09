@@ -313,5 +313,22 @@ QLabel[PropertyEditor="IsMandatory"]{
 	text-align: center;
 }
 
+QToolButton[ToolButton=SideBar]{
+	border: none;
+	width: 30px;
+	height: 30px;
+}
+
+QToolButton[ToolButton=SideBar]:checked{
+	border-left: 3px solid #34b7c9;
+	font-weight: bold;
+}
+
+QToolButton#PackageManagerButton{
+}
+QToolButton#TemplateEditorButton{
+}
+QToolButton#SettingsButton{
+}
 
 
