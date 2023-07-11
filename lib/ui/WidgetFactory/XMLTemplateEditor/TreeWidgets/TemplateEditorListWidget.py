@@ -15,7 +15,7 @@ class TemplateEditorListWidgetItem(QListWidgetItem):
         self.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable)
         self.refresh()
         if self.object_relations is None:
-            self.set_object_relations(self.XMLTemplateEditor.get_table_initial_relations(self.table_name))
+            self.set_object_relations(self.XMLTemplateEditor.DatabaseRelations.get_table_initial_relations(self.table_name))
 
     def set_object_relations(self, object_relations_list):
         self.object_relations = object_relations_list

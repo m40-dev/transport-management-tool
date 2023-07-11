@@ -2,7 +2,7 @@ import pyodbc
 
 
 class DatabaseConnection(object):
-    def __init__(self, connection_parameters):
+    def __init__(self, connection_parameters={}):
 
         super(DatabaseConnection, self).__init__()
 

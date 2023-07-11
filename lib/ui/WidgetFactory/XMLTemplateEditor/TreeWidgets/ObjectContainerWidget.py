@@ -93,15 +93,15 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             if len(self.object_data) > 0:
                 self.object_data = self.object_data[0]
             
-            db_relations = self.XMLTemplateEditor.get_table_initial_relations(table_name)
+            db_relations = self.XMLTemplateEditor.DatabaseRelations.get_table_initial_relations(table_name)
             loaded_tables = [table_name]
 
             for xml_source_relation in self.object_relations:
                 xml_table = xml_source_relation["ChildTable"]
                 if xml_table not in loaded_tables:
                     loaded_tables.append(xml_table)
-                    new_relations = self.XMLTemplateEditor.get_table_initial_relations(xml_table)
-                    db_relations = self.XMLTemplateEditor.extend_table_relations(db_relations, new_relations)
+                    new_relations = self.XMLTemplateEditor.DatabaseRelations.get_table_initial_relations(xml_table)
+                    db_relations = self.XMLTemplateEditor.DatabaseRelations.extend_table_relations(db_relations, new_relations)
 
             if db_relations is not None:
                 for db_relation in db_relations:
@@ -201,7 +201,7 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             else:
                 self.setCheckState(1, Qt.CheckState.Unchecked)
 
-        self.XMLTemplateEditor.xml_structure_changed.emit()
+        self.XMLTemplateEditor.XMLTemplate.xml_structure_changed.emit()
 
     def handle_data_change(self, column):
         # print("data change in object container", column)

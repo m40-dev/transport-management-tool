@@ -76,10 +76,10 @@ class transport_template(transport_template_custom_object):
             xmlObj = etree.parse(xml_file, parser=xml_parser)
         except:
             #TODO: fix temporary handling of file parsing issues
-            self.application.new_transport_template(xml_file)
+            self.application.XMLTemplateEditor.XMLTemplate.newTransportTemplate(xml_file)
             return False
 
         if xmlObj is not None:
             self.data = xmlObj
-            self.application.xml_structure_changed.emit()
-            self.application.reload_xml_structure()
+            self.application.XMLTemplateEditor.XMLTemplate.xml_structure_changed.emit()
+            self.application.XMLTemplateEditor.XMLTemplate.reload_xml_structure()

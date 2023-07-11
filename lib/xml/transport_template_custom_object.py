@@ -71,7 +71,7 @@ class transport_template_custom_object(object):
         return child_objects
 
     def refresh_xml_preview(self):
-        self.application.xml_structure_changed.emit()
+        self.application.XMLTemplateEditor.XMLTemplate.xml_structure_changed.emit()
 
     def delete_object(self):
         parent_node = self.data.getparent()

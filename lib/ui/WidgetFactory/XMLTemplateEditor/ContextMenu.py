@@ -11,7 +11,7 @@ class RelationContextMenu(QMenu):
     follow_table_relations = pyqtSignal(object)
 
     def __init__(self, parent, source_widget_item):
-        super(RelationContextMenu, self).__init__(parent)
+        super(RelationContextMenu, self).__init__()
         self.parent = parent
 
         if source_widget_item:
@@ -34,7 +34,7 @@ class XMLObjectContextMenu(QMenu):
     add_sql_script = pyqtSignal(object, str)
 
     def __init__(self, parent, source_widget_item):
-        super(XMLObjectContextMenu, self).__init__(parent)
+        super(XMLObjectContextMenu, self).__init__()
         self.parent = parent
         self.menu_items = []
 
