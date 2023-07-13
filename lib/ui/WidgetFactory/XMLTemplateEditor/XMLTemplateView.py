@@ -8,16 +8,13 @@ from PyQt6.QtWidgets import (
     )
 from .ContextMenu import XMLObjectContextMenu
 # XML Management
-from lib.xml.transport_template import transport_template
-from lib.xml.transport_template_custom_object import transport_template_custom_object
-from lib.xml.object_container import object_container
-from lib.xml.sql_script_container import sql_script_container
-
+from .xml import *
+from pathlib import Path
 from .TreeWidgets import *
 
 XML_PREVIEW_TIMER = 100
 
-class XMLTemplate(QObject):
+class XMLTemplateView(QObject):
     xml_structure_changed = pyqtSignal()
 
     def __init__(self, parent, application):

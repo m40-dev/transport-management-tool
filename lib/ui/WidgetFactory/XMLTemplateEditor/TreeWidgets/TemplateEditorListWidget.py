@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import  QListWidgetItem, QGridLayout, QLabel
+from PyQt6.QtWidgets import  QListWidgetItem
 from PyQt6.QtCore import Qt
 from pyodbc import Row
 import re

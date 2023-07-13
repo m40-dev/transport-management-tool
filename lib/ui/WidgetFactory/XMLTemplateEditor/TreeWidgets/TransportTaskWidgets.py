@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt
 from . import TemplateEditorTreeWidgetItem, TE_SQLScriptContainer_TreeWidgetItem
-from lib.xml.transport_task import transport_task, sql_script_transport_task
+from ..xml.transport_task import transport_task, sql_script_transport_task
 
 
 class TE_TransportTask_TreeWidgetItem(TemplateEditorTreeWidgetItem):

@@ -2,7 +2,7 @@ from PyQt6 import QtCore, QtWidgets
 from ..CodeEditors import xml_editor
 from .TreeWidgets import *
 
-from .XMLTemplate import XMLTemplate
+from .XMLTemplateView import XMLTemplateView
 from .DatabaseRelations import DatabaseRelations
 
 XML_PREVIEW_TIMER = 100
@@ -16,7 +16,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.xml_structure_widgets = []
 
         self.setupUi()
-        self.XMLTemplate = XMLTemplate(self, application)
+        self.XMLTemplateView = XMLTemplateView(self, application)
         self.DatabaseRelations = DatabaseRelations(self, application)
 
         self.FindObjectButton.clicked.connect(self.queryDatabaseObjects)
@@ -26,8 +26,8 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.XMLStructureTreeWidget.itemClicked.connect(self.select_source_object)
         self.RelationsViewTreeWidget.itemChanged.connect(self.handle_data_change)
         self.XMLStructureTreeWidget.itemChanged.connect(self.handle_data_change)
-        self.XMLStructureTreeWidget.dragMoveEvent = self.XMLTemplate.xml_structure_move_event
-        self.XMLStructureTreeWidget.dropEvent = self.XMLTemplate.xml_structure_drop_event
+        self.XMLStructureTreeWidget.dragMoveEvent = self.XMLTemplateView.xml_structure_move_event
+        self.XMLStructureTreeWidget.dropEvent = self.XMLTemplateView.xml_structure_drop_event
         
         self.DeselectAllToolButton.clicked.connect(self.DatabaseRelations.deselect_all_relations)
         self.AddAsSingleObjectsButton.clicked.connect(
@@ -39,7 +39,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.XMLStructureTreeWidget.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
 
         self.RelationsViewTreeWidget.customContextMenuRequested.connect(self.DatabaseRelations.relationContextMenuRequested)
-        self.XMLStructureTreeWidget.customContextMenuRequested.connect(self.XMLTemplate.xmlContextMenuRequested)
+        self.XMLStructureTreeWidget.customContextMenuRequested.connect(self.XMLTemplateView.xmlContextMenuRequested)
         
 
     def refresh_ui(self):
@@ -106,7 +106,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
     def handle_data_change(self, changed_widget, column):       
         if isinstance(changed_widget, TemplateEditorTreeWidgetItem):
             changed_widget.handle_data_change(column)
-        self.XMLTemplate.xml_structure_changed.emit()
+        self.XMLTemplateView.xml_structure_changed.emit()
 
     def deleteSelectedItems(self):
         tree_widgets = [self.XMLStructureTreeWidget]
@@ -130,8 +130,8 @@ class XMLTemplateEditor(QtWidgets.QWidget):
                     root.removeChild(node_widget)
 
             if tree_widget == self.XMLStructureTreeWidget:
-                self.XMLTemplate.reset_xml_order()
-                self.XMLTemplate.xml_structure_changed.emit()
+                self.XMLTemplateView.reset_xml_order()
+                self.XMLTemplateView.xml_structure_changed.emit()
 
     def clear_widgets(self):
         self.TableComboBox.clear()
@@ -163,7 +163,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             task_item = None
             if len(selected_target_widgets) == 0:
                 """ Create UI Node """
-                task_item = self.XMLTemplate.add_transport_task("VI.Transport.ObjectTransport, VI.Transport")
+                task_item = self.XMLTemplateView.add_transport_task("VI.Transport.ObjectTransport, VI.Transport")
             else:
                 """ Find Parent Node """
                 for widget in selected_target_widgets:
@@ -189,14 +189,14 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
                     task_item.addChild(object_container)
 
-                    self.XMLTemplate.xml_structure_widgets.append(object_container)
+                    self.XMLTemplateView.xml_structure_widgets.append(object_container)
 
                     if add_without_relations:
                         object_container.set_all_relations_state(0)
                     
                     task_item.setExpanded(True)
 
-        self.XMLTemplate.xml_structure_changed.emit()
+        self.XMLTemplateView.xml_structure_changed.emit()
 
     def setupUi(self):
         self.gridLayout = QtWidgets.QGridLayout(self)

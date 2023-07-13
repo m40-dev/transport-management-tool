@@ -1,5 +1,5 @@
 from PyQt6.QtCore import Qt
-from lib.xml.object_container import object_container
+from ..xml.object_container import object_container
 import copy
 # from . import TemplateEditorTreeWidgetItem, TemplateEditorListWidgetItem, TE_Table_TreeWidgetItem, TE_ObjectContainerData_TreeWidgetItem
 from .TemplateEditorTreeWidget import TemplateEditorTreeWidgetItem
@@ -201,7 +201,7 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             else:
                 self.setCheckState(1, Qt.CheckState.Unchecked)
 
-        self.XMLTemplateEditor.XMLTemplate.xml_structure_changed.emit()
+        self.XMLTemplateEditor.XMLTemplateView.xml_structure_changed.emit()
 
     def handle_data_change(self, column):
         # print("data change in object container", column)

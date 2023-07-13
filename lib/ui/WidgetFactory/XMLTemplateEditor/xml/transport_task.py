@@ -1,9 +1,4 @@
-from lxml import etree
-from lib.xml.transport_template_custom_object import transport_template_custom_object
-from lib.xml.object_container import object_container
-from lib.xml.sql_script_container import sql_script_container
-from lib.xml.object_parameter import object_parameter
-
+from ..xml import *
 
 class transport_task(transport_template_custom_object):
     

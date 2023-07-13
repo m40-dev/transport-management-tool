@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import  QTreeWidgetItem
 from PyQt6.QtCore import pyqtSignal
 from pyodbc import Row
-from lib.xml.transport_template_custom_object import transport_template_custom_object
+from ..xml.transport_template_custom_object import transport_template_custom_object
 import re
 
 class TemplateEditorTreeWidgetItem(QTreeWidgetItem):

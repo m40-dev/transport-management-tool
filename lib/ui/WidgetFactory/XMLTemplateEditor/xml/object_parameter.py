@@ -1,4 +1,4 @@
-from lib.xml.transport_template_custom_object import transport_template_custom_object
+from .transport_template_custom_object import transport_template_custom_object
 
 
 class object_parameter(transport_template_custom_object):

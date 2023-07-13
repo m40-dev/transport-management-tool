@@ -1,7 +1,7 @@
 from lxml import etree
-from lib.xml.transport_template_custom_object import transport_template_custom_object
-from lib.xml.object_parameter import object_parameter
-from lib.xml.transport_task import transport_task, sql_script_transport_task
+from .transport_template_custom_object import transport_template_custom_object
+from .object_parameter import object_parameter
+from .transport_task import transport_task, sql_script_transport_task
 
 class transport_template(transport_template_custom_object):
 
@@ -76,10 +76,10 @@ class transport_template(transport_template_custom_object):
             xmlObj = etree.parse(xml_file, parser=xml_parser)
         except:
             #TODO: fix temporary handling of file parsing issues
-            self.application.XMLTemplateEditor.XMLTemplate.newTransportTemplate(xml_file)
+            self.application.XMLTemplateEditor.XMLTemplateView.newTransportTemplate(xml_file)
             return False
 
         if xmlObj is not None:
             self.data = xmlObj
-            self.application.XMLTemplateEditor.XMLTemplate.xml_structure_changed.emit()
-            self.application.XMLTemplateEditor.XMLTemplate.reload_xml_structure()
+            self.application.XMLTemplateEditor.XMLTemplateView.xml_structure_changed.emit()
+            self.application.XMLTemplateEditor.XMLTemplateView.reload_xml_structure()

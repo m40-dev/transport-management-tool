@@ -90,12 +90,12 @@ class Transport_Manager(QMainWindow):
 
         #TODO: Rework required
         self.ui.actionAdd_DatabaseConnection.triggered.connect(self.get_connection_details)
-        self.ui.actionSaveFile.triggered.connect(self.XMLTemplateEditor.XMLTemplate.saveXMLTemplate)
-        self.ui.actionSave_As.triggered.connect(self.XMLTemplateEditor.XMLTemplate.saveXMLTemplateAs)
+        self.ui.actionSaveFile.triggered.connect(self.XMLTemplateEditor.XMLTemplateView.saveXMLTemplate)
+        self.ui.actionSave_As.triggered.connect(self.XMLTemplateEditor.XMLTemplateView.saveXMLTemplateAs)
         self.ui.actionOpen_File.triggered.connect(
             lambda: self.XMLTemplateEditor.openXMLTemplate())
         self.ui.actionChange_WorkingDirectory.triggered.connect(self.PackageManager.changeWorkingDirectory)
-        self.ui.actionNew_Transport_Template.triggered.connect(self.XMLTemplateEditor.XMLTemplate.newTransportTemplate)
+        self.ui.actionNew_Transport_Template.triggered.connect(self.XMLTemplateEditor.XMLTemplateView.newTransportTemplate)
 
         planner_menu = self.ui.menubar.addMenu("Execution Planner")
         new_plan_action = planner_menu.addAction("Add New Plan")
@@ -137,7 +137,7 @@ class Transport_Manager(QMainWindow):
         
 
         """ Initial transport template object """
-        self.XMLTemplateEditor.XMLTemplate.newTransportTemplate()
+        self.XMLTemplateEditor.XMLTemplateView.newTransportTemplate()
         self.PackageManager.addExecutionPlan()
 
     def enter_shortcut(self):

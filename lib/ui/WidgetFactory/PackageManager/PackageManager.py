@@ -280,7 +280,7 @@ class PackageManager(QtWidgets.QWidget):
         if not file_path.is_file():
             file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.touch()
-        self.application.XMLTemplateEditor.XMLTemplate.openXMLTemplate(str(file_path))
+        self.application.XMLTemplateEditor.XMLTemplateView.openXMLTemplate(str(file_path))
 
     def collapseAll(self):
         self.PackageViewTreeView.collapseAll()
