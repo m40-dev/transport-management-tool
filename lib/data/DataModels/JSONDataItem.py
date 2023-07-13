@@ -536,7 +536,7 @@ class JSONDataItem(QObject):
             if not is_for_export:
                 continue
             object_field_value = object_data.get(field, "")
-            export_data[field] = object_field_value
+            export_data[field] = str(object_field_value)
 
             field_type = field_configuration.get("FieldType", None)
             field_role = field_configuration.get("FieldRole", None)
