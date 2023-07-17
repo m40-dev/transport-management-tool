@@ -40,7 +40,7 @@ class XMLTemplateView(QObject):
 
     def openXMLTemplate(self, file_path=None):
         if file_path is None:
-            dialog = QFileDialog(self, "Open existing template file")
+            dialog = QFileDialog(self.application, "Open existing template file")
             dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
 
             file_path = dialog.getOpenFileName(filter="*.xml")

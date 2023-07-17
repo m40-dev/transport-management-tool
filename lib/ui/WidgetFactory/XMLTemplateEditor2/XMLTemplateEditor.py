@@ -1,0 +1,343 @@
+from PyQt6 import QtCore, QtWidgets
+from ..CodeEditors import xml_editor
+
+from lib.data.DataModels import XMLDataModel, XMLDataItem
+from .xml_object_definitions import transport_template
+from pathlib import Path
+
+XML_PREVIEW_TIMER = 100
+
+class XMLTemplateEditor(QtWidgets.QWidget):
+    xml_structure_changed = QtCore.pyqtSignal()
+
+    def __init__(self, application):
+        super().__init__()
+        self.application = application
+        self.current_file = None
+        self.transport_template = transport_template(self.application)
+        self.setupUi()
+
+        # XML Preview Handling
+        self.xml_preview_timer = QtCore.QTimer(self)
+        self.xml_preview_timer.setSingleShot(True)
+        self.xml_preview_timer.timeout.connect(self.reloadXMLPreview)
+        self.xml_structure_changed.connect(self.refreshXMLPreview)
+        
+    def newTransportTemplate(self, file_path=None):
+        if file_path:
+            self.setCurrentXMLTemplate(file_path)
+        self.xml_structure_changed.emit()
+
+    def openXMLTemplate(self, file_path=None):
+        if file_path is None:
+            dialog = QtWidgets.QFileDialog(self.application, "Open existing template file")
+            dialog.setFileMode(QtWidgets.QFileDialog.FileMode.ExistingFile)
+
+            file_path = dialog.getOpenFileName(filter="*.xml")
+            file_path = file_path[0]
+
+        if file_path:
+            self.transport_template.parse_xml_file(file_path)
+            self.setCurrentXMLTemplate(file_path)
+
+        self.application.ui.MainTabWidget.setCurrentWidget(self)
+        self.xml_structure_changed.emit()
+
+    def saveXMLTemplate(self):
+        if self.current_file is not None:
+            # print(Path(self.current_file), Path(self.current_file).is_file())
+            if Path(self.current_file).is_file():
+                Path(self.current_file).parent.mkdir(parents=True, exist_ok=True)
+                with open(self.current_file, 'w') as doc:
+                    doc.write(self.transport_template.string)
+                return self.current_file
+            return self.saveXMLTemplateAs(self.current_file)
+        return self.saveXMLTemplateAs(self.application.current_workdir)
+
+    def saveXMLTemplateAs(self, initial_directory=None):
+        dialog = QtWidgets.QFileDialog(self, "Save As")
+        dialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile) 
+
+        file_path = dialog.getSaveFileName(
+            filter="*.xml", 
+            directory=str(initial_directory))
+
+        if file_path[0] != "":
+            with open(file_path[0], 'w') as doc:
+                doc.write(self.transport_template.string)
+            self.setCurrentXMLTemplate(file_path[0])
+            return file_path[0]
+        return False
+
+    def setCurrentXMLTemplate(self, file_path):            
+        self.current_file = None
+        if file_path:
+            self.current_file = file_path
+        self.current_file_label.setText(str(file_path))
+
+    def refreshXMLPreview(self):
+        self.xml_preview_timer.start(XML_PREVIEW_TIMER)
+
+    def reloadXMLPreview(self):
+        self.XMLPreviewBrowser.setText(self.transport_template.string)
+        self.loadXMLStructureView()
+
+    def loadXMLStructureView(self):
+        data = self.transport_template.children()
+
+        data_model =  XMLDataModel(
+            application=self.application,
+            parent_widget=self.XMLStructureTreeView, 
+            model_item_class=XMLDataItem,
+            data=data)
+
+        self.XMLStructureTreeView.setModel(data_model)
+
+    def setupUi(self):
+        self.gridLayout = QtWidgets.QGridLayout(self)
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
+        self.gridLayout.setSpacing(0)
+        self.gridLayout.setObjectName("gridLayout")
+        self.TemplateEditorSplitter_Left = QtWidgets.QSplitter(self)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.TemplateEditorSplitter_Left.sizePolicy().hasHeightForWidth())
+        self.TemplateEditorSplitter_Left.setSizePolicy(sizePolicy)
+        self.TemplateEditorSplitter_Left.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self.TemplateEditorSplitter_Left.setObjectName("TemplateEditorSplitter_Left")
+        self.TemplateEditorSplitter_Relations = QtWidgets.QSplitter(self.TemplateEditorSplitter_Left)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.TemplateEditorSplitter_Relations.sizePolicy().hasHeightForWidth())
+        self.TemplateEditorSplitter_Relations.setSizePolicy(sizePolicy)
+        self.TemplateEditorSplitter_Relations.setOrientation(QtCore.Qt.Orientation.Vertical)
+        self.TemplateEditorSplitter_Relations.setObjectName("TemplateEditorSplitter_Relations")
+        self.TemplateEditorSplitter_Search = QtWidgets.QSplitter(self.TemplateEditorSplitter_Relations)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Expanding)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.TemplateEditorSplitter_Search.sizePolicy().hasHeightForWidth())
+        self.TemplateEditorSplitter_Search.setSizePolicy(sizePolicy)
+        self.TemplateEditorSplitter_Search.setOrientation(QtCore.Qt.Orientation.Vertical)
+        self.TemplateEditorSplitter_Search.setObjectName("TemplateEditorSplitter_Search")
+        self.SearchGroupBox = QtWidgets.QGroupBox(self.TemplateEditorSplitter_Search)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.SearchGroupBox.sizePolicy().hasHeightForWidth())
+        self.SearchGroupBox.setSizePolicy(sizePolicy)
+        self.SearchGroupBox.setObjectName("SearchGroupBox")
+        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.SearchGroupBox)
+        self.verticalLayout_2.setObjectName("verticalLayout_2")
+        self.TableComboBox = QtWidgets.QComboBox(self.SearchGroupBox)
+        self.TableComboBox.setObjectName("TableComboBox")
+        self.verticalLayout_2.addWidget(self.TableComboBox)
+        self.ObjectQueryTextEdit = QtWidgets.QTextEdit(self.SearchGroupBox)
+        self.ObjectQueryTextEdit.setTabChangesFocus(False)
+        self.ObjectQueryTextEdit.setAcceptRichText(False)
+        self.ObjectQueryTextEdit.setObjectName("ObjectQueryTextEdit")
+        self.verticalLayout_2.addWidget(self.ObjectQueryTextEdit)
+        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_2.setContentsMargins(-1, 2, -1, 2)
+        self.horizontalLayout_2.setSpacing(2)
+        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
+        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        self.horizontalLayout_2.addItem(spacerItem)
+        self.XObjectKeysFilterRadioButton = QtWidgets.QRadioButton(self.SearchGroupBox)
+        self.XObjectKeysFilterRadioButton.setChecked(True)
+        self.XObjectKeysFilterRadioButton.setObjectName("XObjectKeysFilterRadioButton")
+        self.horizontalLayout_2.addWidget(self.XObjectKeysFilterRadioButton)
+        self.SelectedTableFilterRadioButton = QtWidgets.QRadioButton(self.SearchGroupBox)
+        self.SelectedTableFilterRadioButton.setEnabled(True)
+        self.SelectedTableFilterRadioButton.setObjectName("SelectedTableFilterRadioButton")
+        self.horizontalLayout_2.addWidget(self.SelectedTableFilterRadioButton)
+        self.FindObjectButton = QtWidgets.QToolButton(self.SearchGroupBox)
+        self.FindObjectButton.setObjectName("FindObjectButton")
+        self.horizontalLayout_2.addWidget(self.FindObjectButton)
+        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
+        self.SearchResultsGroupBox = QtWidgets.QGroupBox(self.TemplateEditorSplitter_Search)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Preferred)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.SearchResultsGroupBox.sizePolicy().hasHeightForWidth())
+        self.SearchResultsGroupBox.setSizePolicy(sizePolicy)
+        self.SearchResultsGroupBox.setObjectName("SearchResultsGroupBox")
+        self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.SearchResultsGroupBox)
+        self.verticalLayout_3.setObjectName("verticalLayout_3")
+        self.SearchResultsListWidget = QtWidgets.QListWidget(self.SearchResultsGroupBox)
+        self.SearchResultsListWidget.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragOnly)
+        self.SearchResultsListWidget.setDefaultDropAction(QtCore.Qt.DropAction.IgnoreAction)
+        self.SearchResultsListWidget.setAlternatingRowColors(True)
+        self.SearchResultsListWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.SearchResultsListWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.SearchResultsListWidget.setMovement(QtWidgets.QListView.Movement.Free)
+        self.SearchResultsListWidget.setProperty("isWrapping", False)
+        self.SearchResultsListWidget.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
+        self.SearchResultsListWidget.setWordWrap(True)
+        self.SearchResultsListWidget.setItemAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.SearchResultsListWidget.setObjectName("SearchResultsListWidget")
+        self.verticalLayout_3.addWidget(self.SearchResultsListWidget)
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
+        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        self.horizontalLayout_5.addItem(spacerItem1)
+        self.AddSelectedObjectsWithRelationsButton = QtWidgets.QToolButton(self.SearchResultsGroupBox)
+        self.AddSelectedObjectsWithRelationsButton.setObjectName("AddSelectedObjectsWithRelationsButton")
+        self.horizontalLayout_5.addWidget(self.AddSelectedObjectsWithRelationsButton)
+        self.AddAsSingleObjectsButton = QtWidgets.QToolButton(self.SearchResultsGroupBox)
+        self.AddAsSingleObjectsButton.setObjectName("AddAsSingleObjectsButton")
+        self.horizontalLayout_5.addWidget(self.AddAsSingleObjectsButton)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_5)
+        self.SelectedObjectRelationsGroupBox = QtWidgets.QGroupBox(self.TemplateEditorSplitter_Relations)
+        self.SelectedObjectRelationsGroupBox.setObjectName("SelectedObjectRelationsGroupBox")
+        self.gridLayout_4 = QtWidgets.QGridLayout(self.SelectedObjectRelationsGroupBox)
+        self.gridLayout_4.setObjectName("gridLayout_4")
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setContentsMargins(-1, 3, -1, -1)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.RelationPresetsLabel = QtWidgets.QLabel(self.SelectedObjectRelationsGroupBox)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.RelationPresetsLabel.sizePolicy().hasHeightForWidth())
+        self.RelationPresetsLabel.setSizePolicy(sizePolicy)
+        self.RelationPresetsLabel.setObjectName("RelationPresetsLabel")
+        self.horizontalLayout.addWidget(self.RelationPresetsLabel)
+        self.RelationPresetsComboBox = QtWidgets.QComboBox(self.SelectedObjectRelationsGroupBox)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.RelationPresetsComboBox.sizePolicy().hasHeightForWidth())
+        self.RelationPresetsComboBox.setSizePolicy(sizePolicy)
+        self.RelationPresetsComboBox.setObjectName("RelationPresetsComboBox")
+        self.horizontalLayout.addWidget(self.RelationPresetsComboBox)
+        self.ApplyPresetToolButton = QtWidgets.QToolButton(self.SelectedObjectRelationsGroupBox)
+        self.ApplyPresetToolButton.setObjectName("ApplyPresetToolButton")
+        self.horizontalLayout.addWidget(self.ApplyPresetToolButton)
+        self.gridLayout_4.addLayout(self.horizontalLayout, 2, 0, 1, 1)
+        self.formLayout = QtWidgets.QFormLayout()
+        self.formLayout.setSpacing(2)
+        self.formLayout.setObjectName("formLayout")
+        self.SelectWithDatabaseModelCheckBox = QtWidgets.QCheckBox(self.SelectedObjectRelationsGroupBox)
+        self.SelectWithDatabaseModelCheckBox.setChecked(True)
+        self.SelectWithDatabaseModelCheckBox.setObjectName("SelectWithDatabaseModelCheckBox")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.SelectWithDatabaseModelCheckBox)
+        self.DeleteResidualCheckBox = QtWidgets.QCheckBox(self.SelectedObjectRelationsGroupBox)
+        self.DeleteResidualCheckBox.setToolTipDuration(3)
+        self.DeleteResidualCheckBox.setObjectName("DeleteResidualCheckBox")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.DeleteResidualCheckBox)
+        self.ShowAllColumnsCheckBox = QtWidgets.QCheckBox(self.SelectedObjectRelationsGroupBox)
+        self.ShowAllColumnsCheckBox.setObjectName("ShowAllColumnsCheckBox")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.ShowAllColumnsCheckBox)
+        self.AutoListObjectsFromDatabaseCheckBox = QtWidgets.QCheckBox(self.SelectedObjectRelationsGroupBox)
+        self.AutoListObjectsFromDatabaseCheckBox.setObjectName("AutoListObjectsFromDatabaseCheckBox")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.AutoListObjectsFromDatabaseCheckBox)
+        self.DeselectAllToolButton = QtWidgets.QToolButton(self.SelectedObjectRelationsGroupBox)
+        self.DeselectAllToolButton.setObjectName("DeselectAllToolButton")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.LabelRole, self.DeselectAllToolButton)
+        self.AutoLoadCheckBox = QtWidgets.QCheckBox(self.SelectedObjectRelationsGroupBox)
+        self.AutoLoadCheckBox.setObjectName("AutoLoadCheckBox")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.FieldRole, self.AutoLoadCheckBox)
+        self.gridLayout_4.addLayout(self.formLayout, 0, 0, 1, 1)
+        self.RelationsViewTreeWidget = QtWidgets.QTreeWidget(self.SelectedObjectRelationsGroupBox)
+        self.RelationsViewTreeWidget.setProperty("showDropIndicator", False)
+        self.RelationsViewTreeWidget.setDragEnabled(False)
+        self.RelationsViewTreeWidget.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.NoDragDrop)
+        self.RelationsViewTreeWidget.setAlternatingRowColors(True)
+        self.RelationsViewTreeWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.RelationsViewTreeWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.RelationsViewTreeWidget.setAutoExpandDelay(-1)
+        self.RelationsViewTreeWidget.setAnimated(True)
+        self.RelationsViewTreeWidget.setWordWrap(True)
+        self.RelationsViewTreeWidget.setColumnCount(4)
+        self.RelationsViewTreeWidget.setObjectName("RelationsViewTreeWidget")
+        self.RelationsViewTreeWidget.headerItem().setText(0, "1")
+        self.RelationsViewTreeWidget.headerItem().setText(1, "2")
+        self.RelationsViewTreeWidget.headerItem().setText(2, "3")
+        self.RelationsViewTreeWidget.headerItem().setText(3, "4")
+        self.RelationsViewTreeWidget.header().setVisible(False)
+        self.RelationsViewTreeWidget.header().setCascadingSectionResizes(True)
+        self.RelationsViewTreeWidget.header().setMinimumSectionSize(5)
+        self.RelationsViewTreeWidget.header().setSortIndicatorShown(True)
+        self.RelationsViewTreeWidget.header().setStretchLastSection(False)
+        self.gridLayout_4.addWidget(self.RelationsViewTreeWidget, 3, 0, 1, 1)
+        self.TemplateEditorSplitter_Right = QtWidgets.QSplitter(self.TemplateEditorSplitter_Left)
+        self.TemplateEditorSplitter_Right.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        self.TemplateEditorSplitter_Right.setObjectName("TemplateEditorSplitter_Right")
+        self.XMLStructureTreeView = QtWidgets.QTreeView(self.TemplateEditorSplitter_Right)
+        self.XMLStructureTreeView.setObjectName("XMLStructureTreeView")
+        # self.XMLStructureTreeView.header().setStretchLastSection(False)
+        self.XMLStructureTreeView.setHeaderHidden(False)   
+        self.XMLStructureTreeView.setWordWrap(True)
+        self.verticalLayoutWidget = QtWidgets.QWidget(self.TemplateEditorSplitter_Right)
+        self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
+        self.XMLEditorLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
+        self.XMLEditorLayout.setContentsMargins(0, 0, 0, 0)
+        self.XMLEditorLayout.setSpacing(0)
+        self.XMLEditorLayout.setObjectName("XMLEditorLayout")
+        self.gridLayout.addWidget(self.TemplateEditorSplitter_Left, 0, 0, 1, 1)
+        
+        """ Additional UI Configurations """
+        self.XMLPreviewBrowser = xml_editor(self.application)
+        self.current_file_label = QtWidgets.QLabel(self)
+        self.current_file_label.setProperty("Widget", "FilePathLabel")
+        self.current_file_label.setTextInteractionFlags(
+            QtCore.Qt.TextInteractionFlag.TextSelectableByMouse|QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard)
+        self.current_file_label.setWordWrap(True)
+        self.XMLEditorLayout.insertWidget(0, self.current_file_label)
+        self.XMLEditorLayout.insertWidget(1, self.XMLPreviewBrowser)
+
+        self.TemplateEditorSplitter_Search.setSizes(
+            [round(self.height()*0.1), round(self.height()*0.3)])
+        self.TemplateEditorSplitter_Relations.setSizes(
+            [round(self.height()*0.2), round(self.height()*0.2)])
+
+        self.TemplateEditorSplitter_Left.setSizes(
+            [1, round(self.width()*0.8)])
+        self.TemplateEditorSplitter_Right.setSizes(
+            [round(self.width()*0.4), round(self.width()*0.6)])
+
+        self.RelationsViewTreeWidget.setHeaderHidden(False)
+        self.RelationsViewTreeWidget.setHeaderLabels(
+            ['Related Table(references)', 'FK', 'CR', 'SH'])
+        self.RelationsViewTreeWidget.header().setSectionResizeMode(
+            0, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.RelationsViewTreeWidget.header().setStretchLastSection(False)
+        self.RelationsViewTreeWidget.setColumnCount(4)
+        self.RelationsViewTreeWidget.setColumnWidth(1, 30)
+        self.RelationsViewTreeWidget.setColumnWidth(2, 30)
+        self.RelationsViewTreeWidget.setColumnWidth(3, 30)
+
+        
+        self.FindObjectButton.setEnabled(False)
+        self.TableComboBox.setEnabled(False)
+
+        self.retranslateUi(self)
+        QtCore.QMetaObject.connectSlotsByName(self)
+
+    def retranslateUi(self, Form):
+        _translate = QtCore.QCoreApplication.translate
+        self.SearchGroupBox.setTitle(_translate("Form", "Search"))
+        self.TableComboBox.setPlaceholderText(_translate("Form", "Select From Table"))
+        self.ObjectQueryTextEdit.setPlaceholderText(_translate("Form", "Search Database Objects"))
+        self.XObjectKeysFilterRadioButton.setText(_translate("Form", "List of XObjectKeys"))
+        self.SelectedTableFilterRadioButton.setText(_translate("Form", "Selected Table Filter"))
+        self.FindObjectButton.setText(_translate("Form", "Find Objects"))
+        self.SearchResultsGroupBox.setTitle(_translate("Form", "Search Results"))
+        self.SearchResultsListWidget.setSortingEnabled(True)
+        self.AddSelectedObjectsWithRelationsButton.setText(_translate("Form", "Add With Selected Relations"))
+        self.AddAsSingleObjectsButton.setText(_translate("Form", "Add Without Relations"))
+        self.SelectedObjectRelationsGroupBox.setTitle(_translate("Form", "Object Relations"))
+        self.RelationPresetsLabel.setText(_translate("Form", "Relation Presets"))
+        self.ApplyPresetToolButton.setText(_translate("Form", "Apply"))
+        self.SelectWithDatabaseModelCheckBox.setText(_translate("Form", "Select using database model"))
+        self.DeleteResidualCheckBox.setToolTip(_translate("Form", "Selects the transport instruction to delete residual objects which were not provided in the transport package."))
+        self.DeleteResidualCheckBox.setText(_translate("Form", "Delete Residual Objects "))
+        self.ShowAllColumnsCheckBox.setText(_translate("Form", "Show All Columns"))
+        self.AutoListObjectsFromDatabaseCheckBox.setText(_translate("Form", "Auto List Selected Objects from database"))
+        self.DeselectAllToolButton.setText(_translate("Form", "Deselect All Relations"))
+        self.AutoLoadCheckBox.setText(_translate("Form", "Auto Load Matching Objects from database"))
+        self.RelationsViewTreeWidget.setSortingEnabled(False)
+        self.XMLStructureTreeView.setSortingEnabled(False)

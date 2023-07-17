@@ -1,0 +1,126 @@
+from lxml import etree
+
+class transport_template_custom_object(object):
+
+    def __init__(self, application, node_class, source_element=None):
+        super(transport_template_custom_object, self).__init__()
+        self.application = application
+        self.parent = application
+        self.data = None
+        self._xml_object_class = node_class
+
+        """ Node setup for new objects """
+        if source_element is None:
+            self.data = etree.Element(node_class)
+            self.data.tag = node_class
+            self.data.text = None
+            self.data.tail = None
+        else:
+            self.data = source_element
+            self.data.tail = None
+
+        self._display = "\n".join(self.data.itertext()).strip()
+        self._description = ""
+
+    @property
+    def string(self):
+        etree.indent(self.data)
+        return etree.tostring(self.data, pretty_print=True, encoding='UTF-8', method="xml").decode('UTF-8')
+
+    @property
+    def display(self):
+        return self._display
+
+    @display.setter
+    def display(self, value):
+        self._display = value
+
+    @property
+    def description(self):
+        return self._description
+    
+    @description.setter
+    def description(self, value):
+        self._description = value
+        
+    def xml_find_parent(self, element, class_lookup):
+        parent_node = element.getparent()
+        if parent_node is not None:
+            if parent_node.tag == class_lookup:
+                return parent_node
+            return self.xml_find_parent(parent_node, class_lookup)
+        else:
+            return None
+
+    def xml_find_children(self, element, class_lookup):
+        target_node = element.find(class_lookup)
+        if target_node is not None:
+            return target_node.getchildren()
+        return None
+    
+    def xml_find_child(self, element, class_lookup):
+        target_node = element.find(class_lookup)
+        if target_node is not None:
+            return target_node
+        return None
+    
+    def xml_get_child(self, class_lookup, parent_element=None):
+        if parent_element is None:
+            parent_element = self.data
+        child_element = self.xml_find_child(parent_element, class_lookup)
+        return child_element
+
+    def xml_get_children(self, class_lookup=None, parent_element=None):
+        child_objects = []
+
+        if parent_element is None:
+            parent_element = self.data
+
+        child_elements = parent_element.getchildren()
+
+        if class_lookup is not None:
+            child_elements = self.find_children(parent_element, class_lookup)
+        if child_elements is not None:
+            for element in child_elements:
+                if not isinstance(element, etree._Comment) and isinstance(element, etree._Element):
+                    child_objects.append(element)
+        return child_objects
+
+    def xml_delete_object(self):
+        parent_node = self.data.getparent()
+        previous_node = self.data.getprevious()
+
+        if isinstance(previous_node, etree._Comment):
+            parent_node.remove(previous_node)
+
+        if parent_node is not None:
+            parent_node.remove(self.data)
+        
+        return True
+
+    def xml_get_attribute(self, attribute):
+        value = ""
+        if attribute in self.data.attrib.keys():
+            value = self.data.attrib[attribute]
+        return value
+
+    def xml_set_attribute(self, attribute, value):
+        self.data.attrib[attribute] = str(value)
+
+    def xml_append_node(self, node_object):
+        if isinstance(node_object, etree._Element):
+            self.data.append(node_object)
+            return True
+        
+        if isinstance(node_object, transport_template_custom_object):
+            self.data.append(node_object.data)
+    
+    def xml_remove_children(self, element=None):
+        if element is None:
+            element = self.data
+
+        for child_element in element.getchildren():
+            element.remove(child_element)
+
+    def children(self):
+        return self.xml_get_children()
