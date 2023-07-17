@@ -105,6 +105,11 @@
             {
                 "FieldType": "BooleanInput",
                 "DefaultValue": "False"
+            },
+        "Tag": 
+            {
+                "FieldType": "ListInput",
+                "Separator": ","
             }
         },
         "ExecutionPlanner_ExecutionGroup": 

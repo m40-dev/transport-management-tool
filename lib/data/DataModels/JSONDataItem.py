@@ -536,7 +536,7 @@ class JSONDataItem(QObject):
             if not is_for_export:
                 continue
             object_field_value = object_data.get(field, "")
-            export_data[field] = str(object_field_value)
+            export_data[field] = object_field_value
 
             field_type = field_configuration.get("FieldType", None)
             field_role = field_configuration.get("FieldRole", None)
@@ -550,10 +550,25 @@ class JSONDataItem(QObject):
                 export_data[field] = self.get_children_data(task_class=child_class, export_data=True)
 
             if field_type and field_type == "ListInput":
-                 object_value = self._task_data.get(field, [])
-                 if not isinstance(object_value, list):
+                object_value = self._task_data.get(field, [])
+                
+                if isinstance(object_value, list) and len(object_value) > 0:
+                    values = 0
+                    for entry in object_value:
+                        if len(str(entry).strip()) > 0:
+                            values += 1
+                            break
+                    if values == 0:
+                        object_value = []
+
+                export_data[field] = object_value
+                if not isinstance(object_value, list):
                     export_data[field] = [str(object_value)]
                     self._task_data[field] = [str(object_value)]
+
+            if field_type and field_type == "BooleanInput":
+                export_data[field] = str(object_field_value)
+
         return export_data
 
     def get_file_data(self, reload_data=False):
