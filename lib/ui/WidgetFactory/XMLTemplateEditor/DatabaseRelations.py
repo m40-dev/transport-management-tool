@@ -1,29 +1,20 @@
 # from PyQt6 import QtCore, QtWidgets
-# from ..CodeEditors import xml_editor
-from .TreeWidgets import *
 
-from PyQt6.QtCore import QObject
+from PyQt6.QtCore import Qt, QMetaObject, QCoreApplication
 
 #""" Required QT Libraries """
-from PyQt6.QtCore import Qt
-from ..DialogScreens import RelationPresetDialog
-from .ContextMenu import RelationContextMenu
+from PyQt6 import QtWidgets
 
 XML_PREVIEW_TIMER = 100
 
-class DatabaseRelations(QObject):
+class DatabaseRelations(QtWidgets.QWidget):
 
     def __init__(self, parent, application):
         super().__init__()
 
         self.application = application
         self.XMLTemplateEditor = parent
-
-        """ Saved relation presets data """
-        self.relation_presets = self.application.settings.value("relation_presets")
-        if self.relation_presets is None:
-            self.relation_presets = {}
-        
+        self.setupUi()
 
     def load_table_relations(self, relations, source_widget_item, append_to_existing_widget=None):
         if append_to_existing_widget is None:
@@ -221,3 +212,114 @@ class DatabaseRelations(QObject):
             else:
                 continue
         return current
+
+    def setupUi(self):
+        self.layout = QtWidgets.QGridLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.SelectedObjectRelationsGroupBox = QtWidgets.QGroupBox(self)
+        self.layout.addWidget(self.SelectedObjectRelationsGroupBox, 0, 0, -1, -1)
+        self.SelectedObjectRelationsGroupBox.setObjectName("SelectedObjectRelationsGroupBox")
+        self.gridLayout_4 = QtWidgets.QGridLayout(self.SelectedObjectRelationsGroupBox)
+        self.gridLayout_4.setObjectName("gridLayout_4")
+        self.horizontalLayout = QtWidgets.QHBoxLayout()
+        self.horizontalLayout.setContentsMargins(-1, 3, -1, -1)
+        self.horizontalLayout.setObjectName("horizontalLayout")
+        self.RelationPresetsLabel = QtWidgets.QLabel(self.SelectedObjectRelationsGroupBox)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.RelationPresetsLabel.sizePolicy().hasHeightForWidth())
+        self.RelationPresetsLabel.setSizePolicy(sizePolicy)
+        self.RelationPresetsLabel.setObjectName("RelationPresetsLabel")
+        self.horizontalLayout.addWidget(self.RelationPresetsLabel)
+        self.RelationPresetsComboBox = QtWidgets.QComboBox(self.SelectedObjectRelationsGroupBox)
+        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Minimum)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.RelationPresetsComboBox.sizePolicy().hasHeightForWidth())
+        self.RelationPresetsComboBox.setSizePolicy(sizePolicy)
+        self.RelationPresetsComboBox.setObjectName("RelationPresetsComboBox")
+        self.horizontalLayout.addWidget(self.RelationPresetsComboBox)
+        self.ApplyPresetToolButton = QtWidgets.QToolButton(self.SelectedObjectRelationsGroupBox)
+        self.ApplyPresetToolButton.setObjectName("ApplyPresetToolButton")
+        self.horizontalLayout.addWidget(self.ApplyPresetToolButton)
+        self.gridLayout_4.addLayout(self.horizontalLayout, 2, 0, 1, 1)
+        self.formLayout = QtWidgets.QFormLayout()
+        self.formLayout.setSpacing(2)
+        self.formLayout.setObjectName("formLayout")
+        self.SelectWithDatabaseModelCheckBox = QtWidgets.QCheckBox(self.SelectedObjectRelationsGroupBox)
+        self.SelectWithDatabaseModelCheckBox.setChecked(True)
+        self.SelectWithDatabaseModelCheckBox.setObjectName("SelectWithDatabaseModelCheckBox")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.LabelRole, self.SelectWithDatabaseModelCheckBox)
+        self.DeleteResidualCheckBox = QtWidgets.QCheckBox(self.SelectedObjectRelationsGroupBox)
+        self.DeleteResidualCheckBox.setToolTipDuration(3)
+        self.DeleteResidualCheckBox.setObjectName("DeleteResidualCheckBox")
+        self.formLayout.setWidget(0, QtWidgets.QFormLayout.ItemRole.FieldRole, self.DeleteResidualCheckBox)
+        self.ShowAllColumnsCheckBox = QtWidgets.QCheckBox(self.SelectedObjectRelationsGroupBox)
+        self.ShowAllColumnsCheckBox.setObjectName("ShowAllColumnsCheckBox")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.LabelRole, self.ShowAllColumnsCheckBox)
+        self.AutoListObjectsFromDatabaseCheckBox = QtWidgets.QCheckBox(self.SelectedObjectRelationsGroupBox)
+        self.AutoListObjectsFromDatabaseCheckBox.setObjectName("AutoListObjectsFromDatabaseCheckBox")
+        self.formLayout.setWidget(1, QtWidgets.QFormLayout.ItemRole.FieldRole, self.AutoListObjectsFromDatabaseCheckBox)
+        self.DeselectAllToolButton = QtWidgets.QToolButton(self.SelectedObjectRelationsGroupBox)
+        self.DeselectAllToolButton.setObjectName("DeselectAllToolButton")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.LabelRole, self.DeselectAllToolButton)
+        self.AutoLoadCheckBox = QtWidgets.QCheckBox(self.SelectedObjectRelationsGroupBox)
+        self.AutoLoadCheckBox.setObjectName("AutoLoadCheckBox")
+        self.formLayout.setWidget(2, QtWidgets.QFormLayout.ItemRole.FieldRole, self.AutoLoadCheckBox)
+        self.gridLayout_4.addLayout(self.formLayout, 0, 0, 1, 1)
+        self.RelationsViewTreeWidget = QtWidgets.QTreeWidget(self.SelectedObjectRelationsGroupBox)
+        self.RelationsViewTreeWidget.setProperty("showDropIndicator", False)
+        self.RelationsViewTreeWidget.setDragEnabled(False)
+        self.RelationsViewTreeWidget.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.NoDragDrop)
+        self.RelationsViewTreeWidget.setAlternatingRowColors(True)
+        self.RelationsViewTreeWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.RelationsViewTreeWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.RelationsViewTreeWidget.setAutoExpandDelay(-1)
+        self.RelationsViewTreeWidget.setAnimated(True)
+        self.RelationsViewTreeWidget.setWordWrap(True)
+        self.RelationsViewTreeWidget.setColumnCount(4)
+        self.RelationsViewTreeWidget.setObjectName("RelationsViewTreeWidget")
+        self.RelationsViewTreeWidget.headerItem().setText(0, "1")
+        self.RelationsViewTreeWidget.headerItem().setText(1, "2")
+        self.RelationsViewTreeWidget.headerItem().setText(2, "3")
+        self.RelationsViewTreeWidget.headerItem().setText(3, "4")
+        self.RelationsViewTreeWidget.header().setVisible(False)
+        self.RelationsViewTreeWidget.header().setCascadingSectionResizes(True)
+        self.RelationsViewTreeWidget.header().setMinimumSectionSize(5)
+        self.RelationsViewTreeWidget.header().setSortIndicatorShown(True)
+        self.RelationsViewTreeWidget.header().setStretchLastSection(False)
+        self.gridLayout_4.addWidget(self.RelationsViewTreeWidget, 3, 0, 1, 1)
+
+        self.RelationsViewTreeWidget.setHeaderHidden(False)
+        self.RelationsViewTreeWidget.setHeaderLabels(
+            ['Related Table(references)', 'FK', 'CR', 'SH'])
+        self.RelationsViewTreeWidget.header().setSectionResizeMode(
+            0, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        self.RelationsViewTreeWidget.header().setStretchLastSection(False)
+        self.RelationsViewTreeWidget.setColumnCount(4)
+        self.RelationsViewTreeWidget.setColumnWidth(1, 30)
+        self.RelationsViewTreeWidget.setColumnWidth(2, 30)
+        self.RelationsViewTreeWidget.setColumnWidth(3, 30)
+
+        """ Saved relation presets data """
+        self.relation_presets = self.application.settings.value("relation_presets")
+        if self.relation_presets is None:
+            self.relation_presets = {}
+        
+        self.retranslateUi(self)
+        QMetaObject.connectSlotsByName(self)
+        
+    def retranslateUi(self, Form):
+        _translate = QCoreApplication.translate
+        self.SelectedObjectRelationsGroupBox.setTitle(_translate("Form", "Object Relations"))
+        self.RelationPresetsLabel.setText(_translate("Form", "Relation Presets"))
+        self.ApplyPresetToolButton.setText(_translate("Form", "Apply"))
+        self.SelectWithDatabaseModelCheckBox.setText(_translate("Form", "Select using database model"))
+        self.DeleteResidualCheckBox.setToolTip(_translate("Form", "Selects the transport instruction to delete residual objects which were not provided in the transport package."))
+        self.DeleteResidualCheckBox.setText(_translate("Form", "Delete Residual Objects "))
+        self.ShowAllColumnsCheckBox.setText(_translate("Form", "Show All Columns"))
+        self.AutoListObjectsFromDatabaseCheckBox.setText(_translate("Form", "Auto List Selected Objects from database"))
+        self.DeselectAllToolButton.setText(_translate("Form", "Deselect All Relations"))
+        self.AutoLoadCheckBox.setText(_translate("Form", "Auto Load Matching Objects from database"))
+        self.RelationsViewTreeWidget.setSortingEnabled(True)

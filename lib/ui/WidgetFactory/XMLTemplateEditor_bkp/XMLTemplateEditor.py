@@ -1,97 +1,202 @@
 from PyQt6 import QtCore, QtWidgets
 from ..CodeEditors import xml_editor
+from .TreeWidgets import *
 
-from lib.data.DataModels import XMLDataModel, XMLDataItem
-from .xml_object_definitions import transport_template
-from pathlib import Path
+from .XMLTemplateView import XMLTemplateView
+from .DatabaseRelations import DatabaseRelations
 
 XML_PREVIEW_TIMER = 100
 
 class XMLTemplateEditor(QtWidgets.QWidget):
-    xml_structure_changed = QtCore.pyqtSignal()
 
     def __init__(self, application):
         super().__init__()
         self.application = application
         self.current_file = None
-        self.transport_template = transport_template(self.application)
+        self.xml_structure_widgets = []
+
         self.setupUi()
+        self.XMLTemplateView = XMLTemplateView(self, application)
+        self.DatabaseRelations = DatabaseRelations(self, application)
 
-        # XML Preview Handling
-        self.xml_preview_timer = QtCore.QTimer(self)
-        self.xml_preview_timer.setSingleShot(True)
-        self.xml_preview_timer.timeout.connect(self.reloadXMLPreview)
-        self.xml_structure_changed.connect(self.refreshXMLPreview)
+        self.FindObjectButton.clicked.connect(self.queryDatabaseObjects)
+        self.TableComboBox.currentTextChanged.connect(self.load_db_objects)
+        self.AddSelectedObjectsWithRelationsButton.clicked.connect(self.select_object_for_transport)
+        self.SearchResultsListWidget.itemClicked.connect(self.select_source_object)
+        self.XMLStructureTreeWidget.itemClicked.connect(self.select_source_object)
+        self.RelationsViewTreeWidget.itemChanged.connect(self.handle_data_change)
+        self.XMLStructureTreeWidget.itemChanged.connect(self.handle_data_change)
+        self.XMLStructureTreeWidget.dragMoveEvent = self.XMLTemplateView.xml_structure_move_event
+        self.XMLStructureTreeWidget.dropEvent = self.XMLTemplateView.xml_structure_drop_event
         
-    def newTransportTemplate(self, file_path=None):
-        if file_path:
-            self.setCurrentXMLTemplate(file_path)
-        self.xml_structure_changed.emit()
+        self.DeselectAllToolButton.clicked.connect(self.DatabaseRelations.deselect_all_relations)
+        self.AddAsSingleObjectsButton.clicked.connect(
+            lambda: self.select_object_for_transport(add_without_relations=True))
+        self.ApplyPresetToolButton.clicked.connect(self.DatabaseRelations.apply_table_relation_preset)
 
-    def openXMLTemplate(self, file_path=None):
-        if file_path is None:
-            dialog = QtWidgets.QFileDialog(self.application, "Open existing template file")
-            dialog.setFileMode(QtWidgets.QFileDialog.FileMode.ExistingFile)
+        """ Context Menu """
+        self.RelationsViewTreeWidget.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
+        self.XMLStructureTreeWidget.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
 
-            file_path = dialog.getOpenFileName(filter="*.xml")
-            file_path = file_path[0]
+        self.RelationsViewTreeWidget.customContextMenuRequested.connect(self.DatabaseRelations.relationContextMenuRequested)
+        self.XMLStructureTreeWidget.customContextMenuRequested.connect(self.XMLTemplateView.xmlContextMenuRequested)
+        
 
-        if file_path:
-            self.transport_template.parse_xml_file(file_path)
-            self.setCurrentXMLTemplate(file_path)
+    def refresh_ui(self):
+        if self.application.db.is_connected:
+            self.FindObjectButton.setEnabled(True)
+            self.TableComboBox.setEnabled(True)
 
-        self.application.ui.MainTabWidget.setCurrentWidget(self)
-        self.xml_structure_changed.emit()
+        self.TableComboBox.clear()
+        for table_name in self.application.db.table_info.keys():
+            self.TableComboBox.addItem(table_name)
 
-    def saveXMLTemplate(self):
-        if self.current_file is not None:
-            # print(Path(self.current_file), Path(self.current_file).is_file())
-            if Path(self.current_file).is_file():
-                Path(self.current_file).parent.mkdir(parents=True, exist_ok=True)
-                with open(self.current_file, 'w') as doc:
-                    doc.write(self.transport_template.string)
-                return self.current_file
-            return self.saveXMLTemplateAs(self.current_file)
-        return self.saveXMLTemplateAs(self.application.current_workdir)
+        self.XMLEditorWidget.reconfigure_editor()
 
-    def saveXMLTemplateAs(self, initial_directory=None):
-        dialog = QtWidgets.QFileDialog(self, "Save As")
-        dialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile) 
+    def get_objectkey_table(self, input_string):
+        table_name = None
+        regex = r"<T>(.*?)</T>"
+        if input_string is not None:
+            match = re.search(regex, input_string)
+            if match:
+                table_name = match.group(1)
+        return table_name
 
-        file_path = dialog.getSaveFileName(
-            filter="*.xml", 
-            directory=str(initial_directory))
+    def load_db_objects(self, table_name=None, data_rows=[]):
+        self.SearchResultsListWidget.clear()
 
-        if file_path[0] != "":
-            with open(file_path[0], 'w') as doc:
-                doc.write(self.transport_template.string)
-            self.setCurrentXMLTemplate(file_path[0])
-            return file_path[0]
-        return False
+        if len(data_rows) == 0 and table_name: 
+            query = f"select * from {table_name}"
+            data_rows = self.application.db.run_db_query(query)
 
-    def setCurrentXMLTemplate(self, file_path):            
-        self.current_file = None
-        if file_path:
-            self.current_file = file_path
-        self.current_file_label.setText(str(file_path))
+        for row in data_rows:
+            w = TemplateEditorListWidgetItem(self, self.application, row, table_name=table_name)
+            self.SearchResultsListWidget.addItem(w)
 
-    def refreshXMLPreview(self):
-        self.xml_preview_timer.start(XML_PREVIEW_TIMER)
+        self.DatabaseRelations.load_table_relation_presets(table_name)
+    
+    def queryDatabaseObjects(self):
+        if not self.application.db.is_connected:
+            return False
+        
+        filter = self.ObjectQueryTextEdit.toPlainText()
+        data_rows = []
 
-    def reloadXMLPreview(self):
-        self.XMLPreviewBrowser.setText(self.transport_template.string)
-        self.loadXMLStructureView()
+        if self.XObjectKeysFilterRadioButton.isChecked():
+            filter_rows = filter.splitlines()
+            for object_query in filter_rows:
+                object_query = object_query.strip()
+                table_name = self.get_objectkey_table(object_query)
+                if table_name is not None:
+                    query = f"select * from {table_name} where XObjectKey = '{object_query}'"
+                    data_rows += self.application.db.run_db_query(query)
 
-    def loadXMLStructureView(self):
-        data = self.transport_template.children()
+        if self.SelectedTableFilterRadioButton.isChecked() and self.TableComboBox.currentText().strip() != "":
+            object_query = filter.strip()
+            table_name = self.TableComboBox.currentText()
+            if len(object_query) > 0:
+                query = f"select * from {table_name} where {object_query}"
+                data_rows += self.application.db.run_db_query(query)
+            else:
+                query = f"select * from {table_name}"
+                data_rows += self.application.db.run_db_query(query)
+        self.load_db_objects(data_rows=data_rows)
 
-        data_model =  XMLDataModel(
-            application=self.application,
-            parent_widget=self.XMLStructureTreeView, 
-            model_item_class=XMLDataItem,
-            data=data)
+    """ Custom Widget Operations """
+    def handle_data_change(self, changed_widget, column):       
+        if isinstance(changed_widget, TemplateEditorTreeWidgetItem):
+            changed_widget.handle_data_change(column)
+        self.XMLTemplateView.xml_structure_changed.emit()
 
-        self.XMLStructureTreeView.setModel(data_model)
+    def deleteSelectedItems(self):
+        tree_widgets = [self.XMLStructureTreeWidget]
+        for tree_widget in tree_widgets:
+            self.remove_tree_widget_selected_node(tree_widget)
+        
+    def remove_tree_widget_selected_node(self, tree_widget):
+        if tree_widget.hasFocus():
+            for node_widget in tree_widget.selectedItems():
+                if isinstance(node_widget, TemplateEditorTreeWidgetItem):
+                    node_widget.deleteObject()
+                
+                if node_widget in self.xml_structure_widgets:
+                    self.xml_structure_widgets.remove(node_widget)
+                parent_node = node_widget.parent()
+                
+                if parent_node:
+                    parent_node.removeChild(node_widget)
+                else:
+                    root = tree_widget.invisibleRootItem()
+                    root.removeChild(node_widget)
+
+            if tree_widget == self.XMLStructureTreeWidget:
+                self.XMLTemplateView.reset_xml_order()
+                self.XMLTemplateView.xml_structure_changed.emit()
+
+    def clear_widgets(self):
+        self.TableComboBox.clear()
+        self.TableFilter.clear()
+
+    def select_source_object(self, source_widget_item):
+        if isinstance(source_widget_item, TemplateEditorListWidgetItem):
+            self.last_widget_clicked = source_widget_item.listWidget()
+        
+        if isinstance(source_widget_item, TE_ObjectContainer_TreeWidgetItem):
+            self.last_widget_clicked = source_widget_item.treeWidget()
+
+        if isinstance(source_widget_item, TE_ObjectContainer_TreeWidgetItem) or isinstance(source_widget_item, TemplateEditorListWidgetItem):
+            relations = source_widget_item.object_relations
+            self.RelationsViewTreeWidget.clear()
+
+            if relations is not None:
+                self.DatabaseRelations.load_table_relations(relations, source_widget_item)  
+
+            if isinstance(source_widget_item, TE_ObjectContainer_TreeWidgetItem):
+                self.XMLEditorWidget.find_text(source_widget_item.search_text)
+            
+            self.DatabaseRelations.load_table_relation_presets(source_widget_item.table_name)
+    
+    def select_object_for_transport(self, add_without_relations=False):
+        selected_source_widget_items = self.SearchResultsListWidget.selectedItems()
+        if selected_source_widget_items is not None:
+            selected_target_widgets = self.XMLStructureTreeWidget.selectedItems()
+            task_item = None
+            if len(selected_target_widgets) == 0:
+                """ Create UI Node """
+                task_item = self.XMLTemplateView.add_transport_task("VI.Transport.ObjectTransport, VI.Transport")
+            else:
+                """ Find Parent Node """
+                for widget in selected_target_widgets:
+                    while task_item is None:
+                        if widget.parent() is None:
+                            task_item = widget
+                        widget = widget.parent()
+                    break
+
+            for source_widget_item in selected_source_widget_items:
+                """ Add all selected objects to selected Task Container """
+                if isinstance(source_widget_item, TemplateEditorListWidgetItem):
+                    pk_columns_dict = {}
+                    for pk_column in source_widget_item.pk_columns:
+                        if pk_column is not None and pk_column not in pk_columns_dict.keys():
+                            pk_columns_dict[pk_column] = source_widget_item.get_value(pk_column)
+
+                    container_element = task_item.xml_object.add_container(base_table=source_widget_item.table_name, display_name=source_widget_item.display_name, delete_residual_objects=str(int(self.DeleteResidualCheckBox.isChecked())), pk_columns=pk_columns_dict, relations=source_widget_item.object_relations)
+
+                    object_container = TE_ObjectContainer_TreeWidgetItem(self, self.application, object_data=source_widget_item.object_data, xml_object=container_element, source_widget_item=source_widget_item, table_name=source_widget_item.table_name)
+                    
+                    container_element.relations = object_container.object_relations
+
+                    task_item.addChild(object_container)
+
+                    self.XMLTemplateView.xml_structure_widgets.append(object_container)
+
+                    if add_without_relations:
+                        object_container.set_all_relations_state(0)
+                    
+                    task_item.setExpanded(True)
+
+        self.XMLTemplateView.xml_structure_changed.emit()
 
     def setupUi(self):
         self.gridLayout = QtWidgets.QGridLayout(self)
@@ -266,11 +371,30 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.TemplateEditorSplitter_Right = QtWidgets.QSplitter(self.TemplateEditorSplitter_Left)
         self.TemplateEditorSplitter_Right.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.TemplateEditorSplitter_Right.setObjectName("TemplateEditorSplitter_Right")
-        self.XMLStructureTreeView = QtWidgets.QTreeView(self.TemplateEditorSplitter_Right)
-        self.XMLStructureTreeView.setObjectName("XMLStructureTreeView")
-        # self.XMLStructureTreeView.header().setStretchLastSection(False)
-        self.XMLStructureTreeView.setHeaderHidden(False)   
-        self.XMLStructureTreeView.setWordWrap(True)
+        self.XMLStructureTreeWidget = QtWidgets.QTreeWidget(self.TemplateEditorSplitter_Right)
+        self.XMLStructureTreeWidget.setFrameShadow(QtWidgets.QFrame.Shadow.Sunken)
+        self.XMLStructureTreeWidget.setProperty("showDropIndicator", True)
+        self.XMLStructureTreeWidget.setDragEnabled(True)
+        self.XMLStructureTreeWidget.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.InternalMove)
+        self.XMLStructureTreeWidget.setAlternatingRowColors(True)
+        self.XMLStructureTreeWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.XMLStructureTreeWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.XMLStructureTreeWidget.setTextElideMode(QtCore.Qt.TextElideMode.ElideLeft)
+        self.XMLStructureTreeWidget.setIndentation(25)
+        self.XMLStructureTreeWidget.setRootIsDecorated(True)
+        self.XMLStructureTreeWidget.setUniformRowHeights(True)
+        self.XMLStructureTreeWidget.setAnimated(True)
+        self.XMLStructureTreeWidget.setAllColumnsShowFocus(True)
+        self.XMLStructureTreeWidget.setWordWrap(True)
+        self.XMLStructureTreeWidget.setColumnCount(2)
+        self.XMLStructureTreeWidget.setObjectName("XMLStructureTreeWidget")
+        self.XMLStructureTreeWidget.headerItem().setText(0, "1")
+        self.XMLStructureTreeWidget.headerItem().setText(1, "2")
+        self.XMLStructureTreeWidget.header().setVisible(False)
+        self.XMLStructureTreeWidget.header().setCascadingSectionResizes(False)
+        self.XMLStructureTreeWidget.header().setDefaultSectionSize(39)
+        self.XMLStructureTreeWidget.header().setHighlightSections(True)
+        self.XMLStructureTreeWidget.header().setStretchLastSection(False)
         self.verticalLayoutWidget = QtWidgets.QWidget(self.TemplateEditorSplitter_Right)
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
         self.XMLEditorLayout = QtWidgets.QVBoxLayout(self.verticalLayoutWidget)
@@ -280,14 +404,14 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.gridLayout.addWidget(self.TemplateEditorSplitter_Left, 0, 0, 1, 1)
         
         """ Additional UI Configurations """
-        self.XMLPreviewBrowser = xml_editor(self.application)
+        self.XMLEditorWidget = xml_editor(self.application)
         self.current_file_label = QtWidgets.QLabel(self)
         self.current_file_label.setProperty("Widget", "FilePathLabel")
         self.current_file_label.setTextInteractionFlags(
             QtCore.Qt.TextInteractionFlag.TextSelectableByMouse|QtCore.Qt.TextInteractionFlag.TextSelectableByKeyboard)
         self.current_file_label.setWordWrap(True)
         self.XMLEditorLayout.insertWidget(0, self.current_file_label)
-        self.XMLEditorLayout.insertWidget(1, self.XMLPreviewBrowser)
+        self.XMLEditorLayout.insertWidget(1, self.XMLEditorWidget)
 
         self.TemplateEditorSplitter_Search.setSizes(
             [round(self.height()*0.1), round(self.height()*0.3)])
@@ -310,7 +434,12 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.RelationsViewTreeWidget.setColumnWidth(2, 30)
         self.RelationsViewTreeWidget.setColumnWidth(3, 30)
 
-        
+        self.XMLStructureTreeWidget.setHeaderHidden(False)
+        self.XMLStructureTreeWidget.setHeaderLabels(
+            ['Transport Structure', 'Task Options'])
+        self.XMLStructureTreeWidget.setColumnWidth(0, 500)    
+        self.XMLStructureTreeWidget.setColumnWidth(1, 200)    
+        self.XMLStructureTreeWidget.setWordWrap(True)
         self.FindObjectButton.setEnabled(False)
         self.TableComboBox.setEnabled(False)
 
@@ -340,4 +469,4 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.DeselectAllToolButton.setText(_translate("Form", "Deselect All Relations"))
         self.AutoLoadCheckBox.setText(_translate("Form", "Auto Load Matching Objects from database"))
         self.RelationsViewTreeWidget.setSortingEnabled(False)
-        self.XMLStructureTreeView.setSortingEnabled(False)
+        self.XMLStructureTreeWidget.setSortingEnabled(False)

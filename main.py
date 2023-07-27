@@ -27,7 +27,6 @@ import lib.ui.WidgetFactory.DialogScreens as DialogScreens
 from lib.ui.WidgetFactory.PackageManager import PackageManager
 from lib.ui.WidgetFactory.SideBar import SideBar
 from lib.ui.WidgetFactory.XMLTemplateEditor import XMLTemplateEditor
-from lib.ui.WidgetFactory.XMLTemplateEditor2 import XMLTemplateEditor as XMLTemplateEditor2
 from lib.ProgramConfiguration import ProgramConfiguration, ObjectConfiguration
 
 #""" Database Connector Module """
@@ -38,8 +37,6 @@ VERSION = '0.6.1'
 class Transport_Manager(QMainWindow):
     """Main window class for connection launcher"""
 
-    # refresh_widget = pyqtSignal(object)
-    # xml_structure_changed = pyqtSignal()
     connectionDataChanged = pyqtSignal()
     currentViewChanged = pyqtSignal(int)
     
@@ -77,11 +74,9 @@ class Transport_Manager(QMainWindow):
         # Bring in the Main Tab Widgets
         self.PackageManager = PackageManager(self)
         self.XMLTemplateEditor = XMLTemplateEditor(self)
-        self.XMLTemplateEditor2 = XMLTemplateEditor2(self)
 
         self.ui.MainTabWidget.addTab(self.PackageManager, "Package Manager")
         self.ui.MainTabWidget.addTab(self.XMLTemplateEditor, "XML Template Editor")
-        self.ui.MainTabWidget.addTab(self.XMLTemplateEditor2, "XML Template Editor")
         self.ui.MainTabWidget.addTab(QWidget(), "Settings")
 
         self.ui.MainTabWidget.tabBar().setVisible(False)
@@ -92,16 +87,25 @@ class Transport_Manager(QMainWindow):
         self.installEventFilter(self)
 
         #TODO: Rework required
-        self.ui.actionAdd_DatabaseConnection.triggered.connect(self.get_connection_details)
-        self.ui.actionSaveFile.triggered.connect(self.XMLTemplateEditor.XMLTemplateView.saveXMLTemplate)
-        self.ui.actionSave_As.triggered.connect(self.XMLTemplateEditor.XMLTemplateView.saveXMLTemplateAs)
-        # self.ui.actionOpen_File.triggered.connect(
-        #     lambda: self.XMLTemplateEditor.XMLTemplateView.openXMLTemplate())
+        self.ui.actionAdd_DatabaseConnection.triggered.connect(
+            self.get_connection_details)
+        
+        self.ui.actionSaveFile.triggered.connect(
+            self.XMLTemplateEditor.saveXMLTemplate)
+        
+        self.ui.actionSave_As.triggered.connect(
+            self.XMLTemplateEditor.saveXMLTemplateAs)
+        
         self.ui.actionOpen_File.triggered.connect(
-            lambda: self.XMLTemplateEditor2.openXMLTemplate())
-        self.ui.actionChange_WorkingDirectory.triggered.connect(self.PackageManager.changeWorkingDirectory)
-        self.ui.actionNew_Transport_Template.triggered.connect(self.XMLTemplateEditor.XMLTemplateView.newTransportTemplate)
+            lambda: self.XMLTemplateEditor.openXMLTemplate())
 
+        self.ui.actionChange_WorkingDirectory.triggered.connect(
+            self.PackageManager.changeWorkingDirectory)
+        
+        self.ui.actionNew_Transport_Template.triggered.connect(
+            self.XMLTemplateEditor.newTransportTemplate)
+
+        #TODO: Definitely rework required
         planner_menu = self.ui.menubar.addMenu("Execution Planner")
         new_plan_action = planner_menu.addAction("Add New Plan")
         config_action = planner_menu.addAction("Configure")
@@ -142,7 +146,7 @@ class Transport_Manager(QMainWindow):
         
 
         """ Initial transport template object """
-        self.XMLTemplateEditor.XMLTemplateView.newTransportTemplate()
+        # self.XMLTemplateEditor.newTransportTemplate()
         self.PackageManager.addExecutionPlan()
 
     def enter_shortcut(self):

@@ -33,7 +33,7 @@ class PackageManager(QtWidgets.QWidget):
         self.PackageViewTreeView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
 
         self.PackageManagerSplitter.setSizes(
-            [round(self.width()*0.2), round(self.width()*0.4)])
+            [round(self.application.width()*0.3), round(self.application.width()*0.7)])
 
         # Context Menu
         self.PackageViewTreeView.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
@@ -72,6 +72,7 @@ class PackageManager(QtWidgets.QWidget):
             return False
         
         self.setupWorkingDirectory(workdir)
+        self.application.ui.MainTabWidget.setCurrentWidget(self)
 
     def setupWorkingDirectory(self, workdir):
         sort_attribute = ""
@@ -280,7 +281,7 @@ class PackageManager(QtWidgets.QWidget):
         if not file_path.is_file():
             file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.touch()
-        self.application.XMLTemplateEditor.XMLTemplateView.openXMLTemplate(str(file_path))
+        self.application.XMLTemplateEditor.openXMLTemplate(str(file_path))
 
     def collapseAll(self):
         self.PackageViewTreeView.collapseAll()

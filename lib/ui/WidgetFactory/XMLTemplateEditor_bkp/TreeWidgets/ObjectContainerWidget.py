@@ -201,7 +201,7 @@ class TE_ObjectContainer_TreeWidgetItem(TemplateEditorTreeWidgetItem):
             else:
                 self.setCheckState(1, Qt.CheckState.Unchecked)
 
-        self.XMLTemplateEditor.XMLTemplateView.xml_structure_changed.emit()
+        self.XMLTemplateEditor.xml_structure_changed.emit()
 
     def handle_data_change(self, column):
         # print("data change in object container", column)

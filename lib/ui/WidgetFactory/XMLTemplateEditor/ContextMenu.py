@@ -1,86 +1,89 @@
 from PyQt6.QtWidgets import (QMenu)
 from PyQt6.QtCore import pyqtSignal
-
-from .xml.transport_template_custom_object import transport_template_custom_object
-from .xml.transport_task import sql_script_transport_task
-from .TreeWidgets import TE_ObjectContainer_TreeWidgetItem, TE_Table_TreeWidgetItem, TE_RelationColumn_TreeWidgetItem, TE_SQLScriptContainer_TreeWidgetItem, TE_SQLTransportTask_TreeWidgetItem
-
+from lib.data.DataModels.XMTemplateEditor.xml_object_definitions.transport_template_custom_object import transport_template_custom_object
 class RelationContextMenu(QMenu):
     """ Custom QMenu used to manage relation items """
     
-    follow_table_relations = pyqtSignal(object)
+    onFollowTableRelation = pyqtSignal(object)
 
-    def __init__(self, parent, source_widget_item):
+    def __init__(self, parent, source_index):
         super(RelationContextMenu, self).__init__()
         self.parent = parent
 
-        if source_widget_item:
-            
-            if isinstance(source_widget_item, TE_Table_TreeWidgetItem):
-                action_follow_table_relations = self.addAction(f"Add Table Relations: {source_widget_item.follow_table}")
-                action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget_item) )
-            if isinstance(source_widget_item, TE_RelationColumn_TreeWidgetItem):
-                action_follow_table_relations = self.addAction(f"Add Table Relations: {source_widget_item.follow_table}")
-                action_follow_table_relations.triggered.connect(lambda: self.follow_table_relations.emit(source_widget_item) )
+        if source_index and source_index.isValid():
+            source_item = source_index.internalPointer()
+            if source_item.follow_table:
+                menuActionFollowRelation = self.addAction(f"Add Table Relations: {source_item.follow_table}")
+                menuActionFollowRelation.triggered.connect(lambda: self.onFollowTableRelation.emit(source_index))
 
 class XMLObjectContextMenu(QMenu):
     """ Custom QMenu used to manage relation items """
     
-    list_related_objects = pyqtSignal(object)
-    load_object_from_database = pyqtSignal(object)
-    save_relation_preset = pyqtSignal(object)
-    add_transport_task = pyqtSignal(str)
-    edit_sql_script = pyqtSignal(object)
-    add_sql_script = pyqtSignal(object, str)
+    onListRelatedObjectData = pyqtSignal(object)
+    onLoadDatabaseObject = pyqtSignal(object)
+    onSaveRelationPreset = pyqtSignal(object)
+    onAddTransportTask = pyqtSignal(str)
+    onEditSQLScript = pyqtSignal(object)
+    onAddSQLScript = pyqtSignal(object, str)
 
-    def __init__(self, parent, source_widget_item):
+    def __init__(self, parent, source_index):
         super(XMLObjectContextMenu, self).__init__()
         self.parent = parent
         self.menu_items = []
 
-        if isinstance(source_widget_item, TE_ObjectContainer_TreeWidgetItem):
-
-            action_list_related_objects = self.addAction("List Related Objects")
-            action_list_related_objects.triggered.connect(lambda: self.list_related_objects.emit(source_widget_item) )
+        #clicked on a specific object
+        if source_index and source_index.isValid():
+            source_item = source_index.internalPointer()
+            print("object clicked", source_item.xml_object_class)
             
-            self.addSeparator()
-
-            if isinstance(source_widget_item.xml_object, transport_template_custom_object) and source_widget_item.object_data is None:
-                action_load_from_database = self.addAction("Load Object From Database")
-                action_load_from_database.triggered.connect(lambda: self.load_object_from_database.emit(source_widget_item) )
-                self.menu_items.append(action_load_from_database)
-
-            if source_widget_item.object_data is not None:
-                action_save_preset = self.addAction("Save Relations as Preset")
-                action_save_preset.triggered.connect(lambda: self.save_relation_preset.emit(source_widget_item) )
-                self.menu_items.append(action_save_preset)
-
-        if isinstance(source_widget_item, TE_SQLScriptContainer_TreeWidgetItem):
-            action_edit_script = self.addAction("Edit SQL Script")
-            action_edit_script.triggered.connect(lambda: self.edit_sql_script.emit(source_widget_item))
-            self.menu_items.append(action_edit_script)
-
-        if isinstance(source_widget_item, TE_SQLTransportTask_TreeWidgetItem):
-            if isinstance(source_widget_item.xml_object, sql_script_transport_task):
-                if source_widget_item.xml_object.common_sql is None:
-                    action_add_common_sql_script = self.addAction("Add System SQL Script (CommonSQL)")
-                    action_add_common_sql_script.triggered.connect(lambda: self.add_sql_script.emit(source_widget_item, "CommonSQL"))
-                    self.menu_items.append(action_add_common_sql_script)
+            # Prepare Transport Object specific menu items
+            if source_item.xml_object_class == "Transport_Object":
+                menuActionListRelatedObjectData = self.addAction("List Related Objects")
+                menuActionListRelatedObjectData.triggered.connect(lambda: self.onListRelatedObjectData.emit(source_index))
                 
-                if source_widget_item.xml_object.payload_sql is None:
-                    action_add_payload_sql_script = self.addAction("Add User Data SQL Script (PayloadSQL)")
-                    action_add_payload_sql_script.triggered.connect(lambda: self.add_sql_script.emit(source_widget_item, "PayloadSQL"))
-                    self.menu_items.append(action_add_payload_sql_script)
+                self.addSeparator()
 
-        if source_widget_item is None:
-            transport_menu = self.addMenu("Add Transport Task")
-            self.menu_items.append(transport_menu)
+                menuActionLoadDatabaseObject = self.addAction("Load Object From Database")
+                menuActionLoadDatabaseObject.triggered.connect(lambda: self.onLoadDatabaseObject.emit(source_index))
+                
+                menuActionSavePreset = self.addAction("Save Relations as Preset")
+                menuActionSavePreset.triggered.connect(lambda: self.onSaveRelationPreset.emit(source_index) )
+                
+                self.menu_items.append(menuActionListRelatedObjectData)
+                self.menu_items.append(menuActionLoadDatabaseObject)
+                self.menu_items.append(menuActionSavePreset)
+            
+            # Prepare SQL Script object context Menu
+            if source_item.xml_object_class == "Transport_SQL_Object":
+                menuActionEditSQLScript = self.addAction("Edit SQL Script")
+                menuActionEditSQLScript.triggered.connect(lambda: self.onEditSQLScript.emit(source_index))
+                self.menu_items.append(menuActionEditSQLScript)
 
-            action_add_object_task = transport_menu.addAction("Add Object Transport Task")
-            action_add_object_task.triggered.connect(lambda: self.add_transport_task.emit("VI.Transport.ObjectTransport, VI.Transport"))
+            # Prepare SQL Task context Menu
+            if source_item.xml_object_class == "SQL_Transport_Task":
+                if source_item._xml_data.common_sql is None:
+                    menuActionAddSQLScript = self.addAction("Add System SQL Script (CommonSQL)")
+                    menuActionAddSQLScript.triggered.connect(lambda: self.onAddSQLScript.emit(source_index, "CommonSQL"))
+                    self.menu_items.append(menuActionAddSQLScript)
+                
+                if source_item._xml_data.payload_sql is None:
+                    menuActionAddPayloadSQLScript = self.addAction("Add User Data SQL Script (PayloadSQL)")
+                    menuActionAddPayloadSQLScript.triggered.connect(lambda: self.onAddSQLScript.emit(source_index, "PayloadSQL"))
+                    self.menu_items.append(menuActionAddPayloadSQLScript)
+        
+        # no index, white space clicked
+        if not source_index.isValid():
+            menuTransportTask = self.addMenu("Add Transport Task")
+            
+            menuActionAddObjectTransportTask = menuTransportTask.addAction("Add Object Transport Task")
+            menuActionAddObjectTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.ObjectTransport, VI.Transport"))
 
-            action_add_sql_task = transport_menu.addAction("Add SQL Transport Task")
-            action_add_sql_task.triggered.connect(lambda: self.add_transport_task.emit("VI.Transport.SQLTransport, VI.Transport"))
+            menuActionAddSQLTransportTask = menuTransportTask.addAction("Add SQL Transport Task")
+            menuActionAddSQLTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.SQLTransport, VI.Transport"))
+
+            self.menu_items.append(menuTransportTask)
+            self.menu_items.append(menuActionAddObjectTransportTask)
+            self.menu_items.append(menuActionAddSQLTransportTask)
 
 
         

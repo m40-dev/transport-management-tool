@@ -5,8 +5,8 @@ from .transport_task import transport_task, sql_script_transport_task
 
 class transport_template(transport_template_custom_object):
 
-    def __init__(self, application, source_element=None):
-        super(transport_template, self).__init__(application=application, node_class="TransportTemplate", source_element=source_element)
+    def __init__(self, parent, source_element=None):
+        super(transport_template, self).__init__(parent=parent, node_class="TransportTemplate", source_element=source_element)
 
         self.data.attrib["Version"] = "1.0"
 
@@ -14,39 +14,39 @@ class transport_template(transport_template_custom_object):
         header = etree.Element("Header")
 
         """ Transport description setup """
-        self.transport_description = object_parameter(self.application, "Description", "Transport Template Description")
+        self.transport_description = object_parameter(self.parent, "Description", "Transport Template Description")
 
         header.append(self.transport_description.data)
 
         tasks_root = etree.Element("Tasks")
 
         """ Build the transport structure blocks """
-        self.append(header)
-        self.append(tasks_root)
+        super().xml_append_node(header)
+        super().xml_append_node(tasks_root)
+
+    @property
+    def xml_object_class(self):
+        return "Transport_Template"
 
     def add_transport_task(self, task_class):
         task_obj = None
         if task_class == "VI.Transport.ObjectTransport, VI.Transport":
-            task_obj = transport_task(self.application, task_class)
+            task_obj = transport_task(self.parent, task_class)
         elif task_class == "VI.Transport.SQLTransport, VI.Transport":
-            task_obj = sql_script_transport_task(self.application, task_class)
+            task_obj = sql_script_transport_task(self.parent, task_class)
         else:
-            task_obj = transport_task(self.application, task_class)
+            task_obj = transport_task(self.parent, task_class)
 
         if task_obj:
             self.tasks_root.append(task_obj.data)
             return task_obj
-    
-    def clear_xml_tasks(self):
-        self.delete_child_items(self.tasks_root)
 
     @property
     def tasks_root(self):
-        return self.find_child(self.data, "Tasks")
+        return self.xml_find_child(self.data, "Tasks")
     
-    @property
-    def tasks(self):
-        task_nodes = self.find_children(self.data, "Tasks")
+    def children(self):
+        task_nodes = self.xml_find_children(self.data, "Tasks")
         task_list = []
         if task_nodes:
             for task in task_nodes:
@@ -54,20 +54,20 @@ class transport_template(transport_template_custom_object):
                     task_type = task.attrib.get("Class", None)
                     if task_type:
                         if task_type == "VI.Transport.ObjectTransport, VI.Transport":
-                            task_obj = transport_task(self.application, task_type, task)
+                            task_obj = transport_task(self.parent, task_type, task)
                         if task_type == "VI.Transport.SQLTransport, VI.Transport":
-                            task_obj = sql_script_transport_task(self.application, task_type, task)
+                            task_obj = sql_script_transport_task(self.parent, task_type, task)
                         else:
-                            task_obj = transport_task(self.application, task_type, task)
+                            task_obj = transport_task(self.parent, task_type, task)
                     if task_obj:
                         task_list.append(task_obj)
         return task_list
 
     @property
     def header(self):
-        return self.find_child(self.data, "Header")
+        return self.xml_find_child(self.data, "Header")
 
-    def parse_xml_file(self, xml_file):
+    def parse_xml_file(self, xml_file=None):
         if not xml_file:
             return False
 
@@ -76,10 +76,21 @@ class transport_template(transport_template_custom_object):
             xmlObj = etree.parse(xml_file, parser=xml_parser)
         except:
             #TODO: fix temporary handling of file parsing issues
-            self.application.XMLTemplateEditor.XMLTemplateView.newTransportTemplate(xml_file)
+            # self.parent.XMLTemplateEditor.newTransportTemplate(xml_file)
             return False
 
         if xmlObj is not None:
             self.data = xmlObj
-            self.application.XMLTemplateEditor.XMLTemplateView.xml_structure_changed.emit()
-            self.application.XMLTemplateEditor.XMLTemplateView.reload_xml_structure()
+            # self.parent.XMLTemplateEditor.xml_structure_changed.emit(xml_file)
+            # self.parent.XMLTemplateEditor.reload_xml_structure()
+
+    def xml_remove_children(self):
+        super().xml_remove_children(self.tasks_root)
+
+    def xml_append_node(self, node_object):
+        if isinstance(node_object, etree._Element):
+            self.tasks_root.append(node_object)
+            return True
+        
+        if isinstance(node_object, transport_template_custom_object):
+            self.tasks_root.append(node_object.data)

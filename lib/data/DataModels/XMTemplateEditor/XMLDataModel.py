@@ -1,29 +1,60 @@
-from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData
+from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData, pyqtSignal
+from .xml_object_definitions import transport_template
+
 import json
+from .ObjectDataItem import ObjectDataItem
+from .XMLDataItem import XMLDataItem
 
 class XMLDataModel(QAbstractItemModel):
+    databaseObjectsLoaded = pyqtSignal(object, dict)
+    xmlDataStructureChanged = pyqtSignal()
 
-    def __init__(self, application, data, model_item_class, parent_widget=None):
+    def __init__(self, application, data_source, parent_widget=None):
         super().__init__(parent_widget)
-        self.modelDataClass = model_item_class
         self.application = application
         self.object_configuration = application.object_configuration
-        self.rootItem = self.modelDataClass(application=self.application, object_class="RootItem", model_reference=self)
+        self.transport_template = transport_template(self)
         self._headers = ["XML Transport Structure"]
         self.treeview = parent_widget
+        self.export_file_path = data_source
+
+        self.rootItem = XMLDataItem(
+            application=self.application, 
+            object_class="RootItem", 
+            xml_custom_object=self.transport_template, 
+            model_reference=self)
+
+        if data_source:
+            self.transport_template.parse_xml_file(data_source)
+
+        data = self.transport_template.children()
         if data:
             self.setupModelData(data, self.rootItem)
+
+        # connect model data signals 
+        self.databaseObjectsLoaded.connect(self.onDatabaseObjectsLoaded)
 
     def setupModelData(self, data, parent):
         """ Main method used to load all data into the model """
         for task_object in data:
-            task_item = self.modelDataClass(
-                application=self.application,
-                object_class=task_object._xml_object_class, 
+            task_item = XMLDataItem(
+                application=self.application, 
                 xml_custom_object=task_object, 
                 parent=parent,
                 model_reference=self)
             parent.addChild(task_item)
+
+    def reload_model_data(self):
+        print("reload model data")
+        if self.export_file_path:
+            self.beginResetModel()
+            self.rootItem._children = []
+            self.transport_template.parse_xml_file(self.export_file_path)
+            data = self.transport_template.children()
+            if data:
+                self.setupModelData(data, self.rootItem)
+            self.endResetModel()
+        self.xmlDataStructureChanged.emit()
 
     @property
     def headers(self):
@@ -133,6 +164,7 @@ class XMLDataModel(QAbstractItemModel):
         for index in indexes:
             if index.isValid():
                 item = index.internalPointer()
+
                 task_data = item.task_data()
                 if task_data not in items_data:
                     items_data.append(task_data)
@@ -169,25 +201,24 @@ class XMLDataModel(QAbstractItemModel):
         
         for dropped_item in jsondata:
             source_item_uid = dropped_item.get('uid', None)
+            xml_object_class = dropped_item.get('xml_object_class', None)
+            xml_data = dropped_item.get('xml_data', None)
+            # print("dropped item", xml_data)
             source_item = None
             if source_item_uid:
                 # find the source Item and save it
                 source_item = self.find_item_by_attribute("uid", source_item_uid)
                 if source_item:
                     source_items.append(source_item)
-
-            object_class = dropped_item.get('objectclass', "XMLDataItem")
             
             # print("dropped item:", dropped_item)
             # create new object from the source item data and add it to the list, all dropped items will be inserted at once
-            new_item = self.modelDataClass(
-                application=self.application, 
-                object_class=object_class, 
-                task_data=dropped_item, 
+            new_item = XMLDataItem(
+                application=self.application,
                 parent=parentItem,
                 model_reference=self)
+            # new_item.fromString(xml_string=xml_data, xml_object_class=xml_object_class)
             newItems.append(new_item)
-            new_item.is_saved = False
             
             #emit relocation signal for the new item and tell it about its source item from the same model
             if source_item:
@@ -199,8 +230,8 @@ class XMLDataModel(QAbstractItemModel):
         #insert dropped items at new location
         self.insert_items(parentIndex, newItems, row, column)
         
-        for new_item in newItems:
-            new_item.updateSortOrder()
+        # for new_item in newItems:
+        #     new_item.updateSortOrder()
 
         #remove source objects at once
         for source_item in source_items:
@@ -208,18 +239,22 @@ class XMLDataModel(QAbstractItemModel):
         # end = time.time()
         # print("drop event handling", end - start, len(decodedData))
         print("drop event handling", len(decodedData))
+        for new_item in newItems:
+            new_item.refreshModelStructure()
+
+        self.xmlDataStructureChanged.emit()
 
         return True
     
-    def insert_item(self, object_class, dict_data, parentIndex=QModelIndex()):
+    def insert_item(self, object_class, object_data, parentIndex=QModelIndex()):
         parentItem = self.rootItem
         if parentIndex.isValid():
             parentItem = parentIndex.internalPointer()  
         row = parentItem.childCount()
-        newTask = [self.modelDataClass(
+        newTask = [XMLDataItem(
             application=self.application, 
             object_class=object_class, 
-            task_data=dict_data, 
+            object_data=object_data,
             parent=parentItem,
             model_reference=self)]
         newTask[0].is_saved = False
@@ -285,3 +320,19 @@ class XMLDataModel(QAbstractItemModel):
                         if result:
                             return result
         return False
+
+    def exportXMLData(self):
+        return self.transport_template.string
+
+    def onDatabaseObjectsLoaded(self, source_object, object_data):
+        data_items = []
+        print("database objects loaded", len(data_items))
+        for table_name, results in object_data.items():
+            table_display_name = table_name
+            if self.application.db:
+                table_display_name = self.application.db.table_info.get(table_name, table_name)
+            print(f"{table_name} table data loaded - ({len(results)})")
+            table_data_item = ObjectDataItem(parent=source_object, application=self.application, table_data=table_display_name, object_data=results, model_reference=self)
+            data_items.append(table_data_item)
+        parentIndex = self.indexOf(source_object)
+        self.insert_items(parentIndex=parentIndex, list_of_items=data_items)

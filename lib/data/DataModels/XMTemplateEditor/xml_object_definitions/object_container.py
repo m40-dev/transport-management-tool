@@ -3,8 +3,8 @@ from .transport_template_custom_object import transport_template_custom_object
 from .object_parameter import object_parameter
             
 class object_container(transport_template_custom_object):
-    def __init__(self, application, source_element=None, base_table=None, display_name=None, delete_residual_objects=0, pk_columns={}, relations=[]):
-        super(object_container, self).__init__(application=application, node_class="Parameter", source_element=source_element)
+    def __init__(self, parent, source_element=None, base_table=None, display_name=None, delete_residual_objects=0, pk_columns={}, relations=[]):
+        super(object_container, self).__init__(parent=parent, node_class="Parameter", source_element=source_element)
         self.relations = relations
         self.pk_columns = pk_columns
         self.base_object_node = None
@@ -17,24 +17,24 @@ class object_container(transport_template_custom_object):
             self.data.attrib['Name'] = "Container"
 
             """ Container transport settings """
-            self.delete_residuals_node = object_parameter(self.application, "DeleteResiduals", delete_residual_objects)
+            self.delete_residuals_node = object_parameter(self.parent, "DeleteResiduals", delete_residual_objects)
 
             """ Add selected Transport relations """
-            self.object_relations_node = object_parameter(self.application, "Relations")
+            self.object_relations_node = object_parameter(self.parent, "Relations")
 
-            self.base_object_node = object_parameter(self.application, "BaseObject")
+            self.base_object_node = object_parameter(self.parent, "BaseObject")
 
-            base_object_table = object_parameter(self.application, "Tablename", base_table)
-            base_object_display = object_parameter(self.application, "Display", display_name)
+            base_object_table = object_parameter(self.parent, "Tablename", base_table)
+            base_object_display = object_parameter(self.parent, "Display", display_name)
             
             """ build the object container """
             self.base_object_node.append(base_object_table)
             self.base_object_node.append(base_object_display)
 
-            base_object_columns = object_parameter(self.application, "Columns")
+            base_object_columns = object_parameter(self.parent, "Columns")
             for pk_column, pk_column_value in pk_columns.items():
                 if pk_column is not None:
-                    base_object_column = object_parameter(self.application, pk_column, pk_column_value)
+                    base_object_column = object_parameter(self.parent, pk_column, pk_column_value)
                     base_object_columns.append(base_object_column)
 
             self.base_object_node.append(base_object_columns)
@@ -50,13 +50,16 @@ class object_container(transport_template_custom_object):
             """ load data from source element """
             for element in self.children():
                 if element.attrib["Name"] == "BaseObject":
-                    self.base_object_node = object_parameter(self.application, "BaseObject", source_element=element)
+                    self.base_object_node = object_parameter(self.parent, "BaseObject", source_element=element)
                     # print(element)
                     
                 if element.attrib["Name"] == "DeleteResiduals":
-                    self.delete_residuals_node = object_parameter(self.application, "DeleteResiduals", source_element=element)
+                    self.delete_residuals_node = object_parameter(self.parent, "DeleteResiduals", source_element=element)
                 if element.attrib["Name"] == "Relations":
-                    self.object_relations_node = object_parameter(self.application, "Relations", source_element=element)
+                    self.object_relations_node = object_parameter(self.parent, "Relations", source_element=element)
+    @property
+    def xml_object_class(self):
+        return "Transport_Object"
 
     @property
     def description(self):
@@ -67,7 +70,7 @@ class object_container(transport_template_custom_object):
     def table_name(self):
         table_name = ""
         if isinstance(self.base_object_node, transport_template_custom_object):
-            for base_object_data_node in self.base_object_node.get_child_objects():
+            for base_object_data_node in self.base_object_node.xml_get_children():
                 if base_object_data_node.attrib["Name"] == "Tablename":
                     return base_object_data_node.text
         return table_name
@@ -76,7 +79,7 @@ class object_container(transport_template_custom_object):
     def key_columns(self):
         key_columns = {}
         if isinstance(self.base_object_node, transport_template_custom_object):
-            for base_object_data_node in self.base_object_node.get_child_objects():
+            for base_object_data_node in self.base_object_node.xml_get_children():
                 if base_object_data_node.attrib["Name"] == "Columns":
                     for column_node in base_object_data_node.getchildren():
                         column_name = column_node.attrib.get("Name", "")
@@ -98,7 +101,7 @@ class object_container(transport_template_custom_object):
         object_relations = {}
 
         if isinstance(self.object_relations_node, transport_template_custom_object):
-            for relation in self.object_relations_node.get_child_objects():
+            for relation in self.object_relations_node.xml_get_children():
                 relation_data = []
                 if "|" in relation.text:
                     relation_data = relation.text.split("|")
@@ -168,13 +171,13 @@ class object_container(transport_template_custom_object):
                     for relation_key in relation_keys:
                         if relation_key not in local_relation_list:
                             local_relation_list.append(relation_key)
-                            relation_object = object_parameter(self.application, "Relation", relation_key)
+                            relation_object = object_parameter(self.parent, "Relation", relation_key)
                             self.object_relations_node.append(relation_object)
 
-            # self.application.load_xml_preview()
+            # self.parent.load_xml_preview()
             self.refresh_xml_preview()
             return True
-        # self.application.load_xml_preview()
+        # self.parent.load_xml_preview()
         self.refresh_xml_preview()
         return False
 

@@ -21,8 +21,8 @@ class transport_template(transport_template_custom_object):
         tasks_root = etree.Element("Tasks")
 
         """ Build the transport structure blocks """
-        self.xml_append_node(header)
-        self.xml_append_node(tasks_root)
+        self.append(header)
+        self.append(tasks_root)
 
     def add_transport_task(self, task_class):
         task_obj = None
@@ -42,10 +42,11 @@ class transport_template(transport_template_custom_object):
 
     @property
     def tasks_root(self):
-        return self.xml_find_child(self.data, "Tasks")
+        return self.find_child(self.data, "Tasks")
     
-    def children(self):
-        task_nodes = self.xml_find_children(self.data, "Tasks")
+    @property
+    def tasks(self):
+        task_nodes = self.find_children(self.data, "Tasks")
         task_list = []
         if task_nodes:
             for task in task_nodes:
@@ -64,7 +65,7 @@ class transport_template(transport_template_custom_object):
 
     @property
     def header(self):
-        return self.xml_find_child(self.data, "Header")
+        return self.find_child(self.data, "Header")
 
     def parse_xml_file(self, xml_file):
         if not xml_file:
@@ -75,10 +76,10 @@ class transport_template(transport_template_custom_object):
             xmlObj = etree.parse(xml_file, parser=xml_parser)
         except:
             #TODO: fix temporary handling of file parsing issues
-            self.application.XMLTemplateEditor2.newTransportTemplate(xml_file)
+            self.application.XMLTemplateEditor.newTransportTemplate(xml_file)
             return False
 
         if xmlObj is not None:
             self.data = xmlObj
-            self.application.XMLTemplateEditor2.xml_structure_changed.emit()
-            # self.application.XMLTemplateEditor2.reload_xml_structure()
+            self.application.XMLTemplateEditor.xml_structure_changed.emit()
+            # self.application.XMLTemplateEditor.reload_xml_structure()

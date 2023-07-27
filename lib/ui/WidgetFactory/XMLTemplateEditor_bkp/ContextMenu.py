@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import (QMenu)
 from PyQt6.QtCore import pyqtSignal
 
-from .xml_object_definitions.transport_template_custom_object import transport_template_custom_object
-from .xml_object_definitions.transport_task import sql_script_transport_task
+from .xml.transport_template_custom_object import transport_template_custom_object
+from .xml.transport_task import sql_script_transport_task
 from .TreeWidgets import TE_ObjectContainer_TreeWidgetItem, TE_Table_TreeWidgetItem, TE_RelationColumn_TreeWidgetItem, TE_SQLScriptContainer_TreeWidgetItem, TE_SQLTransportTask_TreeWidgetItem
 
 class RelationContextMenu(QMenu):

@@ -2,11 +2,11 @@ from lxml import etree
 
 class transport_template_custom_object(object):
 
-    def __init__(self, application, node_class, source_element=None):
+    def __init__(self, parent, node_class, source_element=None):
         super(transport_template_custom_object, self).__init__()
-        self.application = application
-        self.parent = application
+        self.parent = parent
         self.data = None
+        self._xml_object_class = node_class
 
         """ Node setup for new objects """
         if source_element is None:
@@ -18,43 +18,62 @@ class transport_template_custom_object(object):
             self.data = source_element
             self.data.tail = None
 
+        self._display = "\n".join(self.data.itertext()).strip()
+        self._description = ""
+
+    @property
+    def xml_object_class(self):
+        return self._xml_object_class
+
     @property
     def string(self):
         etree.indent(self.data)
         return etree.tostring(self.data, pretty_print=True, encoding='UTF-8', method="xml").decode('UTF-8')
 
     @property
+    def display(self):
+        return self._display
+
+    @display.setter
+    def display(self, value):
+        self._display = value
+
+    @property
     def description(self):
-        return None
+        return self._description
+    
+    @description.setter
+    def description(self, value):
+        self._description = value
         
-    def find_parent(self, element, class_lookup):
+    def xml_find_parent(self, element, class_lookup):
         parent_node = element.getparent()
         if parent_node is not None:
             if parent_node.tag == class_lookup:
                 return parent_node
-            return self.find_parent(parent_node, class_lookup)
+            return self.xml_find_parent(parent_node, class_lookup)
         else:
             return None
 
-    def find_children(self, element, class_lookup):
+    def xml_find_children(self, element, class_lookup):
         target_node = element.find(class_lookup)
         if target_node is not None:
             return target_node.getchildren()
         return None
     
-    def find_child(self, element, class_lookup):
+    def xml_find_child(self, element, class_lookup):
         target_node = element.find(class_lookup)
         if target_node is not None:
             return target_node
         return None
     
-    def get_child_object(self, class_lookup, parent_element=None):
+    def xml_get_child(self, class_lookup, parent_element=None):
         if parent_element is None:
             parent_element = self.data
-        child_element = self.find_child(parent_element, class_lookup)
+        child_element = self.xml_find_child(parent_element, class_lookup)
         return child_element
 
-    def get_child_objects(self, class_lookup=None, parent_element=None):
+    def xml_get_children(self, class_lookup=None, parent_element=None):
         child_objects = []
 
         if parent_element is None:
@@ -70,10 +89,7 @@ class transport_template_custom_object(object):
                     child_objects.append(element)
         return child_objects
 
-    def refresh_xml_preview(self):
-        self.application.XMLTemplateEditor.XMLTemplateView.xml_structure_changed.emit()
-
-    def delete_object(self):
+    def xml_delete_object(self):
         parent_node = self.data.getparent()
         previous_node = self.data.getprevious()
 
@@ -85,18 +101,16 @@ class transport_template_custom_object(object):
         
         return True
 
-    def get_attribute(self, attribute):
+    def xml_get_attribute(self, attribute):
         value = ""
         if attribute in self.data.attrib.keys():
             value = self.data.attrib[attribute]
         return value
 
-    def set_attribute_value(self, attribute, value, refresh=True):
+    def xml_set_attribute(self, attribute, value):
         self.data.attrib[attribute] = str(value)
-        if refresh:
-            self.refresh()
 
-    def append(self, node_object):
+    def xml_append_node(self, node_object):
         if isinstance(node_object, etree._Element):
             self.data.append(node_object)
             return True
@@ -104,17 +118,12 @@ class transport_template_custom_object(object):
         if isinstance(node_object, transport_template_custom_object):
             self.data.append(node_object.data)
     
-    def delete_child_items(self, element=None):
+    def xml_remove_children(self, element=None):
         if element is None:
             element = self.data
 
         for child_element in element.getchildren():
             element.remove(child_element)
 
-    def set_text(self, value):
-        self.delete_child_items()
-        self.data.text = str(value)
-
-    @property
-    def text(self):
-        return "\n".join(self.data.itertext()).strip()
+    def children(self):
+        return self.xml_get_children()
