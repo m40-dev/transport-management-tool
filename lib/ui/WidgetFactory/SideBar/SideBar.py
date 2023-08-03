@@ -1,27 +1,42 @@
 
-from PyQt6.QtCore import QObject, pyqtSignal
-from PyQt6.QtWidgets import QToolButton
+from PyQt6.QtCore import pyqtSignal, QSize
+from PyQt6.QtWidgets import QToolButton, QWidget, QVBoxLayout
+from PyQt6.QtGui import QIcon
 
 
-class SideBar(QObject):
+class SideBar(QWidget):
     buttonClicked = pyqtSignal(int)
 
-    def __init__(self, application, target_layout):
+    def __init__(self, application):
         super().__init__()
         self.application = application
-        self.layout = target_layout
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.layout.setSpacing(2)
+        self.setObjectName("SideBar")
         self.application.currentViewChanged.connect(self.currentViewChanged)
 
         PackageManagerButton = QToolButton()
-        PackageManagerButton.setText("PM")
+        
+
+        # PackageManagerButton.setText("PM")
         PackageManagerButton.clicked.connect(lambda: self.buttonClicked.emit(0))
+        PM_icon = QIcon("./lib/ui/img/icons/PackageManager.png")
+        PackageManagerButton.setIcon(PM_icon)
+        PackageManagerButton.setIconSize(QSize(round(PackageManagerButton.width()*0.7), round(PackageManagerButton.height()*0.7)))
 
         TemplateEditorButton = QToolButton()
-        TemplateEditorButton.setText("TE")
+        # TemplateEditorButton.setText("TE")
+        TE_icon = QIcon("./lib/ui/img/icons/XMLTemplateEditor.png")
+        TemplateEditorButton.setIcon(TE_icon)
+        TemplateEditorButton.setIconSize(QSize(round(TemplateEditorButton.width()*0.7), round(TemplateEditorButton.height()*0.7)))
         TemplateEditorButton.clicked.connect(lambda: self.buttonClicked.emit(1))
 
         SettingsButton = QToolButton()
-        SettingsButton.setText("S")
+        # SettingsButton.setText("S")
+        Settings_icon = QIcon("./lib/ui/img/icons/Settings.png")
+        SettingsButton.setIcon(Settings_icon)
+        SettingsButton.setIconSize(QSize(round(SettingsButton.width()*0.7), round(SettingsButton.height()*0.7)))
         SettingsButton.clicked.connect(lambda: self.buttonClicked.emit(2))
 
         PackageManagerButton.setProperty("ToolButton", "SideBar")

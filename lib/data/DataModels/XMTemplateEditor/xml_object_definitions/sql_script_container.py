@@ -10,10 +10,12 @@ class sql_script_container(transport_template_custom_object):
 
     @property
     def script_type(self):
-        return self.get_attribute("Name")
+        return self.xml_get_attribute("Name")
 
-    
     @property
     def xml_object_class(self):
         return "Transport_SQL_Object"
 
+    @property
+    def display(self):
+        return self.script_type

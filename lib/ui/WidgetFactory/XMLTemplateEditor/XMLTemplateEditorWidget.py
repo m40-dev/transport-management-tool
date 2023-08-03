@@ -1,5 +1,6 @@
 # Standard modules
 from pathlib import Path
+from copy import deepcopy
 
 #""" Required QT Libraries """
 from PyQt6.QtCore import pyqtSignal, QTimer, Qt
@@ -8,6 +9,7 @@ from PyQt6 import QtWidgets
 # XML Management
 from ..CodeEditors.XMLEditor import xml_editor
 from .ContextMenu import XMLObjectContextMenu
+from ..DialogScreens import RelationPresetDialog, ScriptEditorDialog
 
 # Data Models
 from lib.data.DataModels import XMLDataItem, XMLDataModel, ObjectDataItem
@@ -15,7 +17,7 @@ from lib.data.DataModels import XMLDataItem, XMLDataModel, ObjectDataItem
 XML_PREVIEW_TIMER = 100
 
 class XMLTemplateEditorWidget(QtWidgets.QWidget):
-    xml_structure_changed = pyqtSignal()
+    xmlStructureChanged = pyqtSignal()
 
     def __init__(self, parent, application, file_path):
         super().__init__()
@@ -23,18 +25,32 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.application = application
         self.current_file = file_path
         self.setupUi()
+        
 
         # Initial refresh
         self.loadXMLStructureView()
-        self.refreshXMLPreview()
-        self.xml_structure_changed.connect(self.refreshXMLPreview)
+        self.onXMLPreviewRefresh()
+        self.xmlStructureChanged.connect(self.onXMLPreviewRefresh)
+        self.XMLStructureTreeView.mousePressEvent = self.XMLStructureTreeViewMousePressEvent
 
+    def XMLStructureTreeViewMousePressEvent(self, event):
+        QtWidgets.QTreeView.mousePressEvent(self.XMLStructureTreeView, event)
+
+        target_index = self.XMLStructureTreeView.indexAt(event.position().toPoint())
+        if target_index.isValid():
+            self.onCurrentIndexChanged(target_index)
+        else:
+            self.onCurrentIndexChanged(None)
+        
+    @property
+    def display(self):
+        display_name = "New Template"
+        if self.current_file:
+            display_name = Path(self.current_file).name
+        return display_name
+        
     def reloadXMLFile(self):
         self.XMLStructureTreeView.model().reload_model_data()
-
-    def reloadXMLPreview(self):
-        self.XMLPreviewBrowser.setText(self.XMLStructureTreeView.model().exportXMLData())
-        self.loadXMLStructureView()
 
     def loadXMLStructureView(self):
         data_model =  XMLDataModel(
@@ -43,16 +59,25 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
             data_source=self.current_file)
 
         self.XMLStructureTreeView.setModel(data_model)
-        data_model.xmlDataStructureChanged.connect(self.xml_structure_changed)
+        data_model.xmlDataStructureChanged.connect(self.xmlStructureChanged)
+        data_model.modelItemChecked.connect(self.onItemCheckStateChange)
+        self.XMLStructureTreeView.header().resizeSection(0, round(self.width() * 1))
+        self.XMLStructureTreeView.header().resizeSection(1, round(self.width() * 0.3))
+        self.setCurrentXMLTemplate()
+
+    def onXMLPreviewRefresh(self):
+        self.xml_preview_timer.start(XML_PREVIEW_TIMER)
 
     def refreshXMLPreview(self):
-        print("refresh xml preview")
+        self.XMLPreviewBrowser.setText(self.XMLStructureTreeView.model().exportXMLData())
+    
+    def refresh_ui(self):
         self.XMLPreviewBrowser.setText(self.XMLStructureTreeView.model().exportXMLData())
         self.XMLPreviewBrowser.reconfigure_editor()
         self.setCurrentXMLTemplate()
 
     def saveXMLTemplate(self):
-        if self.current_file is not None:
+        if self.current_file:
             # print(Path(self.current_file), Path(self.current_file).is_file())
             if Path(self.current_file).is_file():
                 Path(self.current_file).parent.mkdir(parents=True, exist_ok=True)
@@ -73,11 +98,13 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         if file_path[0] != "":
             with open(file_path[0], 'w') as doc:
                 doc.write(self.XMLStructureTreeView.model().exportXMLData())
-            self.setCurrentXMLTemplate(file_path[0])
+            self.current_file = file_path[0]
+            self.parent.tabNameChanged.emit(self)
+            self.setCurrentXMLTemplate()
             return file_path[0]
         return False
 
-    def setCurrentXMLTemplate(self):          
+    def setCurrentXMLTemplate(self, file_path=None):
         if self.current_file:
             self.current_file_label.setText(str(self.current_file))
 
@@ -118,30 +145,55 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
             source_item = source_index.internalPointer()
             if source_item.xml_object_class == "Transport_Object":
                 source_item.loadDatabaseObject()
+        self.parent.reloadDatabaseRelations(source_index)
 
     def listRelatedObjectData(self, source_index, override=False):
         for source_index in self.XMLStructureTreeView.selectedIndexes():
             if source_index.isValid():
                 source_item = source_index.internalPointer()
                 if source_item.xml_object_class == "Transport_Object":
-                    source_item.listRelatedObjectData()
+                    source_item.listRelatedObjectData(override)
         
         if len(self.XMLStructureTreeView.selectedIndexes()) == 0 and source_index.isValid():
             source_item = source_index.internalPointer()
             if source_item.xml_object_class == "Transport_Object":
-                source_item.listRelatedObjectData()
+                source_item.listRelatedObjectData(override)
  
     def saveRelationPreset(self, source_index):
-        pass
+        if not source_index.isValid():
+            return False
 
-    def addTransportTask(self, source_index):
-        pass
+        source_item = source_index.internalPointer()
+        if source_item and source_item.xml_object_class != "Transport_Object":
+            return False
 
-    def addSQLScript(self, source_index):
-        pass
+        relation_dialog = RelationPresetDialog(self.application)
+        relation_dialog.relations = deepcopy(source_item.object_relations)
+
+        if relation_dialog.exec():
+            self.application.relationPresetAdded(
+                source_item.table_name, 
+                relation_dialog.name, 
+                relation_dialog.preset_data)
+
+    def addTransportTask(self, task_type):
+        self.XMLStructureTreeView.model().addTransportTask(task_type)
+
+    def addSQLScript(self, source_index, script_type):
+        self.XMLStructureTreeView.model().addSQLScript(source_index, script_type)
 
     def editSQLScript(self, source_index):
-        pass
+        if not source_index.isValid():
+            return False
+
+        source_item = source_index.internalPointer()
+        if source_item and source_item.xml_object_class != "Transport_SQL_Object":
+            return False
+
+        dialog = ScriptEditorDialog(self.application, source_item.script)
+        if dialog.exec():
+            source_item.script = dialog.script
+            self.xmlStructureChanged.emit()
 
     def XMLStructureDragMoveEvent(self, event):
         move_accept = False
@@ -168,15 +220,62 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                 if drop_item.xml_object_class == source_item.xml_object_class:
                     move_accept = True
 
+        if (isinstance(source_item, ObjectDataItem) and isinstance(drop_item, XMLDataItem)) and source_item.model_reference != drop_item.model_reference:
+            if dropIndicator == QtWidgets.QAbstractItemView.DropIndicatorPosition.OnItem:
+                if drop_item.xml_object_class == "Object_Transport_Task":
+                    move_accept = True
+            
+            if dropIndicator in [QtWidgets.QAbstractItemView.DropIndicatorPosition.BelowItem, QtWidgets.QAbstractItemView.DropIndicatorPosition.AboveItem]:
+                if drop_item.xml_object_class == "Transport_Object":
+                    move_accept = True
+
         if drop_item is None and isinstance(source_item, XMLDataItem):
             # no target item - drop at top level
-            if source_item.xml_object_class in ["Object_Transport_Task"]:
+            if source_item.xml_object_class in ["Object_Transport_Task", "SQL_Transport_Task"]:
                 move_accept = True
 
-        if event.mimeData().hasFormat("application/vnd.xmldataitem") and move_accept:
+        if drop_item is None and isinstance(source_item, ObjectDataItem) and source_item.model_reference != self.XMLStructureTreeView.model():
+            # no target item - drop at top level
+            move_accept = True
+
+        if (event.mimeData().hasFormat("application/vnd.xmldataitem") or event.mimeData().hasFormat("application/vnd.objectdataitem")) and move_accept:
             event.acceptProposedAction()
         else:
             event.ignore()
+
+    def onCurrentIndexChanged(self, current_index=None):
+        if current_index:
+            itemClicked = current_index.internalPointer()
+        else:
+            return self.parent.reloadDatabaseRelations(None)
+        # Only handle the Transport Object items on the list
+        if isinstance(itemClicked, ObjectDataItem) or (isinstance(itemClicked, XMLDataItem) and itemClicked.xml_object_class != "Transport_Object"):
+            self.parent.reloadDatabaseRelations(None)
+            return False
+
+        self.parent.reloadDatabaseRelations(current_index)
+
+    def onItemCheckStateChange(self, source_item, column_name, check_state):
+        if column_name != "Options":
+            return False
+
+        for selected_item in self.selectedItems():
+            if selected_item != source_item and selected_item.xml_object_class == source_item.xml_object_class:
+                selected_item.setCheckState(column_name, check_state)
+        self.XMLStructureTreeView.model().layoutChanged.emit()
+
+    def selectedItems(self):
+        selected_items = []
+        source_view = self.XMLStructureTreeView
+        selected_indexes = source_view.selectedIndexes()
+        if len(selected_indexes) > 0:
+            for index in selected_indexes:
+                if not index.isValid():
+                    continue
+                item = index.internalPointer()
+                if item:
+                    selected_items.append(item)
+        return selected_items
 
     def setupUi(self):
         self.layout = QtWidgets.QGridLayout(self)
@@ -188,21 +287,20 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
 
         self.XMLStructureTreeView = QtWidgets.QTreeView(self.mainSplitter)
         self.XMLStructureTreeView.setObjectName("XMLStructureTreeView")
-        # self.XMLStructureTreeView.header().setStretchLastSection(False)
-        self.XMLStructureTreeView.setHeaderHidden(False)   
         self.XMLStructureTreeView.setSortingEnabled(False)
         self.XMLStructureTreeView.setWordWrap(True)
         self.XMLStructureTreeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.XMLStructureTreeView.customContextMenuRequested.connect(self.xmlContextMenuRequested)
-
         self.XMLStructureTreeView.dragMoveEvent = self.XMLStructureDragMoveEvent
-        self.XMLStructureTreeView.setHeaderHidden(True)
+        # self.XMLStructureTreeView.setHeaderHidden(True)
         self.XMLStructureTreeView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.XMLStructureTreeView.setDragEnabled(True)
         self.XMLStructureTreeView.setAcceptDrops(True)
         self.XMLStructureTreeView.setUniformRowHeights(False)
         self.XMLStructureTreeView.setDropIndicatorShown(True)
+
         self.XMLStructureTreeView.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragDrop)
+        self.XMLStructureTreeView.header().setStretchLastSection(False)
 
         self.verticalLayoutWidget = QtWidgets.QWidget(self.mainSplitter)
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")
@@ -223,5 +321,16 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         # XML Preview Handling
         self.xml_preview_timer = QTimer(self)
         self.xml_preview_timer.setSingleShot(True)
-        self.xml_preview_timer.timeout.connect(self.reloadXMLPreview)
-        self.xml_structure_changed.connect(self.refreshXMLPreview)
+        self.xml_preview_timer.timeout.connect(self.refreshXMLPreview)
+        self.xmlStructureChanged.connect(self.onXMLPreviewRefresh)
+    
+    def onWidgetClose(self):
+        if self.XMLStructureTreeView.model().isDifferent():
+            decision = QtWidgets.QMessageBox.question(self.application, "Save Changes?", f"Do you want to save changes before closing?")
+            if decision == QtWidgets.QMessageBox.StandardButton.Yes:
+                self.saveXMLTemplate()
+        self.XMLPreviewBrowser.parent = None
+        self.application = None
+        self.parent = None
+        self.current_file = None
+        self.deleteLater()

@@ -1,14 +1,14 @@
 from PyQt6.QtWidgets import (QMenu)
 from PyQt6.QtCore import pyqtSignal
-from lib.data.DataModels.XMTemplateEditor.xml_object_definitions.transport_template_custom_object import transport_template_custom_object
+
 class RelationContextMenu(QMenu):
     """ Custom QMenu used to manage relation items """
-    
     onFollowTableRelation = pyqtSignal(object)
 
     def __init__(self, parent, source_index):
-        super(RelationContextMenu, self).__init__()
+        super(RelationContextMenu, self).__init__(parent=parent)
         self.parent = parent
+        self.menu_items = []
 
         if source_index and source_index.isValid():
             source_item = source_index.internalPointer()

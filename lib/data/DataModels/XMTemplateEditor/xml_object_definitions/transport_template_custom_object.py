@@ -7,6 +7,8 @@ class transport_template_custom_object(object):
         self.parent = parent
         self.data = None
         self._xml_object_class = node_class
+        self._state = 0
+        self._option = ""
 
         """ Node setup for new objects """
         if source_element is None:
@@ -46,6 +48,30 @@ class transport_template_custom_object(object):
     def description(self, value):
         self._description = value
         
+    @property
+    def text(self):
+        return self.data.text
+    
+    @property
+    def option(self):
+        return self._option
+    
+    @option.setter
+    def option(self, value):
+        self._option = value
+
+    @property
+    def state(self):
+        return self._state
+    
+    @state.setter
+    def state(self, value):
+        self._state = value
+
+    @text.setter
+    def text(self, value):
+        self.data.text = str(value)
+
     def xml_find_parent(self, element, class_lookup):
         parent_node = element.getparent()
         if parent_node is not None:
@@ -127,3 +153,6 @@ class transport_template_custom_object(object):
 
     def children(self):
         return self.xml_get_children()
+    
+    def xml_add_child_node(self, object_info_dict):
+        pass

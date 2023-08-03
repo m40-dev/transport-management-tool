@@ -1,1 +1,0 @@
-from .XMLTemplateEditor import *

@@ -37,6 +37,7 @@ class JSONDataItem(QObject):
             model_reference.filterStringChanged.connect(self.handleFilterStringChanged)
         
         if task_data:
+            self.initialize_data()
             children = task_data.get("children", None)
             if children:
                 self.loadChildren(children)
@@ -519,6 +520,32 @@ class JSONDataItem(QObject):
         for key, value in dict_data.items():
             self.setData(key, value)
 
+    def initialize_data(self):
+        configuration = self.item_class_configuration
+
+        if self._task_data is None or configuration is None:
+            return False
+
+        object_data = self.task_data()
+
+        for field, field_configuration in configuration.items():
+            is_for_export = field_configuration.get("IsForDataExport", "True") == "True"
+            if not is_for_export:
+                continue
+
+            object_field_value = object_data.get(field, "")
+            field_role = field_configuration.get("FieldRole", None)
+            
+            if field_role and field_role == "SortOrder":
+                #set sort order
+                self._task_data[field] = int(self.sortOrder)
+                continue
+
+            if field_role and field_role == "UniqueIdentifier" and len(object_field_value) == 0:
+                # generate UIDs
+                self._task_data[field] = str(uuid.uuid4())
+                continue
+
     def export_data(self):
         if self._task_data is None:
             return self._task_data
@@ -544,16 +571,40 @@ class JSONDataItem(QObject):
             if field_role and field_role == "SortOrder":
                 #set sort order
                 export_data[field] = int(self.sortOrder)
-            
+                continue
+
+            if field_role and field_role == "UniqueIdentifier" and len(object_field_value) == 0:
+                object_field_value = str(uuid.uuid4())
+                export_data[field] = str(object_field_value)
+                continue
+
             if field_type and field_type == "ChildObjectReference":
                 child_class = field_configuration.get("Class", None)
                 export_data[field] = self.get_children_data(task_class=child_class, export_data=True)
+                continue
 
             if field_type and field_type == "ListInput":
-                 object_value = self._task_data.get(field, [])
-                 if not isinstance(object_value, list):
+                object_value = self._task_data.get(field, [])
+                
+                if isinstance(object_value, list) and len(object_value) > 0:
+                    values = 0
+                    for entry in object_value:
+                        if len(str(entry).strip()) > 0:
+                            values += 1
+                            break
+                    if values == 0:
+                        object_value = []
+
+                export_data[field] = object_value
+                if not isinstance(object_value, list):
                     export_data[field] = [str(object_value)]
                     self._task_data[field] = [str(object_value)]
+                continue
+            
+            if field_type and field_type == "BooleanInput":
+                export_data[field] = str(object_field_value)
+                continue
+
         return export_data
 
     def get_file_data(self, reload_data=False):

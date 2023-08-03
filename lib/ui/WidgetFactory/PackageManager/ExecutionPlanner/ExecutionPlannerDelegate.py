@@ -226,7 +226,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.data_item.data_changed.connect(self.refreshTaskUI)
 
     def refreshConnections(self):
-        connections = list(self.application.connections.keys())
+        connections = list(self.application.ConnectionHandler.connections.keys())
         self.connection_box.clear()
         self.connection_box.addItems(connections)
 

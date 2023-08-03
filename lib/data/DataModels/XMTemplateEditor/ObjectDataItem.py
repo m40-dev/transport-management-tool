@@ -1,7 +1,5 @@
 import uuid, re
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, pyqtSignal
-from copy import deepcopy
-from lxml.etree import _Element, _Comment
 from pyodbc import Row
 
 class ObjectDataItem(QObject):
@@ -11,7 +9,7 @@ class ObjectDataItem(QObject):
     itemAdded = pyqtSignal(object)
     columnValueChanged = pyqtSignal(str, str, str)
 
-    def __init__(self, parent, application, object_class="TableDataItem", table_data=None, object_data=None, model_reference=None):
+    def __init__(self, application, object_class="TableDataItem", table_data=None, object_data=None, parent=None, model_reference=None):
         super().__init__(parent=parent)
         self.application = application
         self.model_reference = model_reference
@@ -81,7 +79,7 @@ class ObjectDataItem(QObject):
 
         if isinstance(data_row, Row):
             if self.object_class == "TableDataItem" and self.objectkey_table(data_row) == "DialogTable":
-                return f"{data_row.TableName} - ({data_row.DisplayName})"
+                return f"{data_row.TableName} - ({data_row.DisplayName}) - [{self.childCount()}]"
 
             if self.table_display_pattern is not None and display is None:
                 object_display = self.application.db.parse_object_display(
@@ -165,10 +163,6 @@ class ObjectDataItem(QObject):
             self.addChild(element, row)
             row +=1
 
-    # @property
-    # def tooltipText(self):
-    #     return f"{str(self.data.tag)}: {str(self.data.attrib)}. {str(self.data.text)}"
-
     def object_columns(self, row_data):
         return self.application.db.get_object_columns(row_data)
 
@@ -199,9 +193,41 @@ class ObjectDataItem(QObject):
     def task_data(self):
 
         export_data = {}
-        # export_data['xml_data'] = self._xml_data.string
-        # export_data['xml_object_class'] = self._xml_data.xml_object_class
         export_data['uid'] = self.uid
         export_data['objectclass'] = self.object_class
         export_data['row'] = self.row()
+
+        data_row = self.object_data
+        
+        if self.object_class == "TableDataItem" and self.table_data:
+            data_row = self.table_data
+        row_data = {}
+
+        for column_name in self.object_columns(data_row):
+            row_data[column_name] = str(data_row.__getattribute__(column_name))
+
+        export_data['object_info'] = self.object_info()
+        export_data['object_data'] = row_data
+        
         return export_data
+
+    def object_info(self):
+        data_row = self.object_data
+        if self.object_class == "TableDataItem" and self.table_data:
+            data_row = self.table_data
+        table_name = self.objectkey_table(data_row)
+        table_info = self.application.db.table_info.get(table_name, None)
+        object_info_dict = {}
+        pk_columns_dict = {}
+        if table_info is not None:
+            pk_columns = [table_info.PKName1, table_info.PKName2]
+            for pk_column in pk_columns:
+                if pk_column is not None and pk_column not in pk_columns_dict.keys():
+                    pk_columns_dict[pk_column] = str(data_row.__getattribute__(pk_column))
+        display_name = self.display()
+        object_info_dict["table_name"] = table_name
+        object_info_dict["object_display"] = f"{table_name} - ({display_name})"
+        object_info_dict["pk_columns"] = pk_columns_dict
+        return object_info_dict
+
+    

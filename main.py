@@ -8,12 +8,6 @@ from PyQt6.QtGui import QShortcut, QKeySequence, QIcon
 #""" qt traceback handling"""
 import traceback
 
-#""" built-in modules """
-import hashlib
-import json
-from cryptography.fernet import Fernet
-import base64
-
 from lib.ui.Theme import Application_Theme
 
 from PyQt6.QtCore import pyqtSignal
@@ -27,7 +21,7 @@ import lib.ui.WidgetFactory.DialogScreens as DialogScreens
 from lib.ui.WidgetFactory.PackageManager import PackageManager
 from lib.ui.WidgetFactory.SideBar import SideBar
 from lib.ui.WidgetFactory.XMLTemplateEditor import XMLTemplateEditor
-from lib.ProgramConfiguration import ProgramConfiguration, ObjectConfiguration
+from lib.ProgramConfiguration import ProgramConfiguration, ObjectConfiguration, ConnectionHandler
 
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
@@ -57,17 +51,24 @@ class Transport_Manager(QMainWindow):
 
         self.color_theme = Application_Theme()
         self.qt_app.setPalette(self.color_theme)
+        self.setStyleSheet(self.color_theme.style_sheet)
 
         self.program_configuration = ProgramConfiguration(self)
         self.object_configuration = ObjectConfiguration(self)
 
         self.settings = QSettings("EmergencyCode", "Transport_Manager")
+        self.relation_presets = self.settings.value("RelationPresets")
+        if not self.relation_presets:
+            self.relation_presets = {}
 
-        # Database handler
+        # Database and Connection handlers
         self.db = DatabaseConnection()
+        self.ConnectionHandler = ConnectionHandler(self) 
+        self.ConnectionHandler.databaseConnectionEstablished.connect(self.onDatabaseConnection)
 
-        # Sidebar magic -> to be moved to widget factory
-        self.SideBar = SideBar(application=self, target_layout=self.ui.SideBar_Layout)
+        # Sidebar magic
+        self.SideBar = SideBar(application=self)
+        self.ui.SideBar_Layout.addWidget(self.SideBar)
         self.SideBar.buttonClicked.connect(lambda index: self.ui.MainTabWidget.setCurrentIndex(index))
         self.ui.MainTabWidget.currentChanged.connect(self.currentViewChanged)
 
@@ -77,18 +78,17 @@ class Transport_Manager(QMainWindow):
 
         self.ui.MainTabWidget.addTab(self.PackageManager, "Package Manager")
         self.ui.MainTabWidget.addTab(self.XMLTemplateEditor, "XML Template Editor")
-        self.ui.MainTabWidget.addTab(QWidget(), "Settings")
+        self.SettingsWidget = WidgetFactory.SettingsWidget(self)
+        self.ui.MainTabWidget.addTab(self.SettingsWidget, "Settings")
 
         self.ui.MainTabWidget.tabBar().setVisible(False)
 
-
-        """ Connect UI signals """
+        """ Connect signals """
         self.closeEvent = self.closeApplicationEvent
         self.installEventFilter(self)
 
-        #TODO: Rework required
         self.ui.actionAdd_DatabaseConnection.triggered.connect(
-            self.get_connection_details)
+            self.ConnectionHandler.getConnectionDetails)
         
         self.ui.actionSaveFile.triggered.connect(
             self.XMLTemplateEditor.saveXMLTemplate)
@@ -104,6 +104,8 @@ class Transport_Manager(QMainWindow):
         
         self.ui.actionNew_Transport_Template.triggered.connect(
             self.XMLTemplateEditor.newTransportTemplate)
+        
+        self.ui.actionSettings.triggered.connect(lambda: self.ui.MainTabWidget.setCurrentWidget(self.SettingsWidget))
 
         #TODO: Definitely rework required
         planner_menu = self.ui.menubar.addMenu("Execution Planner")
@@ -111,57 +113,56 @@ class Transport_Manager(QMainWindow):
         config_action = planner_menu.addAction("Configure")
         config_action.triggered.connect(self.configure_execution_planner)
         new_plan_action.triggered.connect(self.PackageManager.addExecutionPlan)
+        new_plan_action.triggered.connect(lambda: self.ui.MainTabWidget.setCurrentWidget(self.PackageManager))
 
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.deleteKeyPressEvent)
-        QShortcut(QKeySequence.StandardKey.InsertParagraphSeparator, self, self.enter_shortcut)
+        # QShortcut(QKeySequence.StandardKey.InsertParagraphSeparator, self, self.onEnterKeyPress)
         QShortcut(QKeySequence.StandardKey.Refresh, self, self.refresh_ui)
-        # QShortcut(QKeySequence("Ctrl+0"), self, self.ui.XMLEditorWidget.expand_by_level)
-        # QShortcut(QKeySequence("Ctrl+9"), self, self.ui.XMLEditorWidget.fold_by_level)
+        QShortcut(QKeySequence("Ctrl+0"), self, self.XMLTemplateEditor.expandXMLPreview)
+        QShortcut(QKeySequence("Ctrl+9"), self, self.XMLTemplateEditor.foldXMLPreview)
 
         self.refresh_ui()
-
-        """ Program variables """
-        self.db = None
-        self.encryption_key = None
-        self.last_widget_clicked = None
-
-        """ Saved connection data """
-        self.connections = self.settings.value("connections")
-        if self.connections is None:
-            self.connections = {}
-
-        if len(self.connections) > 0:
-            encryption_key = self.get_encryption_key()
-            if encryption_key:
-                self.encryption_key = encryption_key
-                if self.decrypt_connection_details():
-                    self.load_saved_connections()
-                else:
-                    print("connection data decryption failed")
-                    self.connections = {}
-            else:
-                print("connection details were not loaded")
-                self.connections = {}
         
-
         """ Initial transport template object """
-        # self.XMLTemplateEditor.newTransportTemplate()
+        self.XMLTemplateEditor.newTransportTemplate()
         self.PackageManager.addExecutionPlan()
 
-    def enter_shortcut(self):
-        if self.ui.SearchPackageLineEdit.hasFocus():
-            self.filter_packages(self.ui.SearchPackageLineEdit.text())
+    def onDatabaseConnection(self):
+        self.db.load_session_data()
+        self.XMLTemplateEditor.refresh_ui()
+
+    def relationPresetAdded(self, table_name, preset_name, preset_data):
+        preset_dict = {preset_name: preset_data}
+        if table_name not in self.relation_presets.keys():
+            self.relation_presets[table_name] = preset_dict
+
+        if preset_name not in self.relation_presets[table_name].keys():
+            self.relation_presets[table_name][preset_name] = preset_data
+        else:
+            """ overwrite existing? """
+            self.relation_presets[table_name][preset_name] = preset_data
+
+        self.settings.setValue("RelationPresets", self.relation_presets)
+        self.XMLTemplateEditor.DatabaseRelations.loadRelationPresets()
+
+    def autoLoadDatabaseObjects(self):
+        state = self.XMLTemplateEditor.DatabaseRelations.AutoLoadCheckBox.isChecked()
+        return state
+
+    def autoListDatabaseObjects(self):
+        state = self.XMLTemplateEditor.DatabaseRelations.AutoListObjectsFromDatabaseCheckBox.isChecked()
+        return state
 
     def refresh_ui(self):
         """ UI style scheme """
         self.setStyleSheet(self.color_theme.style_sheet)
 
         """ Restore window settings """
-        if self.settings.value("geometry") is not None:
-            self.restoreGeometry(self.settings.value("geometry"))
-        if self.settings.value("windowState") is not None:
-            self.restoreState(self.settings.value("windowState"))
+        if self.settings.value("MainWindowGeometry") is not None:
+            self.restoreGeometry(self.settings.value("MainWindowGeometry"))
+        if self.settings.value("MainWindowState") is not None:
+            self.restoreState(self.settings.value("MainWindowState"))
         
         """ Reload Working Directory """
         self.object_configuration.reload_configuration_file()
@@ -194,29 +195,6 @@ class Transport_Manager(QMainWindow):
         if new_configuration.exec():
             new_config_data = new_configuration.to_dict
             self.settings.setValue("ExecutionPlannerSettings", new_config_data)
-    
-    """ Database connection Management """
-    def connect_database(self, connection_name):
-        if not isinstance(self.connections, dict):
-            return False
-        
-        if connection_name not in self.connections.keys():
-            return False
-        
-        self.ui.statusbar.showMessage(f"Using connection info: {connection_name}")
-
-        connection_params = self.connections[connection_name]
-
-        if self.db is not None:
-            self.db.disconnect_db()
-            self.db = None
-
-        self.db = DatabaseConnection(connection_params)
-        self.db.connect_db()
-        
-        if self.db is not None:
-            self.db.load_session_data()
-            self.XMLTemplateEditor.refresh_ui()
         
     def load_file(self, file_path):
         file_content = ""
@@ -224,116 +202,10 @@ class Transport_Manager(QMainWindow):
             file_content = f.read()
         return file_content
 
-    """ connection Data Management """
-    def get_encryption_key(self, initial=False):
-        encryption_key = DialogScreens.EncryptionKeyDialog(self, initial)
-        if encryption_key.exec():
-            enc = hashlib.sha3_512(bytes(encryption_key.encryption_key, 'utf-8'))
-            return enc.hexdigest()
-        return False
-        
-    def decrypt_connection_details(self):
-        encrypted_connection_details = self.connections
-        if isinstance(encrypted_connection_details, dict):
-            return True
-
-        if self.encryption_key is None:
-            self.encryption_key = self.get_encryption_key()
-
-        byte_key = bytes(self.encryption_key, 'utf-8')[0:32]
-        b64_byte_key = base64.urlsafe_b64encode(byte_key)
-
-        crypto = Fernet(b64_byte_key)
-        try:
-            decrypted_connection_details = crypto.decrypt(encrypted_connection_details)
-        except:
-            return False
-
-        connection_data = json.loads(decrypted_connection_details)
-        if connection_data:
-            self.connections = connection_data
-            return True
-        return False
-
-    def save_connection_details(self):
-        if len(self.connections) == 0:
-            self.settings.setValue("connections", {})
-            return True
-        
-        encoded_connection_data = json.dumps(self.connections).encode('utf-8')
-
-        if self.encryption_key is None:
-            self.encryption_key = self.get_encryption_key(initial=True)
-
-        byte_key = bytes(self.encryption_key, 'utf-8')[0:32]
-        b64_byte_key = base64.urlsafe_b64encode(byte_key)
-
-        crypto = Fernet(b64_byte_key)
-        encrypted_connection_details = crypto.encrypt(encoded_connection_data)
-
-        self.settings.setValue("connections", encrypted_connection_details)
-        self.connectionDataChanged.emit()
-
-    def load_saved_connections(self):
-        if self.connections is not None:
-            if isinstance(self.connections, dict):
-                for connection_name in self.connections.keys():
-                    self.add_connection_to_menu(connection_name)
-
-    def get_connection_details(self, connection_name=None):
-        connection_data = self.connections.get(connection_name, None)
-
-        editor_configuration = self.program_configuration.get("Connection_Configuration")
-        if editor_configuration:
-            dialog = WidgetFactory.FormEditorDialog(self, 
-            configuration_class="Connection_Configuration",
-            dialog_name="Connection Configuration",
-            form_configuration=editor_configuration
-            )
-            dialog.set_dictionary_data(connection_data)
-            if dialog.exec():
-                data = dialog.form_data
-                dialog_connection_name = data.get("ConnectionName", None)
-
-                if dialog_connection_name and dialog_connection_name not in self.connections.keys() and not connection_name:
-                    self.add_connection_to_menu(dialog_connection_name)
-
-                if connection_name and dialog_connection_name != connection_name:
-                    source_connection = self.ui.menuConnections.findChildren(QMenu, connection_name, Qt.FindChildOption.FindDirectChildrenOnly)
-                    if len(source_connection) == 1:
-                        source_connection = source_connection[0]
-                        source_connection.setObjectName(dialog_connection_name)
-                        source_connection.setTitle(dialog_connection_name)
-                        self.connections.pop(connection_name)
-
-                self.connections[dialog_connection_name] = data
-                self.save_connection_details()
-
-    def add_connection_to_menu(self, connection_name):
-        NewMenuItem = self.ui.menuConnections.addMenu(connection_name)
-        NewMenuItem.setObjectName(connection_name)
-        ConnectAction = NewMenuItem.addAction("Connect")
-        EditAction = NewMenuItem.addAction("Edit")
-        NewMenuItem.addSeparator()
-        DeleteAction = NewMenuItem.addAction("Delete")
-
-        ConnectAction.triggered.connect(lambda: self.connect_database(NewMenuItem.objectName()))
-        EditAction.triggered.connect(lambda: self.get_connection_details(NewMenuItem.objectName()))
-        DeleteAction.triggered.connect(lambda: self.delete_connection(NewMenuItem))
-
-    def delete_connection(self, connection_menu_object):
-        connection_name = connection_menu_object.title()
-
-        decision = QMessageBox.question(self, "Confirm connection Delete", f"Are you sure to delete connection info: {connection_name}?")
-        if decision == QMessageBox.StandardButton.Yes:
-            action = connection_menu_object.menuAction()
-            self.ui.menuConnections.removeAction(action)
-            
-            self.connections.pop(connection_name)
-            self.save_connection_details()
+    def databaseConnectionRequired(self):
+        QMessageBox.information(self, "Database Connection Required", "This function requires active Database Connection to work.\nPlease connect to the target database and try again.")
 
     def deleteKeyPressEvent(self):
-
         if self.ui.MainTabWidget.currentWidget() == self.PackageManager:
             self.PackageManager.deleteSelectedItems()
 
@@ -347,17 +219,17 @@ class Transport_Manager(QMainWindow):
         return super().eventFilter(source, event)
 
     def saveMainWindowState(self):
-        self.settings.setValue("geometry", self.saveGeometry())
-        self.settings.setValue("windowState", self.saveState())
+        self.settings.setValue("MainWindowGeometry", self.saveGeometry())
+        self.settings.setValue("MainWindowState", self.saveState())
 
     """ Application close """
     def closeApplicationEvent(self, event, force=False):
-        self.settings.setValue("geometry", self.saveGeometry())
-        self.settings.setValue("windowState", self.saveState())
-        self.settings.setValue("relation_presets", self.XMLTemplateEditor.DatabaseRelations.relation_presets)
+        self.settings.setValue("MainWindowGeometry", self.saveGeometry())
+        self.settings.setValue("MainWindowState", self.saveState())
+        self.settings.setValue("RelationPresets", self.relation_presets)
 
-        if len(self.connections) > 0:
-            self.save_connection_details()
+        if len(self.ConnectionHandler.connections) > 0:
+            self.ConnectionHandler.saveConnectionsData()
 
         if event:
             event.accept()

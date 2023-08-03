@@ -13,7 +13,8 @@ class ProcessRunner(QProcess):
         super().__init__()
         self.planner_widget = planner_widget
         self.application = self.planner_widget.application
-        self.current_workdir = self.planner_widget.current_workdir
+        self.ConnectionHandler = self.application.ConnectionHandler
+        self._current_workdir = None
 
         self.object_configuration = self.application.object_configuration
         self.readyReadStandardOutput.connect(self.handleProcessStdOut)
@@ -25,6 +26,12 @@ class ProcessRunner(QProcess):
         self.current_item = None
         self.task_queue = []
         self.sql_thread = None
+
+    @property
+    def current_workdir(self):
+        if self._current_workdir:
+            return self._current_workdir
+        return self.planner_widget.current_workdir
 
     def stopExecutionPlanner(self):
         self.task_queue = []
@@ -248,7 +255,7 @@ class ProcessRunner(QProcess):
         if action_type.upper() != "IMPORT":
             return ""
         
-        connection_data = self.application.connections.get(connection_name, None)
+        connection_data = self.ConnectionHandler.connections.get(connection_name, None)
         if not connection_data:
             # connection data not available
             return ""
@@ -302,7 +309,7 @@ class ProcessRunner(QProcess):
             "Transport Manager")
             return False
 
-        connection_data = self.application.connections.get(connection_name, None)
+        connection_data = self.ConnectionHandler.connections.get(connection_name, None)
         export_file = task_data.get("ExportFile", None)
         definition_file = task_data.get("DefinitionFile", None)
 

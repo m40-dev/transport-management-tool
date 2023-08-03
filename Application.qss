@@ -26,6 +26,7 @@ QLineEdit, QComboBox{
     margin: 0px;
     padding: 2px;
 }
+
 QLineEdit::selection{
 	color: palette(Text);
 	background-color: palette(Highlight)
@@ -130,13 +131,13 @@ QTreeWidget::item, QListWidget::item, QListView::item, QTreeView::item{
 }
 
 QTreeWidget::item:alternate, QListWidget::item:alternate, QListView::item:alternate, QTreeView::item:alternate{
-	background-color: palette(AlternateBase);
+	background-color: #e7e6e1;
 }
 
 QListView::item::hover, QTreeView::item:hover{
 	height: 2em;
 	font: bold;
-	padding-left: 5px;
+	/* padding-left: 5px; */
 	background-color: #d9e7e9;
 }
 
@@ -288,7 +289,7 @@ QLabel,QRadioButton[Label="PropertyValue"]{
 	margin: 1px;
 }
 
-*[Widget="EditorDialog"]{
+[Widget="EditorDialog"]{
 	margin: 0px;
 	margin-left: 0px;
 	min-height: 1.3em;
@@ -320,8 +321,7 @@ QToolButton[ToolButton=SideBar]{
 }
 
 QToolButton[ToolButton=SideBar]:checked{
-	border-left: 3px solid #34b7c9;
-	font-weight: bold;
+	border-left: 3px solid #9da09f;
 }
 
 QToolButton#PackageManagerButton{

@@ -1,28 +1,36 @@
 from PyQt6 import QtCore, QtWidgets
 from .XMLTemplateEditorWidget import XMLTemplateEditorWidget
 from .DatabaseRelations import DatabaseRelations
-from pathlib import Path
+from lib.data.DataModels.XMTemplateEditor import ObjectDataListModel, XMLDataItem
+from copy import deepcopy
+
 XML_PREVIEW_TIMER = 100
 
 class XMLTemplateEditor(QtWidgets.QWidget):
-    refresh_xml_widget = QtCore.pyqtSignal()
+    refreshUi = QtCore.pyqtSignal()
     current_file_changed = QtCore.pyqtSignal(str)
-
+    tabNameChanged = QtCore.pyqtSignal(object)
+    
     def __init__(self, application):
         super().__init__()
         self.application = application
         self.setupUi()
         self.current_file_changed.connect(self.selectXMLTemplateTab)
 
+        #Connect Signals
+
         # Database Relations Handling
-        self.DatabaseRelations = DatabaseRelations(self, self.application)
+        self.TableComboBox.currentTextChanged.connect(self.listTableObjects)
+        self.DatabaseRelations.relationSettingsChanged.connect(self.relationSettingsChanged)
+        self.DatabaseRelations.relationResetRequested.connect(self.resetRelationStates)
+        self.tabNameChanged.connect(self.renameTabWidget)
+
+        # Database Objects listing
+        self.FindObjectButton.clicked.connect(self.queryDatabaseObjects)
 
     def newTransportTemplate(self, file_path=None):
         tabWidget = XMLTemplateEditorWidget(self, self.application, file_path)
-        tab_name = "New Template"
-        if file_path:
-            tab_name = Path(file_path).name
-        index = self.XMLTemplateEditorTabWidget.addTab(tabWidget, tab_name)
+        index = self.XMLTemplateEditorTabWidget.addTab(tabWidget, tabWidget.display)
         self.application.ui.MainTabWidget.setCurrentWidget(self)
         self.XMLTemplateEditorTabWidget.setCurrentWidget(tabWidget)
         return index
@@ -37,8 +45,13 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
         if file_path and self.setCurrentXMLTemplate(file_path):
             self.application.ui.MainTabWidget.setCurrentWidget(self)
-
     
+    def onTabWidgetClose(self, tab_index):
+        tab_widget = self.XMLTemplateEditorTabWidget.widget(tab_index)
+        if tab_widget.onWidgetClose():
+            self.XMLTemplateEditorTabWidget.removeTab(tab_index)
+            del tab_widget
+        
     def selectXMLTemplateTab(self, file_path):
         for index in range(0, self.XMLTemplateEditorTabWidget.count()):
             tab_widget = self.XMLTemplateEditorTabWidget.widget(index)
@@ -60,13 +73,91 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         if not self.selectXMLTemplateTab(file_path=file_path):
             self.newTransportTemplate(file_path=file_path)
 
+    def renameTabWidget(self, tab_widget):
+        # print("rename tab widget", tab_widget.display)
+        index = self.XMLTemplateEditorTabWidget.indexOf(tab_widget)
+        self.XMLTemplateEditorTabWidget.setTabText(index, tab_widget.display)
+
     def saveXMLTemplate(self):
         current_tab = self.XMLTemplateEditorTabWidget.currentWidget()
-        current_tab.saveXMLTemplate()
+        if current_tab:
+            current_tab.saveXMLTemplate()
 
     def saveXMLTemplateAs(self, initial_directory=None):
         current_tab = self.XMLTemplateEditorTabWidget.currentWidget()
-        current_tab.saveXMLTemplateAs(initial_directory)
+        if current_tab:
+            current_tab.saveXMLTemplateAs(initial_directory)
+
+    def queryDatabaseObjects(self):
+        if self.application.db and not self.application.db.is_connected:
+            return self.application.databaseConnectionRequired()
+        
+        filter = self.ObjectQueryTextEdit.toPlainText()
+        data_rows = []
+
+        if self.XObjectKeysFilterRadioButton.isChecked():
+            filter_rows = filter.splitlines()
+            for object_query in filter_rows:
+                object_query = object_query.strip()
+                table_name = self.application.db.get_objectkey_table(object_query)
+                if table_name is not None:
+                    query = f"select * from {table_name} where XObjectKey = '{object_query}'"
+                    data_rows += self.application.db.run_db_query(query)
+
+        if self.SelectedTableFilterRadioButton.isChecked() and self.TableComboBox.currentText().strip() != "":
+            object_query = filter.strip()
+            table_name = self.TableComboBox.currentText()
+            if len(object_query) > 0:
+                query = f"select * from {table_name} where {object_query}"
+                data_rows += self.application.db.run_db_query(query)
+            else:
+                query = f"select * from {table_name}"
+                data_rows += self.application.db.run_db_query(query)
+        self.listTableObjects(data_rows=data_rows)
+
+    def listTableObjects(self, table_name=None, data_rows=[]):
+        if self.application.db and not self.application.db.is_connected:
+            return self.application.databaseConnectionRequired()
+            
+        if len(data_rows) == 0 and table_name: 
+            # get single object to determine its data
+            query = f"select top 1 * from {table_name}"
+            data_rows = self.application.db.run_db_query(query)
+            # query full table data if any record exists
+            if len(data_rows) > 0:
+                table_columns = self.application.db.get_object_columns(data_rows[0])
+                sort_clause = ""
+            
+                for index in range(0, len(table_columns)):
+                    table_columns[index] = table_columns[index].lower()
+                
+                # add sort clause where possible, some tables do not have xdate fields
+                if "xdateinserted" in table_columns and "xdateupdated" in table_columns:
+                    sort_clause = "order by xdateinserted desc, xdateupdated desc"
+                
+                query = f"select * from {table_name} {sort_clause}"
+                data_rows = self.application.db.run_db_query(query)
+
+        print(f"table data loaded, {table_name} - ({len(data_rows)})")
+        self.SearchResultsListView.model().reloadModelData(data_rows)
+
+    def SearchResultsListDragMoveEvent(self, event):
+        event.ignore()
+
+    def resetRelationStates(self, source_item, state):
+        if self.XMLTemplateEditorTabWidget.count() == 0:
+            return True
+        if source_item:
+            source_item.resetRelationStates(state)
+        
+        for selected_item in self.selectedItems():
+            if isinstance(selected_item, XMLDataItem):
+                selected_item.resetRelationStates(state)
+        # refresh XML preview
+        self.XMLTemplateEditorTabWidget.currentWidget().xmlStructureChanged.emit()
+
+    def reloadDatabaseRelations(self, source_index):
+        self.DatabaseRelations.loadRelationData(source_index)
 
     def refresh_ui(self):
         self.TableComboBox.clear()
@@ -75,7 +166,70 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             self.TableComboBox.setEnabled(True)
             for table_name in self.application.db.table_info.keys():
                 self.TableComboBox.addItem(table_name)
-        self.refresh_xml_widget.emit()
+        self.refreshUi.emit()
+
+    def relationSettingsChanged(self, source_item):
+        if self.XMLTemplateEditorTabWidget.count() == 0:
+            return True
+        # remap the source_item object relations to trigger all right setters
+        if source_item:
+            source_item.object_relations = source_item.object_relations
+
+        # reset relation configuration for the other selected objects of the same class 
+        for item in self.selectedItems():
+            if item.table_name == source_item.table_name:
+                item.object_relations = source_item.object_relations
+        # refresh XML preview
+        self.XMLTemplateEditorTabWidget.currentWidget().xmlStructureChanged.emit()
+    
+    def selectedItems(self, source_view=None):
+        if not source_view:
+            current_tab = self.XMLTemplateEditorTabWidget.currentWidget()
+            source_view = current_tab.XMLStructureTreeView
+        return source_view.selectedItems()
+
+    def deleteSelectedItems(self):
+        if self.XMLTemplateEditorTabWidget.count() == 0:
+            return False
+
+        if not self.XMLTemplateEditorTabWidget.currentWidget().XMLStructureTreeView.hasFocus():
+            return False
+        
+        selected_items = self.selectedItems()
+        for item in selected_items:
+            item.removeItem()
+
+        self.XMLTemplateEditorTabWidget.currentWidget().XMLStructureTreeView.model().layoutChanged.emit()
+        self.XMLTemplateEditorTabWidget.currentWidget().xmlStructureChanged.emit()
+
+    def relationPresetApplyRequested(self, preset_table, preset_data):
+        if self.XMLTemplateEditorTabWidget.count() == 0:
+            return False
+
+        if preset_table and preset_data:
+            selected_items = self.selectedItems()
+            for item in selected_items:
+                if item.table_name == preset_table:
+                    preset_data_relations = deepcopy(preset_data["table_relations"])
+                    item.object_relations = preset_data_relations
+
+        self.XMLTemplateEditorTabWidget.currentWidget().xmlStructureChanged.emit()
+
+    def foldXMLPreview(self):
+        if self.XMLTemplateEditorTabWidget.count() == 0:
+            return False
+
+        current_tab = self.XMLTemplateEditorTabWidget.currentWidget()
+        if current_tab:
+            current_tab.XMLPreviewBrowser.foldByLevel()
+
+    def expandXMLPreview(self):
+        if self.XMLTemplateEditorTabWidget.count() == 0:
+            return False
+
+        current_tab = self.XMLTemplateEditorTabWidget.currentWidget()
+        if current_tab:
+            current_tab.XMLPreviewBrowser.expandByLevel()
 
     def setupUi(self):
         self.gridLayout = QtWidgets.QGridLayout(self)
@@ -139,30 +293,24 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.SearchResultsGroupBox.setObjectName("SearchResultsGroupBox")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.SearchResultsGroupBox)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.SearchResultsListWidget = QtWidgets.QListWidget(self.SearchResultsGroupBox)
-        self.SearchResultsListWidget.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragOnly)
-        self.SearchResultsListWidget.setDefaultDropAction(QtCore.Qt.DropAction.IgnoreAction)
-        self.SearchResultsListWidget.setAlternatingRowColors(True)
-        self.SearchResultsListWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.SearchResultsListWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
-        self.SearchResultsListWidget.setMovement(QtWidgets.QListView.Movement.Free)
-        self.SearchResultsListWidget.setProperty("isWrapping", False)
-        self.SearchResultsListWidget.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
-        self.SearchResultsListWidget.setWordWrap(True)
-        self.SearchResultsListWidget.setItemAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
-        self.SearchResultsListWidget.setObjectName("SearchResultsListWidget")
-        self.verticalLayout_3.addWidget(self.SearchResultsListWidget)
-        self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.horizontalLayout_5.addItem(spacerItem1)
-        self.AddSelectedObjectsWithRelationsButton = QtWidgets.QToolButton(self.SearchResultsGroupBox)
-        self.AddSelectedObjectsWithRelationsButton.setObjectName("AddSelectedObjectsWithRelationsButton")
-        self.horizontalLayout_5.addWidget(self.AddSelectedObjectsWithRelationsButton)
-        self.AddAsSingleObjectsButton = QtWidgets.QToolButton(self.SearchResultsGroupBox)
-        self.AddAsSingleObjectsButton.setObjectName("AddAsSingleObjectsButton")
-        self.horizontalLayout_5.addWidget(self.AddAsSingleObjectsButton)
-        self.verticalLayout_3.addLayout(self.horizontalLayout_5)
+        self.SearchResultsListView = QtWidgets.QListView(self.SearchResultsGroupBox)
+        self.SearchResultsListView.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragOnly)
+        self.SearchResultsListView.setDefaultDropAction(QtCore.Qt.DropAction.IgnoreAction)
+        self.SearchResultsListView.setAlternatingRowColors(True)
+        self.SearchResultsListView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.SearchResultsListView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.SearchResultsListView.setMovement(QtWidgets.QListView.Movement.Free)
+        self.SearchResultsListView.setProperty("isWrapping", False)
+        self.SearchResultsListView.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
+        self.SearchResultsListView.setWordWrap(True)
+        self.SearchResultsListView.setItemAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.SearchResultsListView.setObjectName("SearchResultsListView")
+        self.SearchResultsListView.dragMoveEvent = self.SearchResultsListDragMoveEvent
+        self.verticalLayout_3.addWidget(self.SearchResultsListView)
+
+        #Search Result list
+        data_model = ObjectDataListModel(application=self.application, parent_widget=self.SearchResultsListView)
+        self.SearchResultsListView.setModel(data_model)
 
         # Database Relations Widget
         self.DatabaseRelations = DatabaseRelations(self, self.application)
@@ -171,6 +319,8 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         # XML Editor TabWidget
         self.XMLTemplateEditorTabWidget = QtWidgets.QTabWidget(self.TemplateEditorSplitter_Left)
         self.XMLTemplateEditorTabWidget.setTabsClosable(True)
+        self.XMLTemplateEditorTabWidget.tabCloseRequested.connect(self.onTabWidgetClose)
+        self.XMLTemplateEditorTabWidget.setMovable(True)
 
         self.TemplateEditorSplitter_Search.setSizes(
             [round(self.application.height()*0.1), round(self.application.height()*0.7)]
@@ -181,7 +331,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             )
         
         self.TemplateEditorSplitter_Left.setSizes(
-            [round(self.application.width()*0.3), round(self.application.width()*0.7)]
+            [round(self.application.width()*0.25), round(self.application.width()*0.9)]
             )
 
         self.FindObjectButton.setEnabled(False)
@@ -199,7 +349,6 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.SelectedTableFilterRadioButton.setText(_translate("Form", "Selected Table Filter"))
         self.FindObjectButton.setText(_translate("Form", "Find Objects"))
         self.SearchResultsGroupBox.setTitle(_translate("Form", "Search Results"))
-        self.SearchResultsListWidget.setSortingEnabled(True)
-        self.AddSelectedObjectsWithRelationsButton.setText(_translate("Form", "Add With Selected Relations"))
-        self.AddAsSingleObjectsButton.setText(_translate("Form", "Add Without Relations"))
+        # self.AddSelectedObjectsWithRelationsButton.setText(_translate("Form", "Add With Selected Relations"))
+        # self.AddAsSingleObjectsButton.setText(_translate("Form", "Add Without Relations"))
 

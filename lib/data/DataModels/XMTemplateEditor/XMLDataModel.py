@@ -8,13 +8,14 @@ from .XMLDataItem import XMLDataItem
 class XMLDataModel(QAbstractItemModel):
     databaseObjectsLoaded = pyqtSignal(object, dict)
     xmlDataStructureChanged = pyqtSignal()
+    modelItemChecked = pyqtSignal(object, str, int)
 
     def __init__(self, application, data_source, parent_widget=None):
         super().__init__(parent_widget)
         self.application = application
         self.object_configuration = application.object_configuration
         self.transport_template = transport_template(self)
-        self._headers = ["XML Transport Structure"]
+        self._headers = ["XML Transport Structure", "Options"]
         self.treeview = parent_widget
         self.export_file_path = data_source
 
@@ -33,6 +34,9 @@ class XMLDataModel(QAbstractItemModel):
 
         # connect model data signals 
         self.databaseObjectsLoaded.connect(self.onDatabaseObjectsLoaded)
+
+        # save initial transport state
+        self.transport_template_initial = self.transport_template.string
 
     def setupModelData(self, data, parent):
         """ Main method used to load all data into the model """
@@ -72,25 +76,48 @@ class XMLDataModel(QAbstractItemModel):
             return None
 
         item = index.internalPointer()
+        column = index.column()
+        column_name = self.headers[column]
+
         if role == Qt.ItemDataRole.DisplayRole:
-            return item.display()
+            return item.display(column_name)
+
+        if (item.isCheckable(column_name) 
+            and role == Qt.ItemDataRole.CheckStateRole and column_name in ["Options"]):
+                return item.checkState(column_name)
         return None
 
     def setData(self, index, value, role):
         column = index.column()
         item = index.internalPointer()
         column_name = self.headerData(column)
-        item.setData(column_name, value)
+
+        if column_name in ["Options"]:
+            # option columns makes only the checkbox data changes
+            item.setCheckState(column_name, value)
+            self.modelItemChecked.emit(item, column_name, value)
+        else:
+            # otherwise set data directly
+            item.setData(column_name, value)
+
         self.dataChanged.emit(index, index)
-        # self.exportModelToJson()
-        return False
+        self.xmlDataStructureChanged.emit()
+        return True
 
     def flags(self, index):
         if not index.isValid():
             return Qt.ItemFlag.NoItemFlags
 
-        return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsDragEnabled \
+        flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsDragEnabled \
             | Qt.ItemFlag.ItemIsDropEnabled
+        
+        column_name = self.headers[index.column()]
+        if column_name == "Options":
+            option_display = self.data(index)
+            if option_display and len(option_display.strip()) > 0:
+                flags |= Qt.ItemFlag.ItemIsUserCheckable
+
+        return flags
 
     def headerData(self, section, orientation=Qt.Orientation.Horizontal, role=Qt.ItemDataRole.DisplayRole):
         if orientation==Qt.Orientation.Horizontal and role==Qt.ItemDataRole.DisplayRole:
@@ -156,7 +183,7 @@ class XMLDataModel(QAbstractItemModel):
         return Qt.DropAction.MoveAction
 
     def mimeTypes(self):
-        return ["application/vnd.xmldataitem"]
+        return ["application/vnd.xmldataitem", "application/vnd.objectdataitem"]
 
     def mimeData(self, indexes):
         mimedata = QMimeData()
@@ -181,29 +208,36 @@ class XMLDataModel(QAbstractItemModel):
         return mimedata
 
     def dropMimeData(self, data, action, row, column, parentIndex):
-        if not data.hasFormat("application/vnd.xmldataitem"):
+        if action == Qt.DropAction.IgnoreAction:
             return False
 
-        if action == Qt.DropAction.IgnoreAction:
-            return True
-
-        if not parentIndex.isValid():
-            parentItem = self.rootItem
-        else:
-            parentItem = parentIndex.internalPointer()
         # start = time.time()
         encodedData = data.data("application/vnd.xmldataitem")
-        
+
+        if len(encodedData) == 0:
+            # if no xmldata is being dropped, it should be database object data drop
+            encodedData = data.data("application/vnd.objectdataitem")
+
+        if len(encodedData) == 0:
+            # if not supported data type, break here
+            return False
+
         decodedData = bytes(encodedData)
         jsondata = json.loads(decodedData)
         newItems = []
         source_items = []
-        
+
+        if not parentIndex.isValid():
+            # dropped at top level item
+            parentItem = self.rootItem
+            if data.hasFormat("application/vnd.objectdataitem"):
+                parentItem = self.addTransportTask("VI.Transport.ObjectTransport, VI.Transport")
+                parentIndex = self.indexOf(parentItem)
+        else:
+            parentItem = parentIndex.internalPointer()
+
         for dropped_item in jsondata:
             source_item_uid = dropped_item.get('uid', None)
-            xml_object_class = dropped_item.get('xml_object_class', None)
-            xml_data = dropped_item.get('xml_data', None)
-            # print("dropped item", xml_data)
             source_item = None
             if source_item_uid:
                 # find the source Item and save it
@@ -217,7 +251,6 @@ class XMLDataModel(QAbstractItemModel):
                 application=self.application,
                 parent=parentItem,
                 model_reference=self)
-            # new_item.fromString(xml_string=xml_data, xml_object_class=xml_object_class)
             newItems.append(new_item)
             
             #emit relocation signal for the new item and tell it about its source item from the same model
@@ -259,6 +292,39 @@ class XMLDataModel(QAbstractItemModel):
             model_reference=self)]
         newTask[0].is_saved = False
         self.insert_items(parentIndex, newTask, row)
+
+    def addTransportTask(self, task_type):
+        transport_task_xml_object = self.transport_template.add_transport_task(task_type)
+        task_item = self.add_xml_item(transport_task_xml_object)
+        return task_item
+
+    def addSQLScript(self, source_index, script_type):
+        parentItem = None
+        if source_index.isValid():
+            parentItem = source_index.internalPointer() 
+        
+        if not parentItem and not parentItem._xml_data and not parentItem.xml_object_class != "SQL_Transport_Task":
+            return False
+
+        script_xml_object = parentItem._xml_data.add_sql_script(script_type)
+        self.add_xml_item(xml_object=script_xml_object, parentIndex=source_index)
+
+    def add_xml_item(self, xml_object, parentIndex=QModelIndex()):
+        parentItem = self.rootItem
+        if parentIndex.isValid():
+            parentItem = parentIndex.internalPointer()  
+        row = parentItem.childCount()
+        model_item = XMLDataItem(
+            application=self.application,
+            xml_custom_object=xml_object,
+            parent=parentItem,
+            model_reference=self)
+        self.beginInsertRows(parentIndex, row, row + 1)
+        parentItem.addChild(model_item, row)
+        self.endInsertRows()
+        self.layoutChanged.emit()
+        self.xmlDataStructureChanged.emit()
+        return model_item
     
     def insert_items(self, parentIndex, list_of_items, row=-1, column=-1):
         parentItem = self.rootItem
@@ -324,15 +390,22 @@ class XMLDataModel(QAbstractItemModel):
     def exportXMLData(self):
         return self.transport_template.string
 
+    def isDifferent(self):
+        return self.transport_template.string != self.transport_template_initial
+
     def onDatabaseObjectsLoaded(self, source_object, object_data):
         data_items = []
-        print("database objects loaded", len(data_items))
+        # print("database objects loaded", len(data_items))
         for table_name, results in object_data.items():
             table_display_name = table_name
             if self.application.db:
                 table_display_name = self.application.db.table_info.get(table_name, table_name)
-            print(f"{table_name} table data loaded - ({len(results)})")
+            # print(f"{table_name} table data loaded - ({len(results)})")
             table_data_item = ObjectDataItem(parent=source_object, application=self.application, table_data=table_display_name, object_data=results, model_reference=self)
             data_items.append(table_data_item)
         parentIndex = self.indexOf(source_object)
+        self.treeview.setExpanded(parentIndex, True)
         self.insert_items(parentIndex=parentIndex, list_of_items=data_items)
+
+    
+

@@ -39,7 +39,7 @@ class PackageManager(QtWidgets.QWidget):
         self.PackageViewTreeView.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.PackageViewTreeView.customContextMenuRequested.connect(self.contextMenuRequested)
 
-        self.FindPackageButton.clicked.connect(self.queryPackages)
+        # self.FindPackageButton.clicked.connect(self.queryPackages)
         self.AddPackageButton.clicked.connect(self.addPackageDefinition)
 
         # Execution Planner Tabs
@@ -419,9 +419,9 @@ class PackageManager(QtWidgets.QWidget):
         self.SearchPackageLineEdit.setToolTipDuration(1)
         self.SearchPackageLineEdit.setObjectName("SearchPackageLineEdit")
         self.horizontalLayout_4.addWidget(self.SearchPackageLineEdit)
-        self.FindPackageButton = QtWidgets.QToolButton(self.verticalLayoutWidget_5)
-        self.FindPackageButton.setObjectName("FindPackageButton")
-        self.horizontalLayout_4.addWidget(self.FindPackageButton)
+        # self.FindPackageButton = QtWidgets.QToolButton(self.verticalLayoutWidget_5)
+        # self.FindPackageButton.setObjectName("FindPackageButton")
+        # self.horizontalLayout_4.addWidget(self.FindPackageButton)
         self.AddPackageButton = QtWidgets.QToolButton(self.verticalLayoutWidget_5)
         self.AddPackageButton.setObjectName("AddPackageButton")
         self.horizontalLayout_4.addWidget(self.AddPackageButton)
@@ -452,5 +452,5 @@ class PackageManager(QtWidgets.QWidget):
         Form.setWindowTitle(_translate("Form", "Form"))
         self.SearchPackageLineEdit.setToolTip(_translate("Form", "Search Transport Package"))
         self.SearchPackageLineEdit.setPlaceholderText(_translate("Form", "Search Transport Package"))
-        self.FindPackageButton.setText(_translate("Form", "Find"))
+        # self.FindPackageButton.setText(_translate("Form", "Find"))
         self.AddPackageButton.setText(_translate("Form", "Add"))

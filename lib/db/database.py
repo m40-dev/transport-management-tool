@@ -1,5 +1,4 @@
-import pyodbc
-import copy
+import pyodbc, copy, re
 
 
 class DatabaseConnection(object):
@@ -90,6 +89,7 @@ class DatabaseConnection(object):
         
         if self.db_session is not None:
             self.db_session.close()
+        
 
     def run_db_query(self, string_query):
         if self.db_cursor is None or self.db_session is None:
@@ -217,28 +217,33 @@ class DatabaseConnection(object):
         return object_display
 
     def get_table_initial_relations(self, table_name, extended_view=False):
-        initial_relations = copy.deepcopy(self.table_relations.get(table_name, None))
+        initial_relations = copy.deepcopy(self.child_table_relations.get(table_name, None))
         
         if initial_relations is None:
-            return []
-        get_extended_view = extended_view 
-        if not get_extended_view:
+            return {}
+
+        #convert list of table relations into dict 
+        initial_relations = {table_name: initial_relations}
+
+        if not extended_view:
             return initial_relations
 
         relation_tables = []
-
-        for relation in initial_relations:
+        extended_relations = self.table_relations.get(table_name, None)
+        for relation in extended_relations:
             child_table = relation.get("ChildTable", None)
             if child_table is not None:
                 if child_table != table_name and child_table not in relation_tables:
                     relation_tables.append(child_table)
             
         for relation_table in relation_tables:
-            new_table_relations = self.table_relations.get(relation_table, None)
-            if new_table_relations is not None:
-                initial_relations = self.extend_table_relations(initial_relations, new_table_relations)
-
-        return initial_relations
+            new_table_relations = self.child_table_relations.get(relation_table, None)
+            if new_table_relations is not None and relation_table not in initial_relations.keys():
+                initial_relations[relation_table] = new_table_relations
+                # initial_relations = self.extend_table_relations(initial_relations, new_table_relations)
+        
+        relations_sorted = dict(sorted(initial_relations.items()))
+        return relations_sorted
 
     def extend_table_relations(self, current_relations, new_relations):
         current = current_relations
@@ -257,3 +262,12 @@ class DatabaseConnection(object):
             else:
                 continue
         return current
+
+    def get_objectkey_table(self, input_string):
+        table_name = None
+        regex = r"<T>(.*?)</T>"
+        if input_string is not None:
+            match = re.search(regex, input_string)
+            if match:
+                table_name = match.group(1)
+        return table_name

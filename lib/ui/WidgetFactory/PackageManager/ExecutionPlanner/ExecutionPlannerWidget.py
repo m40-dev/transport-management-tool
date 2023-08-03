@@ -15,7 +15,6 @@ class ExecutionPlannerWidget(QWidget):
 
         self.parent = parent
         self.application = application
-        self.current_workdir = self.parent.current_workdir
         self.object_configuration = self.application.object_configuration
         self.ProcessRunner = ProcessRunner(self)
         self.ProcessRunner.message.connect(self.logExecutionPlannerMessage)
@@ -99,6 +98,10 @@ class ExecutionPlannerWidget(QWidget):
             is_running = False
 
         self.stop_execution.setEnabled(is_running)
+
+    @property
+    def current_workdir(self):
+        return self.parent.current_workdir
 
     @property
     def name(self):
