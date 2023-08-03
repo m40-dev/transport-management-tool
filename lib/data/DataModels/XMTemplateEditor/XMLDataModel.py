@@ -254,7 +254,7 @@ class XMLDataModel(QAbstractItemModel):
             newItems.append(new_item)
             
             #emit relocation signal for the new item and tell it about its source item from the same model
-            if source_item:
+            if source_item and source_item.model_reference == self:
                 new_item.locationChanged.emit(source_item)
             else:
                 #emit new item from source signal to tell new item about source item data

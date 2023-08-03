@@ -182,25 +182,17 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         # refresh XML preview
         self.XMLTemplateEditorTabWidget.currentWidget().xmlStructureChanged.emit()
     
-    def selectedItems(self, source_view=None):
-        if not source_view:
-            current_tab = self.XMLTemplateEditorTabWidget.currentWidget()
-            source_view = current_tab.XMLStructureTreeView
-        return source_view.selectedItems()
+    def selectedItems(self):
+        current_tab = self.XMLTemplateEditorTabWidget.currentWidget()
+        if current_tab:
+            return current_tab.selectedItems()
+        return []
 
     def deleteSelectedItems(self):
         if self.XMLTemplateEditorTabWidget.count() == 0:
             return False
 
-        if not self.XMLTemplateEditorTabWidget.currentWidget().XMLStructureTreeView.hasFocus():
-            return False
-        
-        selected_items = self.selectedItems()
-        for item in selected_items:
-            item.removeItem()
-
-        self.XMLTemplateEditorTabWidget.currentWidget().XMLStructureTreeView.model().layoutChanged.emit()
-        self.XMLTemplateEditorTabWidget.currentWidget().xmlStructureChanged.emit()
+        self.XMLTemplateEditorTabWidget.currentWidget().deleteSelectedItems()
 
     def relationPresetApplyRequested(self, preset_table, preset_data):
         if self.XMLTemplateEditorTabWidget.count() == 0:

@@ -110,6 +110,9 @@ class XMLDataItem(QObject):
             object_xml_node = parent_xml_node.xml_add_child_node(object_info)
             self._xml_data = object_xml_node
         # load initial object relations
+        if not object_info:
+            return
+        
         table_name = object_info.get("table_name", None)
         if table_name:
             object_relations = self.application.db.get_table_initial_relations(table_name=table_name, extended_view=True)

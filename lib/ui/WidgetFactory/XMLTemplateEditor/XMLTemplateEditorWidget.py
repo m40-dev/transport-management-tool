@@ -266,16 +266,26 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
 
     def selectedItems(self):
         selected_items = []
-        source_view = self.XMLStructureTreeView
-        selected_indexes = source_view.selectedIndexes()
+        selected_indexes = self.XMLStructureTreeView.selectedIndexes()
         if len(selected_indexes) > 0:
             for index in selected_indexes:
                 if not index.isValid():
                     continue
                 item = index.internalPointer()
-                if item:
+                if item and item not in selected_items:
                     selected_items.append(item)
         return selected_items
+
+    def deleteSelectedItems(self):
+        if not self.XMLStructureTreeView.hasFocus():
+            return False
+
+        selected_items = self.selectedItems()
+        for item in selected_items:
+            item.removeItem()
+
+        self.xmlStructureChanged.emit()
+        self.XMLStructureTreeView.model().layoutChanged.emit()
 
     def setupUi(self):
         self.layout = QtWidgets.QGridLayout(self)
