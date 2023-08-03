@@ -15,7 +15,7 @@ class ScriptEditorDialog(QtWidgets.QDialog):
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("layout")
         
-        self.editor = sql_editor(self)
+        self.editor = sql_editor(self.application)
         self.editor.setText(script_content)
 
         self.buttonBox = QtWidgets.QDialogButtonBox(self)

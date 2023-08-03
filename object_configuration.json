@@ -43,6 +43,11 @@
                 "FieldType": "ChildObjectReference",
                 "Class": "PackageManager_TaskDefinition",
                 "ShowInEditor": "False"
+            },
+        "GUID":
+            {
+                "FieldType": "StringInput",
+                "FieldRole": "UniqueIdentifier"
             }
 
         },

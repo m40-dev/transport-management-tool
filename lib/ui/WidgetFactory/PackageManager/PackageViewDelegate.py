@@ -1,22 +1,19 @@
-from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout, QGraphicsOpacityEffect, QSizePolicy, QWidget
-from PyQt6.QtCore import Qt, QRectF, pyqtSignal, QPropertyAnimation, QSize, QEasingCurve, QAbstractAnimation
+from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout, QGraphicsOpacityEffect, QSizePolicy
+from PyQt6.QtCore import Qt, QRectF, pyqtSignal, QPropertyAnimation, QEasingCurve, QAbstractAnimation
 from PyQt6.QtGui import QPalette, QPen, QPainterPath
-import json
-import os
-import pathlib
 from lib.ui.WidgetFactory import MsgBox
 
 class PackageViewDelegate(QStyledItemDelegate):
 
-    def __init__(self, model_data, application, parent_widget=None):
+    def __init__(self, model_data, application, parent_widget, package_manager):
         super().__init__(parent_widget)
         # self.items = ["", "Import", "Export"]
         self.model_data = model_data
         self.application = application
+        self.package_manager = package_manager
         self.object_configuration = self.application.object_configuration
         self.application_palette = self.application.color_theme
-        self.parent().setAlternatingRowColors(False)
-
+        
     def createEditor(self, parent, option, index):
         if not index.isValid():
             return False
@@ -24,11 +21,11 @@ class PackageViewDelegate(QStyledItemDelegate):
         item = index.internalPointer()
         # print("create editor for column", column_name, item, item.task_class)
         if column_name == "Actions" and item.task_class == "PackageManager_TaskDefinition":
-            editor = TaskDefinitionWidget(data_item=item, application=self.application, parent=self.parent())
+            editor = TaskDefinitionWidget(data_item=item, application=self.application, parent=self.parent(), package_manager=self.package_manager)
             return editor
         
         if column_name == "Actions" and item.task_class == "PackageManager_PackageDefinition":
-            editor = PackageDefinitionWidget(data_item=item, application=self.application, parent=self.parent())
+            editor = PackageDefinitionWidget(data_item=item, application=self.application, parent=self.parent(), package_manager=self.package_manager)
             return editor
 
         return super().createEditor(parent, option, index)
@@ -91,9 +88,10 @@ class PackageViewDelegate(QStyledItemDelegate):
 
 class PackageManagerItemWidget(QFrame):
 
-    def __init__(self, data_item, application, parent):
+    def __init__(self, data_item, application, parent, package_manager):
         super().__init__(parent=parent)
         self.application = application
+        self.package_manager = package_manager
         self.data_item = data_item
         self.treeview = parent
         self.parent = parent
@@ -145,9 +143,9 @@ class PackageManagerItemWidget(QFrame):
         self.treeview.collapsed.connect(self.collapse_children)
         self.animate()
     
-    def sizeHint(self):
-        # print("getting size hint for widget", self.layout.sizeHint())
-        return self.layout.sizeHint()
+    # def sizeHint(self):
+    #     # print("getting size hint for widget", self.layout.sizeHint())
+    #     return self.layout.sizeHint()
 
     def animate(self, reverse=False):
         # animate startup
@@ -203,9 +201,9 @@ class PackageManagerItemWidget(QFrame):
         self.treeview.model().layoutChanged.emit()
 
 class PackageDefinitionWidget(PackageManagerItemWidget):
-    def __init__(self, data_item, application, parent):
+    def __init__(self, data_item, application, parent, package_manager):
         
-        super().__init__(data_item=data_item, application=application, parent=parent)
+        super().__init__(data_item=data_item, application=application, parent=parent, package_manager=package_manager)
 
         self.edit_feature_button = QToolButton()
         self.edit_feature_button.setText("Properties")
@@ -221,24 +219,26 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
 
         self.save_feature_button.clicked.connect(self.save_feature)
 
-    def save_feature(self):
-        if self.application.current_workdir:
-            self.data_item.save()
-            return True
-        MsgBox(self.application, "Working directory is not set. Please configure the work location first.")
+    def save_feature(self, save_single=True):
+        index = self.treeview.model().indexOf(self.data_item)
+        self.package_manager.savePackageDefinition(index)
+        # if self.package_manager.current_workdir:
+        #     self.data_item.save()
+        #     return True
+        # MsgBox(self.application, "Working directory is not set. Please configure the work location first.")
     
     def edit_feature(self):
         index = self.treeview.model().indexOf(self.data_item)
-        self.application.edit_package_definition(index)
+        self.package_manager.editPackageDefinition(index)
 
 class TaskDefinitionWidget(PackageManagerItemWidget):
     
     edit_task_definition = pyqtSignal(object)
     
-    def __init__(self, data_item, application, parent):
+    def __init__(self, data_item, application, parent, package_manager):
 
         """ init parent class """
-        super().__init__(data_item=data_item, application=application, parent=parent)
+        super().__init__(data_item=data_item, application=application, parent=parent, package_manager=package_manager)
 
         """ Add Custom Widgets """
         self.parent=parent
@@ -264,11 +264,11 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
 
     def edit_task_definition(self):
         index = self.treeview.model().indexOf(self.data_item)
-        self.application.edit_task_definition(index)
+        self.package_manager.editTaskDefinition(index)
 
     def edit_task_xml_definition(self):
         index = self.treeview.model().indexOf(self.data_item)
-        self.application.edit_task_xml_definition(index)
+        self.package_manager.editXMLTemplate(index)
 
     def refresh_item_data(self):
         self.edit_xml_definition_button.setText("Edit XML")

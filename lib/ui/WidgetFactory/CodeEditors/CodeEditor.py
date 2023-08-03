@@ -44,7 +44,7 @@ class BaseCodeEditor(QsciScintilla):
         self.SCN_MODIFIED = self.modify
 
         self.reconfigure_editor()
-        self.expand_level = 10
+        self.expand_level = 5
 
     @property
     def dark_mode(self):
@@ -130,11 +130,11 @@ class BaseCodeEditor(QsciScintilla):
                 prev = [-1, fold]
         self.set_fold(prev, lend - 1, 0, full)
 
-    def fold_by_level(self):
+    def foldByLevel(self):
         level = self.expand_level
         # print("fold by level", level, level + 0x400)
         SCI = self.SendScintilla
-        if level > 0:
+        if level > 1:
             level += 0x400
             MASK = QsciScintilla.SC_FOLDLEVELNUMBERMASK
             for line in range(self.lines()):
@@ -144,12 +144,11 @@ class BaseCodeEditor(QsciScintilla):
                     if SCI(QsciScintilla.SCI_GETFOLDEXPANDED, line):
                         SCI(QsciScintilla.SCI_FOLDLINE, line,
                             QsciScintilla.SC_FOLDACTION_CONTRACT)
+            self.expand_level -= 1
         else:
-            SCI(QsciScintilla.SCI_FOLDALL, QsciScintilla.SC_FOLDACTION_EXPAND)
-        self.expand_level -= 1
+            SCI(QsciScintilla.SCI_FOLDALL, QsciScintilla.SC_FOLDACTION_CONTRACT)
 
-    def expand_by_level(self):
-        self.expand_level += 1
+    def expandByLevel(self):
         level = self.expand_level
         # print("expand by level", level, level + 0x400)
         SCI = self.SendScintilla
@@ -163,6 +162,7 @@ class BaseCodeEditor(QsciScintilla):
                     if not SCI(QsciScintilla.SCI_GETFOLDEXPANDED, line):
                         SCI(QsciScintilla.SCI_FOLDLINE, line,
                             QsciScintilla.SC_FOLDACTION_EXPAND)
+            self.expand_level += 1
         else:
             SCI(QsciScintilla.SCI_FOLDALL, QsciScintilla.SC_FOLDACTION_EXPAND)
         
