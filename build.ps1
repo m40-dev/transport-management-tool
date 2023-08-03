@@ -23,6 +23,6 @@ Remove-Item -R .\build\TransportManager\lib\PyQt6\Qt6\qml -Force -ErrorAction Si
 Remove-Item -R .\build\TransportManager\lib\PyQt6\Qt6\translations -Force -ErrorAction SilentlyContinue
 
 #Pack it up
-# & 'C:\Program Files\7-Zip\7z.exe' a .\build\TransportManager.7z .\build\TransportManager
-Compress-Archive -LiteralPath .\build\TransportManager -DestinationPath .\build\TransportManager.zip
+& 'C:\Program Files\7-Zip\7z.exe' a .\build\TransportManager.7z .\build\TransportManager
+# Compress-Archive -LiteralPath .\build\TransportManager -DestinationPath .\build\TransportManager.zip
 

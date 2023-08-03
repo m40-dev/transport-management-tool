@@ -47,7 +47,6 @@
         "GUID":
             {
                 "FieldType": "StringInput",
-                "Display": "Package UID",
                 "FieldRole": "UniqueIdentifier"
             }
 
