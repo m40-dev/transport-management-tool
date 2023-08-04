@@ -51,7 +51,7 @@ class ObjectRelationsDataModel(QAbstractItemModel):
         """ Main method used to load all data into the model """
         if not isinstance(object_data, dict):
             return False 
-            
+
         for table_name, table_records in object_data.items():
             data_item = RelationDataItem(
                 parent=parentItem,
@@ -68,11 +68,11 @@ class ObjectRelationsDataModel(QAbstractItemModel):
     def reloadModelData(self, object_data, filter_state=True):
         self.beginResetModel()
         self.rootItem._children = []
+        self.rootItem._filtered_children = []
         if object_data and len(object_data)>0:
             self.setupModelData(object_data, self.rootItem)
-        self.setFilter(filter_state)
         self.endResetModel()
-        self.modelReset.emit()
+        self.setFilter(filter_state)
 
     @property
     def headers(self):
@@ -195,7 +195,6 @@ class ObjectRelationsDataModel(QAbstractItemModel):
 
         if parentItem:
             return parentItem.childCount()
-        print("rowCount results in 0")
         return 0
 
     # Drag and Drop
@@ -265,8 +264,12 @@ class ObjectRelationsDataModel(QAbstractItemModel):
         parentItem.insertChildren(row, list_of_items)
         self.endInsertRows()
 
-    def remove_item(self, xmldataitem):
-        item_parent = xmldataitem.parent()
+    def remove_item(self, source_index):
+        if not source_index.isValid():
+            return False
+        
+        relationItem = source_index.internalPointer()
+        item_parent = relationItem.parent()
         parent_row = item_parent.row()
 
         if item_parent == self.rootItem:
@@ -274,9 +277,8 @@ class ObjectRelationsDataModel(QAbstractItemModel):
         else:
             parentIndex = self.createIndex(parent_row, 0, item_parent)
 
-        self.beginRemoveRows(parentIndex, xmldataitem.row(), xmldataitem.row())
-        xmldataitem.is_saved = False
-        xmldataitem.removeItem()
+        self.beginRemoveRows(parentIndex, relationItem.row(), relationItem.row())
+        relationItem.removeItem()
         self.endRemoveRows()
 
     def dragEnterEvent(self, event):
@@ -301,4 +303,23 @@ class ObjectRelationsDataModel(QAbstractItemModel):
                         if result:
                             return result
         return False
+
+    def getCurrentModelData(self, table_name=None, parent=None):
+        if not parent:
+            parent = self.rootItem
+        child_items = parent.getAllItems()
+        model_data = {}
+        relation_data = []
+        for data_item in child_items:
+            if data_item.object_class == "TableDataItem":
+                table_name = data_item.table_data
+                model_data.update(self.getCurrentModelData(table_name, data_item))
+            
+            if data_item.object_class == "RelationDataItem" and table_name:
+                if data_item.object_data not in relation_data:
+                    relation_data.append(data_item.object_data)
+                model_data = {table_name: relation_data}
+            if data_item.childCount() > 0:
+                model_data.update(self.getCurrentModelData(parent=data_item))
+        return model_data            
 

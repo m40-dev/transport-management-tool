@@ -92,7 +92,7 @@ class XMLDataItem(QObject):
                     parsed_relations[table_name].append(relation)
             self._object_relations = parsed_relations
         return self._object_relations
-        
+
     @object_relations.setter
     def object_relations(self, relations_data):
         self._object_relations = relations_data
@@ -172,15 +172,18 @@ class XMLDataItem(QObject):
     def uid(self, value):
         self._uid = value
 
-    def display(self, column):
+    def display(self, column_name):
         if self._xml_data:
-            if isinstance(self._xml_data, transport_template_custom_object) and column == "XML Transport Structure":
-                return self._xml_data.display
+            if isinstance(self._xml_data, transport_template_custom_object) and column_name == "XML Transport Structure":
+                caption = self._xml_data.display
+                if caption:
+                    caption.replace('%Globals.QIM_ProductNameShort%', "OneIM")
+                return caption
             
-            if isinstance(self._xml_data, transport_template_custom_object) and column == "Options":
+            if isinstance(self._xml_data, transport_template_custom_object) and column_name == "Options":
                 return self._xml_data.option
 
-        return self.data(column)
+        return self.data(column_name)
 
     def setDisplay(self, value):
         if self._xml_data:
@@ -350,6 +353,10 @@ class XMLDataItem(QObject):
         
         if self._xml_data is not None and self._xml_data.xml_object_class == "Transport_Object":
             table_name = self._xml_data.table_name
+            
+            if not table_name:
+                return
+
             self.object_data = self.application.db.get_db_object(table_name, self._xml_data.key_columns, " and " )
             
             if len(self.object_data) > 0:
@@ -360,12 +367,17 @@ class XMLDataItem(QObject):
             for xml_source_table in self.object_relations.keys():
                 if xml_source_table not in db_relations.keys():
                     new_relations = self.application.db.get_table_initial_relations(xml_source_table)
-                    db_relations[xml_source_table] = new_relations
+                    db_relations.update(new_relations)
 
-            if db_relations is not None:
+            if db_relations and isinstance(db_relations, dict):
                 for db_relation_items in db_relations.values():
-                    for db_relation in db_relation_items:
-                        db_relation["Relation"] = 0
+                    if isinstance(db_relation_items, list):
+                        for db_relation in db_relation_items:
+                            if isinstance(db_relation, dict):
+                                db_relation["Relation"] = 0
+                    
+                    if isinstance(db_relation_items, dict):
+                        db_relation_items["Relation"] = 0
             
             """ select all base relations that match the xml relation state, skip relations that are not marked for transport in the database """
             selected_relations, skipped_relations = self.select_referenced_relations(source=self.object_relations, target=db_relations)
@@ -374,10 +386,10 @@ class XMLDataItem(QObject):
             selected_relations, skipped_relations = self.select_skipped_relations(skipped_relations, selected_relations, db_relations, match_parent_column=True)
             
             # """ select leftover relations where the xml relation matches and do not try to match the parent column anymore (basically include all relations where necessary) """
-            # selected_relations, skipped_relations = self.select_skipped_relations(skipped_relations, selected_relations, db_relations, match_parent_column=False)
+            selected_relations, skipped_relations = self.select_skipped_relations(skipped_relations, selected_relations, db_relations, match_parent_column=False)
     
             relations_sorted = dict(sorted(db_relations.items()))
-            print("Object Relations Loaded", len(relations_sorted))
+            # print("Object Relations Loaded", len(relations_sorted))
 
             """ save final relation data """
             self.object_relations = relations_sorted

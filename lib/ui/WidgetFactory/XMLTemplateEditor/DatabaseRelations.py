@@ -65,6 +65,18 @@ class DatabaseRelations(QtWidgets.QWidget):
         self.current_item = source_object
         self.relation_data_model.reloadModelData(relation_data, filter_state=self.getRelationsViewFilterState())
         
+    def deleteSelectedItems(self):
+        if not self.RelationsViewTreeView.hasFocus():
+            return False
+        selected_indexes = self.RelationsViewTreeView.selectionModel().selectedRows()
+        print(len(selected_indexes), "items to delete")
+        for index in selected_indexes:
+            self.relation_data_model.remove_item(index)
+
+        model_data = self.relation_data_model.getCurrentModelData()
+        if self.current_item:
+            self.current_item.object_relations = model_data
+            self.relationSettingsChanged.emit(self.current_item)
 
     def relationContextMenuRequested(self, menuPosition):
         clickedIndex = self.RelationsViewTreeView.indexAt(menuPosition)
@@ -97,11 +109,17 @@ class DatabaseRelations(QtWidgets.QWidget):
         if self.application.db and not self.application.db.is_connected:
             return self.application.databaseConnectionRequired()
 
-        table_relations = self.application.db.get_table_initial_relations(target_table, extended_view=True)
+        table_relations = self.application.db.get_table_extension(target_table)
         if table_relations and len(table_relations) > 0:
             self.relation_data_model.extendTableRelations(source_index, table_relations)
             if self.current_item:
-                self.current_item.object_relations.update(table_relations)
+                for table_name, extended_relations in table_relations.items():
+                    if table_name not in self.current_item.object_relations.keys():
+                        self.current_item.object_relations.update(table_relations)
+                    else:
+                        # update existing table relations with NEW entries only
+                        existing_relations = self.current_item.object_relations[table_name]
+                        self.current_item.object_relations[table_name] = self.application.db.extend_table_relations(existing_relations, extended_relations)
 
     def loadRelationPresets(self):
         self.RelationPresetsComboBox.clear()
@@ -130,6 +148,7 @@ class DatabaseRelations(QtWidgets.QWidget):
                 break
 
         self.XMLTemplateEditor.relationPresetApplyRequested(preset_table, preset_data)
+        self.loadRelationData(self.current_index)
 
     def relationStatusChanged(self, index=None, column_name=None, value=None):
         self.relationSettingsChanged.emit(self.current_item)
@@ -206,6 +225,7 @@ class DatabaseRelations(QtWidgets.QWidget):
         self.RelationsViewTreeView.setDragEnabled(False)
         self.RelationsViewTreeView.setAcceptDrops(False)
         self.RelationsViewTreeView.customContextMenuRequested.connect(self.relationContextMenuRequested)
+        self.RelationsViewTreeView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         
         self.GroupBoxLayout.addLayout(self.optionsLayout, 0, 0, 1, 1)
         self.GroupBoxLayout.addLayout(buttonsLayout, 1, 0, 1, 1)

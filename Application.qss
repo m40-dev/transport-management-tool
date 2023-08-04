@@ -137,7 +137,6 @@ QTreeWidget::item:alternate, QListWidget::item:alternate, QListView::item:altern
 QListView::item::hover, QTreeView::item:hover{
 	height: 2em;
 	font: bold;
-	/* padding-left: 5px; */
 	background-color: #d9e7e9;
 }
 
@@ -229,6 +228,11 @@ QToolButton[Widget=DeleteButton]::hover{
 QCheckBox[Widget=CheckBoxHeader]{
 	font-size: 15px;
 	color: palette(Text);
+}
+
+QCheckBox::indicator{
+	width: 25px;
+	height: 25px;
 }
 
 QToolButton[Widget=SelectFileButton]{

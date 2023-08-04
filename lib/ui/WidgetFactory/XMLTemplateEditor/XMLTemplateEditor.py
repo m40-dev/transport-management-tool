@@ -138,7 +138,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
                 query = f"select * from {table_name} {sort_clause}"
                 data_rows = self.application.db.run_db_query(query)
 
-        print(f"table data loaded, {table_name} - ({len(data_rows)})")
+        # print(f"table data loaded, {table_name} - ({len(data_rows)})")
         self.SearchResultsListView.model().reloadModelData(data_rows)
 
     def SearchResultsListDragMoveEvent(self, event):
@@ -193,6 +193,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             return False
 
         self.XMLTemplateEditorTabWidget.currentWidget().deleteSelectedItems()
+        self.DatabaseRelations.deleteSelectedItems()
 
     def relationPresetApplyRequested(self, preset_table, preset_data):
         if self.XMLTemplateEditorTabWidget.count() == 0:

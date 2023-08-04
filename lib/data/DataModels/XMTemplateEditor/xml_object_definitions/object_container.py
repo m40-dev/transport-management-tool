@@ -131,7 +131,6 @@ class object_container(transport_template_custom_object):
                 child_table = relation_data[0]
                 child_column = relation_data[1]
                 relation_state = relation_data[2]
-                relation_key = f"{child_table}|{child_column}"
                 relation_number = 0
 
                 if "IgnoreInSupersetHandling" in relation_state:

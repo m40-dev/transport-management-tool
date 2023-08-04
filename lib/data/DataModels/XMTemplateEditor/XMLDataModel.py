@@ -36,7 +36,7 @@ class XMLDataModel(QAbstractItemModel):
         self.databaseObjectsLoaded.connect(self.onDatabaseObjectsLoaded)
 
         # save initial transport state
-        self.transport_template_initial = self.transport_template.string
+        self.fileSaved()
 
     def setupModelData(self, data, parent):
         """ Main method used to load all data into the model """
@@ -80,9 +80,13 @@ class XMLDataModel(QAbstractItemModel):
         column_name = self.headers[column]
 
         if role == Qt.ItemDataRole.DisplayRole:
-            return item.display(column_name)
+            if isinstance(item, XMLDataItem):
+                return item.display(column_name)
 
-        if (item.isCheckable(column_name) 
+            if column_name == "XML Transport Structure":
+                return item.display()
+
+        if (isinstance(item, XMLDataItem) and item.isCheckable(column_name) 
             and role == Qt.ItemDataRole.CheckStateRole and column_name in ["Options"]):
                 return item.checkState(column_name)
         return None
@@ -392,6 +396,9 @@ class XMLDataModel(QAbstractItemModel):
 
     def isDifferent(self):
         return self.transport_template.string != self.transport_template_initial
+
+    def fileSaved(self):
+        self.transport_template_initial = self.transport_template.string
 
     def onDatabaseObjectsLoaded(self, source_object, object_data):
         data_items = []

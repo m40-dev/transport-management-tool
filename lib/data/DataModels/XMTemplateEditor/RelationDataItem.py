@@ -20,7 +20,7 @@ class RelationDataItem(QObject):
         self._filter_match = False
         self._parent = parent
         self._uid = str(uuid.uuid4())
-        
+
         if object_class == "TableDataItem" and object_data and len(object_data) > 0:
             self.loadChildren(object_data)
         
@@ -50,22 +50,18 @@ class RelationDataItem(QObject):
             self.filter_match = True
             return
         
-        self.filter_match = False
+        filter_match = False
 
         if not filterEnabled:
-            self.filter_match = True 
-            return
+            filter_match = True 
         else:
             if self.object_class == "RelationDataItem":
-                self.filter_match = (int(self.InitialRelationState) > 0 or int(self.Relation) > 0)
-                return
+                filter_match = (int(self.InitialRelationState) > 0 or int(self.Relation) > 0)
 
             if self.object_class == "TableDataItem" and self.filter_childCount() > 0:
-                self.filter_match = True
-                return
+                filter_match = True
 
-        # print(f"filter state {filterEnabled}, match result {self.filter_match}, record {self.display()}, ({len(self._children)}), {self.object_class}")
-        # self.filter_match = False
+        self.filter_match = filter_match
 
     def filter_childCount(self):
         return len(self.filter_childItems()[0])
@@ -143,7 +139,7 @@ class RelationDataItem(QObject):
 
     def itemLocationChanged(self, source_item):
         print("object location changed", self.display)
-        #pass over the source files configuration
+        #pass over the source object configuration
         
     def totalChildCount(self):
         total_childitems = self._children + self._filtered_children
@@ -158,7 +154,6 @@ class RelationDataItem(QObject):
                 object_class="RelationDataItem",
                 model_reference=self.model_reference)
             self.addChild(data_item)
-            # print("relation record added", data_item, data_item.display())
 
     def flags(self, column):
         column_name = self.headers[column]
@@ -187,21 +182,24 @@ class RelationDataItem(QObject):
         self._uid = value
 
     def display(self, column=0):
-        data_row = self.object_data
         if self.object_class == "TableDataItem" and self.table_data:
-            data_row = self.table_data
+            return self.table_data
 
-        if isinstance(data_row, str):
-            return data_row
+        if self.object_class == "RelationDataItem" and self.object_data and column == 0:
+            caption = self.Caption
+            table_name = self.ParentTable
+            column_reference = self.ChildColumn
+            relation = f"{column_reference} --> [{table_name}]"
 
-        if isinstance(data_row, dict) and column == 0:
-            row_caption = data_row.get("Caption", None)
-            if not row_caption:
-                row_caption = data_row.get("ChildTable", "")
-            child_column = data_row.get("ChildColumn", "")
-            return f"{row_caption} ({child_column})"
+            if self.RelationType == "ParentRelation":
+                table_name = self.ChildTable
+                column_reference = self.ChildColumn
+                relation = f"{column_reference} <-- [{table_name}]"
+                return relation
+
+            return f"{relation} ({caption})"
         
-        if isinstance(data_row, dict) and column > 0:
+        if isinstance(self.object_data, dict) and column > 0:
             return self.data(column)
 
         return "Object with no display"
@@ -230,7 +228,7 @@ class RelationDataItem(QObject):
         self.itemAdded.emit(child)
 
     def removeChild(self, row):
-        if row >= 0 and row <= len(self._children):
+        if row >= 0 and row <= len(self._children) and len(self._children) > 0:
             return self._children.pop(row)
 
     def removeChildItem(self, childItem):
@@ -284,10 +282,17 @@ class RelationDataItem(QObject):
         export_data['row'] = self.row()
         return export_data
 
-
     @property
     def follow_table(self):
-        return self.ParentTable
+        table_name = self.ParentTable
+
+        if self.RelationType == "ParentRelation":
+            table_name = self.ChildTable
+
+        if self.RelationType == "ChildRelation":
+            table_name = self.ParentTable
+
+        return table_name
     
     @property
     def follow_column(self):
@@ -300,6 +305,21 @@ class RelationDataItem(QObject):
         return 0
 
     @property
+    def RelationType(self):
+        if isinstance(self.object_data, dict):
+            return self.object_data.get("RelationType", "ChildRelation")
+        return "ChildRelation"
+
+    @property
+    def Caption(self):
+        if isinstance(self.object_data, dict):
+            caption = self.object_data.get("Caption", "No Display")
+            if caption:
+                caption.replace('%Globals.QIM_ProductNameShort%', "OneIM")
+            return caption
+        return "No Display"
+
+    @property
     def Relation(self):
         if isinstance(self.object_data, dict):
             return self.object_data.get("Relation", 0)
@@ -309,7 +329,6 @@ class RelationDataItem(QObject):
     def Relation(self, value):
         if isinstance(self.object_data, dict):
             self.object_data["Relation"] = value
-        
 
     @property
     def ChildTable(self):
@@ -331,3 +350,5 @@ class RelationDataItem(QObject):
         if isinstance(self.object_data, dict):
             return self.object_data.get("ParentColumn", "")
     
+    def getAllItems(self):
+        return self._children

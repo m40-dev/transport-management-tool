@@ -83,6 +83,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                 Path(self.current_file).parent.mkdir(parents=True, exist_ok=True)
                 with open(self.current_file, 'w') as doc:
                     doc.write(self.XMLStructureTreeView.model().exportXMLData())
+                self.XMLStructureTreeView.model().fileSaved()
                 return self.current_file
             return self.saveXMLTemplateAs(self.current_file)
         return self.saveXMLTemplateAs(self.application.current_workdir)
@@ -101,6 +102,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
             self.current_file = file_path[0]
             self.parent.tabNameChanged.emit(self)
             self.setCurrentXMLTemplate()
+            self.XMLStructureTreeView.model().fileSaved()
             return file_path[0]
         return False
 
@@ -302,13 +304,13 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.XMLStructureTreeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.XMLStructureTreeView.customContextMenuRequested.connect(self.xmlContextMenuRequested)
         self.XMLStructureTreeView.dragMoveEvent = self.XMLStructureDragMoveEvent
+        self.XMLStructureTreeView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         # self.XMLStructureTreeView.setHeaderHidden(True)
         self.XMLStructureTreeView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.XMLStructureTreeView.setDragEnabled(True)
         self.XMLStructureTreeView.setAcceptDrops(True)
         self.XMLStructureTreeView.setUniformRowHeights(False)
         self.XMLStructureTreeView.setDropIndicatorShown(True)
-
         self.XMLStructureTreeView.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragDrop)
         self.XMLStructureTreeView.header().setStretchLastSection(False)
 

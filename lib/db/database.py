@@ -165,7 +165,8 @@ class DatabaseConnection(object):
                 "Caption": row.Caption,
                 "ParentTable": row.ParentTable, 
                 "ParentColumn": row.ParentColumn, 
-                "Relation": row.Relation,
+                # "Relation": row.Relation,
+                "Relation": 0,
                 "ChildTable": row.ChildTable,
                 "ChildColumn": row.ChildColumn,
                 "InitialRelationState": row.Relation
@@ -177,12 +178,6 @@ class DatabaseConnection(object):
             if relation not in self.table_relations[row.ParentTable]:
                 self.table_relations[row.ParentTable].append(relation)
             
-            if row.ChildTable not in self.table_relations.keys():
-                self.table_relations[row.ChildTable] = [relation]
-                
-            if relation not in self.table_relations[row.ChildTable]:
-                self.table_relations[row.ChildTable].append(relation)
-
             if row.ChildTable not in self.child_table_relations.keys():
                 self.child_table_relations[row.ChildTable] = [relation]
                 
@@ -202,7 +197,6 @@ class DatabaseConnection(object):
         for db_object in db_objects:
             objects_display_name.append(self.parse_object_display(db_object, display_pattern))
         return " ".join(objects_display_name)
-
     
     def parse_object_display(self, db_object, display_pattern):
         object_display = display_pattern.upper()
@@ -216,14 +210,29 @@ class DatabaseConnection(object):
             object_display = object_display.replace("%", "")
         return object_display
 
-    def get_table_initial_relations(self, table_name, extended_view=False):
-        initial_relations = copy.deepcopy(self.child_table_relations.get(table_name, None))
+    def get_table_extension(self, table_name):
+        initial_relations = self.table_relations.get(table_name, None)
         
         if initial_relations is None:
             return {}
+        
+        relation_data = self.set_relation_data_type(initial_relations, "ParentRelation")
+        return {table_name: relation_data}
 
+    def set_relation_data_type(self, initial_relations, relation_type):
+        relation_data = copy.deepcopy(initial_relations)
+        for relation in relation_data:
+            relation["RelationType"] = relation_type
+        return relation_data
+
+    def get_table_initial_relations(self, table_name, extended_view=False):
+        initial_relations = self.child_table_relations.get(table_name, None)
+        if initial_relations is None:
+            return {}
+
+        relation_data = self.set_relation_data_type(initial_relations, "ChildRelation")
         #convert list of table relations into dict 
-        initial_relations = {table_name: initial_relations}
+        initial_relations = {table_name: relation_data}
 
         if not extended_view:
             return initial_relations
@@ -238,9 +247,9 @@ class DatabaseConnection(object):
             
         for relation_table in relation_tables:
             new_table_relations = self.child_table_relations.get(relation_table, None)
+
             if new_table_relations is not None and relation_table not in initial_relations.keys():
-                initial_relations[relation_table] = new_table_relations
-                # initial_relations = self.extend_table_relations(initial_relations, new_table_relations)
+                initial_relations[relation_table] = self.set_relation_data_type(new_table_relations, "ChildRelation")
         
         relations_sorted = dict(sorted(initial_relations.items()))
         return relations_sorted

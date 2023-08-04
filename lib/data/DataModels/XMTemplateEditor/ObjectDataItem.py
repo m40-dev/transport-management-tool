@@ -79,7 +79,8 @@ class ObjectDataItem(QObject):
 
         if isinstance(data_row, Row):
             if self.object_class == "TableDataItem" and self.objectkey_table(data_row) == "DialogTable":
-                return f"{data_row.TableName} - ({data_row.DisplayName}) - [{self.childCount()}]"
+                display = f"{data_row.TableName} - ({data_row.DisplayName}) - [{self.childCount()}]"
+                return display.replace('%Globals.QIM_ProductNameShort%', "OneIM")
 
             if self.table_display_pattern is not None and display is None:
                 object_display = self.application.db.parse_object_display(
@@ -93,6 +94,10 @@ class ObjectDataItem(QObject):
 
             if display is None:
                 display = "Object without display name"
+
+        if display:
+            display.replace('%Globals.QIM_ProductNameShort%', "OneIM")
+
         return display
 
     @property
