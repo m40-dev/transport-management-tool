@@ -95,9 +95,9 @@ class RelationDataItem(QObject):
 
     def setCheckState(self, column_name, value):
         # print("set check state for column", column_name, value)
-        columns = ["SH", "CR", "FK"]
+        columns = ["FK", "CR", "SH"]
         bitmask = ""
-        for column in columns:
+        for column in reversed(columns):
             bit = 0
             # calculate for tha desired state for the column
             if column == column_name:
@@ -117,7 +117,7 @@ class RelationDataItem(QObject):
             if column_name == "FK" and self.Relation in [1, 3, 5, 7]:
                 return 2
 
-            if column_name == "CR" and self.Relation in [2, 3, 7]:
+            if column_name == "CR" and self.Relation in [2, 3, 6, 7]:
                 return 2
             
             if column_name == "SH" and self.Relation > 3:

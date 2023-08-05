@@ -76,6 +76,18 @@ class Application_Theme(QPalette):
         brush = QBrush(QColor(220, 226, 230, 95))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.AlternateBase, brush)
+        
+        brush = QBrush(QColor(10, 10, 10, 250))
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.Text, brush)
+
+        brush = QBrush(QColor(3, 3, 3, 128))
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Text, brush)
+
+        brush = QBrush(QColor(3, 3, 3, 128))
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.PlaceholderText, brush)
 
     @property
     def style_sheet(self):

@@ -46,7 +46,13 @@ class ObjectDataItem(QObject):
                         object_class="ObjectDataItem",
                         model_reference=self.model_reference)
                     self.addChild(data_item)
+            self.sortChildren()
 
+    def sortChildren(self):
+        if len(self._children) > 0:
+            children_sorted = sorted(self._children, key=lambda item: item.display())
+            self._children = children_sorted
+            
     def flags(self, column):
         return Qt.ItemFlag.ItemIsEnabled
 

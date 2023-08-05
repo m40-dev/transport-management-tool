@@ -330,7 +330,7 @@ class XMLDataModel(QAbstractItemModel):
         self.xmlDataStructureChanged.emit()
         return model_item
     
-    def insert_items(self, parentIndex, list_of_items, row=-1, column=-1):
+    def insert_items(self, parentIndex, list_of_items, row=-1, column=-1, sort_children=False):
         parentItem = self.rootItem
 
         if parentIndex.isValid():
@@ -342,6 +342,8 @@ class XMLDataModel(QAbstractItemModel):
         # print("insert items at location", row, (row + len(list_of_items)-1))
         self.beginInsertRows(parentIndex, row, (row + len(list_of_items)-1) )
         parentItem.insertChildren(row, list_of_items)
+        if sort_children:
+            parentItem.sortChildren()
         self.endInsertRows()
 
     def remove_item(self, xmldataitem):
@@ -412,7 +414,8 @@ class XMLDataModel(QAbstractItemModel):
             data_items.append(table_data_item)
         parentIndex = self.indexOf(source_object)
         self.treeview.setExpanded(parentIndex, True)
-        self.insert_items(parentIndex=parentIndex, list_of_items=data_items)
+        self.insert_items(parentIndex=parentIndex, list_of_items=data_items, sort_children=True)
+        
 
     
 

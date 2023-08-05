@@ -290,6 +290,11 @@ class XMLDataItem(QObject):
             # print("add child", element.display)
             self.addChild(element, row)
             row +=1
+    
+    def sortChildren(self):
+        if len(self._children) > 0:
+            children_sorted = sorted(self._children, key=lambda item: item.display())
+            self._children = children_sorted
 
     def task_data(self):
         if self._xml_data is None:

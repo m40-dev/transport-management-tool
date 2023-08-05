@@ -210,12 +210,12 @@ class JSONDataItem(QObject):
                             #read current object value
                             object_value = self._task_data.get(object_data_column, None)
 
-                            #continue filtering only if we have the object value (is not None) 
-                            if object_value:
+                            #continue filtering only if we have the object value (is not None)
+                            if object_value is not None:
 
                                 #in case of lists, concatenate values for comparison
                                 if isinstance(object_value, list):
-                                    object_value = ", ".join(object_value)
+                                    object_value = ",".join(object_value)
 
                                 #simple string comparison
                                 value_check = str(filter_text).lower() in str(object_value).lower()

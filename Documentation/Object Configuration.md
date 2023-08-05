@@ -282,7 +282,7 @@ This parameter defines if the field should be added in the viewport data. By def
 ```
 
 The viewport of the display widgets is structured the same way for similar items, display roles show the object label, description role attributes are filling the description space and any additional attributes to be shown in the viewport are dynamically added under the description in a 4 column layout: 
-![](./screenshots/Pasted%20image%2020230803230051.png)
+![](screenshots/Transport%20Package%20Task%20View.png)
 
 ## Execution task attribute mappings
 Section dedicated only to the attribute mapping configuration in the execution task model.

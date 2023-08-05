@@ -36,7 +36,8 @@ class ProcessRunner(QProcess):
     def stopExecutionPlanner(self):
         self.task_queue = []
         self.kill()
-        self.sql_thread.terminate()
+        if self.sql_thread:
+            self.sql_thread.terminate()
 
     def queuePlannerTasks(self, task_items):
         for task_item in task_items:
