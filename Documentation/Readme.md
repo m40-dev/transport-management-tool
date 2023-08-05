@@ -1,3 +1,11 @@
+Documentation items:
+- [Connections Management](Connections%20Management.md)
+- [Package Manager](Package%20Manager.md)
+- [Object Model Configuration](Object%20Configuration.md)
+- [XML Template Editor](XML%20Template%20Editor.md)
+- [Execution Planner](Execution%20Planner.md)
+
+# Currently implemented features
 ## Session Management ##
 
 * MSSQL Connection support
@@ -15,7 +23,14 @@
 * List objects from database by XObjectKey
 * List objects from database tables, table filtering
 
-## Object Relations Management ##
+## XML Template Definition Editing
+
+* Drag and drop XML Structure objects to adjust order and hierarchy
+* Bulk change supported transport flags or transport container flags
+* Bulk apply relation presets
+* Delete entries from the XML structure
+
+## Object Relations Management 
 
 * List objects selected via table relations
 * Load predefined database table relations
@@ -24,13 +39,6 @@
 * Apply custom relation presets
 * Dynamic listing of selected objects
 
-## Template Definition Editing
-
-* Drag and drop XML Structure objects to adjust order and hierarchy
-* Bulk change supported transport flags or transport container flags
-* Bulk apply relation presets
-* Delete entries from the XML structure
-  
 
 ## Transport Package Management
 
