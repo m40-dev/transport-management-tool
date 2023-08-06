@@ -27,12 +27,15 @@ Moving down to every object on the package definitions view, additional sub-sect
 	2. Task Definitions are not having single "save" option, since all tasks are saved in one Package Definition file as children of the package object. Therefore save action is available only on the Package Definition object.
 3. Object Description box - provides overview of all attributes with the description role
 4. Dynamic viewport grid of attributes selected for the tree views (as defined in the [Object Configuration](Object%20Configuration.md) model - object attributes configured with the *"ShowInTreeView": "True"* are dynamically listed here).
+
 	![](screenshots/Package%20Definition%20View.png)
 
 # Package Definitions View Actions
+
 The package definition view provides a set of supported actions which should effectively help with the overall package management structure management.
 
 ## Create new definition objects
+
 New package definitions can be created from the context menu or by using the "Add" button. 
 If the current working directory is not configured, you will be prompted to do so - even if you do not decide to save the definition it is required to properly calculate the file paths etc.
 
@@ -45,6 +48,7 @@ If the current working directory is not configured, you will be prompted to do s
 5. Placeholder texts are added for fields with no default value as defined in the object configuration model
 
 ## Modify object properties
+
 Properties modification can be accessed by context menu or by clicking the "Properties" button and follows the same principles as in the [Create new definition objects](#Create%20new%20definition%20objects) 
 After the form is generated, it is filled with the edited object data instead of the default data from the object model configuration.
 
@@ -56,6 +60,7 @@ At this time the changes are not yet saved to the disk and live only in the tool
 ![](screenshots/Package%20object%20modified.png)
 
 ## Save package definitions
+
 Save action can be initiated with the "Save" button or from the context menu.
 	**Note:** Context menu save action will work with multi-selected packages on the tree, while button works only for the given object definition.
 
@@ -67,6 +72,7 @@ This is usually helpful if the data model configuration changes and you would li
 **Note:** Adding tasks into [Execution Planner](Execution%20Planner.md) "copies" the current state of the transport task definition and its parent to provide the relevant data into the task execution queue. If the tasks are modified or relocated again after they were added to the queue it will be necessary to re-add them there post these actions.
 
 ### Definition Files management 
+
 On saving the definition files and all required folder structures will be dynamically created where required so it is important that [Object Configuration](Object%20Configuration.md) model for fields of type "*FileInput*" is configured properly.
 
 In case there are existing files in the working directory that would need to be relocated on saving (due to data patterns or attribute changes), application will generate new structures where required, move the files to target locations and delete old directories if they are left empty. Same conditions apply if the file name changes are detected.
@@ -74,6 +80,7 @@ In case there are existing files in the working directory that would need to be 
 If there are any leftover files that are not defined in the transport package definition, application will leave them behind.
 
 ## Drag and Drop - change package definitions and tasks order
+
 In general the package manager does not have to sort by object name (this is actually a backup solution). 
 If there is a dedicated field column which is defined with *"SortOrder"* role, objects will be sorted based on this attribute values.
 
@@ -84,12 +91,14 @@ Object relocations are typically causing data changes and therefore are marked a
 **Note:** Adding tasks into [Execution Planner](Execution%20Planner.md) "copies" the current state of the transport task definition and its parent to provide the relevant data into the task execution queue. If the tasks are modified or relocated again after they were added to the queue it will be necessary to re-add them there post these actions.
 
 ## Reload working directory
+
 By pressing "**F5**" you can reload program configurations, stylesheet changes, object model configurations and the currently configured working directory structures.
 Depending on your workstation and amount of data you have this might take a moment to reload everything again. 
 
 **Note:** Any unsaved changes in the package definitions view are ignored - there might be some sort of handling in the future but right now it just reloads everything and shows the current state as defined in the json data files.
 
 ## Launch XML Template Editor
+
 You can directly open the xml template editor view for the specific task definition by pressing the "Edit XML" button.
 
 Button visibility is controlled by the [Object Configuration](Object%20Configuration.md) model of object class **PackageManager_TaskDefinition**.
@@ -99,6 +108,7 @@ Button is only available for valid objects of class **PackageManager_TaskDefinit
 **Note:** If XML Template Editor cannot open the file or the file does not exist, it will start new empty template editor and create the file if required.
 
 ## Filter definition objects 
+
 Object filtering helps to find the relevant object definition by using its data. 
 Filtering is started automatically when the text is changed in the input field - application will wait (by default 650ms) after the typing is finished and will start filtering automatically.
 
@@ -109,14 +119,17 @@ Any spaces around filter criteria are stripped, so it is not required to write e
 Filters can be built according to the syntax options defined in the below sub-chapters. 
 
 ### Free Text Filtering
+
 In this example objects where the display text or description text fits "text 1" or "text 2" will be listed:
 	text 1, text 2
 
 ### Object Attribute Filtering
+
 In this example only objects where the TaskType attribute fits "transport" or "schema" will be listed:
 	tasktype: transport, schema
 
 ### Joined Attribute Filtering
+
 All filtering conditions can be joined together with semicolon (";") to form the AND statement condition while comma works as the OR condition for the multi value filtering options.
 
 In general any filtering conditions are case insensitive so the exact column name or value is not necessary, however only the values are queried, not respective display names of the attribute/value.

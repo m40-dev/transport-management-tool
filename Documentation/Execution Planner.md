@@ -5,6 +5,7 @@ Execution planner works synchronously in a way - it does not interrupt the UI, b
 
 # Execution Planner View
 Execution Planner view have following components defined:
+
 1. **Execution Group node** - execution planner organizational node
 2. **Execution Group toolbox** - quick access to the execution group operations 
 3. **Execution Task node** - overview of the execution task and its properties

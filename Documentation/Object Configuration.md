@@ -8,7 +8,9 @@ There are predefined object classes that can be supported by the application and
 Each object class have to have minimum fields configured in order to drive the data model and functionalities built into the program.
 
 ### PackageManager_PackageDefinition
+
 Defines the transport package object. Key columns and parameters are described here, full definition can be seen in the repository or in the local directory of the application.
+
 ```
 "PackageManager_PackageDefinition":                                    # Fixed Object Class Name
     "DefinitionFile":                                                  # Field Name
@@ -29,12 +31,15 @@ Defines the transport package object. Key columns and parameters are described h
             "ShowInEditor": "False"                                    # Do not display the column in editor
         }
 ```
+
 Mandatory fields:
 	**DefinitionFile** - provides the Json file information for the application. This file will be tracked and then updated with the export data on save.
 	**ChildTasks** - column name is not relevant but this is somewhat mandatory to provide one column where the child object reference is stored. This will basically tell the application where to store the child task information. 
 
 ### PackageManager_TaskDefinition
+
 Defines the transport package task object. Key columns and parameters are described here, full definition can be seen in the repository or in the local directory of the application.
+
 ```
 "PackageManager_TaskDefinition":                                                              # Fixed Object Class Name
         {
@@ -82,6 +87,7 @@ Defines the transport package task object. Key columns and parameters are descri
                 "DefaultValue": "False"                                                       # Initial field value
             }
 ```
+
 Mandatory fields:
 	**DefinitionFile** - Provides information about the source file for the transport package to be generated.
 	**ExportFile** - Provides information about the target file for the transport package to be generated.
@@ -94,7 +100,9 @@ Mandatory fields:
 	**AutoUpdate** - Defines whether the local workdir needs to be updated before the database compilation/after transport package installation. This is usually helpful when uploading custom files to the database with the transport that will be required in the compilation. 
 
 ### ExecutionPlanner_ExecutionGroup
+
 Defines the Execution Planner group object. Groups are used to structure the activities in the execution planner and run tasks accordingly.
+
 ```
 "ExecutionPlanner_ExecutionGroup":                                 # Fixed Object Class Name
             {                                                      
@@ -106,10 +114,12 @@ Defines the Execution Planner group object. Groups are used to structure the act
                 }                                                  
             }  
 ```
+
 Mandatory fields:
 	**ExecutionTasks** - defines the child task objects reference. This will basically tell the application where to store the execution task information.
 
 ### ExecutionPlanner_ExecutionTask
+
 Defines the execution task to be ran by the planner. The execution task is typically drag/dropped into the planner so most of the fields are directly mapped to the execution task.
 There are similar configuration requirements as for the task definition, but we can additionally define the data source mapping and any additional attributes that will be used by the process runner.
 
@@ -127,6 +137,7 @@ There are similar configuration requirements as for the task definition, but we 
                 } 
 		}
 ```
+
 Mandatory fields:
 	**TaskType** - Defines the task type to determine which tool to use when executing the task. 
 	**Connection** - Defines the connection name to be used with the task execution.
@@ -139,6 +150,7 @@ Field values are typically mapped from the corresponding Task Definition (see ch
 Any fields defined in the execution task will be then available in the execution runner session as powershell variable under column name defined in the execution task fields configuration.
 
 # Field configurations
+
 Example field configuration with general options, also described in the above examples.
 
 ```
@@ -157,27 +169,35 @@ Example field configuration with general options, also described in the above ex
 ```
 
 ## Field Types
+
 Field types are providing the information to the editor on which editor to use. Only supported field types can be displayed in the form.
 
 ### String Input
+
 Provides the standard line edit widget (single line) to enter the value.
+
 ```
 "FieldType": "StringInput"
 ```
 
 ### Text Input
+
 Provides the rich text editor widget to enter the data (usually description fields). Gives 3-4 line viewport to insert the field value. 
+
 ```
 "FieldType": "TextInput"
 ```
 
 ### Integer Input
+
 Provides standard line edit widget (single line) to enter the value but the field is having the integer mask configured.
+
 ```
 "FieldType": "IntegerInput"
 ```
 
 ### File Input
+
 Provides standard line edit widget (single line) to enter the value and the button to select the file using standard file system dialog.
 File input modes are going to determine the location of the files in the system and are usually tricky if the model is not configured according to the actual situation in the filesystem (tool calculates other paths based on these parameters).
 
@@ -190,6 +210,7 @@ File input modes are going to determine the location of the files in the system 
 "RedirectDirectoryRelativeTo": "Parent"                    # Defines the static directory root. "Parent" will set the root of task files under the parent PackageDefinition directory
 
 ```
+
 There are following file selection modes supported:
 	**FileName** - User selects the file but only the file name is taken. 
 	**Relative** - Relative path to the working directory is calculated.
@@ -203,6 +224,7 @@ Dynamic directory locations can be built from the pattern where the exact object
 Based on these patterns and configurations, the Transport Management tool will automatically create, relocate and delete files when these changes are requested. Same configuration will be used when the dependent objects are updated and file paths would change because of that - not only definition file is tracked but any field of this type.  
 
 ### Fixed Input
+
 Provides the combo box (drop down list) with the predefined options to select from the editor. 
 ```
 "FieldType": "FixedInput",                                                    # Configure the field as Fixed Input (Drop down list)
@@ -212,11 +234,13 @@ Provides the combo box (drop down list) with the predefined options to select fr
 			"Bug Fix Package": "BugFix"}
 ```
 ### Boolean Input
+
 Provides checkbox widget to get the boolean value from the editor.
 ```
 "FieldType": "BooleanInput"
 ```
 ### Child Object Reference
+
 Provides information on how to build hierarchical structure of the Transport Management Tool objects. 
 This field type does not have a supported user interface in the editor form.
 ```
@@ -225,31 +249,38 @@ This field type does not have a supported user interface in the editor form.
 ```
 
 ## Field Roles
+
 Field role defines role of the field value in the application (display, description) but also are used to declare other field roles for the application to generate or manage accordingly (like unique identifiers or sort order). 
 
 ### Display Role
+
 Marks the field value as display to be shown in the data display widgets. Multiple columns with the display role will be concatenated.
 ```
 "FieldRole": "DisplayRole"         # Field display role definition
 ```
 
 ### Description Role
+
 Marks the field value as display to be shown in the data display widgets. Multiple columns with the description role will be concatenated.
 ```
 "FieldRole": "DescriptionRole"     # Field description role definition
 ```
 
 ### Unique Identifier
+
 Generate Unique Identifier (UUID4) for the object. 
 This UID is generated when the editor is opened for new or existing object, or during the data export for fields with no value available.
+
 ```
 "FieldType": "StringInput",       # Field type for the editor view
 "FieldRole": "UniqueIdentifier"   # Unique Identifier role definition
 ```
 
 ### Sort Order
+
 Sort order defines the organization attribute to put the items on the lists but also generate the appropriate order identifiers for the transport actions where required.
 Sort order can be driven purely by the row position in the view or determined by the minimum and maximum values for the application to calculate. 
+
 ``` 
 "FieldType": "IntegerInput",   # Field type for the editor and data type
 "FieldRole": "SortOrder",      # Sort order role definition
@@ -260,9 +291,11 @@ Sort order can be driven purely by the row position in the view or determined by
 ```
 
 ## Other options
+
 This section describes the options not listed in the above sections.
 
 ### ShowInEditor
+
 Defines if the parameter is editable in the editor interface. This is typically used to let the generated or structural widgets out of the user interface and just let the data work.
 By default all fields will be shown as long as the input type is supported.
 ```
@@ -270,12 +303,14 @@ By default all fields will be shown as long as the input type is supported.
 ```
 
 ### IsForDataExport
+
 This parameter defines if the field should be added in the export data when the file definition is saved. By default all fields are marked for export so this parameter is not required unless you want to exclude the field. 
 ```
 "IsForDataExport": "False",                  # Excludes the column from the target object data export
 ```
 
 ### ShowInTreeView
+
 This parameter defines if the field should be added in the viewport data. By default all fields are hidden and only required fields need this attribute to be set.
 ```
 "ShowInTreeView": "True"                     # Information for the application to show the column in the viewport
@@ -285,10 +320,12 @@ The viewport of the display widgets is structured the same way for similar items
 ![](screenshots/Transport%20Package%20Task%20View.png)
 
 ## Execution task attribute mappings
+
 Section dedicated only to the attribute mapping configuration in the execution task model.
 When the transport package task is dropped into the execution planner, it is saved in the last known condition together with the parent package definition to allow the execution task construction according to the local requirements.
 
 ### Package Definition reference 
+
 Source value can be referred as **PARENT_DEF**.*parent_column_name* to map the original parent package definition values with the execution task.
 ```
 "ParentDescription":
@@ -298,6 +335,7 @@ Source value can be referred as **PARENT_DEF**.*parent_column_name* to map the o
 	}
 ```
 ### Task Definition reference
+
 Source value referred just by the task definition column name. In this example the **TaskName** column value defined in the **PackageManager_TaskDefinition** source object class will be mapped with this field and exported to the process runner session as **ExecutionTaskName**.
 ```
 "ExecutionTaskName": 
@@ -308,6 +346,7 @@ Source value referred just by the task definition column name. In this example t
 ```
 
 ### Task Type Configuration
+
 Task type is having additional parameters that are not supported in any other field since it is used to determine the tool or right action to execute when process runner is working through the tasks.
 ```
 "TaskType":                                     # Execution Task Field
