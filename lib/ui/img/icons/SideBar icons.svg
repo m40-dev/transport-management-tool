@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="210mm"
+   height="297mm"
+   viewBox="0 0 210 297"
+   version="1.1"
+   id="svg5"
+   inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\XMLTemplateEditor.png"
+   inkscape:export-xdpi="300"
+   inkscape:export-ydpi="300"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   sodipodi:docname="SideBar icons.svg"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="mm"
+     showgrid="false"
+     inkscape:zoom="0.5499273"
+     inkscape:cx="75.46452"
+     inkscape:cy="397.32525"
+     inkscape:window-width="3440"
+     inkscape:window-height="1369"
+     inkscape:window-x="1912"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <rect
+       x="181.94334"
+       y="73.291663"
+       width="507.25546"
+       height="307.31066"
+       id="rect39478" />
+  </defs>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:none;fill-opacity:0.445977;stroke:#262626;stroke-width:4;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:24, 24;stroke-dashoffset:11.2;stroke-opacity:0.80000001;paint-order:stroke markers fill"
+       id="path45344-5"
+       sodipodi:type="arc"
+       sodipodi:cx="37.444744"
+       sodipodi:cy="117.85966"
+       sodipodi:rx="20.914911"
+       sodipodi:ry="21.273748"
+       sodipodi:start="0"
+       sodipodi:end="6.275628"
+       sodipodi:open="true"
+       sodipodi:arc-type="arc"
+       d="M 58.359655,117.85966 A 20.914911,21.273748 0 0 1 37.484259,139.13337 20.914911,21.273748 0 0 1 16.529982,117.94004 20.914911,21.273748 0 0 1 37.326199,96.586251 20.914911,21.273748 0 0 1 58.359058,117.69889"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\Settings.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:54.0885px;line-height:1.25;font-family:sans-serif;fill:#e8e8e8;fill-opacity:0.445977;stroke:#262626;stroke-width:2.152;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.80000001"
+       x="150.64717"
+       y="45.260971"
+       id="text3752"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\XMLTemplateEditor.png"
+       inkscape:export-xdpi="22.970371"
+       inkscape:export-ydpi="22.970371"
+       transform="scale(0.7559395,1.3228572)"><tspan
+         sodipodi:role="line"
+         id="tspan3750"
+         style="fill:#e8e8e8;fill-opacity:0.445977;stroke:#262626;stroke-width:2.152;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.80000001"
+         x="150.64717"
+         y="45.260971">&lt;/&gt;</tspan></text>
+    <text
+       xml:space="preserve"
+       transform="scale(0.26458333)"
+       id="text39476"
+       style="fill:black;fill-opacity:1;line-height:1.25;stroke:none;font-family:sans-serif;font-style:normal;font-weight:normal;font-size:40px;white-space:pre;shape-inside:url(#rect39478)" />
+    <rect
+       style="fill:#e8e8e8;fill-opacity:0.445977;stroke:#262626;stroke-width:3;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.80000001"
+       id="rect41056"
+       width="27.694483"
+       height="27.694483"
+       x="9.9120169"
+       y="10.72143"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\PackageManager.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <rect
+       style="fill:#e8e8e8;fill-opacity:0.445977;stroke:#262626;stroke-width:3;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.80000001"
+       id="rect41056-2"
+       width="27.694483"
+       height="27.694483"
+       x="18.869207"
+       y="19.951731"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\PackageManager.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="fill:#e8e8e8;fill-opacity:0.44597703;stroke:#262626;stroke-width:2.79999993;stroke-linecap:square;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.80000001;stroke-dashoffset:27.99999927"
+       id="path45344"
+       sodipodi:type="arc"
+       sodipodi:cx="37.527687"
+       sodipodi:cy="117.87543"
+       sodipodi:rx="16.117661"
+       sodipodi:ry="16.117661"
+       sodipodi:start="0"
+       sodipodi:end="6.275628"
+       sodipodi:open="true"
+       sodipodi:arc-type="arc"
+       d="m 53.645348,117.87543 a 16.117661,16.117661 0 0 1 -16.08721,16.11763 16.117661,16.117661 0 0 1 -16.147996,-16.05673 16.117661,16.117661 0 0 1 16.026191,-16.1783 16.117661,16.117661 0 0 1 16.208554,15.99559"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\Settings.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:10.5833px;line-height:1.25;font-family:sans-serif;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.264583"
+       x="34.640945"
+       y="114.38728"
+       id="text52457"><tspan
+         sodipodi:role="line"
+         id="tspan52455"
+         style="stroke-width:0.264583"
+         x="34.640945"
+         y="114.38728" /></text>
+  </g>
+</svg>

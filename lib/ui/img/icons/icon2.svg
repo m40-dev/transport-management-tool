@@ -26,9 +26,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.38885732"
-     inkscape:cx="140.15423"
-     inkscape:cy="762.49046"
+     inkscape:zoom="2.1997092"
+     inkscape:cx="186.16097"
+     inkscape:cy="486.20063"
      inkscape:window-width="3440"
      inkscape:window-height="1369"
      inkscape:window-x="1912"
@@ -140,13 +140,23 @@
        id="layer1-1"
        transform="translate(-6.3875712,49.661183)">
       <rect
+         style="fill:#ffffff;fill-opacity:0.818391;stroke-width:1.73616;stroke-linecap:round;stroke-linejoin:bevel"
+         id="rect915"
+         width="69.522446"
+         height="63.869244"
+         x="62.799381"
+         y="35.497795"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\discord_icon.png"
+         inkscape:export-xdpi="300"
+         inkscape:export-ydpi="300" />
+      <rect
          style="fill:#ffffff;fill-opacity:0.81839079;stroke:none;stroke-width:2.91948;stroke-linecap:butt;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:23.3558, 23.3558;stroke-dashoffset:0;stroke-opacity:1"
          id="rect15170"
          width="57.504215"
          height="52.233158"
          x="68.876213"
          y="41.010841"
-         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\discord_icon.png"
          inkscape:export-xdpi="300"
          inkscape:export-ydpi="300"
          ry="0" />
@@ -157,7 +167,7 @@
          height="17.186893"
          x="75.03035"
          y="70.765923"
-         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\discord_icon.png"
          inkscape:export-xdpi="300"
          inkscape:export-ydpi="300" />
       <rect
@@ -167,7 +177,7 @@
          height="18.671055"
          x="75.030357"
          y="46.125923"
-         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\discord_icon.png"
          inkscape:export-xdpi="300"
          inkscape:export-ydpi="300" />
       <path
@@ -175,7 +185,7 @@
          d="m 126.29875,59.97213 0.0816,-18.94365 -19.45779,-0.05793"
          id="path20683"
          sodipodi:nodetypes="ccc"
-         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\discord_icon.png"
          inkscape:export-xdpi="300"
          inkscape:export-ydpi="300" />
       <path
@@ -183,7 +193,7 @@
          d="m 106.03613,93.167957 20.34429,0.07604 0.0622,-18.118185"
          id="path20683-4"
          sodipodi:nodetypes="ccc"
-         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\discord_icon.png"
          inkscape:export-xdpi="300"
          inkscape:export-ydpi="300" />
       <path
@@ -191,7 +201,7 @@
          d="M 68.957859,74.300352 68.876209,93.24399 88.334,93.30188"
          id="path20683-3"
          sodipodi:nodetypes="ccc"
-         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\discord_icon.png"
          inkscape:export-xdpi="300"
          inkscape:export-ydpi="300" />
       <path
@@ -199,7 +209,7 @@
          d="M 89.220482,41.08687 68.876205,41.010835 68.814039,59.12902"
          id="path20683-3-1"
          sodipodi:nodetypes="ccc"
-         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\icon.png"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\discord_icon.png"
          inkscape:export-xdpi="300"
          inkscape:export-ydpi="300" />
     </g>

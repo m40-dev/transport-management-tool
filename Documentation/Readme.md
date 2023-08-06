@@ -5,6 +5,7 @@ Documentation items:
 - [XML Template Editor](XML%20Template%20Editor.md)
 - [Execution Planner](Execution%20Planner.md)
 
+![](screenshots/Transport%20Management%20Tool%20Overview.png)
 # Currently implemented features
 ## Session Management ##
 
