@@ -83,7 +83,7 @@ Documentation items:
 * Find database objects by change label
 * Convert existing change label tasks to object transport tasks
 * Support for all other transport types (Sync Project, Change Label etc.)
-* Support for the tree item edit operations (display names for tasks, containers, file names, folders etc.)
+* Support for the tree item edit operations (display names for tasks, containers)
 * Better management and application of the relation presets
 * Configuration migration functionalities
 * Application Settings View
