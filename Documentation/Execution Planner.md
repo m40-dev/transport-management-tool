@@ -11,6 +11,7 @@ Execution Planner view have following components defined:
 4. **Execution Task toolbox** - quick access to the execution task configuration parameters
 5. **Execution Planner kill switch** - allows termination of the running execution planner queue 
 6. **Execution Planner console** - provides the output from the process runner
+
 ![](screenshots/Execution%20Planner%20View.png)
 
 # Execution Planner actions
@@ -43,10 +44,12 @@ To start the single task, use the "Start task" button located in the **Execution
 In case there are tasks running already, process runner will queue all tasks in this group for execution at the end of the currently running execution plan according to the order defined in the plan.
 If there are nested execution groups, they will be processed in the same order as defined in the view.
 Example below shows how the planner will queue the tasks if the top level execution group is started:
-1. first child object is an execution task so it is started
+
+1. First child object is an execution task so it is started
 2. Package 1 is an Execution group item so all of its children are added to the execution queue as next
 3. Package 2 is an Execution group item so all of its children are added to the execution queue as next
 The same logic is applied recursively until the end of the tree is reached. 
+
 ![](screenshots/Execution%20Planner%20Start%20order.png)
 
 ## Stop Plan Execution
@@ -58,6 +61,7 @@ In general the execution planner can run the tasks queued in the view, but also 
 Depending on the task type the planner will determine which One Identity Tool to use to run the activity (configuration of the tool mappings is in the [Object Configuration](Object%20Configuration.md) of the Execution task object class).
 
 If any **Import** task is executed, the compiler option and autoupdate options are checked to determine if additional tasks are required to be executed post the import action:
+
 - AutoUpdate is checked - execution planner will add the AutoUpdate command into the task execution script
 - CompilerOption is not None - execution planner will add the Database Compilation command into the task execution script
 

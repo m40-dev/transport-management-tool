@@ -13,20 +13,20 @@ The main view is organized in following sections:
 # Package Definitions view
 Package definition view breaks down into following components:
 
-	1. Search Filter - allows filtering of the transport definitions based on the display attributes, descriptions or any object attribute defined in the object definition
-	2. Transport package add button - easy access to new package definition dialog
-	3. Package Definition Object - provides overview of the *PackageManager_PackageDefinition* objects as defined in the [Object Configuration](Object%20Configuration.md) model
-	4. Task Definition Object - provides overview of the *PackageManager_TaskDefinition* objects as defined in the [Object Configuration](Object%20Configuration.md) model
-	5. Context Menu - package definitions view have different context menus available depending on the object type. To avoid already overcrowded UI, most of the actions are done over context menus and drag/drop operations. Some of the actions in the context menu are working with multi-selected objects of the same class
+1. Search Filter - allows filtering of the transport definitions based on the display attributes, descriptions or any object attribute defined in the object definition
+2. Transport package add button - easy access to new package definition dialog
+3. Package Definition Object - provides overview of the *PackageManager_PackageDefinition* objects as defined in the [Object Configuration](Object%20Configuration.md) model
+4. Task Definition Object - provides overview of the *PackageManager_TaskDefinition* objects as defined in the [Object Configuration](Object%20Configuration.md) model
+5. Context Menu - package definitions view have different context menus available depending on the object type. To avoid already overcrowded UI, most of the actions are done over context menus and drag/drop operations. Some of the actions in the context menu are working with multi-selected objects of the same class
 
 Moving down to every object on the package definitions view, additional sub-sections are defined:
 
-	6. Object Display box - provides overview of all attributes with the display role
-	7. Object quick actions toolbox - quick access to the object property editor dialog and key activities executed on the object (Data save or [[XML Template Editor]] shortcut). 
-		1. Only Task Definition objects can get the xml template editor shortcut. Only the valid *Task Types* configured in the *"XMLTemplateTypes"* property of **TaskType** field are getting the shortcut visible (as defined in the  [Object Configuration](Object%20Configuration.md) model).
-		2. Task Definitions are not having single "save" option, since all tasks are saved in one Package Definition file as children of the package object. Therefore save action is available only on the Package Definition object.
-	8. Object Description box - provides overview of all attributes with the description role
-	9. Dynamic viewport grid of attributes selected for the tree views (as defined in the [Object Configuration](Object%20Configuration.md) model - object attributes configured with the *"ShowInTreeView": "True"* are dynamically listed here).
+1. Object Display box - provides overview of all attributes with the display role
+2. Object quick actions toolbox - quick access to the object property editor dialog and key activities executed on the object (Data save or [[XML Template Editor]] shortcut). 
+	1. Only Task Definition objects can get the xml template editor shortcut. Only the valid *Task Types* configured in the *"XMLTemplateTypes"* property of **TaskType** field are getting the shortcut visible (as defined in the  [Object Configuration](Object%20Configuration.md) model).
+	2. Task Definitions are not having single "save" option, since all tasks are saved in one Package Definition file as children of the package object. Therefore save action is available only on the Package Definition object.
+3. Object Description box - provides overview of all attributes with the description role
+4. Dynamic viewport grid of attributes selected for the tree views (as defined in the [Object Configuration](Object%20Configuration.md) model - object attributes configured with the *"ShowInTreeView": "True"* are dynamically listed here).
 	![](screenshots/Package%20Definition%20View.png)
 
 # Package Definitions View Actions
@@ -38,11 +38,11 @@ If the current working directory is not configured, you will be prompted to do s
 
 ![](screenshots/Add%20Package%20Definition%20Dialog.png)
 
-	1. Form Generation is entirely driven with the [Object Configuration](Object%20Configuration.md) model 
-	2. Object fields configured with the *"**ShowInEditor**": "True"* are dynamically listed here).
-	3. The order of the fields is driven by the order of the field configurations in the object configuration model.
-	4. Fields marked as mandatory in the object configuration model are additionally displayed with the red asterisk in front of the value editor widget and if the value is not provided, form data will not be accepted when "OK" is clicked.
-	5. Placeholder texts are added for fields with no default value as defined in the object configuration model
+1. Form Generation is entirely driven with the [Object Configuration](Object%20Configuration.md) model 
+2. Object fields configured with the *"**ShowInEditor**": "True"* are dynamically listed here).
+3. The order of the fields is driven by the order of the field configurations in the object configuration model.
+4. Fields marked as mandatory in the object configuration model are additionally displayed with the red asterisk in front of the value editor widget and if the value is not provided, form data will not be accepted when "OK" is clicked.
+5. Placeholder texts are added for fields with no default value as defined in the object configuration model
 
 ## Modify object properties
 Properties modification can be accessed by context menu or by clicking the "Properties" button and follows the same principles as in the [Create new definition objects](#Create%20new%20definition%20objects) 
