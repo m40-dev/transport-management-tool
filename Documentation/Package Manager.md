@@ -2,11 +2,11 @@ Package manager is the view where all transport packages and their dependencies 
 
 The main view is organized in following sections:
 
-	1. **Side Bar** - navigation between views
-	2. **Package definitions view** - preview of all of your defined packages (effectively JSON defined objects)
-	3. **Execution planner view** - side view for execution planner operations, queue tasks to be executed here. More detailed description of the execution planner can be found in the dedicated page: [[Execution Planner]]
-	4. **Execution planner output console** - console shows the process runner commands but also the output from the tools/commands which are actually running the task. 
-		   Initially this console is hidden and shows up when first task is executed.
+1. **Side Bar** - navigation between views
+2. **Package definitions view** - preview of all of your defined packages (effectively JSON defined objects)
+3. **Execution planner view** - side view for execution planner operations, queue tasks to be executed here. More detailed description of the execution planner can be found in the dedicated page: [[Execution Planner]]
+4. **Execution planner output console** - console shows the process runner commands but also the output from the tools/commands which are actually running the task. 
+	Initially this console is hidden and shows up when first task is executed.
 
 ![](screenshots/Package%20Manager%20View.png)
 
