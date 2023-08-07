@@ -24,7 +24,6 @@ class FormEditorDialog(QtWidgets.QDialog):
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("layout")
         self.layout.setSpacing(2)
-        # self.layout.setContentsMargins(QtCore.QMargins(2,2,2,2))
         
         self.editors = {}
         self.setup_form()
@@ -37,6 +36,7 @@ class FormEditorDialog(QtWidgets.QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.layout.setRowStretch(self.layout.rowCount(), 2)
+        self.layout.setColumnStretch(self.layout.columnCount()-1, 2)
         self.layout.addWidget(self.buttonBox, self.layout.rowCount()+1, 1, 1, 2)
         self.restoreWindowState()
 
@@ -46,13 +46,10 @@ class FormEditorDialog(QtWidgets.QDialog):
         self.settings = self.application.settings
         if self.settings.value("EditorDialogGeometry") is not None:
             self.restoreGeometry(self.settings.value("EditorDialogGeometry"))
-        # if self.settings.value("EditorDialogState") is not None:
-        #     self.restoreState(self.settings.value("EditorDialogState"))
 
     def saveWindowState(self):
         # print("save window")
         self.application.settings.setValue("EditorDialogGeometry", self.saveGeometry())
-        # self.application.settings.setValue("EditorDialogState", self.saveState())
 
     def accept(self):
         self.saveWindowState()
@@ -60,7 +57,7 @@ class FormEditorDialog(QtWidgets.QDialog):
         self.check_mandatory_columns(validation_errors)
         # self.check_mandatory_columns(validation_errors, "Some Additional Error")
         
-        print("vaildate and accept")
+        # print("vaildate and accept")
         if len(validation_errors) > 0:
             string_data = json.dumps(validation_errors, indent=4, separators=(',',':'))
             MsgBox(self.application, "Form validation returned errors", string_data)

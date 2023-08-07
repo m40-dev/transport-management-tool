@@ -221,7 +221,7 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
 
     def save_feature(self, save_single=True):
         index = self.treeview.model().indexOf(self.data_item)
-        self.package_manager.savePackageDefinition(index)
+        self.package_manager.savePackageDefinition(index, save_single)
         # if self.package_manager.current_workdir:
         #     self.data_item.save()
         #     return True

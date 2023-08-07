@@ -10,6 +10,8 @@ class PackageDefinitionMenu(QMenu):
     editXMLTemplate = pyqtSignal(object)
     editTaskDefinition = pyqtSignal(object)
     savePackageDefinition = pyqtSignal(object)
+    editSelectedItems = pyqtSignal(object)
+
     collapseAll = pyqtSignal()
     expandAll = pyqtSignal()
 
@@ -19,6 +21,11 @@ class PackageDefinitionMenu(QMenu):
 
         self.menu_items = []
         source_item = source_index.internalPointer()
+
+        if len(self.parent.selectedItems()) > 1:
+            action_EditSelectedItems = self.addAction("Edit Selected Items")
+            action_EditSelectedItems.triggered.connect(lambda: self.editSelectedItems.emit(source_index))
+            self.menu_items.append(action_EditSelectedItems)
 
         action_collapseAll = self.addAction("Collapse All Items")
         action_collapseAll.triggered.connect(self.collapseAll)

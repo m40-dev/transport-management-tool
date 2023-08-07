@@ -26,7 +26,7 @@ from lib.ProgramConfiguration import ProgramConfiguration, ObjectConfiguration, 
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.7'
+VERSION = '0.7.1'
 
 class Transport_Manager(QMainWindow):
     """Main window class for connection launcher"""
@@ -171,8 +171,10 @@ class Transport_Manager(QMainWindow):
         self.XMLTemplateEditor.refresh_ui()
         self.PackageManager.loadWorkingDirectory()
     
-    def getObjectData(self, object_class, dialog_name="Object Data", source_index=None):
-        editor_configuration = self.object_configuration.get(object_class)
+    def getObjectData(self, object_class, dialog_name="Object Data", source_index=None, editor_configuration=None):
+        if editor_configuration is None:
+            editor_configuration = self.object_configuration.get(object_class)
+
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(
                 application=self, 

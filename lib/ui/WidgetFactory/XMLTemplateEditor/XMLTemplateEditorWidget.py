@@ -137,24 +137,21 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
     """ Context Menu handling functions  """
 
     def loadDatabaseObject(self, source_index):
-        for source_index in self.XMLStructureTreeView.selectedIndexes():
-            if source_index.isValid():
-                source_item = source_index.internalPointer()
-                if source_item.xml_object_class == "Transport_Object":
-                    source_item.loadDatabaseObject()
-
-        if len(self.XMLStructureTreeView.selectedIndexes()) == 0 and source_index.isValid():
-            source_item = source_index.internalPointer()
+        selected_xml_items = self.selectedItems(object_class=XMLDataItem)
+        for source_item in selected_xml_items:
             if source_item.xml_object_class == "Transport_Object":
+                source_item.loadDatabaseObject()
+
+        if len(selected_xml_items) == 0 and source_index.isValid():
+            source_item = source_index.internalPointer()
+            if isinstance(source_item, XMLDataItem) and source_item.xml_object_class == "Transport_Object":
                 source_item.loadDatabaseObject()
         self.parent.reloadDatabaseRelations(source_index)
 
     def listRelatedObjectData(self, source_index, override=False):
-        for source_index in self.XMLStructureTreeView.selectedIndexes():
-            if source_index.isValid():
-                source_item = source_index.internalPointer()
-                if source_item.xml_object_class == "Transport_Object":
-                    source_item.listRelatedObjectData(override)
+        for source_item in self.selectedItems(object_class=XMLDataItem):
+            if source_item.xml_object_class == "Transport_Object":
+                source_item.listRelatedObjectData(override)
         
         if len(self.XMLStructureTreeView.selectedIndexes()) == 0 and source_index.isValid():
             source_item = source_index.internalPointer()
@@ -266,14 +263,18 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                 selected_item.setCheckState(column_name, check_state)
         self.XMLStructureTreeView.model().layoutChanged.emit()
 
-    def selectedItems(self):
+    def selectedItems(self, object_class=None):
         selected_items = []
-        selected_indexes = self.XMLStructureTreeView.selectedIndexes()
+        selected_indexes = self.XMLStructureTreeView.selectionModel().selectedRows()
         if len(selected_indexes) > 0:
             for index in selected_indexes:
                 if not index.isValid():
                     continue
                 item = index.internalPointer()
+                if object_class:
+                    if not isinstance(item, object_class):
+                        continue
+
                 if item and item not in selected_items:
                     selected_items.append(item)
         return selected_items

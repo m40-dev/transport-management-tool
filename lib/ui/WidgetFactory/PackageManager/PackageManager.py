@@ -6,6 +6,7 @@ import json
 from lib.data.DataModels import PackageDefinitionModel
 from .PackageViewDelegate import PackageViewDelegate
 from .ContextMenu import PackageDefinitionMenu
+from ..DialogScreens.MultiObjectEditorForm import MultiObjectEditorForm
 
 FILTER_EXEC_TIMER = 650
 
@@ -31,6 +32,7 @@ class PackageManager(QtWidgets.QWidget):
         self.PackageViewTreeView.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragDrop)
         self.PackageViewTreeView.setAlternatingRowColors(False)
         self.PackageViewTreeView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.PackageViewTreeView.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
 
         self.PackageManagerSplitter.setSizes(
             [round(self.application.width()*0.3), round(self.application.width()*0.7)])
@@ -215,6 +217,7 @@ class PackageManager(QtWidgets.QWidget):
         contextMenu.savePackageDefinition.connect(self.savePackageDefinition)
         contextMenu.collapseAll.connect(self.collapseAll)
         contextMenu.expandAll.connect(self.expandAll)
+        contextMenu.editSelectedItems.connect(self.onEditSelectedItems)
 
         if len(contextMenu.menu_items) > 0:
             contextMenu.popup(menu_target)
@@ -231,8 +234,26 @@ class PackageManager(QtWidgets.QWidget):
             if treeview_model:
                 treeview_model.insert_item("PackageManager_PackageDefinition", form_data)
 
+    def onEditSelectedItems(self, source_index):
+        if not source_index.isValid():
+            return False
+        selected_items = self.selectedItems()
+        if len(selected_items) == 0:
+            return False
+
+        source_item = source_index.internalPointer()
+        form_data = MultiObjectEditorForm(self.application, source_item.task_class)
+        if form_data.exec():
+            selected_columns = form_data.selectedColumns()
+            if len(selected_columns) > 0:
+                form_data = self.application.getObjectData(source_item.task_class, "Edit Selected Items", source_index, selected_columns)
+                if form_data:
+                    for selected_row in selected_items:
+                        if selected_row.task_class == source_item.task_class:
+                            selected_row.update_data(form_data)
+
     def editPackageDefinition(self, source_index):
-        print("Edit Package Definition", source_index)
+        # print("Edit Package Definition", source_index)
         if not source_index.isValid():
             return False
 
@@ -246,17 +267,22 @@ class PackageManager(QtWidgets.QWidget):
             MsgBox(self.application, "Working directory is not set. Please configure the work location first.")
             return False
 
-        if len(self.PackageViewTreeView.selectedIndexes()) > 0 and not save_single:
-            for item_index in self.PackageViewTreeView.selectedIndexes():
-                package_definition = item_index.internalPointer()
-                package_definition.save()
-        else:
-            if source_index.isValid():
-                package_definition = source_index.internalPointer()
-                package_definition.save()
+        source_item = None
+        if source_index.isValid():
+            source_item = source_index.internalPointer()
+            if source_item.task_class == "PackageManager_PackageDefinition":
+                source_item.save()
+
+        selected_items = self.selectedItems()
+        if len(selected_items) > 0 and not save_single:
+            for selected_item in selected_items:
+                if selected_item.task_class == "PackageManager_PackageDefinition" and selected_item != source_item:
+                    selected_item.save()
+        
+            
 
     def addTaskDefinition(self, source_index):
-        print("add task definition for", source_index)
+        # print("add task definition for", source_index)
         if not source_index.isValid():
             return False
 
@@ -335,7 +361,7 @@ class PackageManager(QtWidgets.QWidget):
         return True
 
     def deleteFile(self, file_path):
-        print("file to delete", file_path)
+        # print("file to delete", file_path)
         file_path = Path(str(file_path))
         if file_path.is_file():
             file_path.unlink()
@@ -343,7 +369,7 @@ class PackageManager(QtWidgets.QWidget):
             self.deleteDirectory(parent_directory)
 
     def deleteDirectory(self, directory_path):
-        print("check if directory can be deleted:", directory_path)
+        # print("check if directory can be deleted:", directory_path)
         if not self.current_workdir:
             # do not delete anything if there is no working directory
             return False
@@ -398,6 +424,18 @@ class PackageManager(QtWidgets.QWidget):
             event.acceptProposedAction()
         else:
             event.ignore()
+
+    def selectedItems(self):
+        selected_items = []
+        selected_indexes = self.PackageViewTreeView.selectionModel().selectedRows()
+        if len(selected_indexes) > 0:
+            for index in selected_indexes:
+                if not index.isValid():
+                    continue
+                item = index.internalPointer()
+                if item and item not in selected_items:
+                    selected_items.append(item)
+        return selected_items
 
     def setupUi(self):
         self.gridLayout = QtWidgets.QGridLayout(self)

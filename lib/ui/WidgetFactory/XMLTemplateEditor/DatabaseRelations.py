@@ -69,7 +69,6 @@ class DatabaseRelations(QtWidgets.QWidget):
         if not self.RelationsViewTreeView.hasFocus():
             return False
         selected_indexes = self.RelationsViewTreeView.selectionModel().selectedRows()
-        print(len(selected_indexes), "items to delete")
         for index in selected_indexes:
             self.relation_data_model.remove_item(index)
 

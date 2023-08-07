@@ -52,7 +52,7 @@ class JSONDataItem(QObject):
         pass
 
     def itemLocationChanged(self, source_item):
-        print("object location changed", self.display)
+        # print("object location changed", self.display)
         #pass over the source files configuration
         self._previous_task_data = source_item._previous_task_data
         self.source_files = source_item.source_files
@@ -643,7 +643,7 @@ class JSONDataItem(QObject):
         return file_configurations
 
     def update_file_locations(self):  
-        print("update file locations", self.display, self.source_files)    
+        # print("update file locations", self.display, self.source_files)    
         column_configurations = self.object_configuration.get_columns_configuration_by_type(self.task_class, "FileInput")
         if column_configurations and self.source_files:
             for column in column_configurations.keys():
@@ -729,15 +729,15 @@ class JSONDataItem(QObject):
         return parsed_string
 
     def moveFile(self, source_path, destination_path):
-        print(f"moving {source_path} to {destination_path}")
+        # print(f"moving {source_path} to {destination_path}")
         if not source_path or not destination_path:
             return False
 
         if not source_path.is_file():
             # source file not found
-            print("source file not found:", source_path)
+            # print("source file not found:", source_path)
             return False
 
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         destination_path = source_path.replace(destination_path)
-        self.application.delete_empty_directory(source_path.parent)
+        self.application.PackageManager.deleteDirectory(source_path.parent)
