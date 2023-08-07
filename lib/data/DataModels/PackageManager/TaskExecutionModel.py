@@ -89,6 +89,8 @@ class TaskExecutionItem(JSONDataItem):
             if not task_data.get("ExecutionType", None):
                 self.setData("ExecutionType", "Export")
         self.migrate(task_class)
+        self.initializeObjectData()
+
 
     def itemDataDropped(self, source_dict):
         if source_dict.get("children", None):
@@ -128,3 +130,10 @@ class TaskExecutionItem(JSONDataItem):
 
         self.display = source_display
         self.description = source_description
+
+    def initializeObjectData(self):
+        application_connections = self.application.ConnectionHandler.connections
+        # if self.data("Connection"):
+        if self.task_class == "ExecutionPlanner_ExecutionTask" and self.data("Connection") is None and len(application_connections.keys()):
+            #TODO: add connection preference for the initial task setup
+            self.setData("Connection", list(application_connections.keys())[0])

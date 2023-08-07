@@ -42,7 +42,6 @@ class ProcessRunner(QProcess):
     def queuePlannerTasks(self, task_items):
         for task_item in task_items:
             task_data = task_item.task_data()
-            print("execute stuff here")
             self.startProcessTask(task_item)
 
     def checkTaskType(self, task_type):
@@ -201,6 +200,7 @@ class ProcessRunner(QProcess):
         data = self.readAllStandardError()
         stderr = bytes(data).decode("cp1252")
         self.message.emit(stderr, "Error")
+        
 
     def handleProcessStdOut(self):
         data = self.readAllStandardOutput()
@@ -217,12 +217,21 @@ class ProcessRunner(QProcess):
         self.current_item.setData("task_execution_status", state_name)
         self.message.emit(f"State changed: {state_name}", "Transport Manager")
 
-    def processExecutionFinished(self):
+    def processExecutionFinished(self, exitCode=0, exitStatus=QProcess.ExitStatus.NormalExit):
         self.message.emit("Process finished.", "Transport Manager")
         self.current_item.setData("task_execution_status", "Finished")
         self.is_running = False
+        
+        #TODO: error handling to be moved to the configurtion
+        continue_on_error = (exitCode==0)
+
+        if not continue_on_error:
+            self.task_queue = []
+
         if len(self.task_queue) > 0:
             self.startProcessTask(self.task_queue[0], queued_task=True)
+        
+        
 
     def prepareProcessVariables(self, task_data):
         task_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionTask")
@@ -338,7 +347,7 @@ class ProcessRunner(QProcess):
                 definition_file=definition_file,
                 connection_data=connection_data)
         
-        if is_sql and connection_data and action_type == "Import":
+        if is_sql and connection_data and action_type.upper() == "IMPORT":
             #run scripts
             self.sql_thread = SQLThread(
                     action_type=action_type,

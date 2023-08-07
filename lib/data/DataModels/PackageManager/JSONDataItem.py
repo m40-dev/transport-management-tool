@@ -428,7 +428,7 @@ class JSONDataItem(QObject):
         if self._task_data:
             return self._task_data.get(column,  None)
             
-        super().data(column)
+        return None
 
     def insertChildren(self, row, child_objects):
         if row == -1:
