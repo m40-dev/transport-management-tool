@@ -59,6 +59,21 @@ At this time the changes are not yet saved to the disk and live only in the tool
 
 ![](screenshots/Package%20object%20modified.png)
 
+## Multi-Selected Object modifications
+
+It is possible to modify multiple objects of the same object class (Package Definitions, package tasks).
+When more than 1 item is selected in the package manager tree view, additional context menu entry will be available that lets the user change multiple objects with the same value.
+
+![](screenshots/Multi-Object%20modification%20column%20selection.png)
+
+In this view you can select which columns you want to overwrite and this selection is taken over to the standard form data editor where the value settings can be adjusted:
+
+![](screenshots/Edit%20selected%20items%20dialog.png)
+
+Last clicked item is taken as source object to determine what object class is being edited and which properties are available. This will also determine which objects will be modified as a result.
+
+Source object is also used to pre-fill the form data initially so it is easy to overwrite data on multiple objects if we know the source object which is already set correctly.
+
 ## Save package definitions
 
 Save action can be initiated with the "Save" button or from the context menu.
