@@ -1,12 +1,13 @@
 #""" Required QT Libraries """
 from PyQt6.QtCore import Qt, QSettings, QEvent
 from PyQt6.QtWidgets import (
-    QMainWindow, QApplication, QMenu, QWidget, QMessageBox
+    QMainWindow, QApplication, QMenu, QWidget, QMessageBox, QFileDialog
     )
 from PyQt6.QtGui import QShortcut, QKeySequence, QIcon
 
 #""" qt traceback handling"""
 import traceback
+import json
 
 from lib.ui.Theme import Application_Theme
 
@@ -41,9 +42,10 @@ class Transport_Manager(QMainWindow):
         """ Map QT UI from parsed file - created and updated in qt designer """
 
         self.ui = Ui_MainWindow()
-        self.ui.setupUi(self)
+        
         self.qt_app = qapplication
         self.current_workdir = None
+        
 
         self.setWindowTitle(f"Transport Manager Tool - {VERSION}")
         window_icon = QIcon("./icon.ico")
@@ -55,11 +57,10 @@ class Transport_Manager(QMainWindow):
 
         self.program_configuration = ProgramConfiguration(self)
         self.object_configuration = ObjectConfiguration(self)
-
         self.settings = QSettings("EmergencyCode", "Transport_Manager")
-        self.relation_presets = self.settings.value("RelationPresets")
-        if not self.relation_presets:
-            self.relation_presets = {}
+        self._relation_presets = {}
+
+        self.ui.setupUi(self)
 
         # Database and Connection handlers
         self.db = DatabaseConnection()
@@ -111,9 +112,19 @@ class Transport_Manager(QMainWindow):
         planner_menu = self.ui.menubar.addMenu("Execution Planner")
         new_plan_action = planner_menu.addAction("Add New Plan")
         config_action = planner_menu.addAction("Configure")
+        # Connect Menu Signals
         config_action.triggered.connect(self.configure_execution_planner)
         new_plan_action.triggered.connect(self.PackageManager.addExecutionPlan)
         new_plan_action.triggered.connect(lambda: self.ui.MainTabWidget.setCurrentWidget(self.PackageManager))
+
+        menu_Presets = self.ui.menubar.addMenu("Relation Presets")
+        action_managePresets = menu_Presets.addAction("Manage Presets")
+        action_ExportPresetData = menu_Presets.addAction("Export Preset Data")
+        action_ImportPresetData = menu_Presets.addAction("Import Preset Data")
+        #Connect Menu Signals
+        action_managePresets.triggered.connect(self.manageRelationPresets)
+        action_ExportPresetData.triggered.connect(self.exportRelationPresets)
+        action_ImportPresetData.triggered.connect(self.importRelationPresets)
 
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.deleteKeyPressEvent)
@@ -128,22 +139,78 @@ class Transport_Manager(QMainWindow):
         self.XMLTemplateEditor.newTransportTemplate()
         self.PackageManager.addExecutionPlan()
 
+    @property
+    def relation_presets(self):
+        if not self._relation_presets:
+            self._relation_presets = self.settings.value("RelationPresets")
+        return self._relation_presets
+    
+    @relation_presets.setter
+    def relation_presets(self, preset_data):
+        self._relation_presets = preset_data
+        self.settings.setValue("RelationPresets", preset_data)
+
     def onDatabaseConnection(self):
         self.db.load_session_data()
         self.XMLTemplateEditor.refresh_ui()
 
+    def manageRelationPresets(self):
+        print("manage relation presets")
+        dialog = WidgetFactory.RelationPresetEditor(self, self.relation_presets)
+        if dialog:
+            print("closed")
+        pass
+
+    def exportRelationPresets(self):
+        if len(self.relation_presets) == 0:
+            return False
+
+        dialog = QFileDialog(self, "Save As")
+        dialog.setFileMode(QFileDialog.FileMode.AnyFile)
+        
+
+        file_path = dialog.getSaveFileName(
+            filter="*.json")
+
+        if file_path[0] != "":
+            preset_data = json.dumps(self.relation_presets, indent=4)
+            with open(file_path[0], 'w') as doc:
+                doc.write(preset_data)
+
+    def importRelationPresets(self):
+        dialog = QFileDialog(self, "Import relation preset data")
+        dialog.setFileMode(QFileDialog.FileMode.ExistingFile)
+
+        file_path = dialog.getOpenFileName(filter="*.json")
+        file_path = file_path[0]
+        if file_path:
+            json_data = self.load_file(file_path=file_path)
+            if len(json_data) == 0:
+                return False
+
+            preset_data = json.loads(json_data)
+            for table_name, relation_preset in preset_data.items():
+                if (table_name in self.relation_presets.keys() 
+                    and relation_preset not in self.relation_presets.values()):
+                        self.relation_presets[table_name].update(relation_preset)
+                else:
+                    self.relation_presets[table_name] = relation_preset
+            self.XMLTemplateEditor.DatabaseRelations.loadRelationPresets()
+
     def relationPresetAdded(self, table_name, preset_name, preset_data):
         preset_dict = {preset_name: preset_data}
-        if table_name not in self.relation_presets.keys():
-            self.relation_presets[table_name] = preset_dict
+        relation_presets = self.relation_presets
+        if table_name not in relation_presets.keys():
+            relation_presets[table_name] = preset_dict
 
-        if preset_name not in self.relation_presets[table_name].keys():
-            self.relation_presets[table_name][preset_name] = preset_data
+        if preset_name not in relation_presets[table_name].keys():
+            relation_presets[table_name][preset_name] = preset_data
         else:
             """ overwrite existing? """
-            self.relation_presets[table_name][preset_name] = preset_data
+            relation_presets[table_name][preset_name] = preset_data
 
-        self.settings.setValue("RelationPresets", self.relation_presets)
+        # self.settings.setValue("RelationPresets", self.relation_presets)
+        self.relation_presets = relation_presets
         self.XMLTemplateEditor.DatabaseRelations.loadRelationPresets()
 
     def autoLoadDatabaseObjects(self):

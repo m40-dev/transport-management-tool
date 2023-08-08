@@ -125,7 +125,7 @@ class DatabaseRelations(QtWidgets.QWidget):
         if not self.current_item:
             return False
 
-        relation_presets = self.application.settings.value("RelationPresets")
+        relation_presets = self.application.relation_presets
         table_name = self.current_item.table_name
         if relation_presets and table_name:
             table_presets = relation_presets.get(table_name, None)
@@ -138,7 +138,7 @@ class DatabaseRelations(QtWidgets.QWidget):
         preset_data = None
         preset_table = None
 
-        relation_presets = self.application.settings.value("RelationPresets")
+        relation_presets = self.application.relation_presets
 
         for table_name, relations in relation_presets.items():
             preset_data = relations.get(preset_name, None)
