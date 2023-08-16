@@ -117,92 +117,91 @@
                 "Separator": ","
             }
         },
-        "ExecutionPlanner_ExecutionGroup": 
+    "ExecutionPlanner_ExecutionGroup": 
+        {
+        "GroupName": 
             {
-            "GroupName": 
-                {
-                    "FieldType": "StringInput",
-                    "Display": "Group Name",
-                    "PlaceholderText": "Provide Group Name",
-                    "FieldRole": "DisplayRole"
-                },
-            "Description": 
-                {
-                    "FieldType": "TextInput",
-                    "Display": "Package Description",
-                    "PlaceholderText": "Provide Package Description",
-                    "FieldRole": "DescriptionRole"
-                },
-            "ExecutionTasks": 
-                {
-                    "FieldType": "ChildObjectReference",
-                    "Class": "ExecutionPlanner_ExecutionTask",
-                    "ShowInEditor": "False"
-                }
+                "FieldType": "StringInput",
+                "Display": "Group Name",
+                "PlaceholderText": "Provide Group Name",
+                "FieldRole": "DisplayRole"
             },
-        "ExecutionPlanner_ExecutionTask": 
+        "Description": 
             {
-            "TaskName": 
-                {
-                    "FieldType": "StringInput",
-                    "Display": "Task Name",
-                    "PlaceholderText": "Provide Task Name",
-                    "FieldRole": "DisplayRole",
-                    "Source": "TaskName"
-                },
-            "Description": 
-                {
-                    "FieldType": "TextInput",
-                    "Display": "Package Description",
-                    "PlaceholderText": "Provide Package Description",
-                    "FieldRole": "DescriptionRole"
-                },
-            "TaskType":
-                {
-                    "FieldType": "StringInput",
-                    "Source": "TaskType",
-                    "Transporter": ["Transport", "BugFix"],
-                    "SQLScript": ["SQL"],
-                    "SchemaExtension": ["Schema"],
-                    "ShowInTreeView": "True"
-                },
-            "PackageName":
-                {
-                    "FieldType": "StringInput",
-                    "Source": "PARENT_DEF.PackageName"
-                },
-            "ParentDescription":
-                {
-                    "FieldType": "StringInput",
-                    "Source": "PARENT_DEF.Description"
-                },
-            "Connection":
-                {
-                    "FieldType": "StringInput"   
-                },
-            "DefinitionFile":
-                {
-                    "FieldType": "FileInput",
-                    "FileSelectionMode": "Relative"
-                },
-            "ExportFile":
-                {
-                    "FieldType": "FileInput",
-                    "FileSelectionMode": "Relative"
-                },
-            "CompilerOption": 
-                {
-                    "FieldType": "FixedInput",
-                    "Options": {"No Compilation": "None", "Full Compilation": "Full", "Skip Web Projects Compilation":"NoWeb"},
-                    "DefaultValue": "NoWeb",
-                    "ShowInTreeView": "True"
-                },
-            "AutoUpdate":
-                {
-                    "FieldType": "BooleanInput",
-                    "DefaultValue": "False",
-                    "ShowInTreeView": "True"
-                }
+                "FieldType": "TextInput",
+                "Display": "Package Description",
+                "PlaceholderText": "Provide Package Description",
+                "FieldRole": "DescriptionRole"
+            },
+        "ExecutionTasks": 
+            {
+                "FieldType": "ChildObjectReference",
+                "Class": "ExecutionPlanner_ExecutionTask",
+                "ShowInEditor": "False"
             }
+        },
+    "ExecutionPlanner_ExecutionTask": 
+        {
+        "TaskName": 
+            {
+                "FieldType": "StringInput",
+                "Display": "Task Name",
+                "PlaceholderText": "Provide Task Name",
+                "FieldRole": "DisplayRole",
+                "Source": "TaskName"
+            },
+        "Description": 
+            {
+                "FieldType": "TextInput",
+                "Display": "Package Description",
+                "PlaceholderText": "Provide Package Description",
+                "FieldRole": "DescriptionRole"
+            },
+        "TaskType":
+            {
+                "FieldType": "StringInput",
+                "Source": "TaskType",
+                "Transporter": ["Transport", "BugFix"],
+                "SQLScript": ["SQL"],
+                "SchemaExtension": ["Schema"],
+                "ShowInTreeView": "True"
+            },
+        "PackageName":
+            {
+                "FieldType": "StringInput",
+                "Source": "PARENT_DEF.PackageName"
+            },
+        "ParentDescription":
+            {
+                "FieldType": "StringInput",
+                "Source": "PARENT_DEF.Description"
+            },
+        "Connection":
+            {
+                "FieldType": "StringInput"   
+            },
+        "DefinitionFile":
+            {
+                "FieldType": "FileInput",
+                "FileSelectionMode": "Relative"
+            },
+        "ExportFile":
+            {
+                "FieldType": "FileInput",
+                "FileSelectionMode": "Relative"
+            },
+        "CompilerOption": 
+            {
+                "FieldType": "FixedInput",
+                "Options": {"No Compilation": "None", "Full Compilation": "Full", "Skip Web Projects Compilation":"NoWeb"},
+                "DefaultValue": "NoWeb",
+                "ShowInTreeView": "True"
+            },
+        "AutoUpdate":
+            {
+                "FieldType": "BooleanInput",
+                "DefaultValue": "False",
+                "ShowInTreeView": "True"
+            }
+        }
 }
-

@@ -142,13 +142,16 @@ class Transport_Manager(QMainWindow):
     @property
     def relation_presets(self):
         if not self._relation_presets:
-            self._relation_presets = self.settings.value("RelationPresets")
+            settings = self.settings.value("RelationPresets")
+            if settings:
+                self._relation_presets = settings
         return self._relation_presets
     
     @relation_presets.setter
     def relation_presets(self, preset_data):
         self._relation_presets = preset_data
-        self.settings.setValue("RelationPresets", preset_data)
+        if preset_data and len(preset_data) > 0:
+            self.settings.setValue("RelationPresets", preset_data)
 
     def onDatabaseConnection(self):
         self.db.load_session_data()

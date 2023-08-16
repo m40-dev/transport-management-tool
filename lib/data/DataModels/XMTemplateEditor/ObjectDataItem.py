@@ -89,10 +89,10 @@ class ObjectDataItem(QObject):
                 return display.replace('%Globals.QIM_ProductNameShort%', "OneIM")
 
             if self.table_display_pattern is not None and display is None:
+                
                 object_display = self.application.db.parse_object_display(
                     data_row,
                     self.table_display_pattern)
-                
                 display = object_display
                 
             if display is None:
@@ -179,8 +179,12 @@ class ObjectDataItem(QObject):
 
     def xobjectkey(self, row_data):
         XObjectKey = None
-        if isinstance(row_data, Row) and "XObjectKey" in self.object_columns(row_data):
-            XObjectKey = row_data.XObjectKey
+        db_columns = self.object_columns(row_data)
+        if isinstance(row_data, Row) and db_columns:
+            for column_name in db_columns:
+                if column_name.upper() == "XOBJECTKEY":
+                    XObjectKey = row_data.__getattribute__(column_name)
+                    break
         return XObjectKey
 
     def objectkey_table(self, row_data):
@@ -199,10 +203,11 @@ class ObjectDataItem(QObject):
         if self.object_class == "TableDataItem" and self.table_data:
             data_row = self.table_data
         table_name = self.objectkey_table(data_row)
-        return self.application.db.get_table_display_pattern(table_name)
+        pattern = self.application.db.get_table_display_pattern(table_name)
+        # print(data_row, table_name, "table display pattern", pattern)
+        return pattern
 
     def task_data(self):
-
         export_data = {}
         export_data['uid'] = self.uid
         export_data['objectclass'] = self.object_class
@@ -233,7 +238,7 @@ class ObjectDataItem(QObject):
         if table_info is not None:
             pk_columns = [table_info.PKName1, table_info.PKName2]
             for pk_column in pk_columns:
-                if pk_column is not None and pk_column not in pk_columns_dict.keys():
+                if pk_column is not None and len(str(pk_column)) > 0 and pk_column not in pk_columns_dict.keys():
                     pk_columns_dict[pk_column] = str(data_row.__getattribute__(pk_column))
         display_name = self.display()
         object_info_dict["table_name"] = table_name

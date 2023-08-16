@@ -364,7 +364,7 @@ class XMLDataItem(QObject):
 
             self.object_data = self.application.db.get_db_object(table_name, self._xml_data.key_columns, " and " )
             
-            if len(self.object_data) > 0:
+            if self.object_data and len(self.object_data) > 0:
                 self.object_data = self.object_data[0]
             
             db_relations = self.application.db.get_table_initial_relations(table_name, extended_view=True)

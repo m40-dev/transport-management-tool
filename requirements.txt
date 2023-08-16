@@ -1,0 +1,4 @@
+pyodbc
+cryptography
+PyQt6
+lxml

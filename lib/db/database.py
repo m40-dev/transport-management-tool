@@ -10,7 +10,7 @@ class DatabaseConnection(object):
         self.db_session = None
         self.db_cursor = None
         self.table_info = {}
-        self.column_info = {}
+        # self.column_info = {}
         self.table_relations = {}
         self.child_table_relations = {}
 
@@ -96,7 +96,6 @@ class DatabaseConnection(object):
             return False
         
         self.db_cursor.execute(string_query)
-
         data = self.db_cursor.fetchall()
         return data
     
@@ -127,7 +126,7 @@ class DatabaseConnection(object):
     
     def load_session_data(self):
         self.load_table_relations_data()
-        self.load_column_data()
+        # self.load_column_data()
         self.load_table_data()
 
     def load_table_data(self):
@@ -137,12 +136,12 @@ class DatabaseConnection(object):
         for row in query_result:
             self.table_info[row.TableName] = row
 
-    def load_column_data(self):
-        query = "select * from DialogColumn order by Caption"
-        query_result = self.run_db_query(query)
+    # def load_column_data(self):
+    #     query = "select * from DialogColumn order by Caption"
+    #     query_result = self.run_db_query(query)
 
-        for row in query_result:
-            self.column_info[row.ColumnName] = row
+    #     for row in query_result:
+    #         self.column_info[row.ColumnName] = row
 
     def load_table_relations_data(self):
         query = "select \
@@ -239,6 +238,9 @@ class DatabaseConnection(object):
 
         relation_tables = []
         extended_relations = self.table_relations.get(table_name, None)
+        if extended_relations is None:
+            return initial_relations
+
         for relation in extended_relations:
             child_table = relation.get("ChildTable", None)
             if child_table is not None:
