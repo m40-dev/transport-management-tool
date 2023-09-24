@@ -63,8 +63,10 @@ class BaseCodeEditor(QsciScintilla):
             editor_bg_color = QColor("#1e1f1c")
             editor_text_color = QColor("#eee")
             caret_bg_color = QColor("#555")
-            
-        lexer.setColor(editor_text_color)
+        
+        # TODO: set color for light or dark theme
+        # lexer.setColor(editor_text_color)
+
         lexer.setFont(self.font)
         lexer.setDefaultPaper(editor_bg_color)
         lexer.setPaper(editor_bg_color)
@@ -86,9 +88,9 @@ class BaseCodeEditor(QsciScintilla):
 
         current_cursor_pos = self.getCursorPosition()
         result = self.findFirst(text, False, False, False, True, True, current_cursor_pos[0], 0, True)
+
         if not result:
             self.findFirst(text, False, False, False, True, True, 0, 0, True)
-
 
     def set_fold(self, prev, line, fold, full):
         if (prev[0] >= 0):

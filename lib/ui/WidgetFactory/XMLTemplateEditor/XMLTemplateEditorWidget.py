@@ -251,7 +251,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         if isinstance(itemClicked, ObjectDataItem) or (isinstance(itemClicked, XMLDataItem) and itemClicked.xml_object_class != "Transport_Object"):
             self.parent.reloadDatabaseRelations(None)
             return False
-
+        self.XMLPreviewBrowser.find_text(itemClicked.display("XML Transport Structure"))
         self.parent.reloadDatabaseRelations(current_index)
 
     def onItemCheckStateChange(self, source_item, column_name, check_state):
