@@ -138,7 +138,7 @@ QListView::item::hover, QTreeView::item:hover{
 }
 
 QListView::item:selected, QTreeView::item:selected{
-	background-color: palette(Highlight);
+	background-color: rgb(217, 231, 233);
 }
 
 QLabel{
