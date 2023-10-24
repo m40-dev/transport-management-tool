@@ -25,6 +25,8 @@ class XMLObjectContextMenu(QMenu):
     onAddTransportTask = pyqtSignal(str)
     onEditSQLScript = pyqtSignal(object)
     onAddSQLScript = pyqtSignal(object, str)
+    onCopySelectedNodes = pyqtSignal()
+    onPasteSelectedNodes = pyqtSignal(object)
 
     def __init__(self, parent, source_index):
         super(XMLObjectContextMenu, self).__init__()
@@ -53,6 +55,16 @@ class XMLObjectContextMenu(QMenu):
                 self.menu_items.append(menuActionLoadDatabaseObject)
                 self.menu_items.append(menuActionSavePreset)
             
+            self.addSeparator()
+
+            menuActionCopyNodes = self.addAction("Copy Selected Nodes")
+            menuActionCopyNodes.triggered.connect(lambda: self.onCopySelectedNodes.emit() )  
+            self.menu_items.append(menuActionCopyNodes)
+
+            menuActionPasteNodes = self.addAction("Paste Selected Nodes")
+            menuActionPasteNodes.triggered.connect(lambda: self.onPasteSelectedNodes.emit(source_index) )  
+            self.menu_items.append(menuActionPasteNodes)
+
             # Prepare SQL Script object context Menu
             if source_item.xml_object_class == "Transport_SQL_Object":
                 menuActionEditSQLScript = self.addAction("Edit SQL Script")

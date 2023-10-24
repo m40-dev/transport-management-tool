@@ -44,6 +44,8 @@ class DatabaseConnection(object):
 
         if ServerAddress and DatabaseName and SQLUserName and SQLPassword:
             connection_string = "DRIVER={ODBC Driver 18 for SQL Server};" + f"SERVER={ServerAddress};DATABASE={DatabaseName};ENCRYPT={EncryptConnection};UID={SQLUserName};PWD={SQLPassword}"
+            if EncryptConnection.upper() == "NO":
+                connection_string += ';"TrustServerCertificate="yes"'
         return connection_string
 
     def get_connection_string(self):
@@ -63,6 +65,8 @@ class DatabaseConnection(object):
 
         if ServerAddress and DatabaseName and SQLUserName and SQLPassword:
             connection_string = f'Data Source={ServerAddress};Initial Catalog={DatabaseName};User ID="{SQLUserName}";Password="{SQLPassword}"'
+            if EncryptConnection.upper() == "NO":
+                connection_string += ';"TrustServerCertificate="yes"'
         return connection_string
 
 
@@ -238,7 +242,8 @@ class DatabaseConnection(object):
 
         relation_tables = []
         extended_relations = self.table_relations.get(table_name, None)
-        if extended_relations is None:
+        
+        if not extended_relations:
             return initial_relations
 
         for relation in extended_relations:

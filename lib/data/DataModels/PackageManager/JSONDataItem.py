@@ -741,3 +741,19 @@ class JSONDataItem(QObject):
         destination_path.parent.mkdir(parents=True, exist_ok=True)
         destination_path = source_path.replace(destination_path)
         self.application.PackageManager.deleteDirectory(source_path.parent)
+
+    @property
+    def is_transport(self):
+        is_transport = False
+        task_type = self._task_data.get("TaskType", None)
+        
+        if not task_type:
+            return is_transport 
+
+        task_type_configuration = self.item_class_configuration.get("TaskType", None)
+        if task_type_configuration:
+            template_configuration = task_type_configuration.get("XMLTemplateTypes", None)
+            if template_configuration:
+                is_transport = task_type in template_configuration
+        
+        return is_transport

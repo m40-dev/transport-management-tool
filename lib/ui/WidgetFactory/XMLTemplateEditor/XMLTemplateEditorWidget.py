@@ -1,9 +1,10 @@
 # Standard modules
 from pathlib import Path
 from copy import deepcopy
+import json
 
 #""" Required QT Libraries """
-from PyQt6.QtCore import pyqtSignal, QTimer, Qt
+from PyQt6.QtCore import pyqtSignal, QTimer, Qt, QMimeData
 from PyQt6 import QtWidgets
 
 # XML Management
@@ -129,12 +130,80 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         contextMenu.onAddTransportTask.connect(self.addTransportTask)
         contextMenu.onAddSQLScript.connect(self.addSQLScript)
         contextMenu.onEditSQLScript.connect(self.editSQLScript)
+        contextMenu.onCopySelectedNodes.connect(self.copyXMLNodes)
+        contextMenu.onPasteSelectedNodes.connect(self.pasteSelectedNodes)
 
         if len(contextMenu.menu_items) > 0:
             menu_target = self.XMLStructureTreeView.mapToGlobal(menuPosition)
             contextMenu.popup(menu_target)
     
     """ Context Menu handling functions  """
+    def pasteSelectedNodes(self, target_index):
+        mimeData = self.application.clipboard.mimeData()
+        xml_model = self.XMLStructureTreeView.model()
+
+        encodedData = mimeData.data("application/vnd.xmldataitem")
+
+        if len(encodedData) == 0:
+            # if no xmldata is being dropped, it should be database object data drop
+            encodedData = mimeData.data("application/vnd.objectdataitem")
+
+        if len(encodedData) == 0:
+            # if not supported data type, break here
+            return False
+
+        if not target_index.isValid():
+            # dropped at top level item
+            parentItem = self.rootItem
+            if mimeData.hasFormat("application/vnd.objectdataitem"):
+                parentItem = xml_model.addTransportTask("VI.Transport.ObjectTransport, VI.Transport")
+                target_index = xml_model.indexOf(parentItem)
+        else:
+            parentItem = target_index.internalPointer()
+
+        decodedData = bytes(encodedData)
+        jsondata = json.loads(decodedData)
+        print("pasted data",jsondata)
+        newItems = []
+        for source_object in jsondata:
+            new_item = XMLDataItem(
+                application=self.application,
+                parent=parentItem,
+                model_reference=self,
+                )
+            newItems.append(new_item)
+            new_item.fromString(source_object["xml_data"], source_object["xml_object_class"])
+        
+        #insert dropped items at new location
+        xml_model.insert_items(target_index, newItems)
+
+        for new_item in newItems:
+            new_item.refreshModelStructure()
+
+        xml_model.xmlDataStructureChanged.emit()
+
+    def copyXMLNodes(self):
+        selected_xml_items = self.selectedItems(object_class=XMLDataItem)
+
+        mimedata = QMimeData()
+        items_data = []
+
+        for source_item in selected_xml_items:
+            task_data = source_item.task_data()
+            
+            if task_data not in items_data:
+                items_data.append(task_data)
+
+        items_data_sorted = sorted(
+                            items_data, 
+                            key=lambda d: (d['row'])
+                            )
+        
+        jsondata = json.dumps(items_data_sorted, indent=4)
+        encodedData = jsondata.encode('utf-8')
+
+        mimedata.setData("application/vnd.xmldataitem", encodedData)
+        self.application.clipboard.setMimeData(mimedata)
 
     def loadDatabaseObject(self, source_index):
         selected_xml_items = self.selectedItems(object_class=XMLDataItem)

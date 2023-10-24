@@ -24,9 +24,17 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.DatabaseRelations.relationSettingsChanged.connect(self.relationSettingsChanged)
         self.DatabaseRelations.relationResetRequested.connect(self.resetRelationStates)
         self.tabNameChanged.connect(self.renameTabWidget)
+        # self.XMLTemplateEditorTabWidget.tabBar().installEventFilter(self)
 
         # Database Objects listing
         self.FindObjectButton.clicked.connect(self.queryDatabaseObjects)
+
+    # def eventFilter(self, source, event):
+    #     print("event filtering", event, source)
+    #     if source == self:
+    #         if event.type() == QtCore.QEvent.Type.DragEnter:
+    #             print("dragging something here!", event.position())
+    #     return super().eventFilter(source, event)
 
     def newTransportTemplate(self, file_path=None):
         tabWidget = XMLTemplateEditorWidget(self, self.application, file_path)

@@ -29,6 +29,10 @@ class transport_task(transport_template_custom_object):
     def display(self):
         return self.xml_get_attribute("Display")
 
+    @display.setter
+    def display(self, value):
+        self.xml_set_attribute("Display", value)
+
     def children(self):
         task_nodes = self.data.getchildren()
         child_objects = []

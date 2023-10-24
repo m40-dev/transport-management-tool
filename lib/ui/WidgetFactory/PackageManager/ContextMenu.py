@@ -60,7 +60,7 @@ class PackageDefinitionMenu(QMenu):
                 action_editTaskDefinition.triggered.connect(lambda: self.editTaskDefinition.emit(source_index))
                 self.menu_items.append(action_editTaskDefinition)
 
-                action_editXMLTemplate = self.addAction("Edit Task Definition")
+                action_editXMLTemplate = self.addAction("Edit Task Definition(s)")
                 action_editXMLTemplate.triggered.connect(lambda: self.editXMLTemplate.emit(source_index))
                 self.menu_items.append(action_editXMLTemplate)
         

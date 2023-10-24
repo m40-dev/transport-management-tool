@@ -72,6 +72,7 @@ class XMLDataModel(QAbstractItemModel):
         return len(self.headers)
 
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
+        
         if not index.isValid():
             return None
 
@@ -85,10 +86,14 @@ class XMLDataModel(QAbstractItemModel):
 
             if column_name == "XML Transport Structure":
                 return item.display()
-
+        
         if (isinstance(item, XMLDataItem) and item.isCheckable(column_name) 
             and role == Qt.ItemDataRole.CheckStateRole and column_name in ["Options"]):
                 return item.checkState(column_name)
+
+        if role == Qt.ItemDataRole.EditRole and column_name == "XML Transport Structure":
+            return item.display(column_name)
+        
         return None
 
     def setData(self, index, value, role):
@@ -102,7 +107,10 @@ class XMLDataModel(QAbstractItemModel):
             self.modelItemChecked.emit(item, column_name, value)
         else:
             # otherwise set data directly
-            item.setData(column_name, value)
+            if column_name == "XML Transport Structure":
+                item.setDisplay(value)
+            else:
+                item.setData(column_name, value)
 
         self.dataChanged.emit(index, index)
         self.xmlDataStructureChanged.emit()
@@ -120,6 +128,11 @@ class XMLDataModel(QAbstractItemModel):
             option_display = self.data(index)
             if option_display and len(option_display.strip()) > 0:
                 flags |= Qt.ItemFlag.ItemIsUserCheckable
+
+        if column_name == "XML Transport Structure":
+            option_display = self.data(index)
+            if option_display and len(option_display.strip()) > 0:
+                flags |= Qt.ItemFlag.ItemIsEditable
 
         return flags
 

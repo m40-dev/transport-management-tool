@@ -172,7 +172,7 @@ class XMLDataItem(QObject):
     def uid(self, value):
         self._uid = value
 
-    def display(self, column_name):
+    def display(self, column_name="XML Transport Structure"):
         if self._xml_data:
             if isinstance(self._xml_data, transport_template_custom_object) and column_name == "XML Transport Structure":
                 caption = self._xml_data.display

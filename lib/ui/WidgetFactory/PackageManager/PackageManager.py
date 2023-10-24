@@ -213,7 +213,7 @@ class PackageManager(QtWidgets.QWidget):
         contextMenu.editPackageDefinition.connect(self.editPackageDefinition)
         contextMenu.addTaskDefinition.connect(self.addTaskDefinition)
         contextMenu.editTaskDefinition.connect(self.editTaskDefinition)
-        contextMenu.editXMLTemplate.connect(self.editXMLTemplate)
+        contextMenu.editXMLTemplate.connect(self.onEditXMLTemplates)
         contextMenu.savePackageDefinition.connect(self.savePackageDefinition)
         contextMenu.collapseAll.connect(self.collapseAll)
         contextMenu.expandAll.connect(self.expandAll)
@@ -233,6 +233,14 @@ class PackageManager(QtWidgets.QWidget):
             treeview_model = self.PackageViewTreeView.model()
             if treeview_model:
                 treeview_model.insert_item("PackageManager_PackageDefinition", form_data)
+
+    def onEditXMLTemplates(self, source_index):
+        self.editXMLTemplate(source_index)
+        for selected_index in self.PackageViewTreeView.selectedIndexes():
+            if selected_index != source_index and selected_index.isValid():
+                selected_item = selected_index.internalPointer()
+                if selected_item.task_class == "PackageManager_TaskDefinition" and selected_item.is_transport:
+                    self.editXMLTemplate(selected_index)
 
     def onEditSelectedItems(self, source_index):
         if not source_index.isValid():

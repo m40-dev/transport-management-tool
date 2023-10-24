@@ -27,7 +27,7 @@ from lib.ProgramConfiguration import ProgramConfiguration, ObjectConfiguration, 
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.7.1'
+VERSION = '0.7.2'
 
 class Transport_Manager(QMainWindow):
     """Main window class for connection launcher"""
@@ -44,8 +44,8 @@ class Transport_Manager(QMainWindow):
         self.ui = Ui_MainWindow()
         
         self.qt_app = qapplication
+        self.clipboard = clipboard
         self.current_workdir = None
-        
 
         self.setWindowTitle(f"Transport Manager Tool - {VERSION}")
         window_icon = QIcon("./icon.ico")

@@ -114,6 +114,16 @@ class object_container(transport_template_custom_object):
                     return base_object_data_node.text
         return display_name
 
+    @display.setter
+    def display(self, value):
+        if isinstance(self.base_object_node, transport_template_custom_object):
+            for base_object_data_node in self.base_object_node.children():
+                if base_object_data_node.attrib["Name"] == "Display":
+                    base_object_data_node.text = value
+                    return
+        self.xml_set_attribute("Display", value)
+            
+        
     @property
     def xml_object_relations(self):
         object_relations = {}
