@@ -336,7 +336,10 @@ class XMLDataItem(QObject):
             xml_object = object_container(parent=parent_node, source_element=xml_node)
 
         if xml_object_class == "Object_Transport_Task":
-            xml_object = transport_task(parent=parent_node, source_element=xml_node, object_class="VI.Transport.ObjectTransport, VI.Transport")
+            xml_object = transport_task(parent=parent_node, source_element=xml_node)
+
+        if xml_object_class == "SQL_Transport_Task":
+            xml_object = sql_script_transport_task(parent=parent_node, source_element=xml_node)
         
         self._xml_data = xml_object
         children = xml_object.children()
