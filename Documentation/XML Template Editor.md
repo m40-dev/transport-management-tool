@@ -33,7 +33,7 @@ When loading the transport template where object transport tasks with relation c
 
 ## Edit XML Template structure
 
-You can edit xml template structure by simple drag and drop operations - these changes can be done on single items or on multi-selected objects.
+You can edit xml template structure by simple **drag and drop** operations - these changes can be done on single items or on multi-selected objects.
 Application validates and prevents certain movement operations, but it is important that you verify and create correct object structures that can be then parsed by the database transporter tool. 
 
 ## Add XML structure nodes
@@ -52,19 +52,70 @@ Each of these actions can be initiated from the context menu in the xml structur
 
 Automatic listing allows for live preview of how the selected database relations affect the related objects that would be selected by the database transporter - this is only orientational information since in some edge cases this information might not be accurate enough. 
 
+## Edit transport object relations
+
+The Object relations view provides graphical representation of the xml object relations or available database object relations (updated when the database object is loaded). Relations view is updated when the active XML Transport Structure object is selected **(1)**.
+
+![](screenshots/Pasted%20image%2020231102100437.png)
+After the Object Transport Container is selected, the available relation presets are loaded **(2)** and also the current object relation configuration.
+Relations can be edited with the checkboxes which are corresponding to the respective relation instructions:
+**FK** - object referenced by the foreign key of the base object
+**CR** - objects referencing the base object through child foreign key reference
+**SH** - selects the 'Ignore in superset handling' flag
+
+Object Relations view can be configured with additional options:
+
+![](screenshots/Pasted%20image%2020231102101754.png)
+
+**Auto List Selected Objects from database** - This option controls whether the database objects referenced via object relations will be automatically listed in the XML Structure View according to the currently active database connection. When this option is set, database objects will be automatically loaded where required. This is helpful to preview relation changes in the XML Structure editor, but can prolong the loading times of complex XML templates where all object transport containers will be loaded at the same time.
+
+**Auto Load Matching Objects from database** - Will only attempt to identify and load the corresponding database object in the currently active connection.
+
+**Show All Columns** - By default the relations view show only the selected relations or relations that have clear instructions in the database table relations data. If database model does not provide any instruction which relation option should be used by default, the relation will be hidden. 
+
+**Deselect All Relations** - Clear any object relation settings for the selected object transport container.
+
+**Reset To Initial State** - This action can reset the object relations to the state defined by the database model configuration.
+
+### Follow table relations
+In database relation editor only the close object relations are loaded to avoid loopback and can be extended manually if required.
+
+If the object relation contains instruction for the target table where the object relation follows the relation, the table relation can be loaded using the context menu of the object relation entry:
+
+![](screenshots/Pasted%20image%2020231102102808.png)
+
+Once the action is performed, all of the target table relations are loaded and can be selected from the tree structure.
+![](screenshots/Pasted%20image%2020231102103028.png)
+Note: when the object container is re-loaded or relations are refreshed, any additional table relations will be loaded in the top-level structure. This sub-tree view is only generated when additional relations are loaded manually.
+
+### Edit table relations
+
+Whenever the relation configuration is changed, the XML file preview is refreshed to show the effective file structure, but also the related objects can be listed in the XML Transport Structure view if the auto listing option is enabled.
+
+![](screenshots/Pasted%20image%2020231102103537.png)
+On this example, the selected table relations would show that **1 AccProduct** and **1 AccProductGroup** will be selected in the transport. The treeview can be extended further to see which items are loaded, however only display names of the selected items are currently available.
+
+![](screenshots/Pasted%20image%2020231102103747.png)
+
 ## Save Relation Preset
 
 Transport containers in the Object Transport tasks have usually some sort of relation configured and it is possible to save those relations to be then transferred on different object types.
 To save the relation configuration of a specific object transport container, right click the item on the **XML Structure Tree View**  and select the action from the context menu.
+![](screenshots/Pasted%20image%2020231102100203.png)
 
 ## Apply Relation Preset
 
-Saved relation presets are automatically loaded in the  **Object relations management view** when the object container is activated.
+Saved relation presets are automatically loaded in the  **Object relations management view (2, 3)** when the object container is activated **(1)**.
 
-![](screenshots/Relation%20Presets%20Selection.png)
+![](screenshots/Pasted%20image%2020231102100437.png)
+
+After the preset is selected from the drop-down list, it can be applied to the selected object container or containers(applies only to the objects of the same type).
+
+![](screenshots/Pasted%20image%2020231102100536.png)
 
 Only presets that are relevant for this object type are listed and can be applied.
-Select the relation preset that you would like to apply on the container and click apply. This will overwrite any existing relation configurations with the datathat is saved in the preset.
+
+When the preset is applied to the selected objects, the effective relations of the object container are updated and then the relations in view **3** will be overwritten according to the selected preset data.
 
 ## Edit SQL Scripts
 
