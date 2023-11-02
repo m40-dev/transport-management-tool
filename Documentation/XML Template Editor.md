@@ -57,6 +57,7 @@ Automatic listing allows for live preview of how the selected database relations
 The Object relations view provides graphical representation of the xml object relations or available database object relations (updated when the database object is loaded). Relations view is updated when the active XML Transport Structure object is selected **(1)**.
 
 ![](screenshots/Pasted%20image%2020231102100437.png)
+
 After the Object Transport Container is selected, the available relation presets are loaded **(2)** and also the current object relation configuration.
 Relations can be edited with the checkboxes which are corresponding to the respective relation instructions:
 **FK** - object referenced by the foreign key of the base object
@@ -85,7 +86,9 @@ If the object relation contains instruction for the target table where the objec
 ![](screenshots/Pasted%20image%2020231102102808.png)
 
 Once the action is performed, all of the target table relations are loaded and can be selected from the tree structure.
+
 ![](screenshots/Pasted%20image%2020231102103028.png)
+
 Note: when the object container is re-loaded or relations are refreshed, any additional table relations will be loaded in the top-level structure. This sub-tree view is only generated when additional relations are loaded manually.
 
 ### Edit table relations
@@ -93,6 +96,7 @@ Note: when the object container is re-loaded or relations are refreshed, any add
 Whenever the relation configuration is changed, the XML file preview is refreshed to show the effective file structure, but also the related objects can be listed in the XML Transport Structure view if the auto listing option is enabled.
 
 ![](screenshots/Pasted%20image%2020231102103537.png)
+
 On this example, the selected table relations would show that **1 AccProduct** and **1 AccProductGroup** will be selected in the transport. The treeview can be extended further to see which items are loaded, however only display names of the selected items are currently available.
 
 ![](screenshots/Pasted%20image%2020231102103747.png)
