@@ -59,9 +59,13 @@ The Object relations view provides graphical representation of the xml object re
 ![](screenshots/Pasted%20image%2020231102100437.png)
 
 After the Object Transport Container is selected, the available relation presets are loaded **(2)** and also the current object relation configuration.
+
 Relations can be edited with the checkboxes which are corresponding to the respective relation instructions:
+
 **FK** - object referenced by the foreign key of the base object
+
 **CR** - objects referencing the base object through child foreign key reference
+
 **SH** - selects the 'Ignore in superset handling' flag
 
 Object Relations view can be configured with additional options:
