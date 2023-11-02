@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView, QTextEdit, QSplitter, QLineEdit, QLabel, QToolButton
 from PyQt6.QtCore import Qt, pyqtSignal, QProcess
-
+from PyQt6.QtGui import QTextCursor
 from .ContextMenu import ExecutionPlannerContextMenu
 from lib.data.DataModels import TaskExecutionModel
 from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
@@ -18,6 +18,7 @@ class ExecutionPlannerWidget(QWidget):
         self.object_configuration = self.application.object_configuration
         self.ProcessRunner = ProcessRunner(self)
         self.ProcessRunner.message.connect(self.logExecutionPlannerMessage)
+        self.ProcessRunner.stageFinished.connect(self.appendLogSeparator)
         self.ProcessRunner.stateChanged.connect(self.processRunnerStateChanged)
 
         self.layout = QGridLayout(self)
@@ -37,6 +38,7 @@ class ExecutionPlannerWidget(QWidget):
 
         self.treeview = QTreeView()
         self.console = QTextEdit()
+        self.console.setAcceptRichText(True)
 
         splitter.addWidget(self.treeview)
         splitter.addWidget(self.console)
@@ -167,10 +169,31 @@ class ExecutionPlannerWidget(QWidget):
     def logExecutionPlannerMessage(self, message, severity=None):
         if len(message.strip()) == 0:
             return False
+        message = message.strip()
         if severity:
-            self.console.append(f"[{severity}]:{message.strip()}")
-        else:
-            self.console.append(message.strip())
+            message = f"[{severity}]:{message.strip()}"
+
+        cursor = self.console.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.MoveAnchor)
+
+        cursor.insertHtml(message + "<br>")
+
+        self.console.setTextCursor(cursor)
+    
+    def appendLogSeparator(self, exitCode):
+        print("process finished")
+        cursor = self.console.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.MoveAnchor)
+        task_display_name = self.ProcessRunner.current_item.display
+        
+        format_color = "green"
+
+        if exitCode != 0:
+            format_color = "red"
+
+        cursor.insertHtml(f'<p style="color: {format_color};font: bold;"> [ Transport Manager ] - Task Execution Finished - [ {task_display_name} ] # # # # # # # </p><br>')
+
+        self.console.setTextCursor(cursor)
     
     def changeData(self, col, row):
         print("data changed in ", col, row)

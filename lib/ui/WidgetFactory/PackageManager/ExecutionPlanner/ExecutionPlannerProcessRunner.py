@@ -8,6 +8,7 @@ class ProcessRunner(QProcess):
     message = pyqtSignal(str, str)
     taskStatusChanged = pyqtSignal(object, str)
     taskCompleted = pyqtSignal(object)
+    stageFinished = pyqtSignal(object)
 
     def __init__(self, planner_widget):
         super().__init__()
@@ -200,7 +201,6 @@ class ProcessRunner(QProcess):
         data = self.readAllStandardError()
         stderr = bytes(data).decode("cp1252")
         self.message.emit(stderr, "Error")
-        
 
     def handleProcessStdOut(self):
         data = self.readAllStandardOutput()
@@ -219,6 +219,7 @@ class ProcessRunner(QProcess):
 
     def processExecutionFinished(self, exitCode=0, exitStatus=QProcess.ExitStatus.NormalExit):
         self.message.emit("Process finished.", "Transport Manager")
+        self.stageFinished.emit(exitCode)
         self.current_item.setData("task_execution_status", "Finished")
         self.is_running = False
         
@@ -230,7 +231,6 @@ class ProcessRunner(QProcess):
 
         if len(self.task_queue) > 0:
             self.startProcessTask(self.task_queue[0], queued_task=True)
-        
         
 
     def prepareProcessVariables(self, task_data):
