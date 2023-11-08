@@ -262,7 +262,7 @@ class XMLDataModel(QAbstractItemModel):
                 if source_item:
                     source_items.append(source_item)
             
-            # print("dropped item:", dropped_item)
+            print("dropped item:", dropped_item)
             # create new object from the source item data and add it to the list, all dropped items will be inserted at once
             new_item = XMLDataItem(
                 application=self.application,
@@ -271,6 +271,7 @@ class XMLDataModel(QAbstractItemModel):
             newItems.append(new_item)
             
             #emit relocation signal for the new item and tell it about its source item from the same model
+            print(source_item.model_reference)
             if source_item and source_item.model_reference == self:
                 new_item.locationChanged.emit(source_item)
             else:

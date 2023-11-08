@@ -65,6 +65,8 @@ class XMLObjectContextMenu(QMenu):
             menuActionPasteNodes.triggered.connect(lambda: self.onPasteSelectedNodes.emit(source_index) )  
             self.menu_items.append(menuActionPasteNodes)
 
+            self.addSeparator()
+
             # Prepare SQL Script object context Menu
             if source_item.xml_object_class == "Transport_SQL_Object":
                 menuActionEditSQLScript = self.addAction("Edit SQL Script")
@@ -85,6 +87,14 @@ class XMLObjectContextMenu(QMenu):
         
         # no index, white space clicked
         if not source_index.isValid():
+
+            menuActionPasteNodes = self.addAction("Paste Selected Nodes")
+            menuActionPasteNodes.triggered.connect(lambda: self.onPasteSelectedNodes.emit(source_index) )  
+
+            self.menu_items.append(menuActionPasteNodes)
+
+            self.addSeparator()
+
             menuTransportTask = self.addMenu("Add Transport Task")
             
             menuActionAddObjectTransportTask = menuTransportTask.addAction("Add Object Transport Task")
@@ -93,6 +103,8 @@ class XMLObjectContextMenu(QMenu):
             menuActionAddSQLTransportTask = menuTransportTask.addAction("Add SQL Transport Task")
             menuActionAddSQLTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.SQLTransport, VI.Transport"))
 
+
+            
             self.menu_items.append(menuTransportTask)
             self.menu_items.append(menuActionAddObjectTransportTask)
             self.menu_items.append(menuActionAddSQLTransportTask)

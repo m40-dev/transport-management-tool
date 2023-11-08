@@ -341,6 +341,12 @@ class XMLDataItem(QObject):
         if xml_object_class == "SQL_Transport_Task":
             xml_object = sql_script_transport_task(parent=parent_node, source_element=xml_node)
         
+        if xml_object_class == "Transport_SQL_Object":
+            xml_object = sql_script_container(parent=parent_node, source_element=xml_node)
+    
+        if not xml_object:
+            return False
+
         self._xml_data = xml_object
         children = xml_object.children()
         if children:

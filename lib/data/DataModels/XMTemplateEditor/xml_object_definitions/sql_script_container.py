@@ -18,4 +18,11 @@ class sql_script_container(transport_template_custom_object):
 
     @property
     def display(self):
+        display_name = self.xml_get_attribute("Display")
+        if display_name:
+            return display_name
         return self.script_type
+
+    @display.setter
+    def display(self, value):
+        self.xml_set_attribute("Display", value)

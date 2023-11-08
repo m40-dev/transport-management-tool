@@ -154,22 +154,22 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
 
         if not target_index.isValid():
             # dropped at top level item
-            parentItem = self.rootItem
-            if mimeData.hasFormat("application/vnd.objectdataitem"):
-                parentItem = xml_model.addTransportTask("VI.Transport.ObjectTransport, VI.Transport")
-                target_index = xml_model.indexOf(parentItem)
+            parentItem = xml_model.rootItem
+            # if mimeData.hasFormat("application/vnd.objectdataitem"):
+            #     parentItem = xml_model.addTransportTask("VI.Transport.ObjectTransport, VI.Transport")
+            #     target_index = xml_model.indexOf(parentItem)
         else:
             parentItem = target_index.internalPointer()
 
         decodedData = bytes(encodedData)
         jsondata = json.loads(decodedData)
-        print("pasted data",jsondata)
+        # print("pasted data",jsondata)
         newItems = []
         for source_object in jsondata:
             new_item = XMLDataItem(
                 application=self.application,
                 parent=parentItem,
-                model_reference=self,
+                model_reference=xml_model,
                 )
             newItems.append(new_item)
             new_item.fromString(source_object["xml_data"], source_object["xml_object_class"])
@@ -283,6 +283,8 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                 if drop_item and source_item:
                     if source_item.xml_object_class == "Transport_Object" and drop_item.xml_object_class == "Object_Transport_Task":
                         move_accept = True
+                    if source_item.xml_object_class == "Transport_SQL_Object" and drop_item.xml_object_class == "SQL_Transport_Task":
+                        move_accept = True
 
             if dropIndicator in [QtWidgets.QAbstractItemView.DropIndicatorPosition.BelowItem, QtWidgets.QAbstractItemView.DropIndicatorPosition.AboveItem]:
                 if drop_item.xml_object_class == source_item.xml_object_class:
@@ -316,12 +318,15 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
             itemClicked = current_index.internalPointer()
         else:
             return self.parent.reloadDatabaseRelations(None)
-        # Only handle the Transport Object items on the list
-        if isinstance(itemClicked, ObjectDataItem) or (isinstance(itemClicked, XMLDataItem) and itemClicked.xml_object_class != "Transport_Object"):
+
+        if itemClicked and isinstance(itemClicked, XMLDataItem) and itemClicked.xml_object_class == "Transport_Object":
+            self.parent.reloadDatabaseRelations(current_index)
+        else:
             self.parent.reloadDatabaseRelations(None)
-            return False
-        self.XMLPreviewBrowser.find_text(itemClicked.display("XML Transport Structure"))
-        self.parent.reloadDatabaseRelations(current_index)
+
+        if isinstance(itemClicked, XMLDataItem):
+            display_text = itemClicked.display("XML Transport Structure")
+            self.XMLPreviewBrowser.find_text(display_text)
 
     def onItemCheckStateChange(self, source_item, column_name, check_state):
         if column_name != "Options":

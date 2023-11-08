@@ -7,6 +7,12 @@ from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
 from .ExecutionPlannerProcessRunner import ProcessRunner
 from lib.ui.WidgetFactory import FormEditorDialog
 
+LOG_STD = "#333"
+LOG_ERROR = "#b30000"
+LOG_SUCCESS = "#006600"
+LOG_TRANSPORT_MANAGER = "#232"
+FONT_SIZE = "13px"
+
 class ExecutionPlannerWidget(QWidget):
     plannerNameChanged = pyqtSignal(object)
 
@@ -166,32 +172,75 @@ class ExecutionPlannerWidget(QWidget):
             if child_task.childCount() > 0:
                 self.queueExecutionGroup(child_task)
 
-    def logExecutionPlannerMessage(self, message, severity=None):
+    def logExecutionPlannerMessage(self, message, message_format=None):
         if len(message.strip()) == 0:
             return False
-        message = message.strip()
-        if severity:
-            message = f"[{severity}]:{message.strip()}"
 
         cursor = self.console.textCursor()
         cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.MoveAnchor)
+        cursor.movePosition(QTextCursor.MoveOperation.Left, QTextCursor.MoveMode.KeepAnchor)
+        
+        if cursor.columnNumber() > 0 and bytes(cursor.selectedText(), 'utf-8') == b'\xe2\x80\xa8':
+            cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor)
 
-        cursor.insertHtml(message + "<br>")
+        message = message.strip()
+        format_color = LOG_STD
+        important = False
+        important_style = ""
+        endl_separator = "<br>"
+
+        if message_format:
+            if message_format.upper() == "ERROR":
+                cursor.insertHtml(f'<div style="color: {LOG_ERROR};font: bold;font-size:{FONT_SIZE};">[Error] </div>')
+                format_color = LOG_ERROR
+                important = True
+
+            if message_format.upper() == "TRANSPORT MANAGER":
+                cursor.insertHtml(f'<div style="color: {LOG_TRANSPORT_MANAGER};font-size:{FONT_SIZE};">[Transport Manager] </div>')
+            
+            if message_format.upper() == "INIT":
+                format_color = LOG_SUCCESS
+                important = True
+                cursor.insertHtml(f'<div style="color: {LOG_SUCCESS};font: bold;font-size:{FONT_SIZE};">[Transport Manager] </div>')
+            
+            if message_format.upper() == "FINISHED":
+                end_state = "Successfully"
+                format_color = LOG_SUCCESS
+                if self.ProcessRunner.was_error:
+                    format_color = LOG_ERROR
+                    end_state = "with Error"
+                message = ""
+                execution_summary = f'<div style="color: {format_color};font: bold;font-size:{FONT_SIZE};">[Transport Manager] Task Execution Finished {end_state}.</div><br>'
+                execution_summary += f'Task display name: <b>{self.ProcessRunner.current_item.display}.</b><br>'
+                execution_summary += f'Task Execution time: <b>({self.ProcessRunner.execution_time})</b>'
+                execution_summary += f'<hr style="border-top: 3px solid red; border-radius: 2px;"><br>'
+
+                cursor.insertHtml(execution_summary)
+                self.console.setTextCursor(cursor)
+                return True
+
+        if important:
+            important_style = "font: bold;"
+
+        cursor.insertHtml(f'<div style="color: {format_color};font-size:{FONT_SIZE};{important_style}">{message}{endl_separator}</div>')
 
         self.console.setTextCursor(cursor)
     
     def appendLogSeparator(self, exitCode):
         print("process finished")
         cursor = self.console.textCursor()
+
         cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.MoveAnchor)
         task_display_name = self.ProcessRunner.current_item.display
-        
-        format_color = "green"
+
+        format_color = LOG_SUCCESS
+        end_state = "Successfully"
 
         if exitCode != 0:
-            format_color = "red"
+            format_color = LOG_ERROR
+            end_state = "with Error"
 
-        cursor.insertHtml(f'<p style="color: {format_color};font: bold;"> [ Transport Manager ] - Task Execution Finished - [ {task_display_name} ] # # # # # # # </p><br>')
+        cursor.insertHtml(f'<div style="color: {format_color};font: bold;font-size:{FONT_SIZE};"> [Transport Manager] - Task Execution Finished {end_state} - [ {task_display_name} ] <hr> </div><br>')
 
         self.console.setTextCursor(cursor)
     

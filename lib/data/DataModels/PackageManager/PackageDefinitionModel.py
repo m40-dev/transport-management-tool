@@ -1,4 +1,5 @@
 from . import JSONDataItem, JSONDataModel, pyqtSignal
+from lib.ui.WidgetFactory import MsgBox
 from copy import deepcopy
 from pathlib import Path
 import json
@@ -59,6 +60,13 @@ class PackageDefinitionItem(JSONDataItem):
         self.update_file_locations()
         if self.task_class == "PackageManager_PackageDefinition":
             if self.application.current_workdir:
+
+                if len(self._filtered_children) > 0:
+                    detailed_message = f"There seem to be hidden items on the currently saved element ({self.display}).\nAre you sure to save?"
+                    decision = MsgBox(self.application, detailed_message, window_mode=MsgBox.QUESTION)
+                    if not decision.accepted:
+                        return False
+
                 export_file = self.get_file_path()
                 export = self.export_data()
                 export_data = json.dumps(export, indent=4, separators=(',',':'))

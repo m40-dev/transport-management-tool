@@ -3,6 +3,8 @@ from PyQt6.QtCore import QProcess, pyqtSignal, QIODeviceBase, QThread
 from lib.db.database import DatabaseConnection 
 import pathlib, shutil
 from lib.ui.WidgetFactory import MsgBox
+from timeit import default_timer as timer
+from datetime import timedelta, datetime
 
 class ProcessRunner(QProcess):
     message = pyqtSignal(str, str)
@@ -24,9 +26,11 @@ class ProcessRunner(QProcess):
         self.stateChanged.connect(self.handleProcessState)
         
         self.is_running = False
+        self.start_time = timer()
         self.current_item = None
         self.task_queue = []
         self.sql_thread = None
+        self.was_error = False
 
     @property
     def current_workdir(self):
@@ -138,6 +142,7 @@ class ProcessRunner(QProcess):
         
         # prepare some task variables
         self.current_item = task_item
+        self.start_time = timer()
         
         connection_name = task_data.get("Connection", None)
         
@@ -150,8 +155,8 @@ class ProcessRunner(QProcess):
 
         # moving forward
         self.message.emit(
-            f"Starting task execution ({task_name}). Action: [{action_type}]. Connection: [{connection_name}]",
-            "Transport Manager")
+            f"Starting task execution ({task_name}). Action: [{action_type}]. Connection: [{connection_name}]. Start time: [{datetime.now()}]",
+            "INIT")
 
         # prepare variables script
         variables_script = self.prepareProcessVariables(task_data)
@@ -218,8 +223,11 @@ class ProcessRunner(QProcess):
         self.message.emit(f"State changed: {state_name}", "Transport Manager")
 
     def processExecutionFinished(self, exitCode=0, exitStatus=QProcess.ExitStatus.NormalExit):
-        self.message.emit("Process finished.", "Transport Manager")
-        self.stageFinished.emit(exitCode)
+        end_time = timer()
+        self.execution_time = timedelta(seconds=end_time - self.start_time)
+        self.was_error = (exitCode != 0)
+        self.message.emit("Task Execution Finished", "FINISHED")
+        # self.stageFinished.emit(exitCode)
         self.current_item.setData("task_execution_status", "Finished")
         self.is_running = False
         
@@ -362,7 +370,8 @@ class ProcessRunner(QProcess):
 
         # task type is not supported, copy the files to target directory if this is an export task
         if action_type == "Export":
-            self.message.emit(f"Task type was not handled with known configuration: Task Type: [{task_type}] Task Name: {task_name}. Source File will be copied over to export destination.", "Transport Manager")
+            self.message.emit(f"Task type was not handled with known configuration: Task Type: [{task_type}] Task Name: {task_name}. Source File will be copied over to export destination.", 
+            "Transport Manager")
             self.copyDefinitionFile()
 
         return command
