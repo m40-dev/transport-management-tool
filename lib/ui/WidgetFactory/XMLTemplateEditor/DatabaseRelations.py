@@ -131,6 +131,10 @@ class DatabaseRelations(QtWidgets.QWidget):
             table_presets = relation_presets.get(table_name, None)
             if table_presets is not None:
                 for preset_name, preset_data in table_presets.items():
+                    if isinstance(preset_data, dict) and "name" in preset_data.keys():
+                        if preset_data["name"] != preset_name:
+                            preset_name = preset_data["name"]
+
                     self.RelationPresetsComboBox.addItem(preset_name)
     
     def applyRelationPreset(self):

@@ -4,4 +4,4 @@ from .PackageManager import *
 from .XMLTemplateEditor import *
 from .SideBar import *
 from .Settings import *
-from .RelationPresetEditor import *
+from .RelationPresetManager import *

@@ -4,7 +4,7 @@ from lib.db.database import DatabaseConnection
 import pathlib, shutil
 from lib.ui.WidgetFactory import MsgBox
 from timeit import default_timer as timer
-from datetime import timedelta, datetime
+from datetime import timedelta
 
 class ProcessRunner(QProcess):
     message = pyqtSignal(str, str)
@@ -28,6 +28,8 @@ class ProcessRunner(QProcess):
         self.is_running = False
         self.start_time = timer()
         self.current_item = None
+        self.operation = "Export"
+        self.connection_name = ""
         self.task_queue = []
         self.sql_thread = None
         self.was_error = False
@@ -86,6 +88,7 @@ class ProcessRunner(QProcess):
         task_name = task_item.display
         task_data = task_item.task_data()
         action_type = task_data.get("ExecutionType", None)
+        self.operation = action_type
         task_type = task_data.get("TaskType", None)
         configuration_task_type = self.checkTaskType(task_type)
 
@@ -98,7 +101,7 @@ class ProcessRunner(QProcess):
             f"Task execution ({task_name}) cannot be started, working directory was not set.",
             "Transport Manager")
             return False
-
+        
         if action_type == "Import" and configuration_task_type == "SQLScript":
             script_definition = task_data.get("DefinitionFile", None)
             if script_definition:
@@ -145,7 +148,7 @@ class ProcessRunner(QProcess):
         self.start_time = timer()
         
         connection_name = task_data.get("Connection", None)
-        
+        self.connection_name = connection_name
         planner_configuration = self.application.settings.value("ExecutionPlannerSettings")
 
         # if action or task type are not known, we cant do much
@@ -155,7 +158,7 @@ class ProcessRunner(QProcess):
 
         # moving forward
         self.message.emit(
-            f"Starting task execution ({task_name}). Action: [{action_type}]. Connection: [{connection_name}]. Start time: [{datetime.now()}]",
+            f"Starting task execution ({task_name}).",
             "INIT")
 
         # prepare variables script
@@ -227,7 +230,7 @@ class ProcessRunner(QProcess):
         self.execution_time = timedelta(seconds=end_time - self.start_time)
         self.was_error = (exitCode != 0)
         self.message.emit("Task Execution Finished", "FINISHED")
-        # self.stageFinished.emit(exitCode)
+        self.stageFinished.emit(exitCode)
         self.current_item.setData("task_execution_status", "Finished")
         self.is_running = False
         

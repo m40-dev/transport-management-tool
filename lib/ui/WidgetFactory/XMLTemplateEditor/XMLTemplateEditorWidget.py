@@ -10,10 +10,13 @@ from PyQt6 import QtWidgets
 # XML Management
 from ..CodeEditors.XMLEditor import xml_editor
 from .ContextMenu import XMLObjectContextMenu
-from ..DialogScreens import RelationPresetDialog, ScriptEditorDialog
+from ..DialogScreens import ScriptEditorDialog
 
 # Data Models
 from lib.data.DataModels import XMLDataItem, XMLDataModel, ObjectDataItem
+
+# Custom Widgets
+from lib.ui.WidgetFactory import FormEditorDialog
 
 XML_PREVIEW_TIMER = 100
 
@@ -235,14 +238,15 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         if source_item and source_item.xml_object_class != "Transport_Object":
             return False
 
-        relation_dialog = RelationPresetDialog(self.application)
-        relation_dialog.relations = deepcopy(source_item.object_relations)
-
-        if relation_dialog.exec():
+        dialog = FormEditorDialog(self.application, "XMLTemplateEditor_RelationPreset")
+        if dialog.exec():
+            preset_data = dialog.form_data
+            preset_data["table_relations"] = deepcopy(source_item.object_relations)
+            
             self.application.relationPresetAdded(
                 source_item.table_name, 
-                relation_dialog.name, 
-                relation_dialog.preset_data)
+                preset_data["name"], 
+                preset_data)
 
     def addTransportTask(self, task_type):
         self.XMLStructureTreeView.model().addTransportTask(task_type)

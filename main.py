@@ -1,7 +1,7 @@
 #""" Required QT Libraries """
 from PyQt6.QtCore import Qt, QSettings, QEvent
 from PyQt6.QtWidgets import (
-    QMainWindow, QApplication, QMenu, QWidget, QMessageBox, QFileDialog
+    QMainWindow, QApplication, QMessageBox, QFileDialog
     )
 from PyQt6.QtGui import QShortcut, QKeySequence, QIcon
 
@@ -159,10 +159,29 @@ class Transport_Manager(QMainWindow):
 
     def manageRelationPresets(self):
         print("manage relation presets")
-        dialog = WidgetFactory.RelationPresetEditor(self, self.relation_presets)
+        dialog = WidgetFactory.RelationPresetManager(self, self.relation_presets)
         if dialog:
             print("closed")
         pass
+    
+    def updateRelationPresets(self):
+        #iterate through the presets data and update 
+        preset_data = self.relation_presets
+        updated_presets = {}
+        for table_name, relation_presets in preset_data.items():
+            for relation_preset, relation_preset_data in relation_presets.items():
+                preset_name = relation_preset
+                if "name" in relation_preset_data.keys():
+                    preset_name = relation_preset_data["name"]
+                
+                preset_dict = {preset_name: relation_preset_data}
+                if table_name not in updated_presets.keys():
+                    updated_presets[table_name] = preset_dict
+                    continue
+                #overwrite any existing preset with same name
+                updated_presets[table_name][preset_name] = relation_preset_data
+
+        self.relation_presets = updated_presets
 
     def exportRelationPresets(self):
         if len(self.relation_presets) == 0:
@@ -170,7 +189,6 @@ class Transport_Manager(QMainWindow):
 
         dialog = QFileDialog(self, "Save As")
         dialog.setFileMode(QFileDialog.FileMode.AnyFile)
-        
 
         file_path = dialog.getSaveFileName(
             filter="*.json")

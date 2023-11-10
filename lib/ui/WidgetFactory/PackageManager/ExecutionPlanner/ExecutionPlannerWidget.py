@@ -6,12 +6,14 @@ from lib.data.DataModels import TaskExecutionModel
 from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
 from .ExecutionPlannerProcessRunner import ProcessRunner
 from lib.ui.WidgetFactory import FormEditorDialog
+from datetime import datetime
 
 LOG_STD = "#333"
 LOG_ERROR = "#b30000"
 LOG_SUCCESS = "#006600"
 LOG_TRANSPORT_MANAGER = "#232"
 FONT_SIZE = "13px"
+LOG_START = "#ff6600"
 
 class ExecutionPlannerWidget(QWidget):
     plannerNameChanged = pyqtSignal(object)
@@ -24,7 +26,7 @@ class ExecutionPlannerWidget(QWidget):
         self.object_configuration = self.application.object_configuration
         self.ProcessRunner = ProcessRunner(self)
         self.ProcessRunner.message.connect(self.logExecutionPlannerMessage)
-        self.ProcessRunner.stageFinished.connect(self.appendLogSeparator)
+        # self.ProcessRunner.stageFinished.connect(self.appendLogSeparator)
         self.ProcessRunner.stateChanged.connect(self.processRunnerStateChanged)
 
         self.layout = QGridLayout(self)
@@ -182,26 +184,40 @@ class ExecutionPlannerWidget(QWidget):
         
         if cursor.columnNumber() > 0 and bytes(cursor.selectedText(), 'utf-8') == b'\xe2\x80\xa8':
             cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor)
+            # cursor.insertHtml("<br>")
 
         message = message.strip()
         format_color = LOG_STD
-        important = False
-        important_style = ""
-        endl_separator = "<br>"
 
         if message_format:
             if message_format.upper() == "ERROR":
-                cursor.insertHtml(f'<div style="color: {LOG_ERROR};font: bold;font-size:{FONT_SIZE};">[Error] </div>')
-                format_color = LOG_ERROR
-                important = True
+                log_info = f'<p align=left style="color: {LOG_ERROR};font-size:{FONT_SIZE};">'
+                log_info += f'<b>[Error] {message} </b></p><br>'
+
+                cursor.insertHtml(log_info)
+                self.console.setTextCursor(cursor)
+                return True
 
             if message_format.upper() == "TRANSPORT MANAGER":
-                cursor.insertHtml(f'<div style="color: {LOG_TRANSPORT_MANAGER};font-size:{FONT_SIZE};">[Transport Manager] </div>')
+                log_info = f'<p align=left style="color: {LOG_TRANSPORT_MANAGER};font-size:{FONT_SIZE};">'
+                log_info += f'<b>[Transport Manager]</b> {message} </p><br>'
+
+                cursor.insertHtml(log_info)
+                self.console.setTextCursor(cursor)
+                return True
             
             if message_format.upper() == "INIT":
                 format_color = LOG_SUCCESS
-                important = True
-                cursor.insertHtml(f'<div style="color: {LOG_SUCCESS};font: bold;font-size:{FONT_SIZE};">[Transport Manager] </div>')
+
+                execution_info = f'<p align=left style="color: {LOG_START};font-size:{FONT_SIZE};">'
+                execution_info += f'<b>Start time: [{datetime.now()}]<br>'
+                execution_info += f'Starting task execution [{self.ProcessRunner.current_item.display}].</b></p>'
+                execution_info += f'<p align=left style="color: {LOG_STD};font-size:{FONT_SIZE};"><b>Action:</b> [{self.ProcessRunner.operation}]<br>'
+                execution_info += f'<b>Connection:</b> [{self.ProcessRunner.connection_name}]</p><br>'
+                
+                cursor.insertHtml(execution_info)
+                self.console.setTextCursor(cursor)
+                return True
             
             if message_format.upper() == "FINISHED":
                 end_state = "Successfully"
@@ -209,21 +225,18 @@ class ExecutionPlannerWidget(QWidget):
                 if self.ProcessRunner.was_error:
                     format_color = LOG_ERROR
                     end_state = "with Error"
-                message = ""
-                execution_summary = f'<div style="color: {format_color};font: bold;font-size:{FONT_SIZE};">[Transport Manager] Task Execution Finished {end_state}.</div><br>'
-                execution_summary += f'Task display name: <b>{self.ProcessRunner.current_item.display}.</b><br>'
-                execution_summary += f'Task Execution time: <b>({self.ProcessRunner.execution_time})</b>'
-                execution_summary += f'<hr style="border-top: 3px solid red; border-radius: 2px;"><br>'
+
+                execution_summary = f'<p align=left style="color: {format_color};font-size:{FONT_SIZE};">'
+                execution_summary += f'<br><b>Task Execution Finished {end_state}!<br>'
+                execution_summary += f'<b>Executed Task:</b> [{self.ProcessRunner.current_item.display}]<br>'
+                execution_summary += f'<b>Task Execution time:</b> ({self.ProcessRunner.execution_time})'
+                execution_summary += f'</p><hr><br>'
 
                 cursor.insertHtml(execution_summary)
                 self.console.setTextCursor(cursor)
                 return True
 
-        if important:
-            important_style = "font: bold;"
-
-        cursor.insertHtml(f'<div style="color: {format_color};font-size:{FONT_SIZE};{important_style}">{message}{endl_separator}</div>')
-
+        cursor.insertHtml(f'<p align=left style="color: {LOG_STD};font-size:{FONT_SIZE};">{message}</p><br>')
         self.console.setTextCursor(cursor)
     
     def appendLogSeparator(self, exitCode):
