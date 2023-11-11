@@ -146,21 +146,56 @@ class ExecutionPlannerItem(QFrame):
         if self.tree_view.model():
             self.tree_view.model().layoutChanged.emit()
 
-
 class GroupActionWidget(ExecutionPlannerItem):
+    
     def __init__(self, data_item, tree_view, application, planner_widget, parent=None):
         super().__init__(data_item=data_item, tree_view=tree_view, application=application, planner_widget=planner_widget, parent=parent)
         self.setProperty("ExecutionPlannerWidget", "GroupItem")
         self.button1.setText("Start Group")
+        self.data_item.executionStateChanged.connect(self.handleExecutionStateChange)
+    
+    # def handleExecutionStateChange(self, has_error_nodes, has_success_nodes, has_running_nodes):
         
+    #     property_name = "Inactive"
+    #     if not has_error_nodes and has_success_nodes:
+    #         property_name = "AllFinishedSuccess"
+
+    #     if has_running_nodes:
+    #         property_name = "HasRunningNodes"
+
+    #     if has_error_nodes:
+    #         property_name = "HasErrors"
+        
+    #     self.setProperty("GroupExecutionState", property_name)
+    #     self.setStyleSheet(self.styleSheet())
+    #     if self.parent():
+    #         self.parent().setProperty("GroupExecutionState", property_name)
+    #         self.parent().setStyleSheet(self.parent().styleSheet())
+
+    def handleExecutionStateChange(self, state):
+        
+        if state in ["Finished with Errors", "Terminated"]:
+            state = "HasErrors"
+
+        if state in ["Running", "Queued"]:
+            state = "Running"
+
+        self.setProperty("GroupExecutionState", state)
+        self.setStyleSheet(self.styleSheet())
+        if self.parent():
+            self.parent().setProperty("GroupExecutionState", state)
+            self.parent().setStyleSheet(self.parent().styleSheet())
+    
 
 class ItemActionWidget(ExecutionPlannerItem):
+    
     def __init__(self, data_item, tree_view, application, planner_widget, parent=None):
         super().__init__(data_item=data_item, tree_view=tree_view, application=application, planner_widget=planner_widget, parent=parent)
 
         self.treeview = self.parent()
         self.setProperty("ExecutionPlannerWidget", "TaskItem")
         self.button1.setText("Start Task")
+        
 
         """ Add Custom Widgets """
         self.connection_box_label = QLabel("Use Connection:")
@@ -173,6 +208,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.application.connectionDataChanged.connect(self.refreshConnections)
 
         self.run_status = QLabel(self)
+        self.run_status.setWordWrap(True)
         
         self.dynamic_property_labels = {}
         dynamic_property_columns = self.application.object_configuration.get_columns_configuration_by_setting(self.data_item.task_class, "ShowInTreeView")
@@ -202,6 +238,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         """ Add Widgets to the layouts """
         task_params_layout = QHBoxLayout()
         task_params_layout.addStretch(2)
+        # task_params_layout.addWidget(self.run_status)
         task_params_layout.addWidget(self.task_execution_import)
         task_params_layout.addWidget(self.task_execution_export)
         task_params_layout.addWidget(self.connection_box_label)
@@ -210,8 +247,8 @@ class ItemActionWidget(ExecutionPlannerItem):
         
         self.layout.addLayout(task_params_layout, 0, 1, 1, 3)
         self.layout.addLayout(task_details_layout, 2, 0, 1, 3)
-        # self.layout.setColumnStretch(3, 1)
-        self.layout.addWidget(self.run_status, 2, 4)
+        self.layout.addWidget(self.run_status, 1, 4, 2, 1)
+        self.layout.setColumnStretch(4, 1)
 
         """ Refresh state based on the model data """
         self.refreshTaskUI()
@@ -235,14 +272,18 @@ class ItemActionWidget(ExecutionPlannerItem):
         for column, label_widget in self.dynamic_property_labels.items():
             label_widget.setText(str(self.data_item.data(column)))
 
-        is_export = self.data_item.data("ExecutionType") == "Export"
+        is_export = self.data_item.ExecutionType == "Export"
         if is_export:
             self.task_execution_export.setChecked(True)
         else:
             self.task_execution_import.setChecked(True)
         
-        self.connection_box.setCurrentText(self.data_item.data("Connection"))
-        self.run_status.setText(self.data_item.data("task_execution_status"))
+        self.connection_box.setCurrentText(self.data_item.Connection)
+        self.run_status.setText(self.data_item.ExecutionState)
+        
+        self.setProperty("ExecutionState", str(self.data_item.ExecutionState))
+        self.run_status.setProperty("ExecutionState", str(self.data_item.ExecutionState))
+        self.setStyleSheet(self.styleSheet())
 
     def setExecutionType(self):
         execution_type = "Export"

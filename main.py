@@ -257,7 +257,8 @@ class Transport_Manager(QMainWindow):
         self.program_configuration.reload_configuration_file()
         # self.ui.XMLEditorWidget.reconfigure_editor()
         self.XMLTemplateEditor.refresh_ui()
-        self.PackageManager.loadWorkingDirectory()
+        self.PackageManager.refresh_ui()
+        
     
     def getObjectData(self, object_class, dialog_name="Object Data", source_index=None, editor_configuration=None):
         if editor_configuration is None:

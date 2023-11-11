@@ -1,5 +1,5 @@
 from . import JSONDataItem, JSONDataModel
-from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData
+from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData, pyqtSignal
 import json
 
 class TaskExecutionModel(JSONDataModel):
@@ -64,6 +64,9 @@ class TaskExecutionModel(JSONDataModel):
         return super().dropMimeData(data, action, row, column, parentIndex)
 
 class TaskExecutionItem(JSONDataItem):
+    # executionStateChanged = pyqtSignal(bool, bool, bool)
+    executionStateChanged = pyqtSignal(str)
+
     def __init__(self, application, task_class="ExecutionPlanner_ExecutionTask", task_data=None, parent=None, model_reference=None):
         super().__init__(
             application=application,
@@ -137,3 +140,71 @@ class TaskExecutionItem(JSONDataItem):
         if self.task_class == "ExecutionPlanner_ExecutionTask" and self.data("Connection") is None and len(application_connections.keys()):
             #TODO: add connection preference for the initial task setup
             self.setData("Connection", list(application_connections.keys())[0])
+
+    @property
+    def Connection(self):
+        return self.task_data().get("Connection", None)
+
+    @property
+    def TaskType(self):
+        return self.task_data().get("TaskType", None)
+
+    @property
+    def CompilerOption(self):
+        return self.task_data().get("CompilerOption", None)
+
+    @property
+    def AutoUpdate(self):
+        return self.task_data().get("AutoUpdate", None)
+
+    @property
+    def ExecutionType(self):
+        return self.task_data().get("ExecutionType", None)
+
+    @property
+    def ExecutionState(self):
+        return self.task_data().get("ExecutionState", None)
+        
+    @ExecutionState.setter
+    def ExecutionState(self, state):
+        self.setData("ExecutionState", state)
+        if self.parent():
+            self.parent().ExecutionState = state
+            self.parent().executionStateChanged.emit(state)
+
+    def onTaskExecutionFinished(self, exitCode):
+        print("handle execution exitCode status", exitCode)
+        if exitCode == 1:
+            self.ExecutionState = "Finished with Errors"
+        if exitCode == 0:
+            self.ExecutionState = "Finished"
+        if exitCode == 62097:
+            self.ExecutionState = "Terminated"
+
+    def updateParentExecutionStatus(self, state):
+        # if not task_item:
+        #     task_item = self
+
+        # has_error_nodes = False
+        # has_success_nodes = False
+        # has_running_nodes = False
+
+        # for execution_task in task_item.children():
+        #     if execution_task.ExecutionState in ["Finished with Errors", "Terminated"]:
+        #         has_error_nodes = True
+
+        #     if execution_task.ExecutionState == "Finished":
+        #         has_success_nodes = True
+            
+        #     if execution_task.ExecutionState in ["Running", "Queued"]:
+        #         has_running_nodes = True
+            
+        #     if has_error_nodes or has_success_nodes or has_running_nodes:
+        #         task_item.executionStateChanged.emit(has_error_nodes, has_success_nodes, has_running_nodes)
+        #         return has_error_nodes, has_success_nodes, has_running_nodes
+
+        #     if len(execution_task.children()) > 0:
+        #         has_error_nodes, has_success_nodes, has_running_nodes = self.updateParentExecutionStatus(execution_task)
+        
+        self.executionStateChanged.emit(state)
+        # return has_error_nodes, has_success_nodes, has_running_nodes

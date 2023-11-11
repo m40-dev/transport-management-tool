@@ -11,6 +11,7 @@ from ..DialogScreens.MultiObjectEditorForm import MultiObjectEditorForm
 FILTER_EXEC_TIMER = 650
 
 class PackageManager(QtWidgets.QWidget):
+    uiRefreshRequested = QtCore.pyqtSignal()
 
     def __init__(self, application):
         super().__init__()
@@ -52,6 +53,10 @@ class PackageManager(QtWidgets.QWidget):
         self.queryPackagesTimer = QtCore.QTimer(self)
         self.queryPackagesTimer.setSingleShot(True)
         self.queryPackagesTimer.timeout.connect(self.queryPackages)
+
+    def refresh_ui(self):
+        self.loadWorkingDirectory()
+        self.uiRefreshRequested.emit()
 
     """ Workdir and File Operations """
     def changeWorkingDirectory(self):
@@ -189,6 +194,7 @@ class PackageManager(QtWidgets.QWidget):
     def addExecutionPlan(self):
         tabwidget = ExecutionPlannerWidget(self, self.application)
         tabwidget.plannerNameChanged.connect(self.setPlannerName)
+        self.uiRefreshRequested.connect(tabwidget.refresh_ui)
         self.ExecutionPlannerTabWidget.addTab(tabwidget, "New Execution Plan...")
 
     def setPlannerName(self, planner_widget):

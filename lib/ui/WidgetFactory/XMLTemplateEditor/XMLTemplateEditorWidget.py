@@ -29,7 +29,6 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.application = application
         self.current_file = file_path
         self.setupUi()
-        
 
         # Initial refresh
         self.loadXMLStructureView()

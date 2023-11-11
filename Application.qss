@@ -331,4 +331,123 @@ QToolButton#TemplateEditorButton{
 QToolButton#SettingsButton{
 }
 
+/* Execution Planner configuration - Execution states handling for running task elements */
+QWidget[GroupExecutionState="Inactive"]{
+	border: 1px solid rgba(125, 138, 141, 0.4);
+}
 
+QWidget[GroupExecutionState="Running"]{
+	border-left: 3px solid rgba(233, 181, 12, 0.575);
+}
+
+QWidget[GroupExecutionState="Finished"]{
+	border-left: 3px solid rgba(6, 117, 6, 0.795);
+}
+
+QWidget[GroupExecutionState="HasErrors"]{
+	border-left: 3px solid rgba(233, 45, 12, 0.699);
+}
+
+/* Execution Planner configuration - Execution states handling for running task elements */
+
+QWidget[ExecutionState="Running"]{
+	border-left: 3px solid rgba(233, 181, 12, 0.575);
+}
+
+QWidget[ExecutionState="Queued"]{
+	border-left: 3px solid rgba(0, 202, 238, 0.918);
+}
+
+QWidget[ExecutionState="Finished"]{
+	border-left: 3px solid rgba(6, 117, 6, 0.795);
+}
+
+QWidget[ExecutionState="Finished with Errors"]{
+	border-left: 3px solid rgba(233, 45, 12, 0.699);
+}
+
+QLabel[ExecutionState="Finished with Errors"]{
+	font: bold;
+	border-left: 0px;
+	color: rgba(233, 12, 12, 0.918);
+}
+
+QLabel[ExecutionState="Running"]{
+	border-left: 0px;
+	color:  rgba(233, 163, 12, 0.863);
+	font: bold;
+}
+
+QLabel[ExecutionState="Finished"]{
+	border-left: 0px;
+	color:  rgba(6, 117, 6, 0.795);
+	font: bold;
+}
+
+QLabel[ExecutionState="Terminated"]{
+	border-left: 0px;
+	color: rgba(233, 12, 12, 0.918);
+	font: bold;
+}
+
+QLabel[ExecutionState="Queued"]{
+	border-left: 0px;
+	color: rgba(0, 202, 238, 0.918);
+	font: bold;
+}
+
+/* Console stylesheet - standard console output */
+.execution-log{
+	font-size: 14px;
+	font-family: "Courier New";
+	color:#212124;
+	padding: 1px;
+}
+
+/* Console stylesheet - console error output formatting */
+.execution-error{
+	color: #c7260a;
+	font: bold;
+	padding: 5px;
+}
+
+/* Console stylesheet - transport manager messages formatting */
+.transport-manager{
+	color:#626363;
+	font: italic;
+}
+
+/* Console stylesheet - task initialization table headers formatting */
+.task-init-header{
+	color: #6ab390;
+	text-align: center;
+	border-top: 2px solid #92dba1;
+	font: bold;
+}
+.task-init-footer{
+	color: #6ab390;
+	text-align: center;
+	border-bottom: 2px solid #92dba1;
+	font: bold;
+}
+
+/* Console stylesheet - task information data formatting */
+.task-info{
+	color: #272928;
+	text-align: center;
+	padding: 2px;
+}
+
+/* Console stylesheet - task execution success status formatting */
+.task-finished-success{
+	text-align: center;
+	color: #272928;
+	background-color: #92dba1;
+}
+
+/* Console stylesheet - task execution error status formatting */
+.task-finished-error{
+	text-align: center;
+	color: #272928;
+	background-color: #f18775;
+}

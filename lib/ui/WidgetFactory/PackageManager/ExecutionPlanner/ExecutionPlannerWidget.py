@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView, QTextEdit, QSplitter, QLineEdit, QLabel, QToolButton
 from PyQt6.QtCore import Qt, pyqtSignal, QProcess
-from PyQt6.QtGui import QTextCursor
+from PyQt6.QtGui import QTextCursor, QTextDocumentFragment
 from .ContextMenu import ExecutionPlannerContextMenu
 from lib.data.DataModels import TaskExecutionModel
 from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
@@ -8,12 +8,7 @@ from .ExecutionPlannerProcessRunner import ProcessRunner
 from lib.ui.WidgetFactory import FormEditorDialog
 from datetime import datetime
 
-LOG_STD = "#333"
-LOG_ERROR = "#b30000"
-LOG_SUCCESS = "#006600"
-LOG_TRANSPORT_MANAGER = "#232"
-FONT_SIZE = "13px"
-LOG_START = "#ff6600"
+TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class ExecutionPlannerWidget(QWidget):
     plannerNameChanged = pyqtSignal(object)
@@ -26,7 +21,6 @@ class ExecutionPlannerWidget(QWidget):
         self.object_configuration = self.application.object_configuration
         self.ProcessRunner = ProcessRunner(self)
         self.ProcessRunner.message.connect(self.logExecutionPlannerMessage)
-        # self.ProcessRunner.stageFinished.connect(self.appendLogSeparator)
         self.ProcessRunner.stateChanged.connect(self.processRunnerStateChanged)
 
         self.layout = QGridLayout(self)
@@ -47,6 +41,14 @@ class ExecutionPlannerWidget(QWidget):
         self.treeview = QTreeView()
         self.console = QTextEdit()
         self.console.setAcceptRichText(True)
+
+        self.defaultBlockFormat = self.console.textCursor().blockFormat()
+        self.defaultBlockFormat.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.defaultBlockFormat.setTopMargin(0)
+        self.defaultBlockFormat.setBottomMargin(0)
+        self.defaultBlockFormat.setLeftMargin(0)
+        self.defaultBlockFormat.setRightMargin(0)
+        self.console.textCursor().setBlockFormat(self.defaultBlockFormat)
 
         splitter.addWidget(self.treeview)
         splitter.addWidget(self.console)
@@ -100,6 +102,10 @@ class ExecutionPlannerWidget(QWidget):
 
         self.treeview.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.treeview.customContextMenuRequested.connect(self.contextMenuRequested)
+        self.refresh_ui()
+
+    def refresh_ui(self):
+        self.console.document().setDefaultStyleSheet(self.application.color_theme.style_sheet)
 
     def processRunnerStateChanged(self, running_state):
         is_running = True
@@ -179,84 +185,114 @@ class ExecutionPlannerWidget(QWidget):
             return False
 
         cursor = self.console.textCursor()
-        cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.MoveAnchor)
-        cursor.movePosition(QTextCursor.MoveOperation.Left, QTextCursor.MoveMode.KeepAnchor)
-        
-        if cursor.columnNumber() > 0 and bytes(cursor.selectedText(), 'utf-8') == b'\xe2\x80\xa8':
-            cursor.movePosition(QTextCursor.MoveOperation.Right, QTextCursor.MoveMode.KeepAnchor)
-            # cursor.insertHtml("<br>")
 
+        cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.MoveAnchor)
+
+        if cursor.blockNumber() > 0:
+            cursor.insertBlock(self.defaultBlockFormat)
+
+        # self.console.setTextCursor(cursor)
         message = message.strip()
-        format_color = LOG_STD
 
         if message_format:
             if message_format.upper() == "ERROR":
-                log_info = f'<p align=left style="color: {LOG_ERROR};font-size:{FONT_SIZE};">'
-                log_info += f'<b>[Error] {message} </b></p><br>'
+                # log_info = f'<p class="execution-error">[Error] {message}</p>'
+
+                log_info = '<table width="100%" class="execution-log">'
+                log_info += '<tr>'
+                log_info += f'<td class="execution-error"><b>[Error]</b> {message}</td>'
+                log_info += '</tr>'
+                log_info += '</table>'
 
                 cursor.insertHtml(log_info)
-                self.console.setTextCursor(cursor)
                 return True
 
             if message_format.upper() == "TRANSPORT MANAGER":
-                log_info = f'<p align=left style="color: {LOG_TRANSPORT_MANAGER};font-size:{FONT_SIZE};">'
-                log_info += f'<b>[Transport Manager]</b> {message} </p><br>'
+                # log_info = f'<p class="transport-manager">[Transport Manager] {message}</p>'
+
+                log_info = '<table width="100%" class="execution-log">'
+                log_info += '<tr>'
+                log_info += f'<td class="transport-manager"><b>[Transport Manager]</b> {message}</td>'
+                log_info += '</tr>'
+                log_info += '</table>'
+                
+                cursor.insertHtml(log_info)
+                return True
+            
+            if message_format.upper() == "INIT":
+                time_info = datetime.now()
+                time_info = time_info.strftime(TIME_FORMAT)
+
+                log_info = '<table width="100%" align="center" class="execution-log">'
+                log_info += '<tr>'
+                log_info += f'<td colspan="2"; class="task-init-header">Starting task execution [{self.ProcessRunner.current_item.display}].</td>'
+                log_info += '</tr>'
+                log_info += '<tr>'
+                log_info += f'<td class="task-info"><b>Action:</b> [{self.ProcessRunner.current_item.ExecutionType}]</td>'
+                log_info += f'<td class="task-info"><b>Task Type:</b> [{self.ProcessRunner.current_item.TaskType}]</td>'
+                log_info += '</tr>'
+
+                log_info += '<tr>'
+                log_info += f'<td class="task-info"><b>Compilation:</b> [{self.ProcessRunner.current_item.CompilerOption}]</td>'
+                log_info += f'<td class="task-info"><b>AutoUpdate:</b> [{self.ProcessRunner.current_item.AutoUpdate}]</td>'
+                log_info += '</tr>'
+
+                log_info += '<tr>'
+                log_info += f'<td class="task-info"><b>Connection:</b> [{self.ProcessRunner.current_item.Connection}]</td>'
+                log_info += '<td class="task-info"></td>'
+                log_info += '<tr>'
+                log_info += f'<td colspan="2"; class="task-init-footer">Start time: [{time_info}]</td>'
+                log_info += '</tr>'
+                log_info += '</table>'
+
+                cursor.insertHtml(log_info)
+                
+                return True
+            
+            if message_format.upper() == "FINISHED":
+
+                time_info = self.ProcessRunner.execution_time
+                time_info = self.strfdelta(time_info, "{%D}d {%H}:{%M}:{%S}")
+
+                end_state = "Successfully"
+                finished_class = "task-finished-success"
+                if self.ProcessRunner.was_error:
+                    end_state = "with Error"
+                    finished_class = "task-finished-error"
+
+                log_info = '<table width="100%" align="center" class="execution-log">'
+                log_info += '<tr>'
+                log_info += f'<td colspan="2" class="{finished_class}">Task Execution Finished {end_state}!</td>'
+                log_info += '</tr>'
+                log_info += '<tr>'
+                log_info += f'<td class="task-info"><b>Executed Task:</b> [{self.ProcessRunner.current_item.display}]</td>'
+                log_info += f'<td class="task-info"><b>Task Execution time:</b> ({time_info})</td>'
+                log_info += '</tr>'
+                log_info += '</table>'
 
                 cursor.insertHtml(log_info)
                 self.console.setTextCursor(cursor)
                 return True
-            
-            if message_format.upper() == "INIT":
-                format_color = LOG_SUCCESS
 
-                execution_info = f'<p align=left style="color: {LOG_START};font-size:{FONT_SIZE};">'
-                execution_info += f'<b>Start time: [{datetime.now()}]<br>'
-                execution_info += f'Starting task execution [{self.ProcessRunner.current_item.display}].</b></p>'
-                execution_info += f'<p align=left style="color: {LOG_STD};font-size:{FONT_SIZE};"><b>Action:</b> [{self.ProcessRunner.operation}]<br>'
-                execution_info += f'<b>Connection:</b> [{self.ProcessRunner.connection_name}]</p><br>'
-                
-                cursor.insertHtml(execution_info)
-                self.console.setTextCursor(cursor)
-                return True
-            
-            if message_format.upper() == "FINISHED":
-                end_state = "Successfully"
-                format_color = LOG_SUCCESS
-                if self.ProcessRunner.was_error:
-                    format_color = LOG_ERROR
-                    end_state = "with Error"
+        log_info = '<table width="100%" class="execution-log">'
+        log_info += '<tr>'
+        log_info += f'<td class="execution-log">{message}</td>'
+        log_info += '</tr>'
+        log_info += '</table>'
 
-                execution_summary = f'<p align=left style="color: {format_color};font-size:{FONT_SIZE};">'
-                execution_summary += f'<br><b>Task Execution Finished {end_state}!<br>'
-                execution_summary += f'<b>Executed Task:</b> [{self.ProcessRunner.current_item.display}]<br>'
-                execution_summary += f'<b>Task Execution time:</b> ({self.ProcessRunner.execution_time})'
-                execution_summary += f'</p><hr><br>'
-
-                cursor.insertHtml(execution_summary)
-                self.console.setTextCursor(cursor)
-                return True
-
-        cursor.insertHtml(f'<p align=left style="color: {LOG_STD};font-size:{FONT_SIZE};">{message}</p><br>')
-        self.console.setTextCursor(cursor)
+        cursor.insertHtml(log_info)
     
-    def appendLogSeparator(self, exitCode):
-        print("process finished")
-        cursor = self.console.textCursor()
+    def strfdelta(self, tdelta, fmt):
+        hours, rem = divmod(tdelta.seconds, 3600)
+        minutes, seconds = divmod(rem, 60)
 
-        cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.MoveAnchor)
-        task_display_name = self.ProcessRunner.current_item.display
+        d = {"%D": tdelta.days}
+        d["%H"] = '{:02d}'.format(hours)
+        d["%M"] = '{:02d}'.format(minutes)
+        d["%S"] = '{:02d}'.format(seconds)
 
-        format_color = LOG_SUCCESS
-        end_state = "Successfully"
+        return fmt.format(**d)
 
-        if exitCode != 0:
-            format_color = LOG_ERROR
-            end_state = "with Error"
-
-        cursor.insertHtml(f'<div style="color: {format_color};font: bold;font-size:{FONT_SIZE};"> [Transport Manager] - Task Execution Finished {end_state} - [ {task_display_name} ] <hr> </div><br>')
-
-        self.console.setTextCursor(cursor)
-    
     def changeData(self, col, row):
         print("data changed in ", col, row)
 

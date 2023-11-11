@@ -413,6 +413,9 @@ class JSONDataItem(QObject):
     
     def setData(self, column, value):
         # print("set data", column, value)
+        if not self._task_data:
+            return False
+            
         prev_value = self._task_data.get(column, "")
         if prev_value != value:
             # print(f"set item data for column with new value, {column}, previous value {prev_value}, new value {value}")

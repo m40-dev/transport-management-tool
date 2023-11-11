@@ -10,7 +10,7 @@ class ProcessRunner(QProcess):
     message = pyqtSignal(str, str)
     taskStatusChanged = pyqtSignal(object, str)
     taskCompleted = pyqtSignal(object)
-    stageFinished = pyqtSignal(object)
+    stageFinished = pyqtSignal(object, object)
 
     def __init__(self, planner_widget):
         super().__init__()
@@ -41,6 +41,8 @@ class ProcessRunner(QProcess):
         return self.planner_widget.current_workdir
 
     def stopExecutionPlanner(self):
+        for task in self.task_queue:
+            task.ExecutionState = "Terminated"
         self.task_queue = []
         self.kill()
         if self.sql_thread:
@@ -48,7 +50,8 @@ class ProcessRunner(QProcess):
 
     def queuePlannerTasks(self, task_items):
         for task_item in task_items:
-            task_data = task_item.task_data()
+            # task_data = task_item.task_data()
+            task_item.ExecutionState = ""
             self.startProcessTask(task_item)
 
     def checkTaskType(self, task_type):
@@ -135,8 +138,8 @@ class ProcessRunner(QProcess):
         if self.state() == QProcess.ProcessState.Running:
             if task_item.task_class in ["ExecutionPlanner_ExecutionTask", "PackageManager_TaskDefinition"]:
                 self.task_queue.append(task_item)
-                
                 self.message.emit(f"Adding task to the execution queue.. ({task_name})", "Transport Manager")
+                task_item.ExecutionState = "Queued"
                 return True
             return False
         
@@ -222,7 +225,7 @@ class ProcessRunner(QProcess):
             QProcess.ProcessState.Running: 'Running',
         }
         state_name = states[state]
-        self.current_item.setData("task_execution_status", state_name)
+        self.current_item.ExecutionState = state_name
         self.message.emit(f"State changed: {state_name}", "Transport Manager")
 
     def processExecutionFinished(self, exitCode=0, exitStatus=QProcess.ExitStatus.NormalExit):
@@ -230,14 +233,15 @@ class ProcessRunner(QProcess):
         self.execution_time = timedelta(seconds=end_time - self.start_time)
         self.was_error = (exitCode != 0)
         self.message.emit("Task Execution Finished", "FINISHED")
-        self.stageFinished.emit(exitCode)
-        self.current_item.setData("task_execution_status", "Finished")
+        self.current_item.onTaskExecutionFinished(exitCode)
         self.is_running = False
         
         #TODO: error handling to be moved to the configurtion
         continue_on_error = (exitCode==0)
 
         if not continue_on_error:
+            for task in self.task_queue:
+                task.ExecutionState = "Terminated"
             self.task_queue = []
 
         if len(self.task_queue) > 0:
