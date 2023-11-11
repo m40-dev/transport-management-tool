@@ -102,14 +102,21 @@ class PackageManagerItemWidget(QFrame):
 
         self.element_label = QLabel(self)
         self.element_label.setProperty("ExecutionPlannerWidget", "ItemLabel")
-
+                
         self.element_description = QLabel(self)
         self.element_description.setProperty("ExecutionPlannerWidget", "ItemDescription")
         self.element_description.setWordWrap(True)
 
+        description_config = self.object_configuration.get("Description", None)
+        if description_config:
+            show_description = description_config.get("ShowInTreeView", "True") == "True"
+            if not show_description:
+                self.element_description.setHidden(True)
+
         self.layout.addWidget(self.element_label, 0, 0, 1, 2)
         self.layout.addWidget(self.element_description, 1, 0, 1, 5)
         self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
+
         self.dynamic_property_labels = {}
         dynamic_property_columns = self.application.object_configuration.get_columns_configuration_by_setting(self.data_item.task_class, "ShowInTreeView")
         # lay out items in columns (labels and values)
@@ -120,6 +127,9 @@ class PackageManagerItemWidget(QFrame):
             row = self.layout.rowCount()
             column_count = 0
             for column, column_configuration in dynamic_property_columns.items():
+                show_entry = column_configuration.get("ShowInTreeView", "True") == "True"
+                if not show_entry:
+                    continue
                 label = QLabel(f"{column}:")
                 label.setProperty("Label", "PropertyName")
                 value = QLabel()

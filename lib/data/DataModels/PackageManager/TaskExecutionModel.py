@@ -168,9 +168,9 @@ class TaskExecutionItem(JSONDataItem):
     @ExecutionState.setter
     def ExecutionState(self, state):
         self.setData("ExecutionState", state)
+        self.executionStateChanged.emit(state)
         if self.parent():
             self.parent().ExecutionState = state
-            self.parent().executionStateChanged.emit(state)
 
     def onTaskExecutionFinished(self, exitCode):
         print("handle execution exitCode status", exitCode)
@@ -180,31 +180,3 @@ class TaskExecutionItem(JSONDataItem):
             self.ExecutionState = "Finished"
         if exitCode == 62097:
             self.ExecutionState = "Terminated"
-
-    def updateParentExecutionStatus(self, state):
-        # if not task_item:
-        #     task_item = self
-
-        # has_error_nodes = False
-        # has_success_nodes = False
-        # has_running_nodes = False
-
-        # for execution_task in task_item.children():
-        #     if execution_task.ExecutionState in ["Finished with Errors", "Terminated"]:
-        #         has_error_nodes = True
-
-        #     if execution_task.ExecutionState == "Finished":
-        #         has_success_nodes = True
-            
-        #     if execution_task.ExecutionState in ["Running", "Queued"]:
-        #         has_running_nodes = True
-            
-        #     if has_error_nodes or has_success_nodes or has_running_nodes:
-        #         task_item.executionStateChanged.emit(has_error_nodes, has_success_nodes, has_running_nodes)
-        #         return has_error_nodes, has_success_nodes, has_running_nodes
-
-        #     if len(execution_task.children()) > 0:
-        #         has_error_nodes, has_success_nodes, has_running_nodes = self.updateParentExecutionStatus(execution_task)
-        
-        self.executionStateChanged.emit(state)
-        # return has_error_nodes, has_success_nodes, has_running_nodes

@@ -15,7 +15,8 @@
                 "Display": "Package Description",
                 "PlaceholderText": "Provide Package Description",
                 "FieldRole": "DescriptionRole",
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "ShowInTreeView": "False"
             },
         "DefinitionFile": 
             {
@@ -36,7 +37,7 @@
                 "MaxValue": 999,
                 "DefaultValue": 100,
                 "DistributeEvenly": "True",
-                "ShowInTreeView": "True"
+                "ShowInTreeView": "False"
             },
         "ChildTasks": 
             {
@@ -57,13 +58,13 @@
             {
                 "FieldType": "StringInput",
                 "FieldRole": "DisplayRole",
-                "ShowInTreeView": "True",
                 "IsMandatory": "True"
             },
         "Description": 
             {
                 "FieldType": "TextInput",
-                "FieldRole": "DescriptionRole"
+                "FieldRole": "DescriptionRole",
+                "ShowInTreeView": "False"
             },
         "SortOrder": 
             {
@@ -71,8 +72,7 @@
                 "FieldRole": "SortOrder",
                 "MinValue": 1,
                 "MaxValue": 99,
-                "DistributeEvenly": "True",
-                "ShowInTreeView": "True"
+                "DistributeEvenly": "True"
             },
         "TaskType": 
             {
@@ -80,7 +80,6 @@
                 "Options": {"Transport Package": "Transport", "SQL Script": "SQL", "Schema Extension": "Schema", "Bug Fix Package": "BugFix"},
                 "DefaultValue": "Transport",
                 "Display": "Task Type",
-                "ShowInTreeView": "True",
                 "IsMandatory": "True",
                 "XMLTemplateTypes": ["Transport", "BugFix"]
             },
@@ -90,8 +89,7 @@
                 "FileSelectionMode": "FileName",
                 "RedirectDirectoryStatic": "Task_Definitions",
                 "RedirectDirectoryRelativeTo": "Parent",
-                "IsMandatory": "True",
-                "ShowInTreeView": "True"
+                "IsMandatory": "True"
             },
         "ExportFile":
             {
@@ -103,8 +101,7 @@
             {
                 "FieldType": "FixedInput",
                 "Options": {"No Compilation": "None", "Full Compilation": "Full", "Skip Web Projects Compilation":"NoWeb"},
-                "DefaultValue": "NoWeb",
-                "ShowInTreeView": "True"
+                "DefaultValue": "NoWeb"
             },
         "AutoUpdate": 
             {
@@ -131,9 +128,10 @@
                 "FieldType": "TextInput",
                 "Display": "Package Description",
                 "PlaceholderText": "Provide Package Description",
-                "FieldRole": "DescriptionRole"
+                "FieldRole": "DescriptionRole",
+                "ShowInTreeView": "False"
             },
-        "ExecutionTasks": 
+        "ExecutionTasks":
             {
                 "FieldType": "ChildObjectReference",
                 "Class": "ExecutionPlanner_ExecutionTask",
@@ -155,7 +153,9 @@
                 "FieldType": "TextInput",
                 "Display": "Package Description",
                 "PlaceholderText": "Provide Package Description",
-                "FieldRole": "DescriptionRole"
+                "FieldRole": "DescriptionRole",
+                "ShowInTreeView": "False"
+
             },
         "TaskType":
             {
@@ -163,8 +163,7 @@
                 "Source": "TaskType",
                 "Transporter": ["Transport", "BugFix"],
                 "SQLScript": ["SQL"],
-                "SchemaExtension": ["Schema"],
-                "ShowInTreeView": "True"
+                "SchemaExtension": ["Schema"]
             },
         "PackageName":
             {
@@ -194,14 +193,12 @@
             {
                 "FieldType": "FixedInput",
                 "Options": {"No Compilation": "None", "Full Compilation": "Full", "Skip Web Projects Compilation":"NoWeb"},
-                "DefaultValue": "NoWeb",
-                "ShowInTreeView": "True"
+                "DefaultValue": "NoWeb"
             },
         "AutoUpdate":
             {
                 "FieldType": "BooleanInput",
-                "DefaultValue": "False",
-                "ShowInTreeView": "True"
+                "DefaultValue": "False"
             }
         },
     "XMLTemplateEditor_RelationPreset":

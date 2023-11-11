@@ -129,8 +129,17 @@ class ExecutionPlannerItem(QFrame):
         self.element_description.setProperty("ExecutionPlannerWidget", "ItemDescription")
         self.element_description.setWordWrap(True)
 
+        object_configuration = self.application.object_configuration.get(self.data_item.task_class)
+        print(object_configuration)
+        description_config = object_configuration.get("Description", None)
+        if description_config:
+            show_description = description_config.get("ShowInTreeView", "True") == "True"
+            if not show_description:
+                self.element_description.setHidden(True)
+
+
         self.layout.addWidget(self.element_label, 0, 0, 1, 2)
-        self.layout.addWidget(self.element_description, 1, 0, 1, 4)
+        self.layout.addWidget(self.element_description, 1, 0, 1, 3)
         self.layout.addWidget(self.button1, 0, 4)
         self.data_item.data_changed.connect(self.refreshUI)
         self.refreshUI()
@@ -153,27 +162,10 @@ class GroupActionWidget(ExecutionPlannerItem):
         self.setProperty("ExecutionPlannerWidget", "GroupItem")
         self.button1.setText("Start Group")
         self.data_item.executionStateChanged.connect(self.handleExecutionStateChange)
-    
-    # def handleExecutionStateChange(self, has_error_nodes, has_success_nodes, has_running_nodes):
+       
         
-    #     property_name = "Inactive"
-    #     if not has_error_nodes and has_success_nodes:
-    #         property_name = "AllFinishedSuccess"
-
-    #     if has_running_nodes:
-    #         property_name = "HasRunningNodes"
-
-    #     if has_error_nodes:
-    #         property_name = "HasErrors"
-        
-    #     self.setProperty("GroupExecutionState", property_name)
-    #     self.setStyleSheet(self.styleSheet())
-    #     if self.parent():
-    #         self.parent().setProperty("GroupExecutionState", property_name)
-    #         self.parent().setStyleSheet(self.parent().styleSheet())
 
     def handleExecutionStateChange(self, state):
-        
         if state in ["Finished with Errors", "Terminated"]:
             state = "HasErrors"
 
@@ -182,9 +174,9 @@ class GroupActionWidget(ExecutionPlannerItem):
 
         self.setProperty("GroupExecutionState", state)
         self.setStyleSheet(self.styleSheet())
-        if self.parent():
-            self.parent().setProperty("GroupExecutionState", state)
-            self.parent().setStyleSheet(self.parent().styleSheet())
+        # if self.parent():
+        #     self.parent().setProperty("GroupExecutionState", state)
+        #     self.parent().setStyleSheet(self.parent().styleSheet())
     
 
 class ItemActionWidget(ExecutionPlannerItem):
@@ -221,6 +213,10 @@ class ItemActionWidget(ExecutionPlannerItem):
             row = task_details_layout.rowCount()
             column_count = 0
             for column, column_configuration in dynamic_property_columns.items():
+                show_entry = column_configuration.get("ShowInTreeView", "True") == "True"
+                if not show_entry:
+                    continue
+
                 label = QLabel(f"{column}:")
                 label.setProperty("Label", "PropertyName")
                 value = QLabel()
@@ -247,8 +243,9 @@ class ItemActionWidget(ExecutionPlannerItem):
         
         self.layout.addLayout(task_params_layout, 0, 1, 1, 3)
         self.layout.addLayout(task_details_layout, 2, 0, 1, 3)
-        self.layout.addWidget(self.run_status, 1, 4, 2, 1)
-        self.layout.setColumnStretch(4, 1)
+        self.layout.addWidget(self.run_status, 1, 3, 1, 2)
+        self.run_status.setAlignment(Qt.AlignmentFlag.AlignRight)
+        # self.layout.setColumnStretch(3, 1)
 
         """ Refresh state based on the model data """
         self.refreshTaskUI()
@@ -261,6 +258,8 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.task_execution_export.toggled.connect(self.setExecutionType)
         self.connection_box.currentTextChanged.connect(self.setConnection)
         self.data_item.data_changed.connect(self.refreshTaskUI)
+        # self.data_item.executionStateChanged.connect(self.handleExecutionStateChange)
+
 
     def refreshConnections(self):
         connections = list(self.application.ConnectionHandler.connections.keys())
@@ -268,7 +267,6 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.connection_box.addItems(connections)
 
     def refreshTaskUI(self):
-        
         for column, label_widget in self.dynamic_property_labels.items():
             label_widget.setText(str(self.data_item.data(column)))
 
