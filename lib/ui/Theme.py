@@ -98,5 +98,7 @@ class Application_Theme(QPalette):
             style = f.read()
             f.close()
         except FileNotFoundError:
-            print("stylesheet file not found")
+            # print("stylesheet file not found")
+            # return self.styleSheet()
+            pass
         return style

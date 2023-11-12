@@ -38,10 +38,10 @@ class ConnectionHandler(QObject):
                 if self.decryptConnectionData(connections):
                     self.loadConnectionData()
                 else:
-                    print("connection data decryption failed")
+                    # print("connection data decryption failed")
                     self.connections = {}
             else:
-                print("connection details were not loaded")
+                # print("connection details were not loaded")
                 self.connections = {}
 
     """ connection Data Management """
@@ -87,7 +87,7 @@ class ConnectionHandler(QObject):
             decrypted_connection_details = crypto.decrypt(encrypted_connection_details)
 
         except Exception as ex:
-            print(f"An error occurred: {ex}")
+            # print(f"An error occurred: {ex}")
             return False
 
         connection_data = json.loads(decrypted_connection_details)

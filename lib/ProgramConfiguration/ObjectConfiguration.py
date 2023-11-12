@@ -8,6 +8,7 @@ class ObjectConfiguration(ProgramConfiguration):
 
     def __init__(self, application):
         super().__init__(application=application)
+        self.target_configuration = "ObjectModelConfiguration"
 
     def get_column_configuration(self, definition_class, column):
         object_configuration = self.get(definition_class)

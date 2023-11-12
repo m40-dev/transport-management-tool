@@ -153,8 +153,7 @@
                 "FieldType": "TextInput",
                 "Display": "Package Description",
                 "PlaceholderText": "Provide Package Description",
-                "FieldRole": "DescriptionRole",
-                "ShowInTreeView": "False"
+                "FieldRole": "DescriptionRole"
 
             },
         "TaskType":

@@ -130,16 +130,15 @@ class ExecutionPlannerItem(QFrame):
         self.element_description.setWordWrap(True)
 
         object_configuration = self.application.object_configuration.get(self.data_item.task_class)
-        print(object_configuration)
+        # print(object_configuration)
         description_config = object_configuration.get("Description", None)
         if description_config:
             show_description = description_config.get("ShowInTreeView", "True") == "True"
             if not show_description:
                 self.element_description.setHidden(True)
 
-
         self.layout.addWidget(self.element_label, 0, 0, 1, 2)
-        self.layout.addWidget(self.element_description, 1, 0, 1, 3)
+        self.layout.addWidget(self.element_description, 1, 0, 1, 5)
         self.layout.addWidget(self.button1, 0, 4)
         self.data_item.data_changed.connect(self.refreshUI)
         self.refreshUI()
@@ -234,17 +233,18 @@ class ItemActionWidget(ExecutionPlannerItem):
         """ Add Widgets to the layouts """
         task_params_layout = QHBoxLayout()
         task_params_layout.addStretch(2)
-        # task_params_layout.addWidget(self.run_status)
         task_params_layout.addWidget(self.task_execution_import)
         task_params_layout.addWidget(self.task_execution_export)
         task_params_layout.addWidget(self.connection_box_label)
         task_params_layout.addWidget(self.connection_box)
+        task_params_layout.addWidget(self.run_status)
         task_params_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
         
         self.layout.addLayout(task_params_layout, 0, 1, 1, 3)
         self.layout.addLayout(task_details_layout, 2, 0, 1, 3)
-        self.layout.addWidget(self.run_status, 1, 3, 1, 2)
-        self.run_status.setAlignment(Qt.AlignmentFlag.AlignRight)
+        # self.layout.addWidget(self.run_status, 1, 3, 1, 2)
+        self.run_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.run_status.setFixedWidth(75)
         # self.layout.setColumnStretch(3, 1)
 
         """ Refresh state based on the model data """

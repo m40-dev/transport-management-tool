@@ -49,7 +49,7 @@ class XMLDataModel(QAbstractItemModel):
             parent.addChild(task_item)
 
     def reload_model_data(self):
-        print("reload model data")
+        # print("reload model data")
         if self.export_file_path:
             self.beginResetModel()
             self.rootItem._children = []
@@ -262,7 +262,7 @@ class XMLDataModel(QAbstractItemModel):
                 if source_item:
                     source_items.append(source_item)
             
-            print("dropped item:", dropped_item)
+            # print("dropped item:", dropped_item)
             # create new object from the source item data and add it to the list, all dropped items will be inserted at once
             new_item = XMLDataItem(
                 application=self.application,
@@ -271,7 +271,7 @@ class XMLDataModel(QAbstractItemModel):
             newItems.append(new_item)
             
             #emit relocation signal for the new item and tell it about its source item from the same model
-            print(source_item.model_reference)
+            # print(source_item.model_reference)
             if source_item and source_item.model_reference == self:
                 new_item.locationChanged.emit(source_item)
             else:
@@ -288,8 +288,7 @@ class XMLDataModel(QAbstractItemModel):
         for source_item in source_items:
             self.remove_item(source_item)
         # end = time.time()
-        # print("drop event handling", end - start, len(decodedData))
-        print("drop event handling", len(decodedData))
+
         for new_item in newItems:
             new_item.refreshModelStructure()
 
@@ -386,7 +385,8 @@ class XMLDataModel(QAbstractItemModel):
             group_data = group_item.task_data()
             data.append(group_data)
         jsondata = json.dumps(data, indent=4)
-        print(jsondata)
+        # print(jsondata)
+        return jsondata
 
     def find_item_by_attribute(self, column, value, parent=QModelIndex()):
         """

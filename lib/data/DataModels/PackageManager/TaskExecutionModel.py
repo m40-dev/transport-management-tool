@@ -102,7 +102,7 @@ class TaskExecutionItem(JSONDataItem):
                 child_task.package_definition = source_dict
 
     def itemLocationChanged(self, source_item):
-        print("execution planner item moved")
+        # print("execution planner item moved")
         #pass the package definition over to new item
         super().itemLocationChanged(source_item)
         self.package_definition = source_item.package_definition
@@ -173,7 +173,7 @@ class TaskExecutionItem(JSONDataItem):
             self.parent().ExecutionState = state
 
     def onTaskExecutionFinished(self, exitCode):
-        print("handle execution exitCode status", exitCode)
+        # print("handle execution exitCode status", exitCode)
         if exitCode == 1:
             self.ExecutionState = "Finished with Errors"
         if exitCode == 0:

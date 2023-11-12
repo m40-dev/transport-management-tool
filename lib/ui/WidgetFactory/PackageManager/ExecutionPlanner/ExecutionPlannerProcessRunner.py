@@ -287,7 +287,7 @@ class ProcessRunner(QProcess):
 
         task_name = task_item.display
         task_data = task_item.task_data()
-        print("auto update", task_data.get("AutoUpdate", False))
+        # print("auto update", task_data.get("AutoUpdate", False))
         run_auto_update = task_data.get("AutoUpdate", False)
         if run_auto_update:
             command = self.getAutoUpdateCommand(
@@ -478,7 +478,7 @@ class ProcessRunner(QProcess):
 
     def runSQLScript(self, action_type, definition_file, connection_data):
         self.stateChanged.emit(QProcess.ProcessState.Running)
-        print("Running SQL Script")
+        # print("Running SQL Script")
         if action_type != "Import":
             return False
         sql_script = ""

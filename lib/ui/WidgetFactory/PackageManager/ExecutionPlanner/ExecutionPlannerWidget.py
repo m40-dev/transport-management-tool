@@ -137,7 +137,7 @@ class ExecutionPlannerWidget(QWidget):
             contextMenu.popup(menu_target)
 
     def addPlannerEntry(self, source_index, object_class):
-        print("Add Package Definition", source_index)
+        # print("Add Package Definition", source_index)
         editor_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionGroup")
         if editor_configuration:
             dialog = FormEditorDialog(self.application, 
@@ -150,7 +150,7 @@ class ExecutionPlannerWidget(QWidget):
                 treeview_model.insert_item("ExecutionPlanner_ExecutionGroup", data, source_index)
         
     def editPlannerEntry(self, source_index, object_class):
-        print("Edit Execution Planner Definition", source_index)
+        # print("Edit Execution Planner Definition", source_index)
         if not source_index.isValid():
             return False
             
@@ -173,7 +173,7 @@ class ExecutionPlannerWidget(QWidget):
     def queueExecutionGroup(self, task_item):
         self.console.show()
         for child_task in task_item._children:
-            print("Start task", child_task.task_class)
+            # print("Start task", child_task.task_class)
             if child_task.task_class in ["ExecutionPlanner_ExecutionTask", "PackageManager_TaskDefinition"]:
                 self.ProcessRunner.startProcessTask(child_task)
 
@@ -294,7 +294,8 @@ class ExecutionPlannerWidget(QWidget):
         return fmt.format(**d)
 
     def changeData(self, col, row):
-        print("data changed in ", col, row)
+        # print("data changed in ", col, row)
+        pass
 
     def dragMoveEvent(self, event):
         move_accept = False

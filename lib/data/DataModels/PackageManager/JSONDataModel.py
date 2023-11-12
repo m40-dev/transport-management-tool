@@ -243,7 +243,6 @@ class JSONDataModel(QAbstractItemModel):
             self.remove_item(source_item)
         # end = time.time()
         # print("drop event handling", end - start, len(decodedData))
-        print("drop event handling", len(decodedData))
 
         return True
     
@@ -301,7 +300,8 @@ class JSONDataModel(QAbstractItemModel):
             group_data = group_item.task_data()
             data.append(group_data)
         jsondata = json.dumps(data, indent=4)
-        print(jsondata)
+        # print(jsondata)
+        return jsondata
 
     def find_item_by_attribute(self, column, value, parent=QModelIndex()):
         """

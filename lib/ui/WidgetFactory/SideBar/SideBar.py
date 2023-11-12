@@ -17,7 +17,6 @@ class SideBar(QWidget):
         self.application.currentViewChanged.connect(self.currentViewChanged)
 
         PackageManagerButton = QToolButton()
-        
 
         # PackageManagerButton.setText("PM")
         PackageManagerButton.clicked.connect(lambda: self.buttonClicked.emit(0))

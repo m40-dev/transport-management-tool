@@ -139,6 +139,20 @@ class Transport_Manager(QMainWindow):
         self.XMLTemplateEditor.newTransportTemplate()
         self.PackageManager.addExecutionPlan()
 
+        # Application development testing helpers
+        self.ui.MainTabWidget.setCurrentIndex(2)
+
+
+
+    def getConfigurationValue(self, configuration_section, configuration_key):
+        if self.program_configuration.isValidConfigurationSection(configuration_section):
+            return self.program_configuration.getConfigurationValue(configuration_section, configuration_key)
+        
+        if self.object_configuration.isValidConfigurationSection(configuration_section):
+            return self.object_configuration.getConfigurationValue(configuration_section, configuration_key)
+
+        return None
+
     @property
     def relation_presets(self):
         if not self._relation_presets:
@@ -158,11 +172,11 @@ class Transport_Manager(QMainWindow):
         self.XMLTemplateEditor.refresh_ui()
 
     def manageRelationPresets(self):
-        print("manage relation presets")
+        # print("manage relation presets")
         dialog = WidgetFactory.RelationPresetManager(self, self.relation_presets)
         if dialog:
-            print("closed")
-        pass
+            # print("closed")
+            pass
     
     def updateRelationPresets(self):
         #iterate through the presets data and update 

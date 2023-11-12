@@ -1,12 +1,13 @@
 {
-    "Package Manager":
-        {
-            "WorkdirDirectoryBlacklist": [],
-            "WorkdirDirectoryWhitelist": [],
-            "ExcludedFiles": []
-        },
-    "Appearance":
-        {
-        "UseDarkTheme": false
-        }
+    "Appearance":{
+        "UseDarkTheme":false
+    },
+    "Package Manager":{
+        "WorkdirDirectoryBlacklist":[],
+        "WorkdirDirectoryWhitelist":[
+            "Source_Files",
+            "Package_Data"
+        ],
+        "ExcludedFiles":[]
+    }
 }

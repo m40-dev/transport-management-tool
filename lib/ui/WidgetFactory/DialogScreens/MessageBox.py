@@ -24,9 +24,12 @@ class MsgBox(QtWidgets.QDialog):
         
         
         if detailed_message is not None:
-            self.textinput = QtWidgets.QPlainTextEdit(self)
+            self.textinput = QtWidgets.QTextEdit(self)
             self.textinput.setVisible(False)
-            self.textinput.appendPlainText(detailed_message)
+            self.textinput.setAcceptRichText(True)
+            self.textinput.document().setDefaultStyleSheet(self.application.color_theme.style_sheet)
+
+            self.textinput.setHtml(f'<pre class="MessageBox-DetailedMessage">{detailed_message}</pre>')
 
             self.details_button = QtWidgets.QPushButton(self)
             self.details_button.setText("Show Details")

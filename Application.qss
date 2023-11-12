@@ -331,6 +331,13 @@ QToolButton#TemplateEditorButton{
 QToolButton#SettingsButton{
 }
 
+/* Message Box styling */
+.MessageBox-DetailedMessage{
+	font-size: 14px;
+	font-family: "Courier New";
+	color:#252529;
+}
+
 /* Execution Planner configuration - Execution states handling for running task elements */
 QWidget[GroupExecutionState="Inactive"]{
 	border: 1px solid rgba(125, 138, 141, 0.4);
@@ -449,5 +456,9 @@ QLabel[ExecutionState="Queued"]{
 .task-finished-error{
 	text-align: center;
 	color: #272928;
+	background-color: #f18775;
+}
+
+.test-class{
 	background-color: #f18775;
 }

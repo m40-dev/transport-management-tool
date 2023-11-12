@@ -70,9 +70,8 @@ class PackageDefinitionItem(JSONDataItem):
                 export_file = self.get_file_path()
                 export = self.export_data()
                 export_data = json.dumps(export, indent=4, separators=(',',':'))
-                # print("Export Data" , export_data)
                 
-                print(f"PD: Exported {self.display} to: ", str(export_file))
+                # print(f"PD: Exported {self.display} to: ", str(export_file))
                 
                 export_file.parent.mkdir(parents=True, exist_ok=True)
                 

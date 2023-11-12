@@ -50,7 +50,7 @@ class transport_task(transport_template_custom_object):
         return child_objects
     
     def xml_add_child_node(self, object_info_dict, row=-1):
-        print("add child to transport task")
+        # print("add child to transport task")
         base_table = object_info_dict.get("table_name", None)
         display_name = object_info_dict.get("object_display", None)
         pk_columns = object_info_dict.get("pk_columns", None)

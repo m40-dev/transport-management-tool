@@ -112,23 +112,29 @@ class PackageManager(QtWidgets.QWidget):
             if file_path.is_file():
                 feature_definition_location = file_path.relative_to(workdir_path)
                 accept = True
-
                 if package_manager_configuration and accept:
                     if whitelist_directories:
                         accept = False
                         for directory in whitelist_directories:
                             # print(f"checking whitelist, {str(feature_definition_location)} compared with whitelist directory: {directory}", str(feature_definition_location).lower().startswith(directory.lower()))
-                            if str(feature_definition_location).lower().startswith(directory.lower()):
+                            test_path = Path(directory)
+                            if str(feature_definition_location).lower().startswith(str(test_path).lower()):
                                 accept = True
 
                     excluded_files = package_manager_configuration.get("ExcludedFiles", None)
-                    if excluded_files and feature_definition_location.name in excluded_files:
-                        accept = False
+                    
+                    if excluded_files and accept:
+                        for excluded_file_path in excluded_files:
+                            test_path = Path(excluded_file_path)
+                            if str(test_path) == str(feature_definition_location):
+                                accept = False
                     
                     if accept:
                         blacklist_directories = package_manager_configuration.get("WorkdirDirectoryBlacklist", None)
                         for directory in blacklist_directories:
-                            if str(feature_definition_location).startswith(directory):
+                            test_path = Path(directory)
+
+                            if str(feature_definition_location).lower().startswith(str(test_path).lower()):
                                 accept = False
                     if not accept:
                         # program configuration excluded the file, continue
@@ -160,7 +166,7 @@ class PackageManager(QtWidgets.QWidget):
                 if accept:
                     definitions.append(package_definition)
                 else:
-                    skipped_definitions.append(str(package_definition))
+                    skipped_definitions.append(str(feature_definition_location))
         
         if len(sort_attribute) > 0:
             definitions = sorted(
@@ -186,10 +192,10 @@ class PackageManager(QtWidgets.QWidget):
         
         # Show the summary of skipped data files
         if len(skipped_definitions)>0:
-            definition_list = "\r\n".join(skipped_definitions)
+            definition_list = "\r\n\t".join(skipped_definitions)
             file_count = len(skipped_definitions)
-            MsgBox(self.application, "Some JSON definition files were ignored due to missing mandatory data.\r\nIf this file should be ignored, please configure the filters in program configuration.", 
-                f"Mandatory columns: {mandatory_columns}.\r\nSkipped Entries: {file_count}, skipped data:\r\n{definition_list}")
+            MsgBox(self.application, "Some JSON definition files were ignored due to <b>missing mandatory data.</b><br>If this file should be ignored, please configure the filters in program configuration.", 
+                f"<b>Mandatory columns checked:</b> <i>{mandatory_columns}</i>.\r\n<b>Skipped Entries:</b> <i>{file_count}</i>.\r\n<b>Skipped files (workdir relative):</b>\r\n\t{definition_list}")
 
     def addExecutionPlan(self):
         tabwidget = ExecutionPlannerWidget(self, self.application)
@@ -391,7 +397,7 @@ class PackageManager(QtWidgets.QWidget):
         workdir_path = Path(str(self.current_workdir))
         if directory_path.absolute() <= workdir_path.absolute():
             # never go beyond the working directory
-            print("do not cross the working directory, breaking")
+            # print("do not cross the working directory, breaking")
             return False
 
         if len(list(directory_path.rglob('*'))) == 0:

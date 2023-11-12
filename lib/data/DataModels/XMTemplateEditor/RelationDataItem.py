@@ -138,8 +138,9 @@ class RelationDataItem(QObject):
         pass
 
     def itemLocationChanged(self, source_item):
-        print("object location changed", self.display)
+        # print("object location changed", self.display)
         #pass over the source object configuration
+        pass
         
     def totalChildCount(self):
         total_childitems = self._children + self._filtered_children
@@ -157,10 +158,9 @@ class RelationDataItem(QObject):
 
     def flags(self, column):
         column_name = self.headers[column]
-        print("get flags for column", column, column_name)
+        # print("get flags for column", column, column_name)
         if column_name in ["FK", "CR", "SH"]:
             return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable
-
         return Qt.ItemFlag.ItemIsEnabled
 
     @property

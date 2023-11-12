@@ -1,18 +1,97 @@
 
-from PyQt6.QtWidgets import QWidget, QGridLayout, QLabel
+from PyQt6 import QtWidgets
+from PyQt6.QtCore import Qt
 
+from lib.ProgramConfiguration.ConfigurationDefinition import PROGRAM_CONFIGURATION
+from .ConfigurationSectionTreeWidgetItem import ConfigurationSectionTreeWidgetItem
 
-class SettingsWidget(QWidget):
+class SettingsWidget(QtWidgets.QWidget):
 
     def __init__(self, application):
         super().__init__()
         self.application = application
-        self.layout = QGridLayout(self)
+        self.program_configuration = self.application.program_configuration
+        self.object_configuration = self.application.object_configuration
+
+        self.setupUi()
+        self.loadConfigurationData()
+
+        self.ConfigurationSectionTreeWidget.currentItemChanged.connect(self.onSectionChanged)
+
+    def onSectionChanged(self, source_item):
+        editor_widget = source_item.getSectionEditorWidget()
+        if self.ConfigurationSectionTabWidget.indexOf(editor_widget) < 0:
+            self.ConfigurationSectionTabWidget.addTab(editor_widget, source_item.SectionName)
+        self.ConfigurationSectionTabWidget.setCurrentWidget(editor_widget)
+
+    def setupUi(self):
+        # Widget Layout Configuration
+        self.layout = QtWidgets.QGridLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(2)
         self.setObjectName("SettingsWidget")
 
-        wip_label = QLabel("Coming Soon...")
+        # Configuration sections navigation
+        self.ConfigurationSectionTreeWidget = QtWidgets.QTreeWidget()
+        self.ConfigurationSectionTreeWidget.setHeaderLabels(["Program Configuration Sections"])
 
-        self.layout.addWidget(wip_label, 0, 0, -1, -1)
+        # Configuration section viewport
+        # Configuration Toolbox
+        toolbox_layout = QtWidgets.QHBoxLayout()
+        toolbox_layout.setContentsMargins(0, 0, 0, 0)
+        toolbox_layout.setSpacing(2)
+
+        self.ConfigurationSearch = QtWidgets.QLineEdit()
+        self.ConfigurationSearch.setPlaceholderText("Search for configuration...")
+        self.ConfigurationApplyButton = QtWidgets.QToolButton()
+        self.ConfigurationApplyButton.setText("Apply Configuration")
+        self.ConfigurationApplyButton.clicked.connect(self.saveConfigurationData)
+
+        toolbox_layout.addWidget(self.ConfigurationSearch)
+        toolbox_layout.addWidget(self.ConfigurationApplyButton)
+
+        self.ConfigurationSectionTabWidget = QtWidgets.QTabWidget()
+        self.ConfigurationSectionTabWidget.tabBar().setVisible(False)
+
+        configuration_widget = QtWidgets.QWidget()
+        configuration_widget_layout = QtWidgets.QVBoxLayout(configuration_widget)
+        configuration_widget_layout.setContentsMargins(0, 0, 0, 0)
+        configuration_widget_layout.setSpacing(2)
+        configuration_widget_layout.addLayout(toolbox_layout)
+        configuration_widget_layout.addWidget(self.ConfigurationSectionTabWidget)
+
+
+        # Add main widgets into splitter layout
+        self.ConfigurationViewSplitter = QtWidgets.QSplitter(Qt.Orientation.Horizontal)
+        self.ConfigurationViewSplitter.addWidget(self.ConfigurationSectionTreeWidget)
+        self.ConfigurationViewSplitter.addWidget(configuration_widget)
+
+        # Insert Main Layout Widgets
+        self.layout.addWidget(self.ConfigurationViewSplitter, 0, 0)
+
+        # Configure workspace proportions
+        self.ConfigurationViewSplitter.setSizes(
+            [round(self.application.width()*0.2), round(self.application.width()*0.8)])
+
+    def loadConfigurationData(self):
+        configuration_items = []
+        for section, section_data in PROGRAM_CONFIGURATION.items():
+            configuration_section = ConfigurationSectionTreeWidgetItem(
+                parent=None, 
+                application=self.application,
+                settings_module=self,
+                section_name=section, 
+                section_data=section_data)
+            configuration_items.append(configuration_section)
+
+        self.ConfigurationSectionTreeWidget.addTopLevelItems(configuration_items)
+
+    def saveConfigurationData(self):
+        self.program_configuration.saveConfiguration()
+        # self.object_configuration.saveConfiguration()
+
+        
+
+
+
 

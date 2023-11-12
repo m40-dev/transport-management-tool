@@ -27,9 +27,8 @@ class ObjectDataItem(QObject):
         pass
 
     def itemLocationChanged(self, source_item):
-        print("object location changed", self.display)
-        #pass over the source files configuration
-        # self.object_data = source_item.object_data
+        # print("object location changed", self.display)
+        pass
         
     def totalChildCount(self):
         total_childitems = self._children + self._filtered_children
@@ -158,12 +157,13 @@ class ObjectDataItem(QObject):
         return 0
     
     def setData(self, column, value):
-        print("set data", column, value)
+        # print("set object data", column, value)
+        pass
     
     def data(self, column, previous_state=False):
-        print("return column data", column)
-            
+        # print("return column data", column)
         super().data(column)
+
 
     def insertChildren(self, row, child_objects):
         if row == -1:

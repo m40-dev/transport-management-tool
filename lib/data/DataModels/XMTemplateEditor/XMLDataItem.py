@@ -101,7 +101,7 @@ class XMLDataItem(QObject):
         self.objectRelationsChanged()
 
     def itemDataDropped(self, source_dict):
-        print("foreign model object dropped", source_dict.get("objectclass", None))
+        # print("foreign model object dropped", source_dict.get("objectclass", None))
         source_dict.get("object_data", {})
         object_info = source_dict.get("object_info", None)
 
@@ -121,8 +121,7 @@ class XMLDataItem(QObject):
             self.resetRelationStates(0)
 
     def itemLocationChanged(self, source_item):
-        print("object location changed", self.display(0
-        ), source_item)
+        # print("object location changed", self.display(0), source_item)
         #pass over the source files configuration
         if not isinstance(source_item, XMLDataItem):
             return False
@@ -328,7 +327,7 @@ class XMLDataItem(QObject):
             self.loadDatabaseObject()
 
     def fromString(self, xml_string, xml_object_class):
-        print("create xml node from string", xml_object_class)
+        # print("create xml node from string", xml_object_class)
         xml_node = fromstring(xml_string)
         parent_node = self.parent()._xml_data
 

@@ -32,7 +32,7 @@ class TaskDefinitionDialog(QtWidgets.QDialog):
         self.layout.setRowStretch(self.layout.rowCount(), 2)
         self.layout.addWidget(self.buttonBox, self.layout.rowCount()+1, 1, 1, 2)
 
-        print(json.dumps(self._form_data))
+        # print(json.dumps(self._form_data))
 
 
     def setup_form(self):

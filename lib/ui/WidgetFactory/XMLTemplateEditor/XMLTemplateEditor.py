@@ -63,9 +63,9 @@ class XMLTemplateEditor(QtWidgets.QWidget):
     def selectXMLTemplateTab(self, file_path):
         for index in range(0, self.XMLTemplateEditorTabWidget.count()):
             tab_widget = self.XMLTemplateEditorTabWidget.widget(index)
-            print(tab_widget, "search for tab with file path:", file_path, "found:", tab_widget.current_file)
+            # print(tab_widget, "search for tab with file path:", file_path, "found:", tab_widget.current_file)
             if file_path and tab_widget.current_file and file_path.lower() == tab_widget.current_file.lower():
-                print("existing tab widget found", tab_widget.current_file)
+                # print("existing tab widget found", tab_widget.current_file)
                 self.XMLTemplateEditorTabWidget.setCurrentWidget(tab_widget)
                 # tab_widget.refreshXMLPreview()
                 tab_widget.reloadXMLFile()
