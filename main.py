@@ -27,7 +27,7 @@ from lib.ProgramConfiguration import ProgramConfiguration, ObjectConfiguration, 
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.7.3'
+VERSION = '0.7.4'
 
 class Transport_Manager(QMainWindow):
     """Main window class for connection launcher"""
