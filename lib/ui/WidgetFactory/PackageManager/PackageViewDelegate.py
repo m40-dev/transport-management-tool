@@ -11,7 +11,6 @@ class PackageViewDelegate(QStyledItemDelegate):
         self.model_data = model_data
         self.application = application
         self.package_manager = package_manager
-        self.object_configuration = self.application.object_configuration
         self.application_palette = self.application.color_theme
         
     def createEditor(self, parent, option, index):
@@ -91,11 +90,12 @@ class PackageManagerItemWidget(QFrame):
     def __init__(self, data_item, application, parent, package_manager):
         super().__init__(parent=parent)
         self.application = application
+        self.ProgramConfiguration = self.application.ProgramConfiguration
         self.package_manager = package_manager
         self.data_item = data_item
         self.treeview = parent
         self.parent = parent
-        self.object_configuration = self.application.object_configuration.get(data_item.task_class)
+        self.object_configuration = self.application.getConfigurationParameters(data_item.task_class)
 
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(2, 2, 2, 2)
@@ -113,12 +113,15 @@ class PackageManagerItemWidget(QFrame):
             if not show_description:
                 self.element_description.setHidden(True)
 
-        self.layout.addWidget(self.element_label, 0, 0, 1, 2)
+        self.layout.addWidget(self.element_label, 0, 0, 1, 4, Qt.AlignmentFlag.AlignLeft)
         self.layout.addWidget(self.element_description, 1, 0, 1, 5)
-        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
+
+        self.element_description.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
+
+        # self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
 
         self.dynamic_property_labels = {}
-        dynamic_property_columns = self.application.object_configuration.get_columns_configuration_by_setting(self.data_item.task_class, "ShowInTreeView")
+        dynamic_property_columns = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(self.data_item.task_class, "ShowInTreeView")
         # lay out items in columns (labels and values)
         layout_columns = 4
         self.layout.setColumnStretch(layout_columns, 1)
@@ -134,16 +137,18 @@ class PackageManagerItemWidget(QFrame):
                 label.setProperty("Label", "PropertyName")
                 value = QLabel()
                 value.setProperty("Label", "PropertyValue")
+                value.setWordWrap(True)
+                value.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
 
-                self.layout.addWidget(label, row, column_count)
-                self.layout.addWidget(value, row, column_count+1)
+                self.layout.addWidget(label, row, column_count, 1, 1)
+                self.layout.addWidget(value, row, column_count+1, 1, 1)
                 self.dynamic_property_labels[column] = value
                 # add 2 added columns to the counter
                 column_count += 2
                 if column_count >= layout_columns:
                     row += 1
                     column_count = 0
-
+        self.layout.setColumnStretch(4, 2)
         self.data_item.data_changed.connect(self.refresh_data)
         # self.data_item.filter_object.connect(self.filter_object)
         """ Refresh state based on the model data """
@@ -222,8 +227,8 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
         self.save_feature_button = QToolButton()
         self.save_feature_button.setText("Save")
 
-        self.layout.addWidget(self.edit_feature_button, 0, 3, 1, 1)
-        self.layout.addWidget(self.save_feature_button, 0, 4, 1, 1)
+        self.layout.addWidget(self.edit_feature_button, 0, 4, 1, 1, Qt.AlignmentFlag.AlignRight)
+        self.layout.addWidget(self.save_feature_button, 0, 5, 1, 1, Qt.AlignmentFlag.AlignRight)
 
         self.setProperty("ExecutionPlannerWidget", "GroupItem")
 
@@ -232,10 +237,6 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
     def save_feature(self, save_single=True):
         index = self.treeview.model().indexOf(self.data_item)
         self.package_manager.savePackageDefinition(index, save_single)
-        # if self.package_manager.current_workdir:
-        #     self.data_item.save()
-        #     return True
-        # MsgBox(self.application, "Working directory is not set. Please configure the work location first.")
     
     def edit_feature(self):
         index = self.treeview.model().indexOf(self.data_item)
@@ -267,7 +268,7 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         self.edit_task_definition_button.clicked.connect(self.edit_task_definition)
         
         """ Add Widgets to the layout """
-        self.layout.addLayout(task_buttons_layout, 0, 2, 1, 3)
+        self.layout.addLayout(task_buttons_layout, 0, 2, 1, 3, Qt.AlignmentFlag.AlignRight)
 
         self.data_item.data_changed.connect(self.refresh_item_data)
         self.refresh_item_data()
@@ -284,14 +285,6 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         self.edit_xml_definition_button.setText("Edit XML")
         self.edit_task_definition_button.setText("Properties")
         
-        """ hide the edit button for non-transport tasks """
-        # is_transport = False
-        # task_type = self.data_item.data("TaskType") 
-        # task_type_configuration = self.object_configuration.get("TaskType", None)
-        # if task_type_configuration:
-        #     template_configuration = task_type_configuration.get("XMLTemplateTypes", None)
-        #     if template_configuration:
-        #         is_transport = task_type in template_configuration
-                
+        """ hide the edit button for non-transport tasks """               
         self.edit_xml_definition_button.setVisible(self.data_item.is_transport)
 

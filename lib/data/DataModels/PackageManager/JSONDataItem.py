@@ -1,8 +1,7 @@
 import uuid
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, pyqtSignal
-from PyQt6.QtGui import QStandardItem
 from copy import deepcopy
-import time, re, os
+import re, os
 from pathlib import Path
 
 FILTER_MIN_LEN = 1
@@ -17,7 +16,7 @@ class JSONDataItem(QObject):
     def __init__(self, application, task_class="JSONDataItem", task_data=None, parent=None, model_reference=None):
         super().__init__(parent=parent)
         self.application = application
-        self.object_configuration = application.object_configuration
+        self.ProgramConfiguration = application.ProgramConfiguration
         self.model_reference = model_reference
         self._task_class = task_class
         self._parent = parent
@@ -29,7 +28,7 @@ class JSONDataItem(QObject):
         self._is_saved = True
         self._filter_match = True
         self.filter_string = ""
-        self.item_class_configuration = self.object_configuration.get(self.task_class)
+        self.item_class_configuration = self.application.getConfigurationParameters(self.task_class)
         self.source_files = None
         self.source_files_text = None
         
@@ -106,7 +105,7 @@ class JSONDataItem(QObject):
     def sortOrder(self):
         treeview_order = self.row()
         if self.item_class_configuration:
-            sort_column_configuration = self.object_configuration.get_columns_configuration_by_role(self.task_class, "SortOrder")
+            sort_column_configuration = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_role(self.task_class, "SortOrder")
             if len(sort_column_configuration) == 0:
                 return str(treeview_order)
             sort_column = list(sort_column_configuration.keys())[0]
@@ -118,7 +117,7 @@ class JSONDataItem(QObject):
     def updateSortOrder(self, validate_siblings=True):
         # print("update sort order")
         treeview_order = self.row()
-        sort_column_configuration = self.object_configuration.get_columns_configuration_by_role(self.task_class, "SortOrder")
+        sort_column_configuration = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_role(self.task_class, "SortOrder")
         if len(sort_column_configuration) == 0:
             return treeview_order
         
@@ -291,7 +290,7 @@ class JSONDataItem(QObject):
     @task_class.setter
     def task_class(self, value):
         self._task_class = value
-        self.item_class_configuration = self.object_configuration.get(value)
+        self.item_class_configuration = self.application.getConfigurationParameters(value)
 
     @property
     def uid(self):
@@ -616,7 +615,7 @@ class JSONDataItem(QObject):
             return self.source_files
 
         file_configurations = {}
-        column_configurations = self.object_configuration.get_columns_configuration_by_type(self.task_class, "FileInput")
+        column_configurations = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_type(self.task_class, "FileInput")
         for column in column_configurations:
             file_path = self.get_file_path(file_column=column)
             file_configurations[column] = file_path
@@ -628,7 +627,7 @@ class JSONDataItem(QObject):
             return self.source_files_text
 
         file_configurations = {}
-        column_configurations = self.object_configuration.get_columns_configuration_by_type(self.task_class, "FileInput")
+        column_configurations = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_type(self.task_class, "FileInput")
         for column in column_configurations:
             file_path = self.get_file_path(file_column=column)
             if file_path:
@@ -647,7 +646,7 @@ class JSONDataItem(QObject):
 
     def update_file_locations(self):  
         # print("update file locations", self.display, self.source_files)    
-        column_configurations = self.object_configuration.get_columns_configuration_by_type(self.task_class, "FileInput")
+        column_configurations = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_type(self.task_class, "FileInput")
         if column_configurations and self.source_files:
             for column in column_configurations.keys():
                 source_file = self.source_files.get(column, None)

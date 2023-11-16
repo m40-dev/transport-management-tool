@@ -13,11 +13,11 @@ class XMLDataModel(QAbstractItemModel):
     def __init__(self, application, data_source, parent_widget=None):
         super().__init__(parent_widget)
         self.application = application
-        self.object_configuration = application.object_configuration
         self.transport_template = transport_template(self)
         self._headers = ["XML Transport Structure", "Options"]
         self.treeview = parent_widget
         self.export_file_path = data_source
+        self.treeview.setWordWrap(True)
 
         self.rootItem = XMLDataItem(
             application=self.application, 

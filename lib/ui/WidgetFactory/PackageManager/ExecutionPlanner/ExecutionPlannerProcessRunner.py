@@ -18,8 +18,6 @@ class ProcessRunner(QProcess):
         self.application = self.planner_widget.application
         self.ConnectionHandler = self.application.ConnectionHandler
         self._current_workdir = None
-
-        self.object_configuration = self.application.object_configuration
         self.readyReadStandardOutput.connect(self.handleProcessStdOut)
         self.readyReadStandardError.connect(self.handleProcessStdErr)
         self.finished.connect(self.processExecutionFinished)
@@ -55,7 +53,7 @@ class ProcessRunner(QProcess):
             self.startProcessTask(task_item)
 
     def checkTaskType(self, task_type):
-        task_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionTask")
+        task_configuration = self.application.getConfigurationParameters("ExecutionPlanner_ExecutionTask")
         task_type_configuration = task_configuration.get("TaskType", None)
         # configure task according to the task type settings
         if task_configuration and task_type_configuration:
@@ -249,7 +247,7 @@ class ProcessRunner(QProcess):
         
 
     def prepareProcessVariables(self, task_data):
-        task_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionTask")
+        task_configuration = self.application.getConfigurationParameters("ExecutionPlanner_ExecutionTask")
         
         workdir = self.current_workdir
         variables_script = f"$WORKDIR='{workdir}'\r\n"

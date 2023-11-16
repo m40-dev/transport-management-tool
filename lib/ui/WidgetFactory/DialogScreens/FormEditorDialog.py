@@ -11,8 +11,8 @@ class FormEditorDialog(QtWidgets.QDialog):
 
         self.application = application
         self.configuration_class = configuration_class
-        self.object_configuration = self.application.object_configuration
-        self._form_confguration = self.object_configuration.get(configuration_class)
+        self.ProgramConfiguration = self.application.ProgramConfiguration
+        self._form_confguration = self.application.getConfigurationParameters(configuration_class)
         if form_configuration is not None:
             self._form_confguration = form_configuration
         self._form_data = {}
@@ -66,7 +66,7 @@ class FormEditorDialog(QtWidgets.QDialog):
         super().accept()
 
     def check_mandatory_columns(self, validation_errors={}, error_message = "Mandatory column not set."):
-        mandatory_columns = self.object_configuration.get_columns_configuration_by_setting(self.configuration_class, "IsMandatory")
+        mandatory_columns = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(self.configuration_class, "IsMandatory")
         if len(mandatory_columns) > 0:
             for column, column_configuration in mandatory_columns.items():
                 if column_configuration.get("ShowInEditor", "True") == "False":
@@ -90,37 +90,28 @@ class FormEditorDialog(QtWidgets.QDialog):
         # print("setup form")
         # print(self._form_data)
         for column, column_configuration in self._form_confguration.items():
-            widget_required = (column_configuration.get("ShowInEditor", "True") == "True")
+            # widget_required = (column_configuration.get("ShowInEditor", "True") == "True")
             row_id = self.layout.rowCount()
-            display_name = column_configuration.get("Display", column)
-            default_value = column_configuration.get("DefaultValue", "")
             
-            # setup fields based on their role
-            field_role =  column_configuration.get("FieldRole", None)
-            if field_role and field_role == "UniqueIdentifier":
-                default_value = str(uuid.uuid4())
+            editor_object = FormEditorObject(self.application, column, column_configuration)
 
-            #set default value only if available. This ensures that only required fields will be updated with the form data
-            # having too many columns that are not editable might result in data overwrites where this is not desired (e.g. children data)
-            if default_value:
-                self.update_form_data(column, default_value)
+            if editor_object.default_value:
+                self.update_form_data(column, editor_object.default_value)
 
-            if not widget_required:
+            if not editor_object.isVisible:
+                editor_object.deleteLater()
                 continue
-            
-            is_mandatory = column_configuration.get("IsMandatory", "False") == "True"
-            label = QtWidgets.QLabel(str(display_name))
-            if is_mandatory:
-                mandatory_flag = QtWidgets.QLabel("*")
-                mandatory_flag.setProperty("PropertyEditor","IsMandatory")
-                self.layout.addWidget(mandatory_flag, row_id, 1)
 
-            editor = self.get_editor(column, column_configuration)
-            if editor:
-                self.editors[column] = editor
-                self.layout.addWidget(label, row_id, 0)
-                self.layout.addWidget(editor, row_id, 2)
-                self.set_editor_data(editor, default_value)
+            editor_object.dataChanged.connect(self.update_form_data)
+
+            if editor_object.editor:
+                self.editors[column] = editor_object
+                self.layout.addWidget(editor_object.label, row_id, 0)
+                if editor_object.isMandatory:
+                    self.layout.addWidget(editor_object.MandatoryLabel, row_id, 1)
+                self.layout.addWidget(editor_object.editor, row_id, 2)
+
+                # editor_object.set_editor_data(default_value)
 
     def update_form_data(self, column, value):
         if column:
@@ -142,11 +133,11 @@ class FormEditorDialog(QtWidgets.QDialog):
             editor_widget = self.editors.get(column, None)
             if editor_widget:
                 #configure the widget with base object value
-                self.set_editor_data(editor_widget, value)
+                editor_widget.set_editor_data(value)
             form_column = self.form_data.get(column, None)
             if form_column and len(str(value).strip()) > 0:
                 self.update_form_data(column, value)
-
+    
     def set_form_data(self, source_index):
         #configures the editors based on the source data of the object
         #sets the values for any hidden items as well
@@ -161,12 +152,55 @@ class FormEditorDialog(QtWidgets.QDialog):
             editor_widget = self.editors.get(column, None)
             if editor_widget:
                 #configure the widget with base object value
-                self.set_editor_data(editor_widget, value)
+                editor_widget.set_editor_data(value)
             form_column = self.form_data.get(column, None)
             if form_column and len(str(value).strip()) > 0:
                 self.update_form_data(column, value)
 
-    def set_editor_data(self, editor_widget, value):
+class FormEditorObject(QtCore.QObject):
+    dataChanged = QtCore.pyqtSignal(str, object)
+
+    def __init__(self, application, column_name, column_configuration):
+        super(FormEditorObject, self).__init__()
+        self.application = application
+        self.column_name = column_name
+        self.column_configuration = column_configuration
+
+        self.display_name = column_configuration.get("Display", column_name)
+        self.isMandatory = column_configuration.get("IsMandatory", "False") == "True"
+        self.isVisible = (column_configuration.get("ShowInEditor", "True") == "True")
+        
+        self.label = None
+        self.MandatoryLabel = None
+        self.editor = None
+
+        self.default_value = column_configuration.get("DefaultValue", "")
+            
+        # setup fields based on their role
+        field_role =  column_configuration.get("FieldRole", None)
+        if field_role and field_role == "UniqueIdentifier":
+            self.default_value = str(uuid.uuid4())
+
+        if self.isVisible:
+            self.setupUi()
+    
+    def setupUi(self):
+        if self.isMandatory:
+            self.MandatoryLabel = QtWidgets.QLabel("*")
+            self.MandatoryLabel.setProperty("PropertyEditor","IsMandatory")
+
+        self.label = QtWidgets.QLabel(f"<b>{str(self.display_name)}</b>")
+        self.editor = self.get_editor()
+        self.set_editor_data(self.default_value)
+
+
+    def update_form_data(self, column, value):
+        if self.column_configuration.get("FieldType", None) == "BooleanInput":
+            value = (str(value) == "2" or str(value) == "True")
+        self.dataChanged.emit(self.column_name, value)
+
+    def set_editor_data(self, value):
+        editor_widget = self.editor
         if isinstance(editor_widget, (QtWidgets.QLineEdit, QtWidgets.QTextEdit)):
             editor_widget.setText(str(value))
             editor_widget.adjustSize()
@@ -185,7 +219,10 @@ class FormEditorDialog(QtWidgets.QDialog):
             state = str(value) == "2" or str(value) == "True"
             editor_widget.setChecked(state)
 
-    def get_editor(self, column, column_configuration):
+    def get_editor(self):
+        column = self.column_name
+        column_configuration = self.column_configuration
+
         supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput", "IntegerInput", "BooleanInput"]
 
         field_type = column_configuration.get("FieldType", None)
@@ -250,7 +287,8 @@ class FormEditorDialog(QtWidgets.QDialog):
     def fixed_input(self, column, column_configuration):
         options = column_configuration.get("Options", {})
         editor = QtWidgets.QComboBox()
-        
+        editor.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
+        editor.wheelEvent = lambda event, editor=editor: self.wheelEventHandler(event, editor)
         for key, value in options.items():
             editor.addItem(key, value)
 
@@ -261,6 +299,13 @@ class FormEditorDialog(QtWidgets.QDialog):
 
         editor.setProperty("Widget", "EditorDialog")
         return editor
+
+    def wheelEventHandler(self, event, editor=None):
+        if editor.hasFocus():
+            editor.__class__.wheelEvent(editor, event)
+        event.accept()
+        
+
 
     def string_input(self, column, column_configuration):
         placeholder_text = column_configuration.get("PlaceholderText", "")
@@ -308,7 +353,6 @@ class FormEditorDialog(QtWidgets.QDialog):
             lambda value, column=column: 
             self.update_form_data(column, value)
             )
-        
         return editor
 
 class FormEditorWidget(QtWidgets.QWidget):

@@ -9,7 +9,7 @@ GENERAL_CONFIGURATION = {
             "UseDarkTheme": {
                 "DataType": "Boolean",
                 "Display": "Use Dark Theme",
-                "Description": "Defines whether the dark theme should be used.",
+                "Description": "Turn on the dark color palette.",
                 "DefaultValue": False
                 }
             }

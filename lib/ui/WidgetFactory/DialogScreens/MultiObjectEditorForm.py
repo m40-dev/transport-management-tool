@@ -8,8 +8,7 @@ class MultiObjectEditorForm(QtWidgets.QDialog):
 
         self.application = application
         self.configuration_class = configuration_class
-        self.object_configuration = self.application.object_configuration
-        self._form_confguration = self.object_configuration.get(configuration_class)
+        self._form_confguration = self.application.getConfigurationParameters(configuration_class)
         if form_configuration is not None:
             self._form_confguration = form_configuration
         self._form_data = {}

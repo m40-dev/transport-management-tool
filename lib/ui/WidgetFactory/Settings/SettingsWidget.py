@@ -2,7 +2,6 @@
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt
 
-from lib.ProgramConfiguration.ConfigurationDefinition import PROGRAM_CONFIGURATION
 from .ConfigurationSectionTreeWidgetItem import ConfigurationSectionTreeWidgetItem
 
 class SettingsWidget(QtWidgets.QWidget):
@@ -10,16 +9,20 @@ class SettingsWidget(QtWidgets.QWidget):
     def __init__(self, application):
         super().__init__()
         self.application = application
-        self.program_configuration = self.application.program_configuration
-        self.object_configuration = self.application.object_configuration
+        self.ProgramConfiguration = self.application.ProgramConfiguration
 
         self.setupUi()
         self.loadConfigurationData()
 
-        self.ConfigurationSectionTreeWidget.currentItemChanged.connect(self.onSectionChanged)
+        self.ConfigurationSectionTreeWidget.itemClicked.connect(self.onSectionChanged)
 
     def onSectionChanged(self, source_item):
+        
+        for x in range(self.ConfigurationSectionTabWidget.count()):
+            self.ConfigurationSectionTabWidget.removeTab(0)
+
         editor_widget = source_item.getSectionEditorWidget()
+
         if self.ConfigurationSectionTabWidget.indexOf(editor_widget) < 0:
             self.ConfigurationSectionTabWidget.addTab(editor_widget, source_item.SectionName)
         self.ConfigurationSectionTabWidget.setCurrentWidget(editor_widget)
@@ -60,7 +63,6 @@ class SettingsWidget(QtWidgets.QWidget):
         configuration_widget_layout.addLayout(toolbox_layout)
         configuration_widget_layout.addWidget(self.ConfigurationSectionTabWidget)
 
-
         # Add main widgets into splitter layout
         self.ConfigurationViewSplitter = QtWidgets.QSplitter(Qt.Orientation.Horizontal)
         self.ConfigurationViewSplitter.addWidget(self.ConfigurationSectionTreeWidget)
@@ -75,7 +77,10 @@ class SettingsWidget(QtWidgets.QWidget):
 
     def loadConfigurationData(self):
         configuration_items = []
-        for section, section_data in PROGRAM_CONFIGURATION.items():
+        for section, section_data in self.ProgramConfiguration.ProgramConfiguration.items():
+            if section_data.get("IsEditable", True) is False:
+                continue
+
             configuration_section = ConfigurationSectionTreeWidgetItem(
                 parent=None, 
                 application=self.application,
@@ -87,8 +92,12 @@ class SettingsWidget(QtWidgets.QWidget):
         self.ConfigurationSectionTreeWidget.addTopLevelItems(configuration_items)
 
     def saveConfigurationData(self):
-        self.program_configuration.saveConfiguration()
-        # self.object_configuration.saveConfiguration()
+        self.ProgramConfiguration.saveConfiguration()
+
+    def refresh_ui(self):
+        for x in range(self.ConfigurationSectionTabWidget.count()):
+            self.ConfigurationSectionTabWidget.removeTab(0)
+
 
         
 

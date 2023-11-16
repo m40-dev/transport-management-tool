@@ -10,21 +10,21 @@ PACKAGE_MANAGER_CONFIGURATION = {
                 "WorkdirDirectoryBlacklist": {
                     "DataType": "String",
                     "Display": "Directory Blacklist",
-                    "Description": "Configures the directory blacklist handling when the working directory is being loaded.",
+                    "Description": "Configures the directory blacklist handling when the working directory is being loaded.\n\nComma delimited list of workspace relative folder locations is expected.",
                     "DefaultValue": [],
                     "isMultivalue": True
                 },
                 "WorkdirDirectoryWhitelist": {
                     "DataType": "String",
                     "Display": "Directory Whitelist",
-                    "Description": "Configures the directory whitelist handling when the working directory is being loaded.",
+                    "Description": "Configures the directory whitelist handling when the working directory is being loaded.\n\nComma delimited list of workspace relative folder locations is expected.",
                     "DefaultValue": [],
                     "isMultivalue": True
                 },
                 "ExcludedFiles": {
                     "DataType": "String",
                     "Display": "File Blacklist",
-                    "Description": "Configures the individual files to be excluded when the working directory is being loaded.",
+                    "Description": "Configures the individual files to be excluded when the working directory is being loaded.\n\nComma delimited list of workspace relative file locations is expected.",
                     "DefaultValue": [],
                     "isMultivalue": True
                 }

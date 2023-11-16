@@ -4,10 +4,13 @@
     },
     "Package Manager":{
         "WorkdirDirectoryBlacklist":[],
-        "WorkdirDirectoryWhitelist":[
-            "Source_Files",
-            "Package_Data"
-        ],
-        "ExcludedFiles":[]
+        "WorkdirDirectoryWhitelist":[],
+        "ExcludedFiles":[
+            "preset_data.json",
+            "preset_data2.json"
+        ]
+    },
+    "ObjectModel":{
+        "UseExperimental":false
     }
 }

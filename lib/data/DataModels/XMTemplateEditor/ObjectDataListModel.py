@@ -9,7 +9,6 @@ class ObjectDataListModel(QAbstractItemModel):
     def __init__(self, application, object_data=[], parent_widget=None):
         super().__init__(parent_widget)
         self.application = application
-        self.object_configuration = application.object_configuration
         self._headers = ["Database Object"]
         self.treeview = parent_widget
 

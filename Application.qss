@@ -289,7 +289,7 @@ QLabel,QRadioButton[Label="PropertyValue"]{
 	margin: 1px;
 }
 
-[Widget="EditorDialog"]{
+QWidget[Widget="EditorDialog"]{
 	margin: 0px;
 	margin-left: 0px;
 	min-height: 1.3em;
@@ -461,4 +461,29 @@ QLabel[ExecutionState="Queued"]{
 
 .test-class{
 	background-color: #f18775;
+}
+
+
+/* Configuration Editor custom widgets */
+QListView[ConfigurationEditor="ObjectModelListView"]{
+	border: 1px solid rgba(125, 138, 141, 0.4);
+}
+
+QListView[ConfigurationEditor="ObjectModelListView"]::item{
+	min-height: 200px;
+	margin: 1px;
+	margin-right: 2px;
+}
+
+QWidget[ConfigurationEditor="ObjectModelItemWidget"]{
+	background-color: rgba(239, 239, 245, 0.2);
+	border: 1px solid rgba(125, 138, 141, 0.4);
+}
+
+QWidget[ConfigurationEditor="PropertyLabel"]{
+
+}
+
+QWidget[ConfigurationEditor="PropertyEditor"]{
+
 }

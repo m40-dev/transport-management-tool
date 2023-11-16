@@ -1,8 +1,11 @@
+from lib.ui.WidgetFactory.Settings.ConfigurationSectionEditor.ObjectModelEditor import ObjectModelConfigurationEditor
 ExecutionPlanner_ExecutionGroup = {
     "SectionName": "ExecutionPlanner_ExecutionGroup",
     "DisplayName": "Object Definition - Execution Planner Group",
     "Description": "Configuration Parameters section for the Execution Planner Group object definition.",
     "TargetConfigurationFile": "ObjectModelConfiguration",
+    "ConfigurationEditor": ObjectModelConfigurationEditor,
+    "ExportType": "ExportKeys",
     "ConfigurationParameters":{
         "GroupName": 
             {

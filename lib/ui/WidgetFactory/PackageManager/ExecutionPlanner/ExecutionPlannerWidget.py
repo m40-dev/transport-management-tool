@@ -18,7 +18,6 @@ class ExecutionPlannerWidget(QWidget):
 
         self.parent = parent
         self.application = application
-        self.object_configuration = self.application.object_configuration
         self.ProcessRunner = ProcessRunner(self)
         self.ProcessRunner.message.connect(self.logExecutionPlannerMessage)
         self.ProcessRunner.stateChanged.connect(self.processRunnerStateChanged)
@@ -138,7 +137,7 @@ class ExecutionPlannerWidget(QWidget):
 
     def addPlannerEntry(self, source_index, object_class):
         # print("Add Package Definition", source_index)
-        editor_configuration = self.object_configuration.get("ExecutionPlanner_ExecutionGroup")
+        editor_configuration = self.application.getConfigurationParameters("ExecutionPlanner_ExecutionGroup")
         if editor_configuration:
             dialog = FormEditorDialog(self.application, 
             configuration_class="ExecutionPlanner_ExecutionGroup", 
@@ -154,7 +153,7 @@ class ExecutionPlannerWidget(QWidget):
         if not source_index.isValid():
             return False
             
-        editor_configuration = self.object_configuration.get(object_class)
+        editor_configuration = self.application.getConfigurationParameters(object_class)
         if editor_configuration:
             dialog = FormEditorDialog(self.application, 
             configuration_class=object_class,
@@ -205,6 +204,7 @@ class ExecutionPlannerWidget(QWidget):
                 log_info += '</table>'
 
                 cursor.insertHtml(log_info)
+                self.console.setTextCursor(cursor)
                 return True
 
             if message_format.upper() == "TRANSPORT MANAGER":
@@ -217,6 +217,7 @@ class ExecutionPlannerWidget(QWidget):
                 log_info += '</table>'
                 
                 cursor.insertHtml(log_info)
+                self.console.setTextCursor(cursor)
                 return True
             
             if message_format.upper() == "INIT":
@@ -246,6 +247,7 @@ class ExecutionPlannerWidget(QWidget):
                 log_info += '</table>'
 
                 cursor.insertHtml(log_info)
+                self.console.setTextCursor(cursor)
                 
                 return True
             
@@ -276,11 +278,12 @@ class ExecutionPlannerWidget(QWidget):
 
         log_info = '<table width="100%" class="execution-log">'
         log_info += '<tr>'
-        log_info += f'<td class="execution-log">{message}</td>'
+        log_info += f'<td><pre class="execution-log">{message}</pre></td>'
         log_info += '</tr>'
         log_info += '</table>'
 
         cursor.insertHtml(log_info)
+        self.console.setTextCursor(cursor)
     
     def strfdelta(self, tdelta, fmt):
         hours, rem = divmod(tdelta.seconds, 3600)

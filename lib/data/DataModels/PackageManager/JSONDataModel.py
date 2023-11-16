@@ -1,7 +1,6 @@
 from PyQt6.QtCore import QAbstractItemModel, QModelIndex, Qt, QMimeData, pyqtSignal
-from PyQt6.QtGui import QStandardItemModel
 import json
-import time
+
 
 class JSONDataModel(QAbstractItemModel):
     filterStringChanged = pyqtSignal(str) 
@@ -10,7 +9,6 @@ class JSONDataModel(QAbstractItemModel):
         super().__init__(parent_widget)
         self.modelDataClass = model_item_class
         self.application = application
-        self.object_configuration = application.object_configuration
         self.rootItem = self.modelDataClass(application=self.application, task_class="RootItem", model_reference=self)
         self._headers = ["Actions"]
         self.treeview = parent_widget
@@ -70,9 +68,7 @@ class JSONDataModel(QAbstractItemModel):
     def data(self, index, role=Qt.ItemDataRole.DisplayRole):
         if not index.isValid():
             return None
-        # row = index.row()
-        # column = index.column()
-        # column_name = self.headerData(column)
+
         item = index.internalPointer()
 
         if role == Qt.ItemDataRole.DisplayRole:

@@ -6,7 +6,7 @@ class BaseCodeEditor(QsciScintilla):
         self.parent = parent
         QsciScintilla.__init__(self, parent)
         self.application = parent
-        self.program_configuration = self.application.program_configuration
+        self.ProgramConfiguration = self.application.ProgramConfiguration
         #font
         self.font = QFont()
         self.font.setFamily('Consolas')
@@ -48,10 +48,7 @@ class BaseCodeEditor(QsciScintilla):
 
     @property
     def dark_mode(self):
-        theme_configuration = self.program_configuration.get("Appearance")
-        if theme_configuration:
-            dark_theme_config = theme_configuration.get("UseDarkTheme", False)
-            return dark_theme_config
+        return self.application.getConfigurationValue("Appearance", "UseDarkTheme")
 
     def reconfigure_editor(self):
         lexer = self.lexer

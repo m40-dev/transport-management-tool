@@ -1,227 +1,232 @@
 {
-    "PackageManager_PackageDefinition": 
-        {
-        "PackageName": 
-            {
-                "FieldType": "StringInput",
-                "Display": "Package Name",
-                "PlaceholderText": "Provide Package Name",
-                "FieldRole": "DisplayRole",
-                "IsMandatory": "True"
-            },
-        "Description": 
-            {
-                "FieldType": "TextInput",
-                "Display": "Package Description",
-                "PlaceholderText": "Provide Package Description",
-                "FieldRole": "DescriptionRole",
-                "IsMandatory": "True",
-                "ShowInTreeView": "False"
-            },
-        "DefinitionFile": 
-            {
-                "FieldType": "FileInput",
-                "Display": "Definition File Name",
-                "DefaultValue": "definition.json",
-                "IsForDataExport": "False",
-                "FileExtension": "*.json",
-                "FileSelectionMode": "FileName",
-                "RedirectDirectoryDynamic": "Source_Files/%PackageName%",
-                "IsMandatory": "True"
-            },
-        "SortOrder":
-            {
-                "FieldType": "IntegerInput",
-                "FieldRole": "SortOrder",
-                "MinValue": 100,
-                "MaxValue": 999,
-                "DefaultValue": 100,
-                "DistributeEvenly": "True",
-                "ShowInTreeView": "False"
-            },
-        "ChildTasks": 
-            {
-                "FieldType": "ChildObjectReference",
-                "Class": "PackageManager_TaskDefinition",
-                "ShowInEditor": "False"
-            },
-        "GUID":
-            {
-                "FieldType": "StringInput",
-                "FieldRole": "UniqueIdentifier"
-            }
-
+    "PackageManager_PackageDefinition":{
+        "PackageName":{
+            "FieldType":"StringInput",
+            "Display":"Package Name",
+            "PlaceholderText":"Provide Package Name",
+            "FieldRole":"DisplayRole",
+            "IsMandatory":"True",
+            "RowId":0,
+            "ShowInTreeView":"False"
         },
-    "PackageManager_TaskDefinition":
-        {
-        "TaskName": 
-            {
-                "FieldType": "StringInput",
-                "FieldRole": "DisplayRole",
-                "IsMandatory": "True"
-            },
-        "Description": 
-            {
-                "FieldType": "TextInput",
-                "FieldRole": "DescriptionRole",
-                "ShowInTreeView": "False"
-            },
-        "SortOrder": 
-            {
-                "FieldType": "IntegerInput",
-                "FieldRole": "SortOrder",
-                "MinValue": 1,
-                "MaxValue": 99,
-                "DistributeEvenly": "True"
-            },
-        "TaskType": 
-            {
-                "FieldType": "FixedInput",
-                "Options": {"Transport Package": "Transport", "SQL Script": "SQL", "Schema Extension": "Schema", "Bug Fix Package": "BugFix"},
-                "DefaultValue": "Transport",
-                "Display": "Task Type",
-                "IsMandatory": "True",
-                "XMLTemplateTypes": ["Transport", "BugFix"]
-            },
-        "DefinitionFile": 
-            {
-                "FieldType": "FileInput",
-                "FileSelectionMode": "FileName",
-                "RedirectDirectoryStatic": "Task_Definitions",
-                "RedirectDirectoryRelativeTo": "Parent",
-                "IsMandatory": "True"
-            },
-        "ExportFile":
-            {
-                "FieldType": "FileInput",
-                "FileSelectionMode": "FileName",
-                "RedirectDirectoryDynamic": "Package_Data/%Parent.PackageName%/%TaskType%"
-            },
-        "CompilerOption": 
-            {
-                "FieldType": "FixedInput",
-                "Options": {"No Compilation": "None", "Full Compilation": "Full", "Skip Web Projects Compilation":"NoWeb"},
-                "DefaultValue": "NoWeb"
-            },
-        "AutoUpdate": 
-            {
-                "FieldType": "BooleanInput",
-                "DefaultValue": "False"
-            },
-        "Tag": 
-            {
-                "FieldType": "ListInput",
-                "Separator": ","
-            }
+        "Description":{
+            "FieldType":"TextInput",
+            "Display":"Package Description",
+            "PlaceholderText":"Provide Package Description",
+            "FieldRole":"DescriptionRole",
+            "IsMandatory":"True",
+            "ShowInTreeView":"False",
+            "RowId":1
         },
-    "ExecutionPlanner_ExecutionGroup": 
-        {
-        "GroupName": 
-            {
-                "FieldType": "StringInput",
-                "Display": "Group Name",
-                "PlaceholderText": "Provide Group Name",
-                "FieldRole": "DisplayRole"
-            },
-        "Description": 
-            {
-                "FieldType": "TextInput",
-                "Display": "Package Description",
-                "PlaceholderText": "Provide Package Description",
-                "FieldRole": "DescriptionRole",
-                "ShowInTreeView": "False"
-            },
-        "ExecutionTasks":
-            {
-                "FieldType": "ChildObjectReference",
-                "Class": "ExecutionPlanner_ExecutionTask",
-                "ShowInEditor": "False"
-            }
+        "DefinitionFile":{
+            "FieldType":"FileInput",
+            "Display":"Definition File Name",
+            "DefaultValue":"definition.json",
+            "IsForDataExport":"False",
+            "FileExtension":"*.json",
+            "FileSelectionMode":"FileName",
+            "RedirectDirectoryDynamic":"Source_Files/%PackageName%",
+            "IsMandatory":"True",
+            "RowId":2,
+            "ShowInTreeView":"False"
         },
-    "ExecutionPlanner_ExecutionTask": 
-        {
-        "TaskName": 
-            {
-                "FieldType": "StringInput",
-                "Display": "Task Name",
-                "PlaceholderText": "Provide Task Name",
-                "FieldRole": "DisplayRole",
-                "Source": "TaskName"
-            },
-        "Description": 
-            {
-                "FieldType": "TextInput",
-                "Display": "Package Description",
-                "PlaceholderText": "Provide Package Description",
-                "FieldRole": "DescriptionRole"
-
-            },
-        "TaskType":
-            {
-                "FieldType": "StringInput",
-                "Source": "TaskType",
-                "Transporter": ["Transport", "BugFix"],
-                "SQLScript": ["SQL"],
-                "SchemaExtension": ["Schema"]
-            },
-        "PackageName":
-            {
-                "FieldType": "StringInput",
-                "Source": "PARENT_DEF.PackageName"
-            },
-        "ParentDescription":
-            {
-                "FieldType": "StringInput",
-                "Source": "PARENT_DEF.Description"
-            },
-        "Connection":
-            {
-                "FieldType": "StringInput"   
-            },
-        "DefinitionFile":
-            {
-                "FieldType": "FileInput",
-                "FileSelectionMode": "Relative"
-            },
-        "ExportFile":
-            {
-                "FieldType": "FileInput",
-                "FileSelectionMode": "Relative"
-            },
-        "CompilerOption": 
-            {
-                "FieldType": "FixedInput",
-                "Options": {"No Compilation": "None", "Full Compilation": "Full", "Skip Web Projects Compilation":"NoWeb"},
-                "DefaultValue": "NoWeb"
-            },
-        "AutoUpdate":
-            {
-                "FieldType": "BooleanInput",
-                "DefaultValue": "False"
-            }
+        "SortOrder":{
+            "FieldType":"IntegerInput",
+            "FieldRole":"SortOrder",
+            "MinValue":100,
+            "MaxValue":999,
+            "DefaultValue":100,
+            "DistributeEvenly":"True",
+            "ShowInTreeView":"False",
+            "RowId":3
         },
-    "XMLTemplateEditor_RelationPreset":
-        {
-            "name":
-                {
-                    "FieldType": "StringInput",
-                    "Display": "Relation Preset Name"
-                },
-            "description":
-                {
-                    "FieldType": "TextInput",
-                    "Display": "Relation Preset Description"
-                },
-            "always_apply":
-                {
-                    "FieldType": "BooleanInput",
-                    "DefaultValue": "False",
-                    "Display": "Apply Preset Automatically"
-                },
-            "table_relations":
-                {
-                    "FieldType": "ChildObjectReference",
-                    "ShowInEditor": "False"
-                }
+        "ChildTasks":{
+            "FieldType":"ChildObjectReference",
+            "Class":"PackageManager_TaskDefinition",
+            "ShowInEditor":"False",
+            "RowId":4,
+            "ShowInTreeView":"False"
+        },
+        "GUID":{
+            "FieldType":"StringInput",
+            "FieldRole":"UniqueIdentifier",
+            "RowId":5,
+            "ShowInTreeView":"False"
+        },
+        "TestParame":{
+            "FieldType":"StringInput",
+            "FieldRole":"UniqueIdentifier",
+            "ShowInEditor":"False",
+            "RowId":6,
+            "ShowInTreeView":"False"
         }
+    },
+    "PackageManager_TaskDefinition":{
+        "TaskName":{
+            "FieldType":"StringInput",
+            "FieldRole":"DisplayRole",
+            "IsMandatory":"True",
+            "RowId":0
+        },
+        "Description":{
+            "FieldType":"TextInput",
+            "FieldRole":"DescriptionRole",
+            "ShowInTreeView":"False",
+            "RowId":1
+        },
+        "SortOrder":{
+            "FieldType":"IntegerInput",
+            "FieldRole":"SortOrder",
+            "MinValue":1,
+            "MaxValue":99,
+            "DefaultValue":99,
+            "DistributeEvenly":"True",
+            "RowId":2
+        },
+        "TaskType":{
+            "FieldType":"FixedInput",
+            "Options":{
+                "Transport Package":"Transport",
+                "SQL Script":"SQL",
+                "Schema Extension":"Schema",
+                "Bug Fix Package":"BugFix"
+            },
+            "DefaultValue":"Transport",
+            "Display":"Task Type",
+            "IsMandatory":"True",
+            "XMLTemplateTypes":[
+                "Transport",
+                "BugFix"
+            ],
+            "RowId":3
+        },
+        "DefinitionFile":{
+            "FieldType":"FileInput",
+            "FileSelectionMode":"FileName",
+            "RedirectDirectoryStatic":"Task_Definitions",
+            "RedirectDirectoryRelativeTo":"Parent",
+            "IsMandatory":"True",
+            "RowId":4
+        },
+        "ExportFile":{
+            "FieldType":"FileInput",
+            "FileSelectionMode":"FileName",
+            "RedirectDirectoryDynamic":"Package_Data/%Parent.PackageName%/%TaskType%",
+            "RowId":5
+        },
+        "CompilerOption":{
+            "FieldType":"FixedInput",
+            "Options":{
+                "No Compilation":"None",
+                "Full Compilation":"Full",
+                "Skip Web Projects Compilation":"NoWeb"
+            },
+            "DefaultValue":"NoWeb",
+            "RowId":6
+        },
+        "AutoUpdate":{
+            "FieldType":"BooleanInput",
+            "DefaultValue":"False",
+            "RowId":7
+        },
+        "Tag":{
+            "FieldType":"ListInput",
+            "Separator":",",
+            "RowId":8
+        }
+    },
+    "ExecutionPlanner_ExecutionGroup":{
+        "GroupName":{
+            "FieldType":"StringInput",
+            "Display":"Group Name",
+            "PlaceholderText":"Provide Group Name",
+            "FieldRole":"DisplayRole",
+            "RowId":0
+        },
+        "Description":{
+            "FieldType":"TextInput",
+            "Display":"Package Description",
+            "PlaceholderText":"Provide Package Description",
+            "FieldRole":"DescriptionRole",
+            "ShowInTreeView":"False",
+            "RowId":1
+        },
+        "ExecutionTasks":{
+            "FieldType":"ChildObjectReference",
+            "Class":"ExecutionPlanner_ExecutionTask",
+            "ShowInEditor":"False",
+            "RowId":2
+        }
+    },
+    "ExecutionPlanner_ExecutionTask":{
+        "TaskName":{
+            "FieldType":"StringInput",
+            "Display":"Task Name",
+            "PlaceholderText":"Provide Task Name",
+            "FieldRole":"DisplayRole",
+            "Source":"TaskName",
+            "RowId":0
+        },
+        "Description":{
+            "FieldType":"TextInput",
+            "Display":"Package Description",
+            "PlaceholderText":"Provide Package Description",
+            "FieldRole":"DescriptionRole",
+            "RowId":1
+        },
+        "TaskType":{
+            "FieldType":"StringInput",
+            "Source":"TaskType",
+            "Transporter":[
+                "Transport",
+                "BugFix"
+            ],
+            "SQLScript":[
+                "SQL"
+            ],
+            "SchemaExtension":[
+                "Schema"
+            ],
+            "RowId":2
+        },
+        "PackageName":{
+            "FieldType":"StringInput",
+            "Source":"PARENT_DEF.PackageName",
+            "RowId":3
+        },
+        "ParentDescription":{
+            "FieldType":"StringInput",
+            "Source":"PARENT_DEF.Description",
+            "RowId":4
+        },
+        "Connection":{
+            "FieldType":"StringInput",
+            "RowId":5
+        },
+        "DefinitionFile":{
+            "FieldType":"FileInput",
+            "FileSelectionMode":"Relative",
+            "RowId":6
+        },
+        "ExportFile":{
+            "FieldType":"FileInput",
+            "FileSelectionMode":"Relative",
+            "RowId":7
+        },
+        "CompilerOption":{
+            "FieldType":"FixedInput",
+            "Options":{
+                "No Compilation":"None",
+                "Full Compilation":"Full",
+                "Skip Web Projects Compilation":"NoWeb"
+            },
+            "DefaultValue":"NoWeb",
+            "RowId":8
+        },
+        "AutoUpdate":{
+            "FieldType":"BooleanInput",
+            "DefaultValue":"False",
+            "RowId":9
+        }
+    }
 }

@@ -4,6 +4,7 @@ from .ConfigurationSectionEditor import GeneralConfigurationEditor
 
 
 class ConfigurationSectionTreeWidgetItem(QtWidgets.QTreeWidgetItem):
+
     def __init__(self, parent, application, settings_module, section_name, section_data):
         super().__init__(parent)
 
@@ -16,21 +17,32 @@ class ConfigurationSectionTreeWidgetItem(QtWidgets.QTreeWidgetItem):
         sub_sections = section_data.get("SubSections", None)
         if sub_sections and len(sub_sections) > 0:
             for sub_section_name, sub_section_data in sub_sections.items():
+                if sub_section_data.get("IsEditable", True) is False:
+                    continue
+                
                 ConfigurationSectionTreeWidgetItem(
                     parent=self, 
                     application=self.application, 
                     settings_module=settings_module,
                     section_name=sub_section_name, 
                     section_data=sub_section_data)
-        
-        for configuration_key, field_configuration in self.ConfigurationParameters.items():
-            current_configuration = self.application.getConfigurationValue(section_name, configuration_key)
-            field_configuration["ConfigurationValue"] = current_configuration
-        
+    
     def getSectionEditorWidget(self):
-        if self.section_editor:
-            return self.section_editor
+        #refresh the configuration section data
+        self._section_data = self.application.ProgramConfiguration.getConfigurationSection(self.SectionName)
         
+        if self.section_editor:
+            self.section_editor.deleteLater()
+            self.section_editor = None
+
+        if self.ConfigurationEditor:
+            self.section_editor = self.ConfigurationEditor(
+                application=self.application, 
+                section_name=self.SectionName,
+                section_source=self
+            )
+            return self.section_editor
+
         self.section_editor = GeneralConfigurationEditor(
             application=self.application, 
             section_name=self.SectionName,
@@ -43,5 +55,14 @@ class ConfigurationSectionTreeWidgetItem(QtWidgets.QTreeWidgetItem):
             dict_data = self._section_data.get(attribute, None)
             if dict_data:
                 return dict_data
-        
-        return self.__getattribute__(attribute)
+        if attribute in self.__dict__.keys():
+            return self.__getattribute__(attribute)
+        return None
+    
+    @property
+    def section_data(self):
+        return self._section_data
+
+    @section_data.setter
+    def section_data(self, value):
+        self._section_data = value

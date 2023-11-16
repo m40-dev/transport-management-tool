@@ -28,6 +28,8 @@ class PackageDefinitionItem(JSONDataItem):
             task_class=task_class, 
             task_data=task_data,
             model_reference=model_reference)
+        
+        self.ProgramConfiguration = application.ProgramConfiguration
 
         if task_class is None:
             self.task_class = "PackageManager_PackageDefinition"
@@ -37,7 +39,7 @@ class PackageDefinitionItem(JSONDataItem):
             self.source_files_text = self.get_file_strings(reload_data=True)
             # children object handling
             child_tasks = task_data.get("children", None)
-            children_columns_configuration = self.object_configuration.get_columns_configuration_by_type(self.task_class, "ChildObjectReference")
+            children_columns_configuration = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_type(self.task_class, "ChildObjectReference")
             if not child_tasks and children_columns_configuration:
                 for column in children_columns_configuration.keys():
                     child_tasks = task_data.get(column, None)

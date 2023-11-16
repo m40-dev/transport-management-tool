@@ -11,6 +11,7 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
     def __init__(self, model_data, application, planner_widget, parent=None):
         super().__init__(parent)
         self.application = application
+        self.ProgramConfiguration = application.ProgramConfiguration
         self.planner_widget = planner_widget
         self.model_data = model_data
 
@@ -109,6 +110,7 @@ class ExecutionPlannerItem(QFrame):
         super().__init__(parent=parent)
         self.tree_view = tree_view
         self.application = application
+        self.ProgramConfiguration = application.ProgramConfiguration
         self.planner_widget = planner_widget
         self.data_item = data_item
         self.button1 = QToolButton(self)
@@ -129,7 +131,7 @@ class ExecutionPlannerItem(QFrame):
         self.element_description.setProperty("ExecutionPlannerWidget", "ItemDescription")
         self.element_description.setWordWrap(True)
 
-        object_configuration = self.application.object_configuration.get(self.data_item.task_class)
+        object_configuration = self.application.getConfigurationParameters(self.data_item.task_class)
         # print(object_configuration)
         description_config = object_configuration.get("Description", None)
         if description_config:
@@ -202,7 +204,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.run_status.setWordWrap(True)
         
         self.dynamic_property_labels = {}
-        dynamic_property_columns = self.application.object_configuration.get_columns_configuration_by_setting(self.data_item.task_class, "ShowInTreeView")
+        dynamic_property_columns = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(self.data_item.task_class, "ShowInTreeView")
         # lay out items in columns (labels and values)
         layout_columns = 6
         task_details_layout = QGridLayout()

@@ -1,24 +1,26 @@
 
 from PyQt6 import QtWidgets
+from PyQt6.QtCore import pyqtSignal
 
 class ConfigurationSectionEditor(QtWidgets.QWidget):
+    reloadEditor = pyqtSignal()
+    
     def __init__(self, application, section_name, section_source):
         super().__init__()
 
         self.application = application
-        self.program_configuration = self.application.program_configuration
-        self.object_configuration = self.application.object_configuration
+        self.ProgramConfiguration = self.application.ProgramConfiguration
 
         self._section_source = section_source
         self._section_name = section_name
-    
         self.setupUi()
 
     def setupUi(self):
 
-        self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("MainLayout")
         self.layout.setSpacing(2)
+        self.layout.setContentsMargins(2,2,2,2)
 
         name_label = QtWidgets.QLabel(f"<h2>{self._section_source.DisplayName}</h2>")
         description_label = QtWidgets.QLabel(f"<p>{self._section_source.Description}</p>")
@@ -27,11 +29,10 @@ class ConfigurationSectionEditor(QtWidgets.QWidget):
         
         #layout for any dedicated editor widgets
         self.editor_layout = QtWidgets.QGridLayout()
-        self.layout.setObjectName("EditorLayout")
+        self.editor_layout.setObjectName("EditorLayout")
 
         #Add Widgets to the main layout
-        self.layout.addWidget(name_label)
-        self.layout.addWidget(description_label)
-        self.layout.addWidget(separator)
-        self.layout.addLayout(self.editor_layout)
-        self.layout.addStretch(2)
+        self.layout.addWidget(name_label, 0, 0)
+        self.layout.addWidget(description_label,1, 0)
+        self.layout.addWidget(separator, 2, 0, 1, -1)
+        self.layout.addLayout(self.editor_layout, 3, 0, -1, -1)

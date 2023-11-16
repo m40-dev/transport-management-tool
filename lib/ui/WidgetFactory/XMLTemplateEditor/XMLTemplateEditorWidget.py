@@ -35,6 +35,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.onXMLPreviewRefresh()
         self.xmlStructureChanged.connect(self.onXMLPreviewRefresh)
         self.XMLStructureTreeView.mousePressEvent = self.XMLStructureTreeViewMousePressEvent
+        self.XMLStructureTreeView.setWordWrap(True)
 
     def XMLStructureTreeViewMousePressEvent(self, event):
         QtWidgets.QTreeView.mousePressEvent(self.XMLStructureTreeView, event)
@@ -336,7 +337,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
             return False
 
         for selected_item in self.selectedItems():
-            if selected_item != source_item and selected_item.xml_object_class == source_item.xml_object_class:
+            if type(selected_item) == type(source_item) and selected_item != source_item and selected_item.xml_object_class == source_item.xml_object_class:
                 selected_item.setCheckState(column_name, check_state)
         self.XMLStructureTreeView.model().layoutChanged.emit()
 

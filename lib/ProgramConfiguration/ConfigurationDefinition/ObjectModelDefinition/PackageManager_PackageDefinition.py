@@ -1,8 +1,12 @@
+from lib.ui.WidgetFactory.Settings.ConfigurationSectionEditor import ObjectModelConfigurationEditor
+
 PackageManager_PackageDefinition = {
     "SectionName": "PackageManager_PackageDefinition",
     "DisplayName": "Object Definition - Transport Package",
     "Description": "Configuration Parameters section for the Transport Package object definition.",
     "TargetConfigurationFile": "ObjectModelConfiguration",
+    "ConfigurationEditor": ObjectModelConfigurationEditor,
+    "ExportType": "ExportKeys",
     "ConfigurationParameters":{
         "PackageName": 
             {
@@ -10,7 +14,8 @@ PackageManager_PackageDefinition = {
                 "Display": "Package Name",
                 "PlaceholderText": "Provide Package Name",
                 "FieldRole": "DisplayRole",
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "RowId": 0
             },
         "Description": 
             {
@@ -19,7 +24,8 @@ PackageManager_PackageDefinition = {
                 "PlaceholderText": "Provide Package Description",
                 "FieldRole": "DescriptionRole",
                 "IsMandatory": "True",
-                "ShowInTreeView": "False"
+                "ShowInTreeView": "False",
+                "RowId": 1
             },
         "DefinitionFile": 
             {
@@ -30,7 +36,8 @@ PackageManager_PackageDefinition = {
                 "FileExtension": "*.json",
                 "FileSelectionMode": "FileName",
                 "RedirectDirectoryDynamic": "Source_Files/%PackageName%",
-                "IsMandatory": "True"
+                "IsMandatory": "True",
+                "RowId": 2
             },
         "SortOrder":
             {
@@ -40,18 +47,21 @@ PackageManager_PackageDefinition = {
                 "MaxValue": 999,
                 "DefaultValue": 100,
                 "DistributeEvenly": "True",
-                "ShowInTreeView": "False"
+                "ShowInTreeView": "False",
+                "RowId": 3
             },
         "ChildTasks": 
             {
                 "FieldType": "ChildObjectReference",
                 "Class": "PackageManager_TaskDefinition",
-                "ShowInEditor": "False"
+                "ShowInEditor": "False",
+                "RowId": 4
             },
         "GUID":
             {
                 "FieldType": "StringInput",
-                "FieldRole": "UniqueIdentifier"
+                "FieldRole": "UniqueIdentifier",
+                "RowId": 5
             }
         }
 }

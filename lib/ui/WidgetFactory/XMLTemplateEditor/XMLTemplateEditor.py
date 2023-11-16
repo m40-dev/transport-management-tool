@@ -185,7 +185,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
         # reset relation configuration for the other selected objects of the same class 
         for item in self.selectedItems():
-            if item.table_name == source_item.table_name:
+            if isinstance(item, XMLDataItem) and item.xml_object_class == "Transport_Object" and item.table_name == source_item.table_name:
                 item.object_relations = source_item.object_relations
         # refresh XML preview
         self.XMLTemplateEditorTabWidget.currentWidget().xmlStructureChanged.emit()
@@ -210,7 +210,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         if preset_table and preset_data:
             selected_items = self.selectedItems()
             for item in selected_items:
-                if item.table_name == preset_table:
+                if isinstance(item, XMLDataItem) and item.xml_object_class == "Transport_Object" and item.table_name == preset_table:
                     preset_data_relations = deepcopy(preset_data["table_relations"])
                     item.object_relations = preset_data_relations
 

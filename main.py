@@ -27,7 +27,7 @@ from lib.ProgramConfiguration import ProgramConfiguration, ObjectConfiguration, 
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.7.4'
+VERSION = '0.7.5'
 
 class Transport_Manager(QMainWindow):
     """Main window class for connection launcher"""
@@ -55,8 +55,7 @@ class Transport_Manager(QMainWindow):
         self.qt_app.setPalette(self.color_theme)
         self.setStyleSheet(self.color_theme.style_sheet)
 
-        self.program_configuration = ProgramConfiguration(self)
-        self.object_configuration = ObjectConfiguration(self)
+        self.ProgramConfiguration = ProgramConfiguration(self)
         self.settings = QSettings("EmergencyCode", "Transport_Manager")
         self._relation_presets = {}
 
@@ -136,22 +135,20 @@ class Transport_Manager(QMainWindow):
         self.refresh_ui()
         
         """ Initial transport template object """
-        self.XMLTemplateEditor.newTransportTemplate()
+        # self.XMLTemplateEditor.newTransportTemplate()
         self.PackageManager.addExecutionPlan()
 
         # Application development testing helpers
         self.ui.MainTabWidget.setCurrentIndex(2)
 
+    def getConfigurationParameters(self, configuration_section):
+        return self.ProgramConfiguration.getConfigurationParameters(configuration_section)
 
+    def getConfigurationKey(self, configuration_section, configuration_key):
+        return self.ProgramConfiguration.getConfigurationKey(configuration_section, configuration_key)
 
     def getConfigurationValue(self, configuration_section, configuration_key):
-        if self.program_configuration.isValidConfigurationSection(configuration_section):
-            return self.program_configuration.getConfigurationValue(configuration_section, configuration_key)
-        
-        if self.object_configuration.isValidConfigurationSection(configuration_section):
-            return self.object_configuration.getConfigurationValue(configuration_section, configuration_key)
-
-        return None
+        return self.ProgramConfiguration.getConfigurationValue(configuration_section, configuration_key)
 
     @property
     def relation_presets(self):
@@ -267,16 +264,16 @@ class Transport_Manager(QMainWindow):
             self.restoreState(self.settings.value("MainWindowState"))
         
         """ Reload Working Directory """
-        self.object_configuration.reload_configuration_file()
-        self.program_configuration.reload_configuration_file()
+        self.ProgramConfiguration.reloadUserConfiguration()
         # self.ui.XMLEditorWidget.reconfigure_editor()
         self.XMLTemplateEditor.refresh_ui()
         self.PackageManager.refresh_ui()
+        self.SettingsWidget.refresh_ui()
         
     
     def getObjectData(self, object_class, dialog_name="Object Data", source_index=None, editor_configuration=None):
         if editor_configuration is None:
-            editor_configuration = self.object_configuration.get(object_class)
+            editor_configuration = self.getConfigurationParameters(object_class)
 
         if editor_configuration:
             dialog = WidgetFactory.FormEditorDialog(

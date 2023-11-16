@@ -16,8 +16,7 @@ class PackageManager(QtWidgets.QWidget):
     def __init__(self, application):
         super().__init__()
         self.application = application
-        self.object_configuration = self.application.object_configuration
-        self.program_configuration = self.application.program_configuration
+        self.ProgramConfiguration = self.application.ProgramConfiguration
         self.current_workdir = None
 
         self.setupUi()
@@ -83,7 +82,7 @@ class PackageManager(QtWidgets.QWidget):
 
     def setupWorkingDirectory(self, workdir):
         sort_attribute = ""
-        package_definition_config = self.object_configuration.get("PackageManager_PackageDefinition")
+        package_definition_config = self.application.getConfigurationParameters("PackageManager_PackageDefinition")
         mandatory_columns = []
         if package_definition_config:
             for column, column_configuration in package_definition_config.items():
@@ -105,40 +104,38 @@ class PackageManager(QtWidgets.QWidget):
         workdir_path = Path(workdir).absolute()
         definitions = []
         skipped_definitions = []
-        package_manager_configuration = self.program_configuration.get("Package Manager")
-        whitelist_directories = package_manager_configuration.get("WorkdirDirectoryWhitelist", None)
+        whitelist_directories = self.application.getConfigurationValue("Package Manager", "WorkdirDirectoryWhitelist")
+        blacklist_directories = self.application.getConfigurationValue("Package Manager", "WorkdirDirectoryBlacklist")
+        excluded_files = self.application.getConfigurationValue("Package Manager", "ExcludedFiles")
+        definition_config = self.application.getConfigurationKey("PackageManager_PackageDefinition", "DefinitionFile")
 
         for file_path in Path(workdir).rglob( '*.json' ):
             if file_path.is_file():
                 feature_definition_location = file_path.relative_to(workdir_path)
                 accept = True
-                if package_manager_configuration and accept:
-                    if whitelist_directories:
-                        accept = False
-                        for directory in whitelist_directories:
-                            # print(f"checking whitelist, {str(feature_definition_location)} compared with whitelist directory: {directory}", str(feature_definition_location).lower().startswith(directory.lower()))
-                            test_path = Path(directory)
-                            if str(feature_definition_location).lower().startswith(str(test_path).lower()):
-                                accept = True
+                if whitelist_directories:
+                    accept = False
+                    for directory in whitelist_directories:
+                        # print(f"checking whitelist, {str(feature_definition_location)} compared with whitelist directory: {directory}", str(feature_definition_location).lower().startswith(directory.lower()))
+                        test_path = Path(directory)
+                        if str(feature_definition_location).lower().startswith(str(test_path).lower()):
+                            accept = True
 
-                    excluded_files = package_manager_configuration.get("ExcludedFiles", None)
-                    
-                    if excluded_files and accept:
-                        for excluded_file_path in excluded_files:
-                            test_path = Path(excluded_file_path)
-                            if str(test_path) == str(feature_definition_location):
-                                accept = False
-                    
-                    if accept:
-                        blacklist_directories = package_manager_configuration.get("WorkdirDirectoryBlacklist", None)
+                if excluded_files and accept:
+                    for excluded_file_path in excluded_files:
+                        test_path = Path(excluded_file_path)
+                        if str(test_path) == str(feature_definition_location):
+                            accept = False
+                
+                if blacklist_directories and accept:
+                    if blacklist_directories:
                         for directory in blacklist_directories:
                             test_path = Path(directory)
-
                             if str(feature_definition_location).lower().startswith(str(test_path).lower()):
                                 accept = False
-                    if not accept:
-                        # program configuration excluded the file, continue
-                        continue
+                if not accept:
+                    # program configuration excluded the file, continue
+                    continue
                 
                 #file went through the whitelist/blacklist configurations
                 json_content = self.application.load_file(file_path.absolute())
@@ -147,7 +144,6 @@ class PackageManager(QtWidgets.QWidget):
                 #keep relative path by default
                 package_definition["DefinitionFile"] = str(feature_definition_location)
 
-                definition_config = self.object_configuration.get_column_configuration("PackageManager_PackageDefinition", "DefinitionFile")
                 if definition_config and definition_config.get("FileSelectionMode", "") == "FileName":
                     #keep just the file name, location to be calculated dynamically
                     package_definition["DefinitionFile"] = str(feature_definition_location.name)
@@ -447,6 +443,9 @@ class PackageManager(QtWidgets.QWidget):
 
     def selectedItems(self):
         selected_items = []
+        if not self.PackageViewTreeView.selectionModel():
+            return selected_items
+
         selected_indexes = self.PackageViewTreeView.selectionModel().selectedRows()
         if len(selected_indexes) > 0:
             for index in selected_indexes:

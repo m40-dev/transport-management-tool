@@ -2,7 +2,8 @@ XMLTemplateEditor_RelationPreset = {
     "SectionName": "XMLTemplateEditor_RelationPreset",
     "DisplayName": "Object Definition - Relation Preset",
     "Description": "Configuration Parameters section for the Relation Preset object definition.",
-    "TargetConfigurationFile": "ObjectModelConfiguration",
+    "TargetConfigurationFile": "InternalConfiguration",
+    "ExportType": "ExportKeys",
     "ConfigurationParameters":{
             "name":
                 {
