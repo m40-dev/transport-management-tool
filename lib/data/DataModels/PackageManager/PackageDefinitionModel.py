@@ -44,6 +44,14 @@ class PackageDefinitionItem(JSONDataItem):
                 for column in children_columns_configuration.keys():
                     child_tasks = task_data.get(column, None)
                     if child_tasks:
+                        sort_order_column = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_role(self.task_class, "SortOrder")
+                        if sort_order_column and len(sort_order_column) > 0:
+                            column_name = list(sort_order_column.keys())[0]
+                            if column_name:
+                                child_tasks = sorted(
+                                        child_tasks, 
+                                        key=lambda d: (d[column_name])
+                                        )
                         self.loadChildren(child_tasks)
 
     def loadChildren(self, child_tasks):
@@ -85,3 +93,7 @@ class PackageDefinitionItem(JSONDataItem):
                     child_item.save()
         super().save()
         
+    def sortChildItems(self):
+        all_items = self._children + self._filtered_children
+        for task_item in all_items:
+            task_item.updateSortOrder(validate_siblings=False)

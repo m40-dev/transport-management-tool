@@ -4,6 +4,7 @@ from pathlib import Path
 from copy import deepcopy
 from .ObjectConfiguration import ObjectModel
 from .ConfigurationDefinition import PROGRAM_CONFIGURATION, CONFIGURATION_FILES
+from lib.data.DataModels.Settings.ObjectConfigurationModel import ObjectConfigurationModel
 
 class ProgramConfiguration(QObject):
 
@@ -44,7 +45,6 @@ class ProgramConfiguration(QObject):
         for configuration_section, configuration_parameters in configuration_dict.items():
             
             section_configuration = self.getConfigurationSection(configuration_section)
-            # section_parameters = section_configuration.get("ConfigurationParameters")
 
             if section_configuration.get("ExportType", "ExportValues") == "ExportKeys":
                 # TODO: check if overwriting here always makes sense, we have some parameters that we rely on and have to be always
@@ -56,13 +56,21 @@ class ProgramConfiguration(QObject):
                 section_configuration["ConfigurationParameters"] = configuration_parameters
                 self.configuration[configuration_section] = configuration_parameters
                 continue
-            
+
+            if "ConfigurationParameters" not in section_configuration.keys():
+                section_configuration["ConfigurationParameters"] = {}
+
             if section_configuration.get("ExportType", "ExportValues") == "ExportValues":
                 for configuration_key, parameter_value in configuration_parameters.items():
+
                     if configuration_key in section_configuration["ConfigurationParameters"].keys():
                         section_configuration["ConfigurationParameters"][configuration_key]["ConfigurationValue"] = parameter_value
 
+
     def sortSectionItems(self, section_data):
+        if section_data is None:
+            return False
+
         i=0
         for entry_key, entry_configuration in section_data.items():
             if "RowId" not in entry_configuration.keys():
@@ -87,13 +95,16 @@ class ProgramConfiguration(QObject):
         
         if len(configuration_data) == 0:
             return {}
-
+        
         for section_key, section_configuration in configuration_data.items():
-            if section_configuration.get("SectionName", False) == configuration_section:
+            if section_configuration.get("SectionName", None) == configuration_section:
+                
                 return section_configuration
 
             if "SubSections" in section_configuration.keys() and len(section_configuration["SubSections"]) > 0:
-                return self.getConfigurationSection(configuration_section, section_configuration["SubSections"])
+                subsection_query = self.getConfigurationSection(configuration_section, section_configuration["SubSections"])
+                if subsection_query:
+                    return subsection_query
         return {}
     
     def getConfigurationKey(self, configuration_section, configuration_key):
@@ -145,12 +156,24 @@ class ProgramConfiguration(QObject):
             configuration_data = self.ProgramConfiguration
 
         for configuration_section, configuration_data in configuration_data.items():
-            if configuration_data.get("TargetConfigurationFile", None) == target_configuration:
-                
+            # Use section name as the key attribute in exports
+            configuration_section = configuration_data.get("SectionName", configuration_section)
+
+            if configuration_data.get("TargetConfigurationFile", None) == target_configuration:        
                 if configuration_section not in export_data.keys():
                     export_data[configuration_section] = {}
 
                 configuration_parameters = configuration_data.get("ConfigurationParameters", None)
+                if target_configuration in ["ObjectModelConfiguration", "DevelopmentConfiguration"]:
+                    # print("verify object model for this section", configuration_section, configuration_parameters)
+                    model_data = ObjectConfigurationModel(
+                        application=self.application, 
+                        section_name=configuration_section,
+                        configuration_data=configuration_parameters)
+                    section_export_data = model_data.exportModelData()
+                    export_data[configuration_section] = section_export_data
+                    continue
+
                 if configuration_parameters and len(configuration_parameters) > 0:
                     # print(configuration_parameters)
                     if configuration_data.get("ExportType", "ExportValues") == "ExportValues":
@@ -171,14 +194,18 @@ class ProgramConfiguration(QObject):
                 self.exportConfiguration(target_configuration, child_sections, export_data)
         return export_data
 
-    def saveConfiguration(self):
+    def saveConfiguration(self, target_configuration_group=None):
         #for time being use only the 
         for target_configuration, file_path in CONFIGURATION_FILES.items():
+            if target_configuration_group:
+                if target_configuration_group != target_configuration:
+                    # skip target configuration sections other than requested
+                    continue
             export_data = self.exportConfiguration(target_configuration, configuration_data=self.ProgramConfiguration, export_data={})
             export_json = json.dumps(export_data, indent=4, separators=(',',':'))
             with open(str(file_path), 'w', encoding="utf-8") as doc:
                 doc.write(export_json)
-        self.application.refresh_ui()
+        # self.application.refresh_ui()
         
             
                             

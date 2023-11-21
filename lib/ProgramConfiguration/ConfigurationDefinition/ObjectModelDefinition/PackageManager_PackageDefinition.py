@@ -8,60 +8,136 @@ PackageManager_PackageDefinition = {
     "ConfigurationEditor": ObjectModelConfigurationEditor,
     "ExportType": "ExportKeys",
     "ConfigurationParameters":{
-        "PackageName": 
-            {
-                "FieldType": "StringInput",
-                "Display": "Package Name",
-                "PlaceholderText": "Provide Package Name",
-                "FieldRole": "DisplayRole",
-                "IsMandatory": "True",
-                "RowId": 0
-            },
-        "Description": 
-            {
-                "FieldType": "TextInput",
-                "Display": "Package Description",
-                "PlaceholderText": "Provide Package Description",
-                "FieldRole": "DescriptionRole",
-                "IsMandatory": "True",
-                "ShowInTreeView": "False",
-                "RowId": 1
-            },
-        "DefinitionFile": 
-            {
-                "FieldType": "FileInput",
-                "Display": "Definition File Name",
-                "DefaultValue": "definition.json",
-                "IsForDataExport": "False",
-                "FileExtension": "*.json",
-                "FileSelectionMode": "FileName",
-                "RedirectDirectoryDynamic": "Source_Files/%PackageName%",
-                "IsMandatory": "True",
-                "RowId": 2
-            },
-        "SortOrder":
-            {
-                "FieldType": "IntegerInput",
-                "FieldRole": "SortOrder",
-                "MinValue": 100,
-                "MaxValue": 999,
-                "DefaultValue": 100,
-                "DistributeEvenly": "True",
-                "ShowInTreeView": "False",
-                "RowId": 3
-            },
-        "ChildTasks": 
-            {
-                "FieldType": "ChildObjectReference",
-                "Class": "PackageManager_TaskDefinition",
-                "ShowInEditor": "False",
-                "RowId": 4
-            },
-        "GUID":
-            {
-                "FieldType": "StringInput",
-                "FieldRole": "UniqueIdentifier",
-                "RowId": 5
-            }
+        "PackageName":{
+            "RowId":0,
+            "Display":"Package Name",
+            "Description":"Holds the friendly name of the transport package object.",
+            "FieldType":"StringInput",
+            "FieldRole":"DisplayRole",
+            "DefaultValue":"",
+            "PlaceholderText":"Provide Package Name",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True
+        },
+        "Description":{
+            "RowId":1,
+            "Display":"Package Description",
+            "Description":"Holds the description of the transport package object.",
+            "FieldType":"TextInput",
+            "FieldRole":"DescriptionRole",
+            "DefaultValue":"",
+            "PlaceholderText":"Provide Package Description",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True
+        },
+        "SortOrder":{
+            "RowId":2,
+            "Display":"Sort Order",
+            "Description":"Holds the sort order of the object in the list.",
+            "FieldType":"IntegerInput",
+            "FieldRole":"SortOrder",
+            "DefaultValue":999,
+            "PlaceholderText":"Provide Sort Order id",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "MinValue":100,
+            "MaxValue":999,
+            "DistributeEvenly":True
+        },
+        "DefinitionFile":{
+            "RowId":3,
+            "Display":"Package Definition File Name",
+            "Description":"Holds the effective package definition file name and location in the workspace.",
+            "FieldType":"FileInput",
+            "FieldRole":"",
+            "DefaultValue":"definition.json",
+            "PlaceholderText":"Enter Package Definition file name.",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":False,
+            "FileSelectionMode":"FileName",
+            "RedirectDirectoryStatic":"",
+            "RedirectDirectoryDynamic":"Source_Files/%PackageName%",
+            "RedirectDirectoryRelativeTo":"Parent"
+        },
+        "ChildTasks":{
+            "RowId":4,
+            "Display":"Package Tasks",
+            "Description":"Child object class items to be exported into the package definition.",
+            "FieldType":"ChildObjectReference",
+            "FieldRole":"",
+            "DefaultValue":"",
+            "PlaceholderText":"Package Definition child tasks.",
+            "IsMandatory":False,
+            "ShowInEditor":False,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "Class":"PackageManager_TaskDefinition"
+        },
+        "GUID":{
+            "RowId":5,
+            "Display":"",
+            "Description":"Holds the unique identifier of the Transport Package definition object.",
+            "FieldType":"StringInput",
+            "FieldRole":"UniqueIdentifier",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True
         }
+        },
+    "DefaultConfigurationItems": {
+        "PackageName":{
+            "Display":"Package Name",
+            "Description":"Holds the friendly name of the transport package object.",
+            "FieldType":"StringInput",
+            "FieldRole":"DisplayRole",
+            "DefaultValue":"",
+            "PlaceholderText":"Provide Package Name",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True
+            },
+        "DefinitionFile":{
+            "Display":"Package Definition File Name",
+            "Description":"Configures the effective package definition file name and location in the workspace.",
+            "FieldType":"FileInput",
+            "FieldRole":"",
+            "DefaultValue":"definition.json",
+            "PlaceholderText":"Enter Package Definition file name.",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":False,
+            "FileSelectionMode":"FileName",
+            "RedirectDirectoryStatic":"",
+            "RedirectDirectoryDynamic":"Source_Files/%PackageName%",
+            "RedirectDirectoryRelativeTo":"Parent"
+        },
+        "ChildTasks":{
+            "Display":"Package Tasks",
+            "Description":"Child object class items to be exported into the package definition.",
+            "FieldType":"ChildObjectReference",
+            "FieldRole":"",
+            "DefaultValue":"",
+            "PlaceholderText":"Package Definition child tasks.",
+            "IsMandatory":False,
+            "ShowInEditor":False,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "Class":"PackageManager_TaskDefinition"
+        }
+    }
 }
+
+

@@ -180,18 +180,18 @@ QLabel[Widget=Header3]{
 }
 
 QToolButton{
-    background-color: palette(Button.Active);
-	color: palette(Text);
+    background-color:palette(Button.Active);
+	color:#626363;
 	margin: 1px;
-	border: 1px solid palette(Dark);
+	border: 1px solid #dfd9d9;
 	border-radius: 2px;
 	padding: 3px;
 	min-height: 1.5em;
 }
 
 QPushButton:hover, QToolButton:hover{
-	background-color: rgba(96, 213, 228, 0.795);
-	border: 2px solid rgb(161, 208, 218);;
+	background-color: rgba(216, 216, 216, 0.486);
+	border: 1px solid rgba(114, 114, 116, 0.726);;
 }
 
 QToolButton[Widget=AddButton]{
@@ -324,6 +324,17 @@ QToolButton[ToolButton=SideBar]:checked{
 	border-left: 3px solid #9da09f;
 }
 
+QToolButton[ToolButton=DeleteItem]{
+	color:#9e2015;
+	font: bold;
+}
+
+QToolButton[ToolButton=DeleteItem]:hover{
+	color:#ffffff;
+	background-color: #c5675e;
+	border:1px solid #9e2015;
+}
+
 QToolButton#PackageManagerButton{
 }
 QToolButton#TemplateEditorButton{
@@ -409,7 +420,10 @@ QLabel[ExecutionState="Queued"]{
 	font-family: "Courier New";
 	color:#212124;
 	padding: 1px;
+	word-wrap: break-word;
+	white-space:pre-wrap;
 }
+
 
 /* Console stylesheet - console error output formatting */
 .execution-error{
@@ -459,31 +473,102 @@ QLabel[ExecutionState="Queued"]{
 	background-color: #f18775;
 }
 
-.test-class{
-	background-color: #f18775;
+/* Configuration Editor custom widgets */
+QLabel[ConfigurationEditor="ListViewHeader"]{
+	font-size: 15px;
+	font: bold;
+	color:#333633;
 }
 
-
-/* Configuration Editor custom widgets */
 QListView[ConfigurationEditor="ObjectModelListView"]{
 	border: 1px solid rgba(125, 138, 141, 0.4);
 }
 
 QListView[ConfigurationEditor="ObjectModelListView"]::item{
-	min-height: 200px;
-	margin: 1px;
-	margin-right: 2px;
+	padding: 0px;
+	margin: 0px;
+	border: 1px solid #272928;
+}
+
+QWidget[ConfigurationEditor="Active"]{
+	background-color: rgba(216, 220, 224, 0.24);
+	border-radius: 3px;
+	border: 1px solid #7575cf9d;
+	padding: 2px;
+}
+
+QWidget[ConfigurationEditor="Handle"]{
+	color:#222121;
+	border: 1px solid #9da09f8c;
+}
+
+QWidget[ConfigurationEditor="Handle"]::hover{
+	background-color :#9da09f8c;
 }
 
 QWidget[ConfigurationEditor="ObjectModelItemWidget"]{
 	background-color: rgba(239, 239, 245, 0.2);
-	border: 1px solid rgba(125, 138, 141, 0.4);
+	border: 1px solid rgba(125, 138, 141, 0.644);
+	padding: 2px;
+	margin-top: 4px;
+	margin-bottom: 4px;
 }
 
 QWidget[ConfigurationEditor="PropertyLabel"]{
-
+	color:#626363;
 }
 
 QWidget[ConfigurationEditor="PropertyEditor"]{
+	color:#626363;
+}
 
+QWidget[ConfigurationEditor="FieldLabel"]{
+	color:#626363;
+	font: bold;
+	font-size: 12px;
+	margin-top: 0px;
+	margin-bottom: 2px;
+	padding:0;
+}
+
+QWidget[ConfigurationEditor="FieldDescription"]{
+	color:#626363;
+	margin-top: 0px;
+	margin-bottom: 2px;
+	padding-left: 5px;
+	padding-top: 0;
+}
+
+/* Object model editor frame with field properties */
+QGroupBox[ConfigurationEditor="FieldConfigurationFrame"]{
+	border-radius: 3px;
+	border: 1px solid #615c51b6;
+	margin-top:12px;
+	font: bold 14px;
+	color:#272928;
+	margin-left: 1ex;
+	margin-right: 1ex;
+}
+
+QGroupBox[ConfigurationEditor="FieldConfigurationFrame"]::title{
+	subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+	padding: 0px;
+	/* border: 1px solid #9e2015; */
+	margin-top:2px;
+	margin-bottom:2px;
+	color:#626363;
+}
+
+QFrame[FieldConfigurationFrame="Separator"]{
+	border-top: 2px solid qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 transparent, stop: 0.5 #615c51b6, stop: 1 transparent);
+}
+
+
+QLineEdit:!enabled{
+	background-color: #a39797a9;
+}
+
+QLabel:!enabled{
+	color: #7e7676;
 }

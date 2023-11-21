@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView, QTextEdit, QSplitter, QLineEdit, QLabel, QToolButton
 from PyQt6.QtCore import Qt, pyqtSignal, QProcess
-from PyQt6.QtGui import QTextCursor, QTextDocumentFragment
+from PyQt6.QtGui import QTextCursor, QTextDocumentFragment, QTextOption
 from .ContextMenu import ExecutionPlannerContextMenu
 from lib.data.DataModels import TaskExecutionModel
 from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
@@ -40,6 +40,9 @@ class ExecutionPlannerWidget(QWidget):
         self.treeview = QTreeView()
         self.console = QTextEdit()
         self.console.setAcceptRichText(True)
+        self.console.setWordWrapMode(QTextOption.WrapMode.WordWrap)
+        self.console.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
+        self.console.setLineWrapColumnOrWidth(self.console.width())
 
         self.defaultBlockFormat = self.console.textCursor().blockFormat()
         self.defaultBlockFormat.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -276,9 +279,9 @@ class ExecutionPlannerWidget(QWidget):
                 self.console.setTextCursor(cursor)
                 return True
 
-        log_info = '<table width="100%" class="execution-log">'
+        log_info = '<table width="100%" class="log-table">'
         log_info += '<tr>'
-        log_info += f'<td><pre class="execution-log">{message}</pre></td>'
+        log_info += f'<td class="log-row"><pre class="execution-log">{message}</pre></td>'
         log_info += '</tr>'
         log_info += '</table>'
 

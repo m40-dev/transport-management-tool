@@ -46,7 +46,7 @@ class MultiObjectEditorForm(QtWidgets.QDialog):
         description_label = QtWidgets.QLabel("Select Columns to be updated in bulk for all selected items.\nOnly same object class items will be updated.")
         self.layout.addWidget(description_label, self.layout.rowCount(), 0, 2, 2)
         for column, column_configuration in self._form_confguration.items():
-            widget_required = (column_configuration.get("ShowInEditor", "True") == "True")
+            widget_required = (column_configuration.get("ShowInEditor", True) == True)
             
             if not widget_required:
                 continue

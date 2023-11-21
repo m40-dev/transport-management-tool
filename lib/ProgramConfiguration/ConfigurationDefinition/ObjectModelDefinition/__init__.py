@@ -3,7 +3,8 @@ from .PackageManager_TaskDefinition import *
 from .ExecutionPlanner_ExecutionGroup import *
 from .ExecutionPlanner_ExecutionTask import *
 from .XMLTemplateEditor_RelationPreset import *
-from .ObjectModelConfigurationWidget import *
+from .ObjectModelConfiguration import *
+from .DevelopmentConfigurations import *
 
 OBJECT_MODEL_CONFIGURATION = {
     "ObjectModel":{
@@ -26,7 +27,7 @@ OBJECT_MODEL_CONFIGURATION = {
             "ExecutionPlanner_ExecutionGroup": ExecutionPlanner_ExecutionGroup,
             "ExecutionPlanner_ExecutionTask": ExecutionPlanner_ExecutionTask,
             "XMLTemplateEditor_RelationPreset": XMLTemplateEditor_RelationPreset,
-            "ObjectModelConfigurationWidget": ObjectModelConfigurationWidget
+            "ObjectModelConfiguration": ObjectModelConfiguration
         }
     }
 }

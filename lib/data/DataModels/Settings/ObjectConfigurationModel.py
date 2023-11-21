@@ -3,29 +3,34 @@ import json
 from .ObjectConfigurationItem import ObjectConfigurationItem
 
 class ObjectConfigurationModel(QAbstractItemModel):
-    filterStringChanged = pyqtSignal(str) 
+    filterStringChanged = pyqtSignal(str)
+    newItemAdded = pyqtSignal(object)
 
-    def __init__(self, application, configuration_data, parent_widget=None):
+    def __init__(self, application, section_name, configuration_data, parent_widget=None):
         super().__init__(parent_widget)
         self.application = application
         self.ProgramConfiguration = self.application.ProgramConfiguration
         self._headers = ["Form Elements"]
         self.listview = parent_widget
         self.rootItem = ObjectConfigurationItem(parent=parent_widget, application=application, object_data=None, model_reference=self)
+        self._object_class = section_name
 
         if configuration_data:
+            # Configuration data carries over the configuration parameters for the model
             self.setupModelData(configuration_data)
 
     def setupModelData(self, configuration_data):
         """ Main method used to load all data into the model """
-        configuration_data = self.ProgramConfiguration.sortSectionItems(configuration_data.ConfigurationParameters)
-        for configuration_key, configuration_entry in configuration_data.items():
-            configuration_item = ObjectConfigurationItem(
-                parent=self.rootItem,
-                application=self.application,
-                object_data={configuration_key: configuration_entry}, 
-                model_reference=self)
-            self.rootItem.addChild(configuration_item)
+        if configuration_data and self.ProgramConfiguration:
+            configuration_data = self.ProgramConfiguration.sortSectionItems(configuration_data)
+        
+            for configuration_key, configuration_entry in configuration_data.items():
+                configuration_item = ObjectConfigurationItem(
+                    parent=self.rootItem,
+                    application=self.application,
+                    object_data={configuration_key: configuration_entry}, 
+                    model_reference=self)
+                self.rootItem.addChild(configuration_item)
 
     @property
     def headers(self):
@@ -158,7 +163,7 @@ class ObjectConfigurationModel(QAbstractItemModel):
             source_item = None
             if source_item_uid:
                 # find the source Item and save it
-                source_item = self.findItemByUID("uid", source_item_uid)
+                source_item = self.findItemByUID(source_item_uid)
                 if source_item:
                     source_items.append(source_item)
 
@@ -179,13 +184,17 @@ class ObjectConfigurationModel(QAbstractItemModel):
                 new_item.dataDropped.emit(dropped_item)
         
         #insert dropped items at new location
+        # print("insert at row", row)
         self.insertItems(newItems, row)
 
         #remove source objects at once
         self.removeItems(source_items)
 
+        last_item = newItems[-1]
+        last_item.isActive = True
+
         #emit data change signal
-        self.dataChanged.emit(parentIndex, parentIndex)
+        # self.dataChanged.emit(parentIndex, parentIndex)
         return True
 
     def insertItems(self, list_of_items, row=-1):
@@ -198,12 +207,14 @@ class ObjectConfigurationModel(QAbstractItemModel):
         self.beginInsertRows(QModelIndex(), row, (row + len(list_of_items)-1) )
         parentItem.insertChildren(row, list_of_items)
         self.endInsertRows()
+        self.dataChanged.emit(QModelIndex(), QModelIndex())
 
     def removeItems(self, source_items):
         for source_item in source_items:
             self.beginRemoveRows(QModelIndex(), source_item.row(), source_item.row())
             self.rootItem.removeChildItem(source_item)
             self.endRemoveRows()
+        self.dataChanged.emit(QModelIndex(), QModelIndex())
 
     def exportModelToJson(self):
         data = []
@@ -226,7 +237,7 @@ class ObjectConfigurationModel(QAbstractItemModel):
             export_data.update(object_data)
         return export_data
 
-    def findItemByUID(self, column, uid_query):
+    def findItemByUID(self, uid_query):
         """
         Finds the first item in the model with a matching attribute value in the given column.
         """
@@ -236,4 +247,16 @@ class ObjectConfigurationModel(QAbstractItemModel):
                 item = index.internalPointer()
                 if item.uid == uid_query:
                     return item
+        return False
+    
+    def findIndexByUID(self, uid_query):
+        """
+        Finds the first item in the model with a matching attribute value in the given column.
+        """
+        for row in range(self.rowCount()):
+            index = self.index(row, 0)
+            if index.isValid():
+                item = index.internalPointer()
+                if item.uid == uid_query:
+                    return index
         return False

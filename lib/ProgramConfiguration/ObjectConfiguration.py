@@ -37,3 +37,4 @@ class ObjectModel(QObject):
                 if column_configuration.get(setting, None):
                     columns[column] = column_configuration
         return columns
+

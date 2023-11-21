@@ -226,6 +226,7 @@ class PackageManager(QtWidgets.QWidget):
         contextMenu.collapseAll.connect(self.collapseAll)
         contextMenu.expandAll.connect(self.expandAll)
         contextMenu.editSelectedItems.connect(self.onEditSelectedItems)
+        contextMenu.sortChildItems.connect(self.onSortChildItems)
 
         if len(contextMenu.menu_items) > 0:
             contextMenu.popup(menu_target)
@@ -295,7 +296,21 @@ class PackageManager(QtWidgets.QWidget):
                 if selected_item.task_class == "PackageManager_PackageDefinition" and selected_item != source_item:
                     selected_item.save()
         
-            
+    def onSortChildItems(self, source_index):
+        if not source_index.isValid():
+            return False
+
+        source_item = None
+        if source_index.isValid():
+            source_item = source_index.internalPointer()
+            if source_item.task_class == "PackageManager_PackageDefinition":
+                source_item.sortChildItems()
+
+        selected_items = self.selectedItems()
+        if len(selected_items) > 0:
+            for selected_item in selected_items:
+                if selected_item.task_class == "PackageManager_PackageDefinition" and selected_item != source_item:
+                    selected_item.sortChildItems()
 
     def addTaskDefinition(self, source_index):
         # print("add task definition for", source_index)

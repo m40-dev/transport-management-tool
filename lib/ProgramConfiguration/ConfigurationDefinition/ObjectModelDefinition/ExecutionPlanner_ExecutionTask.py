@@ -1,4 +1,5 @@
 from lib.ui.WidgetFactory.Settings.ConfigurationSectionEditor import ObjectModelConfigurationEditor
+
 ExecutionPlanner_ExecutionTask = {
     "SectionName": "ExecutionPlanner_ExecutionTask",
     "DisplayName": "Object Definition - Execution Planner Task",
@@ -13,17 +14,14 @@ ExecutionPlanner_ExecutionTask = {
                 "Display": "Task Name",
                 "PlaceholderText": "Provide Task Name",
                 "FieldRole": "DisplayRole",
-                "Source": "TaskName",
-                "RowId": 0
+                "Source": "TaskName"
             },
         "Description": 
             {
                 "FieldType": "TextInput",
                 "Display": "Package Description",
                 "PlaceholderText": "Provide Package Description",
-                "FieldRole": "DescriptionRole",
-                "RowId": 1
-
+                "FieldRole": "DescriptionRole"
             },
         "TaskType":
             {
@@ -31,50 +29,34 @@ ExecutionPlanner_ExecutionTask = {
                 "Source": "TaskType",
                 "Transporter": ["Transport", "BugFix"],
                 "SQLScript": ["SQL"],
-                "SchemaExtension": ["Schema"],
-                "RowId": 2
-            },
-        "PackageName":
-            {
-                "FieldType": "StringInput",
-                "Source": "PARENT_DEF.PackageName",
-                "RowId": 3
-            },
-        "ParentDescription":
-            {
-                "FieldType": "StringInput",
-                "Source": "PARENT_DEF.Description",
-                "RowId": 4
+                "SchemaExtension": ["Schema"]
             },
         "Connection":
             {
-                "FieldType": "StringInput",
-                "RowId": 5 
+                "FieldType": "StringInput" 
             },
         "DefinitionFile":
             {
                 "FieldType": "FileInput",
-                "FileSelectionMode": "Relative",
-                "RowId": 6
+                "FileSelectionMode": "Relative"
             },
         "ExportFile":
             {
                 "FieldType": "FileInput",
-                "FileSelectionMode": "Relative",
-                "RowId": 7
+                "FileSelectionMode": "Relative"
             },
         "CompilerOption": 
             {
                 "FieldType": "FixedInput",
                 "Options": {"No Compilation": "None", "Full Compilation": "Full", "Skip Web Projects Compilation":"NoWeb"},
-                "DefaultValue": "NoWeb",
-                "RowId": 8
+                "DefaultValue": "NoWeb"
             },
         "AutoUpdate":
             {
                 "FieldType": "BooleanInput",
-                "DefaultValue": "False",
-                "RowId": 9
+                "DefaultValue": "False"
             }
-        }
+        },
+    "DefaultConfigurationItems": {
+    }
 }

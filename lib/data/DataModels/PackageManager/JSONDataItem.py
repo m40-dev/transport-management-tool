@@ -126,13 +126,29 @@ class JSONDataItem(QObject):
         
         if sort_column_configuration:
             min_value = sort_column_configuration.get("MinValue", 1)
-            max_value = sort_column_configuration.get("MaxValue", 255)
+
+            if treeview_order == 0:
+                treeview_order = min_value
+                if treeview_order != self.data(sort_column):
+                    self.setData(sort_column, treeview_order)
+                return treeview_order
+
+            max_value = sort_column_configuration.get("MaxValue", 999)
             sibling_count = self.parent().childCount()
+
             if sibling_count <= 0:
                 sibling_count = 1
+            if treeview_order >= sibling_count-1:
+                treeview_order = max_value
+                if treeview_order != self.data(sort_column):
+                    self.setData(sort_column, treeview_order)
+                return treeview_order
+
             value_range = (max_value - min_value)
+
+            treeview_order = treeview_order + min_value
                             
-            if sort_column_configuration.get("DistributeEvenly", "False") == "True":
+            if sort_column_configuration.get("DistributeEvenly", False) == True:
                 sorting_step = value_range / sibling_count
                 treeview_order = round(sorting_step * treeview_order )
             
@@ -159,7 +175,6 @@ class JSONDataItem(QObject):
 
         if treeview_order != self.data(sort_column):
             self.setData(sort_column, treeview_order)
-        
         return treeview_order
 
 
@@ -531,7 +546,7 @@ class JSONDataItem(QObject):
         object_data = self.task_data()
 
         for field, field_configuration in configuration.items():
-            is_for_export = field_configuration.get("IsForDataExport", "True") == "True"
+            is_for_export = field_configuration.get("IsForDataExport", True) == True
             if not is_for_export:
                 continue
 
@@ -561,7 +576,7 @@ class JSONDataItem(QObject):
             return object_data
 
         for field, field_configuration in configuration.items():
-            is_for_export = field_configuration.get("IsForDataExport", "True") == "True"
+            is_for_export = field_configuration.get("IsForDataExport", True) == True
             if not is_for_export:
                 continue
             object_field_value = object_data.get(field, "")
@@ -688,8 +703,12 @@ class JSONDataItem(QObject):
                             #previous data state is required, but parent location is determined by the DefinitionFile path
                             parent_location = self.parent()._previous_task_data.get("DefinitionFile")
 
-                        parent_directory_path = self.parent().get_file_path(parent_location, previous_state=previous_state).parent
-                        # print(f"get file path in previous state {previous_state}, parent location {parent_location}")
+                        parent_file_path = self.parent().get_file_path(parent_location, previous_state=previous_state)
+                        
+                        if parent_file_path:
+                            parent_directory_path = Path(parent_file_path).parent
+                        
+                        # print(f"get file path in previous state {previous_state}, parent location {parent_directory_path}")
 
                     static_redirect = definition_file_configuration.get("RedirectDirectoryStatic", None)
                     if static_redirect:

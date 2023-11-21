@@ -15,6 +15,21 @@ class ConfigurationSectionEditor(QtWidgets.QWidget):
         self._section_name = section_name
         self.setupUi()
 
+    @property
+    def section_display_name(self):
+        return self._section_source._section_data.get("DisplayName", "")
+    
+    @property
+    def description(self):
+        return self._section_source._section_data.get("Description", "")
+
+    @property
+    def section_source(self):
+        return self._section_source
+
+    def reloadSection(self):
+        pass
+    
     def setupUi(self):
 
         self.layout = QtWidgets.QGridLayout(self)
@@ -22,8 +37,8 @@ class ConfigurationSectionEditor(QtWidgets.QWidget):
         self.layout.setSpacing(2)
         self.layout.setContentsMargins(2,2,2,2)
 
-        name_label = QtWidgets.QLabel(f"<h2>{self._section_source.DisplayName}</h2>")
-        description_label = QtWidgets.QLabel(f"<p>{self._section_source.Description}</p>")
+        name_label = QtWidgets.QLabel(f"<h2>{self.section_display_name}</h2>")
+        description_label = QtWidgets.QLabel(f"<p>{self.description}</p>")
         separator = QtWidgets.QFrame()
         separator.setFrameShape(QtWidgets.QFrame.Shape.HLine)
         

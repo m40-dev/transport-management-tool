@@ -1,26 +1,29 @@
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 
 from .ConfigurationSectionTreeWidgetItem import ConfigurationSectionTreeWidgetItem
 
 class SettingsWidget(QtWidgets.QWidget):
+    configurationReloaded = pyqtSignal()
 
     def __init__(self, application):
         super().__init__()
         self.application = application
         self.ProgramConfiguration = self.application.ProgramConfiguration
-
+        self.current_section = None
         self.setupUi()
         self.loadConfigurationData()
 
         self.ConfigurationSectionTreeWidget.itemClicked.connect(self.onSectionChanged)
+        self.configurationReloaded.connect(lambda current=self.current_section: self.onSectionChanged(self.current_section))
 
     def onSectionChanged(self, source_item):
-        
-        for x in range(self.ConfigurationSectionTabWidget.count()):
-            self.ConfigurationSectionTabWidget.removeTab(0)
-
+        if not source_item:
+            return False
+        # for x in range(self.ConfigurationSectionTabWidget.count()):
+        #     self.ConfigurationSectionTabWidget.removeTab(0)
+        self.current_section = source_item
         editor_widget = source_item.getSectionEditorWidget()
 
         if self.ConfigurationSectionTabWidget.indexOf(editor_widget) < 0:
@@ -47,7 +50,7 @@ class SettingsWidget(QtWidgets.QWidget):
         self.ConfigurationSearch = QtWidgets.QLineEdit()
         self.ConfigurationSearch.setPlaceholderText("Search for configuration...")
         self.ConfigurationApplyButton = QtWidgets.QToolButton()
-        self.ConfigurationApplyButton.setText("Apply Configuration")
+        self.ConfigurationApplyButton.setText("Save Configuration")
         self.ConfigurationApplyButton.clicked.connect(self.saveConfigurationData)
 
         toolbox_layout.addWidget(self.ConfigurationSearch)
@@ -93,11 +96,6 @@ class SettingsWidget(QtWidgets.QWidget):
 
     def saveConfigurationData(self):
         self.ProgramConfiguration.saveConfiguration()
-
-    def refresh_ui(self):
-        for x in range(self.ConfigurationSectionTabWidget.count()):
-            self.ConfigurationSectionTabWidget.removeTab(0)
-
 
         
 

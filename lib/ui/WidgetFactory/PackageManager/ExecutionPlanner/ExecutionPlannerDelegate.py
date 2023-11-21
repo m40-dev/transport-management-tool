@@ -86,7 +86,8 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
             if option.state & QStyle.StateFlag.State_Selected:
                 palette = Application_Theme()
                 selection_color = palette.color(QPalette.ColorRole.Highlight)
-                
+                if selection_color:
+                    selection_color.setAlphaF(0.2)
                 # Set the pen color to the selection color
                 pen = QPen(selection_color)
                 pen.setWidth(3)
@@ -135,7 +136,7 @@ class ExecutionPlannerItem(QFrame):
         # print(object_configuration)
         description_config = object_configuration.get("Description", None)
         if description_config:
-            show_description = description_config.get("ShowInTreeView", "True") == "True"
+            show_description = description_config.get("ShowInTreeView", True) == True
             if not show_description:
                 self.element_description.setHidden(True)
 
@@ -214,7 +215,7 @@ class ItemActionWidget(ExecutionPlannerItem):
             row = task_details_layout.rowCount()
             column_count = 0
             for column, column_configuration in dynamic_property_columns.items():
-                show_entry = column_configuration.get("ShowInTreeView", "True") == "True"
+                show_entry = column_configuration.get("ShowInTreeView", True) == True
                 if not show_entry:
                     continue
 

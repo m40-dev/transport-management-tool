@@ -304,6 +304,8 @@ class XMLDataItem(QObject):
         export_data['uid'] = self.uid
         export_data['objectclass'] = self.object_class
         export_data['row'] = self.row()
+        if self.xml_object_class == "Transport_Object" and self.object_relations:
+            export_data['object_relations'] = self.object_relations
         return export_data
 
     @property

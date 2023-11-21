@@ -139,7 +139,7 @@ class Transport_Manager(QMainWindow):
         self.PackageManager.addExecutionPlan()
 
         # Application development testing helpers
-        self.ui.MainTabWidget.setCurrentIndex(2)
+        # self.ui.MainTabWidget.setCurrentIndex(2)
 
     def getConfigurationParameters(self, configuration_section):
         return self.ProgramConfiguration.getConfigurationParameters(configuration_section)
@@ -268,7 +268,7 @@ class Transport_Manager(QMainWindow):
         # self.ui.XMLEditorWidget.reconfigure_editor()
         self.XMLTemplateEditor.refresh_ui()
         self.PackageManager.refresh_ui()
-        self.SettingsWidget.refresh_ui()
+        self.SettingsWidget.configurationReloaded.emit()
         
     
     def getObjectData(self, object_class, dialog_name="Object Data", source_index=None, editor_configuration=None):

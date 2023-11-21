@@ -6,11 +6,11 @@ from .ConfigurationSectionEditor import ConfigurationSectionEditor
 class GeneralConfigurationEditor(ConfigurationSectionEditor):
     def __init__(self, application, section_name, section_source):
         super().__init__(application=application, section_name=section_name, section_source=section_source)
-
-        for configuration_key, field_configuration in self._section_source.ConfigurationParameters.items():
-            editor_widget = self.get_editorWidget(configuration_key, field_configuration)
-
-            self.editor_layout.addWidget(editor_widget, self.editor_layout.rowCount(), 0, 1, 1)
+        if self._section_source.ConfigurationParameters:
+            for configuration_key, field_configuration in self._section_source.ConfigurationParameters.items():
+                editor_widget = self.get_editorWidget(configuration_key, field_configuration)
+                if editor_widget:
+                    self.editor_layout.addWidget(editor_widget, self.editor_layout.rowCount(), 0, 1, 1)
         self.editor_layout.setRowStretch(self.editor_layout.rowCount()+1, 10)
     
     def updateTempDisplay(self, configuration_key, test_label):

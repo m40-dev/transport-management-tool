@@ -1,4 +1,5 @@
 from PyQt6 import QtCore, QtWidgets, QtGui
+
 from pathlib import Path
 import json
 import uuid
@@ -54,22 +55,32 @@ class FormEditorDialog(QtWidgets.QDialog):
     def accept(self):
         self.saveWindowState()
         validation_errors = {}
-        self.check_mandatory_columns(validation_errors)
-        # self.check_mandatory_columns(validation_errors, "Some Additional Error")
+        # self.check_mandatory_columns(validation_errors)
+        validation_summary = self.check_validators()
         
         # print("vaildate and accept")
-        if len(validation_errors) > 0:
-            string_data = json.dumps(validation_errors, indent=4, separators=(',',':'))
+        if len(validation_summary) > 0:
+            string_data = json.dumps(validation_summary, indent=4, separators=(',',':'))
             MsgBox(self.application, "Form validation returned errors", string_data)
             return False
         # print("form data", self.form_data)
         super().accept()
 
+    def check_validators(self):
+        validation_summary = {}
+        for editor_object in self.editors.values():
+            if editor_object.editor:
+                form_value = self.form_data.get(editor_object.column_name, "")
+                validation_result, validation_errors = editor_object.validate(form_value)
+                if not validation_result:
+                    validation_summary[editor_object.display_name] = validation_errors
+        return validation_summary
+
     def check_mandatory_columns(self, validation_errors={}, error_message = "Mandatory column not set."):
         mandatory_columns = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(self.configuration_class, "IsMandatory")
         if len(mandatory_columns) > 0:
             for column, column_configuration in mandatory_columns.items():
-                if column_configuration.get("ShowInEditor", "True") == "False":
+                if column_configuration.get("ShowInEditor", True) == False:
                     # column not visible to user
                     # print(column, "column not visible to user")
                     continue
@@ -90,10 +101,9 @@ class FormEditorDialog(QtWidgets.QDialog):
         # print("setup form")
         # print(self._form_data)
         for column, column_configuration in self._form_confguration.items():
-            # widget_required = (column_configuration.get("ShowInEditor", "True") == "True")
+            # widget_required = (column_configuration.get("ShowInEditor", True) == True
             row_id = self.layout.rowCount()
-            
-            editor_object = FormEditorObject(self.application, column, column_configuration)
+            editor_object = FormEditorObject(self, self.application, column, column_configuration)
 
             if editor_object.default_value:
                 self.update_form_data(column, editor_object.default_value)
@@ -160,21 +170,27 @@ class FormEditorDialog(QtWidgets.QDialog):
 class FormEditorObject(QtCore.QObject):
     dataChanged = QtCore.pyqtSignal(str, object)
 
-    def __init__(self, application, column_name, column_configuration):
+    def __init__(self, parent, application, column_name, column_configuration):
         super(FormEditorObject, self).__init__()
+        self.parent = parent
         self.application = application
         self.column_name = column_name
         self.column_configuration = column_configuration
+        self.display_name = column_name
 
-        self.display_name = column_configuration.get("Display", column_name)
-        self.isMandatory = column_configuration.get("IsMandatory", "False") == "True"
-        self.isVisible = (column_configuration.get("ShowInEditor", "True") == "True")
-        
+        display = column_configuration.get("Display", column_name)
+        if len(display.strip()) > 0:
+            self.display_name = display
+            
+        self.isMandatory = str(column_configuration.get("IsMandatory", "False")).upper() == "TRUE"
+        self.isVisible = str(column_configuration.get("ShowInEditor", "True")).upper() == "TRUE"
         self.label = None
         self.MandatoryLabel = None
         self.editor = None
 
         self.default_value = column_configuration.get("DefaultValue", "")
+        self.widgets = []
+        self._opacity = 1 
             
         # setup fields based on their role
         field_role =  column_configuration.get("FieldRole", None)
@@ -183,16 +199,67 @@ class FormEditorObject(QtCore.QObject):
 
         if self.isVisible:
             self.setupUi()
-    
+            # self.setVisible(True)
+
+    def validate(self, check_value):
+        validation_status = True
+        validation_errors = {}
+        if len(str(check_value).strip()) == 0 and self.isMandatory:
+            validation_errors.update({"Check Mandatory fields": "Mandatory column not set."})
+            validation_status = False
+
+        field_type = self.column_configuration.get("FieldType", None)
+        if field_type == "IntegerInput":
+            if isinstance(check_value, str) and check_value.isnumeric():
+                check_value = int(check_value)
+            min_value = self.column_configuration.get("MinValue", None)
+            max_value = self.column_configuration.get("MaxValue", None)
+            if min_value:
+                if check_value < min_value:
+                    validation_errors.update({"Check value range": "Form Value below minimum allowed value range."})
+                    validation_status = False
+            if max_value:
+                if check_value > max_value:
+                    validation_errors.update({"Check value range": "Form Value above maximum allowed value range."})
+                    validation_status = False
+
+        return validation_status, validation_errors
+
+    def setVisible(self, visible):
+        for widget in self.widgets:
+            if widget:
+                widget.setVisible(visible)
+                
+    def setEnabled(self, enabled):
+        for widget in self.widgets:
+            if widget:
+                widget.setEnabled(enabled)
+
     def setupUi(self):
+        widgets = []
         if self.isMandatory:
             self.MandatoryLabel = QtWidgets.QLabel("*")
             self.MandatoryLabel.setProperty("PropertyEditor","IsMandatory")
+            widgets.append(self.MandatoryLabel)
 
-        self.label = QtWidgets.QLabel(f"<b>{str(self.display_name)}</b>")
+        self.label = QtWidgets.QLabel(self.parent)
+        self.label.setText(f"<b>{str(self.display_name)}</b>")
         self.editor = self.get_editor()
-        self.set_editor_data(self.default_value)
 
+        tooltip = self.column_configuration.get("Description", "")
+        if len(tooltip.strip()) > 0: 
+            if self.label:
+                self.label.setToolTip(f"<i>{tooltip}</i>")
+            if self.editor:
+                self.editor.setToolTip(f"<i>{tooltip}</i>")
+
+        widgets.append(self.label)
+        widgets.append(self.editor)
+
+        self.set_editor_data(self.default_value)
+        self.update_form_data(self.column_name, self.default_value)
+
+        self.widgets = widgets
 
     def update_form_data(self, column, value):
         if self.column_configuration.get("FieldType", None) == "BooleanInput":
@@ -216,7 +283,7 @@ class FormEditorObject(QtCore.QObject):
             editor_widget.setValues(value)
         
         if isinstance(editor_widget, QtWidgets.QCheckBox):
-            state = str(value) == "2" or str(value) == "True"
+            state = str(value) == "2" or str(value).upper() == "TRUE"
             editor_widget.setChecked(state)
 
     def get_editor(self):
@@ -266,9 +333,7 @@ class FormEditorObject(QtCore.QObject):
 
     def integer_input(self, column, column_configuration):
         editor = self.string_input(column, column_configuration)
-        min_value = column_configuration.get("MinValue", 1)
-        max_value = column_configuration.get("MaxValue", 255)
-        range_validator = QtGui.QIntValidator(min_value, max_value, self)
+        range_validator = QtGui.QIntValidator(self)
         editor.setValidator(range_validator)
         return editor
 
@@ -285,10 +350,13 @@ class FormEditorObject(QtCore.QObject):
         return editor
 
     def fixed_input(self, column, column_configuration):
-        options = column_configuration.get("Options", {})
+        options = column_configuration.get("Options", {"":""})
         editor = QtWidgets.QComboBox()
         editor.setFocusPolicy(QtCore.Qt.FocusPolicy.StrongFocus)
         editor.wheelEvent = lambda event, editor=editor: self.wheelEventHandler(event, editor)
+        if isinstance(options, str):
+            options = json.loads(options)
+            
         for key, value in options.items():
             editor.addItem(key, value)
 
@@ -304,8 +372,6 @@ class FormEditorObject(QtCore.QObject):
         if editor.hasFocus():
             editor.__class__.wheelEvent(editor, event)
         event.accept()
-        
-
 
     def string_input(self, column, column_configuration):
         placeholder_text = column_configuration.get("PlaceholderText", "")
@@ -318,7 +384,7 @@ class FormEditorObject(QtCore.QObject):
                 self.update_form_data(column, value)
                 )
         
-        is_sensitive = column_configuration.get("IsSensitive", "False") == "True"
+        is_sensitive = column_configuration.get("IsSensitive", False) == True
         if is_sensitive:
             editor.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
         editor.setProperty("Widget", "EditorDialog")
@@ -336,9 +402,6 @@ class FormEditorObject(QtCore.QObject):
                 )
         
         editor.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-        is_sensitive = column_configuration.get("IsSensitive", "False") == "True"
-        if is_sensitive:
-            editor.setEchoMode(QtWidgets.QTextEdit.EchoMode.Password)
         editor.setProperty("Widget", "EditorDialog")
         
         return editor
@@ -381,7 +444,7 @@ class ListInputWidget(FormEditorWidget):
 
         self.list_input=QtWidgets.QTextEdit()
         self.list_input.setPlaceholderText(self.placeholder_text)
-        is_sensitive = column_configuration.get("IsSensitive", "False") == "True"
+        is_sensitive = column_configuration.get("IsSensitive", False) == True
         if is_sensitive:
             self.list_input.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
 
@@ -422,7 +485,7 @@ class FileInputWidget(FormEditorWidget):
 
         self.path_input=QtWidgets.QLineEdit()
         self.path_input.setPlaceholderText(self.placeholder_text)
-        is_sensitive = column_configuration.get("IsSensitive", "False") == "True"
+        is_sensitive = column_configuration.get("IsSensitive", False) == True
         if is_sensitive:
             self.path_input.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
 

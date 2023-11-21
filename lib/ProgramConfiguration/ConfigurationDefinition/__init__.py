@@ -3,6 +3,10 @@ from .PackageManagerConfiguration import *
 from .ObjectModelDefinition import *
 
 
-CONFIGURATION_FILES = {"ProgramConfiguration": "program_configuration.json", "ObjectModelConfiguration": "object_configuration.json"}
+CONFIGURATION_FILES = {
+    "ProgramConfiguration": "program_configuration.json", 
+    "ObjectModelConfiguration": "object_configuration.json"
+    }
+    # "DevelopmentConfiguration": "development_configuration.json"
 
-PROGRAM_CONFIGURATION = GENERAL_CONFIGURATION | PACKAGE_MANAGER_CONFIGURATION | OBJECT_MODEL_CONFIGURATION
+PROGRAM_CONFIGURATION = GENERAL_CONFIGURATION | PACKAGE_MANAGER_CONFIGURATION | OBJECT_MODEL_CONFIGURATION | DEVELOPMENT_CONFIGURATION

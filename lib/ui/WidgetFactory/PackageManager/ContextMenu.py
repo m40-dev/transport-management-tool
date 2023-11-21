@@ -11,6 +11,7 @@ class PackageDefinitionMenu(QMenu):
     editTaskDefinition = pyqtSignal(object)
     savePackageDefinition = pyqtSignal(object)
     editSelectedItems = pyqtSignal(object)
+    sortChildItems = pyqtSignal(object)
 
     collapseAll = pyqtSignal()
     expandAll = pyqtSignal()
@@ -51,9 +52,13 @@ class PackageDefinitionMenu(QMenu):
                 action_save_package_definition = self.addAction("Save Package Definition(s)")
                 action_save_package_definition.triggered.connect(lambda: self.savePackageDefinition.emit(source_index))
 
+                action_sortChildren = self.addAction("Sort Task items")
+                action_sortChildren.triggered.connect(lambda: self.sortChildItems.emit(source_index))
+
                 self.menu_items.append(action_addPackageDefinition)
                 self.menu_items.append(action_editPackageDefinition)
                 self.menu_items.append(action_save_package_definition)
+                self.menu_items.append(action_sortChildren)
 
             if source_item.task_class == "PackageManager_TaskDefinition":
                 action_editTaskDefinition = self.addAction("Edit Task")

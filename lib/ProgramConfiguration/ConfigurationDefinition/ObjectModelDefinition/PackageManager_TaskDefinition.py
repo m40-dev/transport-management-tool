@@ -1,80 +1,226 @@
 from lib.ui.WidgetFactory.Settings.ConfigurationSectionEditor import ObjectModelConfigurationEditor
 PackageManager_TaskDefinition = {
     "SectionName": "PackageManager_TaskDefinition",
+    "IsEditable": True,
     "DisplayName": "Object Definition - Transport Task",
     "Description": "Configuration Parameters section for the Transport Task object definition.",
     "TargetConfigurationFile": "ObjectModelConfiguration",
     "ConfigurationEditor": ObjectModelConfigurationEditor,
     "ExportType": "ExportKeys",
     "ConfigurationParameters":{
-        "TaskName": 
-            {
-                "FieldType": "StringInput",
-                "FieldRole": "DisplayRole",
-                "IsMandatory": "True",
-                "RowId": 0
+        "TaskName":{
+            "Display":"Task Name",
+            "Description":"Holds the friendly name of the transport package object.",
+            "FieldType":"StringInput",
+            "FieldRole":"DisplayRole",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True
+        },
+        "Description":{
+            "Display":"Task Description",
+            "Description":"Holds the description of the transport package object.",
+            "FieldType":"TextInput",
+            "FieldRole":"DescriptionRole",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True
+        },
+        "SortOrder":{
+            "Display":"Sort Order",
+            "Description":"Holds the sort order of the object in the list.",
+            "FieldType":"IntegerInput",
+            "FieldRole":"SortOrder",
+            "DefaultValue":99,
+            "PlaceholderText":"",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "MinValue":1,
+            "MaxValue":99,
+            "DistributeEvenly":True
+        },
+        "DefinitionFile":{
+            "Display":"Transport Definition file name",
+            "Description":"Holds the effective task definition file name and location in the workspace.",
+            "FieldType":"FileInput",
+            "FieldRole":"",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "FileSelectionMode":"FileName",
+            "RedirectDirectoryStatic":"Task_Definitions",
+            "RedirectDirectoryDynamic":"",
+            "RedirectDirectoryRelativeTo":"Parent"
+        },
+        "ExportFile":{
+            "Display":"Export file name",
+            "Description":"Holds the effective transport package export file name and location in the workspace.",
+            "FieldType":"FileInput",
+            "FieldRole":"",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "FileSelectionMode":"FileName",
+            "RedirectDirectoryStatic":"",
+            "RedirectDirectoryDynamic":"Package_Data/%Parent.PackageName%/%TaskType%",
+            "RedirectDirectoryRelativeTo":"Parent"
+        },
+        "TaskType":{
+            "Display":"Task Type",
+            "Description":"Holds the type of the transport task associated with the export file.",
+            "FieldType":"FixedInput",
+            "FieldRole":"",
+            "DefaultValue":"Transport",
+            "PlaceholderText":"",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "Options":{
+                "Transport Package":"Transport",
+                "SQL Script":"SQL",
+                "Schema Extension":"Schema",
+                "Bug Fix Package":"BugFix"
             },
-        "Description": 
-            {
-                "FieldType": "TextInput",
-                "FieldRole": "DescriptionRole",
-                "ShowInTreeView": "False",
-                "RowId": 1
-            },
-        "SortOrder": 
-            {
-                "FieldType": "IntegerInput",
-                "FieldRole": "SortOrder",
-                "MinValue": 1,
-                "MaxValue": 99,
-                "DefaultValue": 99,
-                "DistributeEvenly": "True",
-                "RowId": 2
-            },
-        "TaskType": 
-            {
-                "FieldType": "FixedInput",
-                "Options": {"Transport Package": "Transport", "SQL Script": "SQL", "Schema Extension": "Schema", "Bug Fix Package": "BugFix"},
-                "DefaultValue": "Transport",
-                "Display": "Task Type",
-                "IsMandatory": "True",
-                "XMLTemplateTypes": ["Transport", "BugFix"],
-                "RowId": 3
-            },
-        "DefinitionFile": 
-            {
-                "FieldType": "FileInput",
-                "FileSelectionMode": "FileName",
-                "RedirectDirectoryStatic": "Task_Definitions",
-                "RedirectDirectoryRelativeTo": "Parent",
-                "IsMandatory": "True",
-                "RowId": 4
-            },
-        "ExportFile":
-            {
-                "FieldType": "FileInput",
-                "FileSelectionMode": "FileName",
-                "RedirectDirectoryDynamic": "Package_Data/%Parent.PackageName%/%TaskType%",
-                "RowId": 5
-            },
-        "CompilerOption": 
-            {
-                "FieldType": "FixedInput",
-                "Options": {"No Compilation": "None", "Full Compilation": "Full", "Skip Web Projects Compilation":"NoWeb"},
-                "DefaultValue": "NoWeb",
-                "RowId": 6
-            },
-        "AutoUpdate": 
-            {
-                "FieldType": "BooleanInput",
-                "DefaultValue": "False",
-                "RowId": 7
-            },
-        "Tag": 
-            {
-                "FieldType": "ListInput",
-                "Separator": ",",
-                "RowId": 8
+            "XMLTemplateTypes": ["Transport", "BugFix"]
+        },
+        "CompilerOption":{
+            "Display":"Compiler Configuration",
+            "Description":"Holds the instructions for the compilation required when this transport package is being installed in the target system.",
+            "FieldType":"FixedInput",
+            "FieldRole":"",
+            "DefaultValue":"NoWeb",
+            "PlaceholderText":"",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "Options":{
+                "No Compilation":"None",
+                "Full Compilation":"Full",
+                "Skip Web Projects Compilation":"NoWeb"
             }
+        },
+        "AutoUpdate":{
+            "Display":"AutoUpdate Required",
+            "Description":"Holds the instruction for the installer, whether the automatic local files update is required before the database compiler can be initiated.",
+            "FieldType":"BooleanInput",
+            "FieldRole":"",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True
+        },
+        "Tag":{
+            "Display":"Object Tags",
+            "Description":"Holds the list of tags which can be used for quick access and task object filtering.",
+            "FieldType":"ListInput",
+            "FieldRole":"",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "Separator":","
         }
+        },
+    "DefaultConfigurationItems":{
+        "DefinitionFile":{
+            "Display":"Transport Definition file name",
+            "Description":"Holds the effective task definition file name and location in the workspace.",
+            "FieldType":"FileInput",
+            "FieldRole":"",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "FileSelectionMode":"FileName",
+            "RedirectDirectoryStatic":"Task_Definitions",
+            "RedirectDirectoryDynamic":"",
+            "RedirectDirectoryRelativeTo":"Parent"
+        },
+        "ExportFile":{
+            "Display":"Export file name",
+            "Description":"Holds the effective transport package export file name and location in the workspace.",
+            "FieldType":"FileInput",
+            "FieldRole":"",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "FileSelectionMode":"FileName",
+            "RedirectDirectoryStatic":"",
+            "RedirectDirectoryDynamic":"Package_Data/%Parent.PackageName%/%TaskType%",
+            "RedirectDirectoryRelativeTo":"Parent"
+        },
+        "TaskType":{
+            "Display":"Task Type",
+            "Description":"Holds the type of the transport task associated with the export file.",
+            "FieldType":"FixedInput",
+            "FieldRole":"",
+            "DefaultValue":"Transport",
+            "PlaceholderText":"",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "Options":{
+                "Transport Package":"Transport",
+                "SQL Script":"SQL",
+                "Schema Extension":"Schema",
+                "Bug Fix Package":"BugFix"
+            },
+            "XMLTemplateTypes": ["Transport", "BugFix"]
+        },
+        "CompilerOption":{
+            "Display":"Compiler Configuration",
+            "Description":"Holds the instructions for the compilation required when this transport package is being installed in the target system.",
+            "FieldType":"FixedInput",
+            "FieldRole":"",
+            "DefaultValue":"NoWeb",
+            "PlaceholderText":"",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "Options":{
+                "No Compilation":"None",
+                "Full Compilation":"Full",
+                "Skip Web Projects Compilation":"NoWeb"
+            }
+        },
+        "AutoUpdate":{
+            "Display":"AutoUpdate Required",
+            "Description":"Holds the instruction for the installer, whether the automatic local files update is required before the database compiler can be initiated.",
+            "FieldType":"BooleanInput",
+            "FieldRole":"",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True
+        }
+    }
 }

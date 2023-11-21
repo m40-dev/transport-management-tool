@@ -176,6 +176,9 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                 )
             newItems.append(new_item)
             new_item.fromString(source_object["xml_data"], source_object["xml_object_class"])
+            object_relations = source_object.get("object_relations", None)
+            if object_relations:
+                new_item.object_relations = object_relations
         
         #insert dropped items at new location
         xml_model.insert_items(target_index, newItems)
