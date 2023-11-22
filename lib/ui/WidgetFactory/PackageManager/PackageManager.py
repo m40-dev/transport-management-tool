@@ -167,7 +167,7 @@ class PackageManager(QtWidgets.QWidget):
         if len(sort_attribute) > 0:
             definitions = sorted(
                     definitions, 
-                    key=lambda d: (d[sort_attribute])
+                    key=lambda d: (d.get(sort_attribute, ""))
                     )
 
         data_model =  PackageDefinitionModel(

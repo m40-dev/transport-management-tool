@@ -41,23 +41,28 @@ class PackageDefinitionItem(JSONDataItem):
             child_tasks = task_data.get("children", None)
             children_columns_configuration = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_type(self.task_class, "ChildObjectReference")
             if not child_tasks and children_columns_configuration:
-                for column in children_columns_configuration.keys():
+                for column, column_config in children_columns_configuration.items():
+                    child_task_class = column_config.get("Class", None)
+                    # if task_class:
+                    #     print(child_task_class)
                     child_tasks = task_data.get(column, None)
                     if child_tasks:
-                        sort_order_column = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_role(self.task_class, "SortOrder")
+                        sort_order_column = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_role(child_task_class, "SortOrder")
                         if sort_order_column and len(sort_order_column) > 0:
                             column_name = list(sort_order_column.keys())[0]
                             if column_name:
                                 child_tasks = sorted(
                                         child_tasks, 
-                                        key=lambda d: (d[column_name])
+                                        key=lambda d: (d.get(column_name, ""))
                                         )
-                        self.loadChildren(child_tasks)
+                        self.loadChildren(child_tasks, child_task_class)
 
-    def loadChildren(self, child_tasks):
+    def loadChildren(self, child_tasks, child_task_class=None):
         if child_tasks:
             for task_object in child_tasks:
                 task_class = task_object.get("objectclass", "PackageManager_TaskDefinition")
+                if child_task_class:
+                    task_class = child_task_class
                 task_item = PackageDefinitionItem(
                     application=self.application, 
                     task_class=task_class, 

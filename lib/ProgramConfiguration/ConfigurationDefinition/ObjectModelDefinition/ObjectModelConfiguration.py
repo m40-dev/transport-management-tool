@@ -185,8 +185,9 @@ ObjectModelConfiguration = {
                     "FieldType": "FixedInput",
                     "DefaultValue": "",
                     "Options": {
+                        "":"",
                         "Transport Task Definition": "PackageManager_TaskDefinition", 
-                        "Transport Execution Task": "ExecutionPlanner_ExecutionTask",
+                        "Transport Execution Task": "ExecutionPlanner_ExecutionTask"
                         },
                     "EditDependency": {"FieldType": "ChildObjectReference"}
                 },
@@ -233,7 +234,7 @@ ObjectModelConfiguration = {
                     "Display": "XML Template Types",
                     "FieldType": "ListInput",
                     "Description": "Configures the valid task types that can be edited with the XML Template Editor.",
-                    "EditDependency": {"FieldId": "TaskType"}
+                    "EditDependency": {"FieldId": "TaskType", "ConfigurationSectionId": "PackageManager_TaskDefinition"}
                 },
             "Transporter": {
                     "Display": "Database Transporter tasks",

@@ -9,7 +9,7 @@ PackageManager_PackageDefinition = {
     "ExportType": "ExportKeys",
     "ConfigurationParameters":{
         "PackageName":{
-            "RowId":0,
+            
             "Display":"Package Name",
             "Description":"Holds the friendly name of the transport package object.",
             "FieldType":"StringInput",
@@ -19,10 +19,11 @@ PackageManager_PackageDefinition = {
             "IsMandatory":True,
             "ShowInEditor":True,
             "ShowInTreeView":False,
-            "IsForDataExport":True
+            "IsForDataExport":True,
+            "IsSensitive":False
         },
         "Description":{
-            "RowId":1,
+            
             "Display":"Package Description",
             "Description":"Holds the description of the transport package object.",
             "FieldType":"TextInput",
@@ -35,7 +36,7 @@ PackageManager_PackageDefinition = {
             "IsForDataExport":True
         },
         "SortOrder":{
-            "RowId":2,
+            
             "Display":"Sort Order",
             "Description":"Holds the sort order of the object in the list.",
             "FieldType":"IntegerInput",
@@ -51,7 +52,7 @@ PackageManager_PackageDefinition = {
             "DistributeEvenly":True
         },
         "DefinitionFile":{
-            "RowId":3,
+            
             "Display":"Package Definition File Name",
             "Description":"Holds the effective package definition file name and location in the workspace.",
             "FieldType":"FileInput",
@@ -68,7 +69,7 @@ PackageManager_PackageDefinition = {
             "RedirectDirectoryRelativeTo":"Parent"
         },
         "ChildTasks":{
-            "RowId":4,
+            
             "Display":"Package Tasks",
             "Description":"Child object class items to be exported into the package definition.",
             "FieldType":"ChildObjectReference",
@@ -82,21 +83,23 @@ PackageManager_PackageDefinition = {
             "Class":"PackageManager_TaskDefinition"
         },
         "GUID":{
-            "RowId":5,
-            "Display":"",
+            
+            "Display":"Unique Identifier",
             "Description":"Holds the unique identifier of the Transport Package definition object.",
             "FieldType":"StringInput",
             "FieldRole":"UniqueIdentifier",
             "DefaultValue":"",
-            "PlaceholderText":"",
+            "PlaceholderText":"Provide the unique Identifier for the object.",
             "IsMandatory":False,
             "ShowInEditor":True,
             "ShowInTreeView":False,
-            "IsForDataExport":True
+            "IsForDataExport":True,
+            "IsSensitive":False
         }
         },
     "DefaultConfigurationItems": {
         "PackageName":{
+            
             "Display":"Package Name",
             "Description":"Holds the friendly name of the transport package object.",
             "FieldType":"StringInput",
@@ -106,11 +109,42 @@ PackageManager_PackageDefinition = {
             "IsMandatory":True,
             "ShowInEditor":True,
             "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "IsSensitive":False
+        },
+        "Description":{
+            
+            "Display":"Package Description",
+            "Description":"Holds the description of the transport package object.",
+            "FieldType":"TextInput",
+            "FieldRole":"DescriptionRole",
+            "DefaultValue":"",
+            "PlaceholderText":"Provide Package Description",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
             "IsForDataExport":True
-            },
+        },
+        "SortOrder":{
+            
+            "Display":"Sort Order",
+            "Description":"Holds the sort order of the object in the list.",
+            "FieldType":"IntegerInput",
+            "FieldRole":"SortOrder",
+            "DefaultValue":999,
+            "PlaceholderText":"Provide Sort Order id",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "MinValue":100,
+            "MaxValue":999,
+            "DistributeEvenly":True
+        },
         "DefinitionFile":{
+            
             "Display":"Package Definition File Name",
-            "Description":"Configures the effective package definition file name and location in the workspace.",
+            "Description":"Holds the effective package definition file name and location in the workspace.",
             "FieldType":"FileInput",
             "FieldRole":"",
             "DefaultValue":"definition.json",
@@ -125,6 +159,7 @@ PackageManager_PackageDefinition = {
             "RedirectDirectoryRelativeTo":"Parent"
         },
         "ChildTasks":{
+            
             "Display":"Package Tasks",
             "Description":"Child object class items to be exported into the package definition.",
             "FieldType":"ChildObjectReference",
@@ -136,6 +171,20 @@ PackageManager_PackageDefinition = {
             "ShowInTreeView":False,
             "IsForDataExport":True,
             "Class":"PackageManager_TaskDefinition"
+        },
+        "GUID":{
+            
+            "Display":"Unique Identifier",
+            "Description":"Holds the unique identifier of the Transport Package definition object.",
+            "FieldType":"StringInput",
+            "FieldRole":"UniqueIdentifier",
+            "DefaultValue":"",
+            "PlaceholderText":"Provide the unique Identifier for the object.",
+            "IsMandatory":False,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "IsSensitive":False
         }
     }
 }

@@ -151,7 +151,7 @@ class ObjectDataListModel(QAbstractItemModel):
         
         items_data_sorted = sorted(
                             items_data, 
-                            key=lambda d: (d['row'])
+                            key=lambda d: (d.get('row', ''))
                             )
 
         jsondata = json.dumps(items_data_sorted, indent=4)

@@ -9,6 +9,7 @@ PackageManager_TaskDefinition = {
     "ExportType": "ExportKeys",
     "ConfigurationParameters":{
         "TaskName":{
+            
             "Display":"Task Name",
             "Description":"Holds the friendly name of the transport package object.",
             "FieldType":"StringInput",
@@ -18,21 +19,24 @@ PackageManager_TaskDefinition = {
             "IsMandatory":True,
             "ShowInEditor":True,
             "ShowInTreeView":False,
-            "IsForDataExport":True
+            "IsForDataExport":True,
+            "IsSensitive":False
         },
         "Description":{
+            
             "Display":"Task Description",
             "Description":"Holds the description of the transport package object.",
             "FieldType":"TextInput",
             "FieldRole":"DescriptionRole",
             "DefaultValue":"",
             "PlaceholderText":"",
-            "IsMandatory":False,
+            "IsMandatory":True,
             "ShowInEditor":True,
             "ShowInTreeView":False,
             "IsForDataExport":True
         },
         "SortOrder":{
+            
             "Display":"Sort Order",
             "Description":"Holds the sort order of the object in the list.",
             "FieldType":"IntegerInput",
@@ -48,6 +52,7 @@ PackageManager_TaskDefinition = {
             "DistributeEvenly":True
         },
         "DefinitionFile":{
+            
             "Display":"Transport Definition file name",
             "Description":"Holds the effective task definition file name and location in the workspace.",
             "FieldType":"FileInput",
@@ -64,13 +69,14 @@ PackageManager_TaskDefinition = {
             "RedirectDirectoryRelativeTo":"Parent"
         },
         "ExportFile":{
+            
             "Display":"Export file name",
             "Description":"Holds the effective transport package export file name and location in the workspace.",
             "FieldType":"FileInput",
             "FieldRole":"",
             "DefaultValue":"",
             "PlaceholderText":"",
-            "IsMandatory":False,
+            "IsMandatory":True,
             "ShowInEditor":True,
             "ShowInTreeView":False,
             "IsForDataExport":True,
@@ -80,6 +86,7 @@ PackageManager_TaskDefinition = {
             "RedirectDirectoryRelativeTo":"Parent"
         },
         "TaskType":{
+            
             "Display":"Task Type",
             "Description":"Holds the type of the transport task associated with the export file.",
             "FieldType":"FixedInput",
@@ -96,16 +103,20 @@ PackageManager_TaskDefinition = {
                 "Schema Extension":"Schema",
                 "Bug Fix Package":"BugFix"
             },
-            "XMLTemplateTypes": ["Transport", "BugFix"]
+            "XMLTemplateTypes":[
+                "Transport",
+                "BugFix"
+            ]
         },
         "CompilerOption":{
+            
             "Display":"Compiler Configuration",
             "Description":"Holds the instructions for the compilation required when this transport package is being installed in the target system.",
             "FieldType":"FixedInput",
             "FieldRole":"",
             "DefaultValue":"NoWeb",
             "PlaceholderText":"",
-            "IsMandatory":False,
+            "IsMandatory":True,
             "ShowInEditor":True,
             "ShowInTreeView":False,
             "IsForDataExport":True,
@@ -116,6 +127,7 @@ PackageManager_TaskDefinition = {
             }
         },
         "AutoUpdate":{
+            
             "Display":"AutoUpdate Required",
             "Description":"Holds the instruction for the installer, whether the automatic local files update is required before the database compiler can be initiated.",
             "FieldType":"BooleanInput",
@@ -128,6 +140,7 @@ PackageManager_TaskDefinition = {
             "IsForDataExport":True
         },
         "Tag":{
+            
             "Display":"Object Tags",
             "Description":"Holds the list of tags which can be used for quick access and task object filtering.",
             "FieldType":"ListInput",
@@ -142,13 +155,41 @@ PackageManager_TaskDefinition = {
         }
         },
     "DefaultConfigurationItems":{
+        "TaskName":{
+            
+            "Display":"Task Name",
+            "Description":"Holds the friendly name of the transport package object.",
+            "FieldType":"StringInput",
+            "FieldRole":"DisplayRole",
+            "DefaultValue":"",
+            "PlaceholderText":"",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True,
+            "IsSensitive":False
+        },
+        "Description":{
+            
+            "Display":"Task Description",
+            "Description":"Holds the description of the transport package object.",
+            "FieldType":"TextInput",
+            "FieldRole":"DescriptionRole",
+            "DefaultValue":"",
+            "PlaceholderText":"Provide task description..",
+            "IsMandatory":True,
+            "ShowInEditor":True,
+            "ShowInTreeView":False,
+            "IsForDataExport":True
+        },
         "DefinitionFile":{
+            
             "Display":"Transport Definition file name",
             "Description":"Holds the effective task definition file name and location in the workspace.",
             "FieldType":"FileInput",
             "FieldRole":"",
             "DefaultValue":"",
-            "PlaceholderText":"",
+            "PlaceholderText":"Provide task source/definition file name",
             "IsMandatory":True,
             "ShowInEditor":True,
             "ShowInTreeView":False,
@@ -159,13 +200,14 @@ PackageManager_TaskDefinition = {
             "RedirectDirectoryRelativeTo":"Parent"
         },
         "ExportFile":{
+            
             "Display":"Export file name",
             "Description":"Holds the effective transport package export file name and location in the workspace.",
             "FieldType":"FileInput",
             "FieldRole":"",
             "DefaultValue":"",
-            "PlaceholderText":"",
-            "IsMandatory":False,
+            "PlaceholderText":"Provide task export file name",
+            "IsMandatory":True,
             "ShowInEditor":True,
             "ShowInTreeView":False,
             "IsForDataExport":True,
@@ -175,6 +217,7 @@ PackageManager_TaskDefinition = {
             "RedirectDirectoryRelativeTo":"Parent"
         },
         "TaskType":{
+            
             "Display":"Task Type",
             "Description":"Holds the type of the transport task associated with the export file.",
             "FieldType":"FixedInput",
@@ -191,16 +234,20 @@ PackageManager_TaskDefinition = {
                 "Schema Extension":"Schema",
                 "Bug Fix Package":"BugFix"
             },
-            "XMLTemplateTypes": ["Transport", "BugFix"]
+            "XMLTemplateTypes":[
+                "Transport",
+                "BugFix"
+            ]
         },
         "CompilerOption":{
+            
             "Display":"Compiler Configuration",
             "Description":"Holds the instructions for the compilation required when this transport package is being installed in the target system.",
             "FieldType":"FixedInput",
             "FieldRole":"",
             "DefaultValue":"NoWeb",
             "PlaceholderText":"",
-            "IsMandatory":False,
+            "IsMandatory":True,
             "ShowInEditor":True,
             "ShowInTreeView":False,
             "IsForDataExport":True,
@@ -211,6 +258,7 @@ PackageManager_TaskDefinition = {
             }
         },
         "AutoUpdate":{
+            
             "Display":"AutoUpdate Required",
             "Description":"Holds the instruction for the installer, whether the automatic local files update is required before the database compiler can be initiated.",
             "FieldType":"BooleanInput",

@@ -42,7 +42,7 @@ class TaskExecutionModel(JSONDataModel):
         
         items_data_sorted = sorted(
                             items_data, 
-                            key=lambda d: (d['row'])
+                            key=lambda d: (d.get('row', ''))
                             )
         # print(items_data_sorted)
         jsondata = json.dumps(items_data_sorted, indent=4)

@@ -525,7 +525,7 @@ QWidget[ConfigurationEditor="PropertyEditor"]{
 QWidget[ConfigurationEditor="FieldLabel"]{
 	color:#626363;
 	font: bold;
-	font-size: 12px;
+	font-size: 14px;
 	margin-top: 0px;
 	margin-bottom: 2px;
 	padding:0;

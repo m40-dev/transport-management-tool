@@ -129,7 +129,7 @@ class ObjectModelConfigurationEditor(ConfigurationSectionEditor):
         configuration_layout.addWidget(view_Label)
         configuration_layout.addWidget(self.ObjectModelConfigurationView)
 
-        mandatory_fields_Label = QtWidgets.QLabel("Required Fields for this class")
+        mandatory_fields_Label = QtWidgets.QLabel("Default Fields for this class")
         mandatory_fields_Label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         mandatory_fields_Label.setProperty("ConfigurationEditor", "ListViewHeader")
         
