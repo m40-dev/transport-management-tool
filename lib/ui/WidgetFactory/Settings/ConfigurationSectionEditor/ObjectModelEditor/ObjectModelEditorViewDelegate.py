@@ -320,8 +320,8 @@ class ObjectModelConfigurationWidget(QFrame):
                 column+=1
                 layout.addWidget(field_editor.editor, row, column, rowSpan, colSpan)
                 
-                if current_value:
-                    field_editor.set_editor_data(current_value)
+                # if current_value:
+                field_editor.set_editor_data(current_value)
 
                 field_editor.dataChanged.connect(self.updateConfigurationItem)
 

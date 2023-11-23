@@ -227,6 +227,8 @@ class PackageManager(QtWidgets.QWidget):
         contextMenu.expandAll.connect(self.expandAll)
         contextMenu.editSelectedItems.connect(self.onEditSelectedItems)
         contextMenu.sortChildItems.connect(self.onSortChildItems)
+        contextMenu.reapplyTemplates.connect(self.onReapplyTemplates)
+        
 
         if len(contextMenu.menu_items) > 0:
             contextMenu.popup(menu_target)
@@ -269,6 +271,18 @@ class PackageManager(QtWidgets.QWidget):
                         if selected_row.task_class == source_item.task_class:
                             selected_row.update_data(form_data)
 
+    def onReapplyTemplates(self, source_index):
+        source_item = None
+        if source_index.isValid():
+            source_item = source_index.internalPointer()
+            if source_item:
+                source_item.configureSourceColumns()
+
+        selected_items = self.selectedItems()
+        if len(selected_items) > 0:
+            for selected_item in selected_items:
+                selected_item.configureSourceColumns()
+
     def editPackageDefinition(self, source_index):
         # print("Edit Package Definition", source_index)
         if not source_index.isValid():
@@ -278,6 +292,7 @@ class PackageManager(QtWidgets.QWidget):
         if form_data:
             source_item = source_index.internalPointer()
             source_item.update_data(form_data)
+            # source_item.configureSourceColumns()
 
     def savePackageDefinition(self, source_index, save_single=False):
         if not self.current_workdir:
@@ -331,6 +346,7 @@ class PackageManager(QtWidgets.QWidget):
         if form_data:
             source_item = source_index.internalPointer()
             source_item.update_data(form_data)
+            # source_item.configureSourceColumns()
 
     def editXMLTemplate(self, source_item):
         source_item = source_item.internalPointer()

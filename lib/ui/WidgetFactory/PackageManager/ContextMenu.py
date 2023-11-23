@@ -12,6 +12,7 @@ class PackageDefinitionMenu(QMenu):
     savePackageDefinition = pyqtSignal(object)
     editSelectedItems = pyqtSignal(object)
     sortChildItems = pyqtSignal(object)
+    reapplyTemplates = pyqtSignal(object)
 
     collapseAll = pyqtSignal()
     expandAll = pyqtSignal()
@@ -19,7 +20,7 @@ class PackageDefinitionMenu(QMenu):
     def __init__(self, parent, source_index):
         super(PackageDefinitionMenu, self).__init__(parent)
         self.parent = parent
-
+        self.useExperimentalFeatures = self.parent.ProgramConfiguration.getConfigurationValue("ObjectModel", "UseExperimental")
         self.menu_items = []
         source_item = source_index.internalPointer()
 
@@ -33,7 +34,9 @@ class PackageDefinitionMenu(QMenu):
 
         action_expandAll = self.addAction("Expand All Items")
         action_expandAll.triggered.connect(self.expandAll)
-        
+
+        self.addSeparator()
+
         action_addPackageDefinition = self.addAction("Add Package Definition")
         action_addPackageDefinition.triggered.connect(lambda: self.addPackageDefinition.emit(source_index) )
         
@@ -52,6 +55,8 @@ class PackageDefinitionMenu(QMenu):
                 action_save_package_definition = self.addAction("Save Package Definition(s)")
                 action_save_package_definition.triggered.connect(lambda: self.savePackageDefinition.emit(source_index))
 
+                self.addSeparator()
+
                 action_sortChildren = self.addAction("Sort Task items")
                 action_sortChildren.triggered.connect(lambda: self.sortChildItems.emit(source_index))
 
@@ -68,6 +73,13 @@ class PackageDefinitionMenu(QMenu):
                 action_editXMLTemplate = self.addAction("Edit Task Definition(s)")
                 action_editXMLTemplate.triggered.connect(lambda: self.editXMLTemplate.emit(source_index))
                 self.menu_items.append(action_editXMLTemplate)
+            
+            if self.useExperimentalFeatures:
+                self.addSeparator()
+                action_reapplyTemplates = self.addAction("Reapply Attribute Templates")
+                action_reapplyTemplates.triggered.connect(lambda: self.reapplyTemplates.emit(source_index))
+                self.menu_items.append(action_reapplyTemplates)
+
         
 
             

@@ -58,7 +58,27 @@ class TaskExecutionModel(JSONDataModel):
             return False
 
         if data.hasFormat("application/vnd.ExecutionPlannerItem"):
-            encodedJson = data.data("application/vnd.ExecutionPlannerItem")
+            encodedJson = data.data("application/vnd.ExecutionPlannerItem")            
+            data.setData("application/vnd.jsondataitem", encodedJson)
+        
+        if data.hasFormat("application/vnd.jsondataitem"):
+            encodedJson = data.data("application/vnd.jsondataitem") 
+            decodedData = bytes(encodedJson)
+            jsondata = json.loads(decodedData)
+            for dropped_item in jsondata:
+                item_object_class = dropped_item.get("objectclass", "JSONDataItem")
+                
+                if item_object_class == "JSONDataItem":
+                    dropped_item["objectclass"] = "ExecutionPlanner_ExecutionTask"
+
+                if item_object_class == "PackageManager_PackageDefinition":
+                    dropped_item["objectclass"] = "ExecutionPlanner_ExecutionGroup"
+                    
+                if item_object_class == "PackageManager_TaskDefinition":
+                    dropped_item["objectclass"] = "ExecutionPlanner_ExecutionTask"
+
+            jsondata = json.dumps(jsondata, indent=4)
+            encodedJson = jsondata.encode('utf-8')
             data.setData("application/vnd.jsondataitem", encodedJson)
         
         return super().dropMimeData(data, action, row, column, parentIndex)
@@ -95,11 +115,13 @@ class TaskExecutionItem(JSONDataItem):
         self.initializeObjectData()
 
 
+
     def itemDataDropped(self, source_dict):
         if source_dict.get("children", None):
             for child_task in self.children():
                 # child_task.setData("PARENT_DEF", source_dict)
                 child_task.package_definition = source_dict
+        
 
     def itemLocationChanged(self, source_item):
         # print("execution planner item moved")

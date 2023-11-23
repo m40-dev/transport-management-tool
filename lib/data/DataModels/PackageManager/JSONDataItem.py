@@ -31,6 +31,7 @@ class JSONDataItem(QObject):
         self.item_class_configuration = self.application.getConfigurationParameters(self.task_class)
         self.source_files = None
         self.source_files_text = None
+        self.useExperimentalFeatures = self.ProgramConfiguration.getConfigurationValue("ObjectModel", "UseExperimental")
         
         if model_reference:
             model_reference.filterStringChanged.connect(self.handleFilterStringChanged)
@@ -40,11 +41,73 @@ class JSONDataItem(QObject):
             children = task_data.get("children", None)
             if children:
                 self.loadChildren(children)
-        
-        # self.source_files = self.get_file_data(reload_data=True)
+
+        if self.task_class and self.useExperimentalFeatures:
+            self.configureSourceColumns(dynamic_only=True)
+
         self.dataDropped.connect(self.itemDataDropped)
         self.locationChanged.connect(self.itemLocationChanged)
         self.locationChanged.connect(self.updateSortOrder)
+
+    def configureSourceColumns(self, parent_only=False, dynamic_only=False):
+        source_map_columns = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(self.task_class, "Source")
+        for column, column_configuration in source_map_columns.items():
+            source_mapping = column_configuration.get("Source", None)
+            if source_mapping and parent_only and "PARENT." not in source_mapping.upper():
+                #Skip non-parent relations
+                continue
+            isForExport = column_configuration.get("IsForDataExport", True)
+            if source_mapping and dynamic_only and isForExport:
+                #Skip standard, exportable columns, calculate only the dynamically calculated fields
+                continue
+
+            source_value = self.parseStringPattern(source_mapping)
+            if source_value:
+                self.setData(column, source_value)
+        
+        #recursively apply to child items
+        total_childitems = self._children + self._filtered_children
+        if len(total_childitems) > 0:
+            for child_item in total_childitems:
+                child_item.configureSourceColumns()
+
+    def parseStringPattern(self, string_pattern):
+        regex_pattern = r'%([^%]+)%'
+        matches = re.findall(regex_pattern, string_pattern)
+        replacement_dict = {}
+        
+        for column_pattern in matches:
+            column_name = column_pattern
+            substring_chars = 0
+            if ":" in column_pattern:
+                #try to substring the value
+                column_name, substring_chars = column_pattern.split(":")
+                if substring_chars.isnumeric():
+                    substring_chars = int(substring_chars)
+            
+            if column_pattern not in replacement_dict.keys():
+                column_value = self.getSourceValue(column_name)
+                replacement_dict[column_pattern] = column_value
+            
+            if substring_chars > 0 and column_pattern in replacement_dict.keys() :
+                replacement_dict[column_pattern] = replacement_dict[column_pattern][:substring_chars]
+            
+        # replacement_dict = self.get_replacement_values(matches, previous_state)
+        parsed_string = re.sub(regex_pattern, lambda match: replacement_dict.get(match.group(1), match.group(0)), string_pattern)
+        return parsed_string
+
+    def getSourceValue(self, source_mapping):
+        if "." in source_mapping:
+            source = source_mapping.split(".")[0]
+            source_column = source_mapping.split(".")[1:]
+            if len(source_column) > 0:
+                # more than one level higher, pass this to the source
+                source_column = ".".join(source_column)
+            if source.upper() == "PARENT" and self.parent():
+                return self.parent().getSourceValue(source_column)
+            
+            return self.task_data().get(source_column, "")
+        return self.task_data().get(source_mapping, "")
 
     def itemDataDropped(self, source_dict):
         # print("foreign model object dropped", source_dict.get("objectclass", None), self.task_class)
@@ -56,6 +119,7 @@ class JSONDataItem(QObject):
         self._previous_task_data = source_item._previous_task_data
         self.source_files = source_item.source_files
         self.source_files_text = source_item.source_files_text
+        self.configureSourceColumns(parent_only=True)
         
     @property
     def filter_match(self):
@@ -432,9 +496,18 @@ class JSONDataItem(QObject):
             
         prev_value = self._task_data.get(column, "")
         if prev_value != value:
-            # print(f"set item data for column with new value, {column}, previous value {prev_value}, new value {value}")
+            # set new value
             self._task_data[column] = value
-            self.is_saved = False
+            
+            # get current column configuration
+            column_config = self.item_class_configuration.get(column, None)
+
+            # mark item as changed / styling, saving
+            if column_config and column_config.get("IsForDataExport", True):
+                #update 'saved' state only if the changed column is exportable
+                self.is_saved = False
+
+            #emit data change signals
             self.data_changed.emit()
             self.columnValueChanged.emit(column, str(prev_value), str(value))
     
@@ -539,7 +612,6 @@ class JSONDataItem(QObject):
 
     def initialize_data(self):
         configuration = self.item_class_configuration
-
         if self._task_data is None or configuration is None:
             return False
 

@@ -11,6 +11,6 @@
         ]
     },
     "ObjectModel":{
-        "UseExperimental":false
+        "UseExperimental":true
     }
 }

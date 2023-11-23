@@ -207,7 +207,9 @@ class PackageManagerItemWidget(QFrame):
         self.setStyleSheet(self.styleSheet())
 
         for column, label_widget in self.dynamic_property_labels.items():
-            label_widget.setText(str(self.data_item.data(column)))
+            value = self.data_item.data(column)
+            if value:
+                label_widget.setText(str(value))
 
         if not self.data_item.is_saved:
             object_display = f"* {object_display}"

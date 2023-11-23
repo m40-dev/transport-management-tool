@@ -296,6 +296,17 @@ QWidget[Widget="EditorDialog"]{
 	padding:2px;
 }
 
+QLabel[EditorDialog="PropertyHasValueTemplate"]{
+	border-left: 3px solid #5e9e14;
+	color:#5e9e14;
+}
+
+QCheckBox[EditorDialog="PropertyHasValueTemplate"]{
+	color:#5e9e14;
+	font:bold;
+	margin-top: 2ex;
+}
+
 QTextEdit[Widget="EditorDialog"]{
 	margin: 0px;
 	min-height: 3em;

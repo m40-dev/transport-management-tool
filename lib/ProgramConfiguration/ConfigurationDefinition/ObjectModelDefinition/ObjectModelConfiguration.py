@@ -16,7 +16,8 @@ ObjectModelConfiguration = {
                     "IsMandatory",
                     "ShowInEditor",
                     "ShowInTreeView", 
-                    "IsForDataExport"],
+                    "IsForDataExport",
+                    "MapValueFromSource"],
                 "FieldType": {
                     "FixedInput":["Options"],
                     "IntegerInput":["MinValue","MaxValue"],
@@ -29,7 +30,8 @@ ObjectModelConfiguration = {
                     "SortOrder": ["DistributeEvenly"]
                     },
                 "ConfigurationSectionId":{
-                    "ExecutionPlanner_ExecutionTask": ["Source"]
+                    "PackageManager_TaskDefinition": ["Source"],
+                    "ExecutionPlanner_ExecutionTask": ["Source"],
                     },
                 "ExecutionPlanner_ExecutionTask": {
                     "TaskType": ["Transporter", "SQLScript", "SchemaExtension"]
@@ -146,17 +148,17 @@ ObjectModelConfiguration = {
                 },
             "MapValueFromSource":
                 {
-                    "Display": "Map Value From Task Definition",
+                    "Display": "Use Value Template",
                     "FieldType": "BooleanInput",
-                    "DefaultValue": True,
-                    "EditDependency": {"ConfigurationSectionId": "ExecutionPlanner_ExecutionTask"}
+                    "DefaultValue": False,
+                    "EditDependency": {}
                 },
             "Source":
                 {
                     "FieldType": "StringInput",
                     "Display": "Attribute value source mapping",
                     "Description": "Allows to transfer the source attribute value from the task definition object",
-                    "EditDependency": {"ConfigurationSectionId": "ExecutionPlanner_ExecutionTask", "MapValueFromSource": True}
+                    "EditDependency": {"MapValueFromSource": True}
                 },
             "MinValue":
                 {

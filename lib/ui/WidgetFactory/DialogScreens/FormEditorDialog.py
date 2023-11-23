@@ -4,6 +4,7 @@ from pathlib import Path
 import json
 import uuid
 from .MessageBox import MsgBox
+import re
 
 class FormEditorDialog(QtWidgets.QDialog):
 
@@ -17,17 +18,22 @@ class FormEditorDialog(QtWidgets.QDialog):
         if form_configuration is not None:
             self._form_confguration = form_configuration
         self._form_data = {}
+        self._base_object = None
         self._base_object_data = None
         self.setMinimumSize(400, 400)
-
+        self.useExperimentalFeatures = self.ProgramConfiguration.getConfigurationValue("ObjectModel", "UseExperimental")
+        self.columnMappings = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(configuration_class, "Source")
+            
         self.setWindowTitle(f"{self.application.windowTitle()} - {dialog_name}") 
 
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("layout")
         self.layout.setSpacing(2)
+        # self.templatesApplied = True
         
         self.editors = {}
         self.setup_form()
+        self.templatesApplied = True
 
         self.buttonBox = QtWidgets.QDialogButtonBox(self)
         self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
@@ -54,6 +60,11 @@ class FormEditorDialog(QtWidgets.QDialog):
 
     def accept(self):
         self.saveWindowState()
+        # if self.useExperimentalFeatures and len(self.columnMappings) > 0 and not self.templatesApplied:
+        #     question = QtWidgets.QMessageBox.question(self, "Reapply Templates?", "There are predefined column mapping patterns in this form.\nWould you like to reapply?")
+        #     if question == QtWidgets.QMessageBox.StandardButton.Yes:
+        #         self.updateFormPatternsComplete()
+        #         return False
         validation_errors = {}
         # self.check_mandatory_columns(validation_errors)
         validation_summary = self.check_validators()
@@ -113,6 +124,9 @@ class FormEditorDialog(QtWidgets.QDialog):
                 continue
 
             editor_object.dataChanged.connect(self.update_form_data)
+            
+            if self.useExperimentalFeatures and len(self.columnMappings) > 0:
+                editor_object.dataChanged.connect(self.updateFormPatterns)
 
             if editor_object.editor:
                 self.editors[column] = editor_object
@@ -122,6 +136,80 @@ class FormEditorDialog(QtWidgets.QDialog):
                 self.layout.addWidget(editor_object.editor, row_id, 2)
 
                 # editor_object.set_editor_data(default_value)
+        if self.useExperimentalFeatures and len(self.columnMappings) > 0:
+            self.useMappings = QtWidgets.QCheckBox("Use Value Templates")
+            # self.useMappings.setChecked(True)
+            self.useMappings.setProperty("EditorDialog", "PropertyHasValueTemplate")
+            self.layout.addWidget(
+                self.useMappings, 
+                self.layout.rowCount(), 0)
+        self.layout.setRowStretch(self.layout.rowCount(), 2)
+            
+
+    def updateFormPatterns(self, source_column, source_editor):
+        if not self.useMappings.isChecked():
+            return False
+
+        for column, column_configuration in self.columnMappings.items():
+            if column == source_column:
+                #do not recalculate pattern when editing value
+                continue
+            column_value = self.parseStringPattern(column_configuration.get("Source", ""))
+            editor = self.editors.get(column, None)
+
+            if editor and column_value != editor.getValue():
+                editor.set_editor_data(column_value)
+            self.update_form_data(column, column_value)
+    
+    def updateFormPatternsComplete(self):
+        for column, column_configuration in self.columnMappings.items():
+
+            column_value = self.parseStringPattern(column_configuration.get("Source", ""))
+            editor = self.editors.get(column, None)
+
+            if editor and column_value != editor.getValue():
+                editor.set_editor_data(column_value)
+
+            self.update_form_data(column, column_value)
+        self.templatesApplied = True
+       
+    def parseStringPattern(self, string_pattern):
+        regex_pattern = r'%([^%]+)%'
+        matches = re.findall(regex_pattern, string_pattern)
+        replacement_dict = {}
+        
+        for column_pattern in matches:
+            column_name = column_pattern
+            substring_chars = 0
+            if ":" in column_pattern:
+                #try to substring the value
+                column_name, substring_chars = column_pattern.split(":")
+                if substring_chars.isnumeric():
+                    substring_chars = int(substring_chars)
+            
+            if column_pattern not in replacement_dict.keys():
+                column_value = self.getSourceValue(column_name)
+                replacement_dict[column_pattern] = column_value
+            
+            if substring_chars > 0 and column_pattern in replacement_dict.keys() :
+                replacement_dict[column_pattern] = replacement_dict[column_pattern][:substring_chars]
+            
+        # replacement_dict = self.get_replacement_values(matches, previous_state)
+        parsed_string = re.sub(regex_pattern, lambda match: replacement_dict.get(match.group(1), match.group(0)), string_pattern)
+        return parsed_string
+
+    def getSourceValue(self, source_mapping):
+        if "." in source_mapping:
+            source = source_mapping.split(".")[0]
+            source_column = source_mapping.split(".")[1:]
+            if len(source_column) > 0:
+                # more than one level higher, pass this to the source
+                source_column = ".".join(source_column)
+            if source.upper() == "PARENT" and self._base_object and self._base_object.parent():
+                return self._base_object.parent().getSourceValue(source_column)
+            
+            return self.form_data.get(source_column, "")
+        return self.form_data.get(source_mapping, "")
 
     def update_form_data(self, column, value):
         if column:
@@ -130,6 +218,7 @@ class FormEditorDialog(QtWidgets.QDialog):
                 if column_configuration.get("FieldType", None) == "BooleanInput":
                     value = (str(value) == "2" or str(value) == "True") 
             self._form_data[column] = value
+        self.templatesApplied = False
 
     @property
     def form_data(self):
@@ -156,6 +245,9 @@ class FormEditorDialog(QtWidgets.QDialog):
             source_item = source_index.internalPointer()
         else:
             return False
+        if not source_item:
+            return False
+        self._base_object = source_item
         self._base_object_data = source_item.edit_data
         for column, value in source_item.edit_data.items():
             # self.form_data[column]=value
@@ -177,11 +269,12 @@ class FormEditorObject(QtCore.QObject):
         self.column_name = column_name
         self.column_configuration = column_configuration
         self.display_name = column_name
+        self._current_value = ""
 
         display = column_configuration.get("Display", column_name)
         if len(display.strip()) > 0:
             self.display_name = display
-            
+        self.useExperimentalFeatures = self.application.ProgramConfiguration.getConfigurationValue("ObjectModel", "UseExperimental")
         self.isMandatory = str(column_configuration.get("IsMandatory", "False")).upper() == "TRUE"
         self.isVisible = str(column_configuration.get("ShowInEditor", "True")).upper() == "TRUE"
         self.label = None
@@ -235,6 +328,9 @@ class FormEditorObject(QtCore.QObject):
             if widget:
                 widget.setEnabled(enabled)
 
+    def getValue(self):
+        return self._current_value
+
     def setupUi(self):
         widgets = []
         if self.isMandatory:
@@ -261,16 +357,21 @@ class FormEditorObject(QtCore.QObject):
 
         self.widgets = widgets
 
+        if self.useExperimentalFeatures and len(self.column_configuration.get("Source", "")) > 0:
+            self.label.setProperty("EditorDialog", "PropertyHasValueTemplate")
+
     def update_form_data(self, column, value):
         if self.column_configuration.get("FieldType", None) == "BooleanInput":
             value = (str(value) == "2" or str(value) == "True")
+        self._current_value = value
         self.dataChanged.emit(self.column_name, value)
 
     def set_editor_data(self, value):
+        self._current_value = value
         editor_widget = self.editor
         if isinstance(editor_widget, (QtWidgets.QLineEdit, QtWidgets.QTextEdit)):
             editor_widget.setText(str(value))
-            editor_widget.adjustSize()
+            # editor_widget.adjustSize()
 
         if isinstance(editor_widget, QtWidgets.QComboBox):
             index = editor_widget.findData(value, QtCore.Qt.ItemDataRole.UserRole)
