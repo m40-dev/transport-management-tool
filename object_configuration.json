@@ -12,7 +12,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "IsSensitive":false
         },
         "Description":{
@@ -27,7 +27,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false
+            "UseTemplates":false
         },
         "SortOrder":{
             "RowId":2,
@@ -41,7 +41,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "MinValue":100,
             "MaxValue":999,
             "DistributeEvenly":true
@@ -51,14 +51,14 @@
             "Display":"Package Definition File Name",
             "Description":"Holds the effective package definition file name and location in the workspace.",
             "FieldType":"FileInput",
-            "FieldRole":"",
+            "FieldRole":"DisplayRole",
             "DefaultValue":"definition.json",
             "PlaceholderText":"Enter Package Definition file name.",
             "IsMandatory":true,
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":false,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "FileSelectionMode":"FileName",
             "RedirectDirectoryStatic":"",
             "RedirectDirectoryDynamic":"Source_Files/%PackageName%",
@@ -76,7 +76,7 @@
             "ShowInEditor":false,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "Class":"PackageManager_TaskDefinition"
         },
         "GUID":{
@@ -91,7 +91,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "IsSensitive":false
         }
     },
@@ -108,9 +108,8 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "IsSensitive":false,
-            "Source":""
+            "UseTemplates":false,
+            "IsSensitive":false
         },
         "Description":{
             "RowId":1,
@@ -124,8 +123,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "Source":""
+            "UseTemplates":false
         },
         "SortOrder":{
             "RowId":2,
@@ -139,11 +137,10 @@
             "ShowInEditor":true,
             "ShowInTreeView":true,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "MinValue":1,
             "MaxValue":99,
-            "DistributeEvenly":true,
-            "Source":""
+            "DistributeEvenly":true
         },
         "DefinitionFile":{
             "RowId":3,
@@ -157,12 +154,12 @@
             "ShowInEditor":true,
             "ShowInTreeView":true,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":true,
             "FileSelectionMode":"FileName",
             "RedirectDirectoryStatic":"Task_Definitions",
             "RedirectDirectoryDynamic":"",
             "RedirectDirectoryRelativeTo":"Parent",
-            "Source":"%TaskType:1%-%TaskName%.xml"
+            "ValuePattern":"%TaskType%-%TaskName%.xml"
         },
         "ExportFile":{
             "RowId":4,
@@ -176,12 +173,12 @@
             "ShowInEditor":true,
             "ShowInTreeView":true,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":true,
             "FileSelectionMode":"FileName",
             "RedirectDirectoryStatic":"",
             "RedirectDirectoryDynamic":"Package_Data/%Parent.PackageName%/%TaskType%",
             "RedirectDirectoryRelativeTo":"Parent",
-            "Source":"%TaskType:1%-%TaskName%.zip"
+            "ValuePattern":"%TaskType%-%TaskName%.zip"
         },
         "TaskType":{
             "RowId":5,
@@ -195,14 +192,13 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "Options":{
                 "Transport Package":"Transport",
                 "SQL Script":"SQL",
                 "Schema Extension":"Schema",
                 "Bug Fix Package":"BugFix"
             },
-            "Source":"",
             "XMLTemplateTypes":[
                 "Transport",
                 "BugFix"
@@ -220,13 +216,12 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "Options":{
                 "No Compilation":"None",
                 "Full Compilation":"Full",
                 "Skip Web Projects Compilation":"NoWeb"
-            },
-            "Source":""
+            }
         },
         "AutoUpdate":{
             "RowId":7,
@@ -240,8 +235,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "Source":""
+            "UseTemplates":false
         },
         "Tag":{
             "RowId":8,
@@ -255,9 +249,8 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "Separator":",",
-            "Source":""
+            "UseTemplates":false,
+            "Separator":","
         },
         "StandardField1":{
             "RowId":9,
@@ -271,9 +264,9 @@
             "ShowInEditor":true,
             "ShowInTreeView":true,
             "IsForDataExport":false,
-            "MapValueFromSource":false,
+            "UseTemplates":true,
             "IsSensitive":false,
-            "Source":"%Parent.PackageName%-test"
+            "ValuePattern":"%Parent.PackageName%"
         },
         "StandardField2":{
             "RowId":10,
@@ -285,11 +278,11 @@
             "PlaceholderText":"Provide attribute value..",
             "IsMandatory":false,
             "ShowInEditor":true,
-            "ShowInTreeView":true,
+            "ShowInTreeView":false,
             "IsForDataExport":false,
-            "MapValueFromSource":false,
+            "UseTemplates":true,
             "IsSensitive":false,
-            "Source":"%TaskType:1%-%TaskName%"
+            "ValuePattern":"%Parent.Description%"
         }
     },
     "ExecutionPlanner_ExecutionGroup":{
@@ -305,8 +298,9 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "IsSensitive":false
+            "UseTemplates":true,
+            "IsSensitive":false,
+            "ValuePattern":""
         },
         "Description":{
             "RowId":1,
@@ -320,7 +314,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false
+            "UseTemplates":false
         },
         "ExecutionTasks":{
             "RowId":2,
@@ -334,7 +328,7 @@
             "ShowInEditor":false,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "Class":"ExecutionPlanner_ExecutionTask"
         }
     },
@@ -351,9 +345,8 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "IsSensitive":false,
-            "Source":""
+            "UseTemplates":false,
+            "IsSensitive":false
         },
         "Description":{
             "RowId":1,
@@ -367,8 +360,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "Source":""
+            "UseTemplates":false
         },
         "TaskType":{
             "RowId":2,
@@ -380,16 +372,15 @@
             "PlaceholderText":"",
             "IsMandatory":true,
             "ShowInEditor":true,
-            "ShowInTreeView":false,
+            "ShowInTreeView":true,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "Options":{
                 "Transport Package":"Transport",
                 "SQL Script":"SQL",
                 "Schema Extension":"Schema",
                 "Bug Fix Package":"BugFix"
             },
-            "Source":"",
             "Transporter":[
                 "Transport",
                 "BugFix"
@@ -413,9 +404,8 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "IsSensitive":false,
-            "Source":""
+            "UseTemplates":false,
+            "IsSensitive":false
         },
         "DefinitionFile":{
             "RowId":4,
@@ -429,12 +419,11 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "FileSelectionMode":"Relative",
             "RedirectDirectoryStatic":"",
             "RedirectDirectoryDynamic":"",
-            "RedirectDirectoryRelativeTo":"Parent",
-            "Source":""
+            "RedirectDirectoryRelativeTo":"Parent"
         },
         "ExportFile":{
             "RowId":5,
@@ -448,12 +437,11 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "FileSelectionMode":"Relative",
             "RedirectDirectoryStatic":"",
             "RedirectDirectoryDynamic":"",
-            "RedirectDirectoryRelativeTo":"Parent",
-            "Source":""
+            "RedirectDirectoryRelativeTo":"Parent"
         },
         "CompilerOption":{
             "RowId":6,
@@ -465,15 +453,14 @@
             "PlaceholderText":"Configure the Compiler option",
             "IsMandatory":true,
             "ShowInEditor":true,
-            "ShowInTreeView":false,
+            "ShowInTreeView":true,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "Options":{
                 "No Compilation":"None",
                 "Full Compilation":"Full",
                 "Skip Web Projects Compilation":"NoWeb"
-            },
-            "Source":""
+            }
         },
         "AutoUpdate":{
             "RowId":7,
@@ -485,10 +472,9 @@
             "PlaceholderText":"",
             "IsMandatory":false,
             "ShowInEditor":true,
-            "ShowInTreeView":false,
+            "ShowInTreeView":true,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "Source":""
+            "UseTemplates":false
         },
         "StandardField1":{
             "RowId":8,
@@ -500,27 +486,10 @@
             "PlaceholderText":"Provide attribute value..",
             "IsMandatory":false,
             "ShowInEditor":true,
-            "ShowInTreeView":true,
-            "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "IsSensitive":false,
-            "Source":""
-        },
-        "StandardField2":{
-            "RowId":9,
-            "Display":"Standard Field 2",
-            "Description":"Field with minimum configurations.",
-            "FieldType":"StringInput",
-            "FieldRole":"",
-            "DefaultValue":"",
-            "PlaceholderText":"Provide attribute value..",
-            "IsMandatory":false,
-            "ShowInEditor":true,
-            "ShowInTreeView":true,
-            "IsForDataExport":true,
-            "MapValueFromSource":false,
-            "IsSensitive":false,
-            "Source":""
+            "ShowInTreeView":false,
+            "IsForDataExport":false,
+            "UseTemplates":false,
+            "IsSensitive":false
         }
     },
     "XMLTemplateEditor_RelationPreset":{
@@ -536,7 +505,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "IsSensitive":false
         },
         "description":{
@@ -551,7 +520,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false
+            "UseTemplates":false
         },
         "always_apply":{
             "RowId":2,
@@ -565,7 +534,7 @@
             "ShowInEditor":true,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false
+            "UseTemplates":false
         },
         "table_relations":{
             "RowId":3,
@@ -579,7 +548,7 @@
             "ShowInEditor":false,
             "ShowInTreeView":false,
             "IsForDataExport":true,
-            "MapValueFromSource":false,
+            "UseTemplates":false,
             "Class":""
         }
     }

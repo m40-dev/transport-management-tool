@@ -256,10 +256,10 @@ class ProcessRunner(QProcess):
             for column, column_confguration in task_configuration.items():
                 column_value = task_data.get(column, None)
 
-                source_column = column_confguration.get("Source", None)
-                if source_column:
-                    # map column with source object attributes
-                    column_value = self.getSourceValue(column, source_column)
+                # source_column = column_confguration.get("ValuePattern", None)
+                # if source_column:
+                #     # map column with source object attributes
+                #     column_value = self.getSourceValue(column, source_column)
 
                 if column_value:
                     if isinstance(column_value, list):

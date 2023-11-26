@@ -11,6 +11,7 @@ class PackageViewDelegate(QStyledItemDelegate):
         self.model_data = model_data
         self.application = application
         self.package_manager = package_manager
+        self.parent_widget = parent_widget
         self.application_palette = self.application.color_theme
         
     def createEditor(self, parent, option, index):
@@ -20,11 +21,11 @@ class PackageViewDelegate(QStyledItemDelegate):
         item = index.internalPointer()
         # print("create editor for column", column_name, item, item.task_class)
         if column_name == "Actions" and item.task_class == "PackageManager_TaskDefinition":
-            editor = TaskDefinitionWidget(data_item=item, application=self.application, parent=self.parent(), package_manager=self.package_manager)
+            editor = TaskDefinitionWidget(data_item=item, application=self.application, parent=self.parent_widget, package_manager=self.package_manager)
             return editor
         
         if column_name == "Actions" and item.task_class == "PackageManager_PackageDefinition":
-            editor = PackageDefinitionWidget(data_item=item, application=self.application, parent=self.parent(), package_manager=self.package_manager)
+            editor = PackageDefinitionWidget(data_item=item, application=self.application, parent=self.parent_widget, package_manager=self.package_manager)
             return editor
 
         return super().createEditor(parent, option, index)
@@ -37,7 +38,7 @@ class PackageViewDelegate(QStyledItemDelegate):
         item = index.internalPointer()
         
         if column_name == "Actions" and item.task_class in ["PackageManager_TaskDefinition", "PackageManager_PackageDefinition"]:
-            viewport = self.parent().viewport()
+            viewport = self.parent_widget.viewport()
             editor.setParent(viewport)
         else:
             super().setEditorData(editor, index)
@@ -55,11 +56,11 @@ class PackageViewDelegate(QStyledItemDelegate):
         item = index.internalPointer()
 
         if column_name == "Actions":
-            widget = self.parent().indexWidget(index)
+            widget = self.parent_widget.indexWidget(index)
             if not widget:
-                widget = self.createEditor(self.parent(), option, index)
+                widget = self.createEditor(self.parent_widget, option, index)
                 self.setEditorData(widget, index)
-                self.parent().setIndexWidget(index, widget)
+                self.parent_widget.setIndexWidget(index, widget)
                 widget.setGeometry(option.rect)
             else:
                 widget.setGeometry(option.rect)
@@ -128,12 +129,18 @@ class PackageManagerItemWidget(QFrame):
         self.layout.setColumnStretch(layout_columns, 1)
         
         if len(dynamic_property_columns) > 0:
+            managed_roles = ["DisplayRole", "DescriptionRole"]
             row = self.layout.rowCount()
             column_count = 0
             for column, column_configuration in dynamic_property_columns.items():
                 show_entry = column_configuration.get("ShowInTreeView", True) == True
                 if not show_entry:
                     continue
+                
+                field_role = column_configuration.get("FieldRole", "")
+                if field_role in managed_roles:
+                    continue
+                
                 label = QLabel(f"{column}:")
                 label.setProperty("Label", "PropertyName")
                 value = QLabel()
@@ -170,13 +177,13 @@ class PackageManagerItemWidget(QFrame):
         animation = QPropertyAnimation(self)
         animation.setPropertyName(bytes("opacity", "utf-8"))
         animation.setTargetObject(effect)
-        animation.setDuration(350)
+        animation.setDuration(200)
         animation.setStartValue(0)
         animation.setEndValue(1)
         if reverse:
             animation.setStartValue(1)
             animation.setEndValue(0)
-            animation.setDuration(100)
+            animation.setDuration(200)
         
         animation.setEasingCurve(QEasingCurve.Type.OutInCubic)
         animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)

@@ -27,6 +27,14 @@ PACKAGE_MANAGER_CONFIGURATION = {
                     "Description": "Configures the individual files to be excluded when the working directory is being loaded.\n\nComma delimited list of workspace relative file locations is expected.",
                     "DefaultValue": [],
                     "isMultivalue": True
+                },
+                "ProcessQueueSize":{
+                    "DataType": "Integer",
+                    "Display": "Process Queue Size",
+                    "Description": "Configures the queue size to be processed at once, when the working directory is being set (in 0.5s intervals). This can speed up data processing at cost of interface lockup.",
+                    "DefaultValue": 5,
+                    "isMultivalue": False
+
                 }
             }
     }

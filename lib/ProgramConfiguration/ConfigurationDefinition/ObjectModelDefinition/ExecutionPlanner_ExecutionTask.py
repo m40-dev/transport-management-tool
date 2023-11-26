@@ -20,8 +20,7 @@ ExecutionPlanner_ExecutionTask = {
             "ShowInEditor":True,
             "ShowInTreeView":False,
             "IsForDataExport":True,
-            "IsSensitive":False,
-            "Source":"TaskName"
+            "IsSensitive":False
         },
         "Description":{
             
@@ -34,8 +33,7 @@ ExecutionPlanner_ExecutionTask = {
             "IsMandatory":False,
             "ShowInEditor":True,
             "ShowInTreeView":False,
-            "IsForDataExport":True,
-            "Source":"Description"
+            "IsForDataExport":True
         },
         "TaskType":{
             
@@ -54,7 +52,6 @@ ExecutionPlanner_ExecutionTask = {
                  'SQL Script': 'SQL',
                  'Schema Extension': 'Schema',
                  'Bug Fix Package': 'BugFix'},
-            "Source":"TaskType",
             "Transporter":[
                 "Transport",
                 "BugFix"
@@ -78,8 +75,7 @@ ExecutionPlanner_ExecutionTask = {
             "ShowInEditor":True,
             "ShowInTreeView":False,
             "IsForDataExport":True,
-            "IsSensitive":False,
-            "Source":""
+            "IsSensitive":False
         },
         "DefinitionFile":{
             
@@ -96,8 +92,7 @@ ExecutionPlanner_ExecutionTask = {
             "FileSelectionMode":"Relative",
             "RedirectDirectoryStatic":"",
             "RedirectDirectoryDynamic":"",
-            "RedirectDirectoryRelativeTo":"Parent",
-            "Source":"DefinitionFile"
+            "RedirectDirectoryRelativeTo":"Parent"
         },
         "ExportFile":{
             
@@ -114,8 +109,7 @@ ExecutionPlanner_ExecutionTask = {
             "FileSelectionMode":"Relative",
             "RedirectDirectoryStatic":"",
             "RedirectDirectoryDynamic":"",
-            "RedirectDirectoryRelativeTo":"Parent",
-            "Source":"ExportFile"
+            "RedirectDirectoryRelativeTo":"Parent"
         },
         "CompilerOption":{
             
@@ -133,8 +127,7 @@ ExecutionPlanner_ExecutionTask = {
                 "No Compilation":"None",
                 "Full Compilation":"Full",
                 "Skip Web Projects Compilation":"NoWeb"
-            },
-            "Source":"CompilerOption"
+            }
         },
         "AutoUpdate":{
             
@@ -147,8 +140,7 @@ ExecutionPlanner_ExecutionTask = {
             "IsMandatory":False,
             "ShowInEditor":True,
             "ShowInTreeView":False,
-            "IsForDataExport":True,
-            "Source":"AutoUpdate"
+            "IsForDataExport":True
         }
         },
     "DefaultConfigurationItems": {
@@ -164,8 +156,7 @@ ExecutionPlanner_ExecutionTask = {
             "ShowInEditor":True,
             "ShowInTreeView":False,
             "IsForDataExport":True,
-            "IsSensitive":False,
-            "Source":"TaskName"
+            "IsSensitive":False
         },
         "Description":{
             
@@ -178,8 +169,7 @@ ExecutionPlanner_ExecutionTask = {
             "IsMandatory":False,
             "ShowInEditor":True,
             "ShowInTreeView":False,
-            "IsForDataExport":True,
-            "Source":"Description"
+            "IsForDataExport":True
         },
         "TaskType":{
             
@@ -198,7 +188,6 @@ ExecutionPlanner_ExecutionTask = {
                 'SQL Script': 'SQL',
                 'Schema Extension': 'Schema',
                 'Bug Fix Package': 'BugFix'},
-            "Source":"TaskType",
             "Transporter":[
                 "Transport",
                 "BugFix"
@@ -222,8 +211,7 @@ ExecutionPlanner_ExecutionTask = {
             "ShowInEditor":True,
             "ShowInTreeView":False,
             "IsForDataExport":True,
-            "IsSensitive":False,
-            "Source":""
+            "IsSensitive":False
         },
         "DefinitionFile":{
             
@@ -240,8 +228,7 @@ ExecutionPlanner_ExecutionTask = {
             "FileSelectionMode":"Relative",
             "RedirectDirectoryStatic":"",
             "RedirectDirectoryDynamic":"",
-            "RedirectDirectoryRelativeTo":"Parent",
-            "Source":""
+            "RedirectDirectoryRelativeTo":"Parent"
         },
         "ExportFile":{
             
@@ -258,8 +245,7 @@ ExecutionPlanner_ExecutionTask = {
             "FileSelectionMode":"Relative",
             "RedirectDirectoryStatic":"",
             "RedirectDirectoryDynamic":"",
-            "RedirectDirectoryRelativeTo":"Parent",
-            "Source":""
+            "RedirectDirectoryRelativeTo":"Parent"
         },
         "CompilerOption":{
             
@@ -277,8 +263,7 @@ ExecutionPlanner_ExecutionTask = {
                 "No Compilation":"None",
                 "Full Compilation":"Full",
                 "Skip Web Projects Compilation":"NoWeb"
-            },
-            "Source":""
+            }
         },
         "AutoUpdate":{
             
@@ -291,8 +276,7 @@ ExecutionPlanner_ExecutionTask = {
             "IsMandatory":False,
             "ShowInEditor":True,
             "ShowInTreeView":False,
-            "IsForDataExport":True,
-            "Source":""
+            "IsForDataExport":True
         }
 
     }

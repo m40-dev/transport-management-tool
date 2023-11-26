@@ -9,6 +9,7 @@ class JSONDataModel(QAbstractItemModel):
         super().__init__(parent_widget)
         self.modelDataClass = model_item_class
         self.application = application
+        self.ProgramConfiguration = self.application.ProgramConfiguration
         self.rootItem = self.modelDataClass(application=self.application, task_class="RootItem", model_reference=self)
         self._headers = ["Actions"]
         self.treeview = parent_widget
@@ -42,8 +43,11 @@ class JSONDataModel(QAbstractItemModel):
             for child_item in filter_items:
                 self.filterRowItems(child_item)
 
-    def setupModelData(self, data, parent):
+    def setupModelData(self, data, parent=None):
         """ Main method used to load all data into the model """
+        if not parent:
+            parent = self.rootItem
+
         for task_object in data:
             task_class = task_object.get("objectclass", None)
             task_item = self.modelDataClass(
@@ -53,6 +57,19 @@ class JSONDataModel(QAbstractItemModel):
                 parent=parent,
                 model_reference=self)
             parent.addChild(task_item)
+
+    def appendModelData(self, task_object, parent=None):
+        if not parent:
+            parent = self.rootItem
+            
+        task_class = task_object.get("objectclass", None)
+        task_item = self.modelDataClass(
+            application=self.application,
+            task_class=task_class, 
+            task_data=task_object, 
+            parent=parent,
+            model_reference=self)
+        parent.addChild(task_item)
 
     @property
     def headers(self):

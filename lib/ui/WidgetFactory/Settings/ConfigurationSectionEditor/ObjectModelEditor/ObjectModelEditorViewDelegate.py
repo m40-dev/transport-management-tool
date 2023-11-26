@@ -140,14 +140,14 @@ class ObjectModelConfigurationWidget(QFrame):
         animation = QPropertyAnimation(self)
         animation.setPropertyName(bytes("opacity", "utf-8"))
         animation.setTargetObject(effect)
-        animation.setDuration(250)
+        animation.setDuration(400)
         animation.setStartValue(0)
         animation.setEndValue(1)
         if reverse:
             animation.setStartValue(1)
             animation.setEndValue(0)
-            animation.setDuration(300)
-        animation.setEasingCurve(QEasingCurve.Type.OutInCubic)
+            animation.setDuration(200)
+        animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
         animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
         return animation
 

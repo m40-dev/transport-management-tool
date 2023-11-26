@@ -22,7 +22,7 @@ class FormEditorDialog(QtWidgets.QDialog):
         self._base_object_data = None
         self.setMinimumSize(400, 400)
         self.useExperimentalFeatures = self.ProgramConfiguration.getConfigurationValue("ObjectModel", "UseExperimental")
-        self.columnMappings = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(configuration_class, "Source")
+        self.columnMappings = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(configuration_class, "ValuePattern")
             
         self.setWindowTitle(f"{self.application.windowTitle()} - {dialog_name}") 
 
@@ -154,7 +154,7 @@ class FormEditorDialog(QtWidgets.QDialog):
             if column == source_column:
                 #do not recalculate pattern when editing value
                 continue
-            column_value = self.parseStringPattern(column_configuration.get("Source", ""))
+            column_value = self.parseStringPattern(column_configuration.get("ValuePattern", ""))
             editor = self.editors.get(column, None)
 
             if editor and column_value != editor.getValue():
@@ -164,7 +164,7 @@ class FormEditorDialog(QtWidgets.QDialog):
     def updateFormPatternsComplete(self):
         for column, column_configuration in self.columnMappings.items():
 
-            column_value = self.parseStringPattern(column_configuration.get("Source", ""))
+            column_value = self.parseStringPattern(column_configuration.get("ValuePattern", ""))
             editor = self.editors.get(column, None)
 
             if editor and column_value != editor.getValue():
@@ -357,7 +357,7 @@ class FormEditorObject(QtCore.QObject):
 
         self.widgets = widgets
 
-        if self.useExperimentalFeatures and len(self.column_configuration.get("Source", "")) > 0:
+        if self.useExperimentalFeatures and len(self.column_configuration.get("ValuePattern", "")) > 0:
             self.label.setProperty("EditorDialog", "PropertyHasValueTemplate")
 
     def update_form_data(self, column, value):

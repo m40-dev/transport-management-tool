@@ -50,9 +50,9 @@ class JSONDataItem(QObject):
         self.locationChanged.connect(self.updateSortOrder)
 
     def configureSourceColumns(self, parent_only=False, dynamic_only=False):
-        source_map_columns = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(self.task_class, "Source")
+        source_map_columns = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(self.task_class, "ValuePattern")
         for column, column_configuration in source_map_columns.items():
-            source_mapping = column_configuration.get("Source", None)
+            source_mapping = column_configuration.get("ValuePattern", None)
             if source_mapping and parent_only and "PARENT." not in source_mapping.upper():
                 #Skip non-parent relations
                 continue

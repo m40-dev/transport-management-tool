@@ -8,7 +8,8 @@
         "ExcludedFiles":[
             "preset_data.json",
             "preset_data2.json"
-        ]
+        ],
+        "ProcessQueueSize":5
     },
     "ObjectModel":{
         "UseExperimental":true

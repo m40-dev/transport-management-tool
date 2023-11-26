@@ -7,19 +7,32 @@ from lib.data.DataModels import PackageDefinitionModel
 from .PackageViewDelegate import PackageViewDelegate
 from .ContextMenu import PackageDefinitionMenu
 from ..DialogScreens.MultiObjectEditorForm import MultiObjectEditorForm
+from timeit import default_timer as timer
+from time import sleep
 
 FILTER_EXEC_TIMER = 650
 
 class PackageManager(QtWidgets.QWidget):
     uiRefreshRequested = QtCore.pyqtSignal()
+    
 
     def __init__(self, application):
         super().__init__()
         self.application = application
         self.ProgramConfiguration = self.application.ProgramConfiguration
         self.current_workdir = None
-
         self.setupUi()
+        self.setupViewDelegate()
+
+        self.modelWorker = PMWorker(
+            application=application,
+            treeview=self.PackageViewTreeView,
+            package_manager=self,
+            definitions=None
+        )
+
+        self.modelWorker.start()
+        self.modelWorker.dataLoaded.connect(self.appendModelData)
 
         # Package Tree View and Navigation
         self.PackageViewTreeView.dragMoveEvent = self.PackageViewDragMoveEvent
@@ -57,6 +70,7 @@ class PackageManager(QtWidgets.QWidget):
         self.loadWorkingDirectory()
         self.uiRefreshRequested.emit()
 
+
     """ Workdir and File Operations """
     def changeWorkingDirectory(self):
         dialog = QtWidgets.QFileDialog(self, "Transport Manager - Select Working Directory")
@@ -81,6 +95,7 @@ class PackageManager(QtWidgets.QWidget):
         self.application.ui.MainTabWidget.setCurrentWidget(self)
 
     def setupWorkingDirectory(self, workdir):
+        start_time = timer()
         sort_attribute = ""
         package_definition_config = self.application.getConfigurationParameters("PackageManager_PackageDefinition")
         mandatory_columns = []
@@ -169,20 +184,19 @@ class PackageManager(QtWidgets.QWidget):
                     definitions, 
                     key=lambda d: (d.get(sort_attribute, ""))
                     )
+        end_time = timer()
+        run_time = end_time - start_time
+        print(f"workdir reading time: {run_time}")
+        print("task definitions loaded", len(definitions))
 
-        data_model =  PackageDefinitionModel(
+        self.setupModelData(
+            data=definitions[:2],
             application=self.application,
-            parent_widget=self.PackageViewTreeView, 
-            data=definitions)
-        
-        packageViewDelegate = PackageViewDelegate(
-            model_data=data_model, 
-            application=self.application, 
-            parent_widget=self.PackageViewTreeView,
+            treeview=self.PackageViewTreeView,
             package_manager=self)
-
-        self.PackageViewTreeView.setItemDelegate(packageViewDelegate)
-        self.PackageViewTreeView.setModel(data_model)
+        
+        delayed_loader_data = definitions[2:]
+        self.modelWorker.dataChanged.emit(delayed_loader_data)
 
         self.SearchPackageLineEdit.textChanged.connect(self.queryPackages)
         
@@ -192,6 +206,50 @@ class PackageManager(QtWidgets.QWidget):
             file_count = len(skipped_definitions)
             MsgBox(self.application, "Some JSON definition files were ignored due to <b>missing mandatory data.</b><br>If this file should be ignored, please configure the filters in program configuration.", 
                 f"<b>Mandatory columns checked:</b> <i>{mandatory_columns}</i>.\r\n<b>Skipped Entries:</b> <i>{file_count}</i>.\r\n<b>Skipped files (workdir relative):</b>\r\n\t{definition_list}")
+
+    def setupViewDelegate(self):
+        print("Setup Model data finished")
+        start_time = timer()
+        data_model = self.PackageViewTreeView.model()
+        if not data_model:
+            data_model =  PackageDefinitionModel(
+                application=self.application,
+                parent_widget=self.PackageViewTreeView, 
+                data={})
+
+        packageViewDelegate = PackageViewDelegate(
+            model_data=data_model, 
+            application=self.application, 
+            parent_widget=self.PackageViewTreeView,
+            package_manager=self)
+
+        self.PackageViewTreeView.setItemDelegate(packageViewDelegate)
+        end_time = timer()
+        run_time = end_time - start_time
+        print(f"delegate setup time: {run_time}")
+
+    def setupModelData(self, data, application, treeview, package_manager):
+        start_time = timer()
+        data_model =  PackageDefinitionModel(
+            application=application,
+            parent_widget=treeview, 
+            data=data)
+
+        treeview.setModel(data_model)
+        
+        end_time = timer()
+        run_time = end_time - start_time
+        print(f"model setup time: {run_time}")
+        # self.setupFinished()
+
+    def appendModelData(self, definition_data):
+        start_time = timer()
+        data_model = self.PackageViewTreeView.model()
+        data_model.appendModelData(definition_data)
+        data_model.layoutChanged.emit()
+        end_time = timer()
+        run_time = end_time - start_time
+        print(f"model update time: {run_time}")
 
     def addExecutionPlan(self):
         tabwidget = ExecutionPlannerWidget(self, self.application)
@@ -542,3 +600,47 @@ class PackageManager(QtWidgets.QWidget):
         self.SearchPackageLineEdit.setPlaceholderText(_translate("Form", "Search Transport Package"))
         # self.FindPackageButton.setText(_translate("Form", "Find"))
         self.AddPackageButton.setText(_translate("Form", "Add"))
+
+class PMWorker(QtCore.QThread):
+    finished = QtCore.pyqtSignal()
+    dataChanged = QtCore.pyqtSignal(object)
+    dataLoaded = QtCore.pyqtSignal(object)
+
+    def __init__(self, application, treeview, package_manager, definitions=None):
+        super(PMWorker, self).__init__()
+        self.definitions = definitions
+        self.application = application
+        self.treeview = treeview
+        self.package_manager = package_manager
+        self.dataChanged.connect(self.modelDataChanged)
+        self.isRunning = True
+        self.modelDataAwaits = False
+
+    def run(self, *args, **kwargs):
+        while self.isRunning:
+            sleep(0.5)
+            queue = 0
+            if self.definitions:
+                queue = len(self.definitions)
+            
+            if queue > 0:
+                self.processQueue()
+            
+    def modelDataChanged(self, data):
+        
+        self.definitions = data
+        self.modelDataAwaits = True
+
+    def processQueue(self):
+        processQueueSize = self.application.ProgramConfiguration.getConfigurationValue("Package Manager", "ProcessQueueSize")
+        print("worker thread is running, processing the queue", len(self.definitions), "Process step:", processQueueSize)
+        for i in range(0, processQueueSize):
+            self.loadSingleDefinition()
+
+    def loadSingleDefinition(self):
+        if self.definitions and len(self.definitions) > 0:
+            self.dataLoaded.emit(self.definitions[0])
+            self.definitions.remove(self.definitions[0])
+        
+
+        

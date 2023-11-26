@@ -122,7 +122,7 @@ class ExecutionPlannerItem(QFrame):
 
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(2, 2, 2, 2)
-        self.layout.setSpacing(3)
+        self.layout.setSpacing(1)
 
         self.element_label = QLabel(self)
         self.element_label.setProperty("ExecutionPlannerWidget", "ItemLabel")
@@ -141,7 +141,7 @@ class ExecutionPlannerItem(QFrame):
                 self.element_description.setHidden(True)
 
         self.layout.addWidget(self.element_label, 0, 0, 1, 2)
-        self.layout.addWidget(self.element_description, 1, 0, 1, 5)
+        self.layout.addWidget(self.element_description, 1, 0, 1, 4)
         self.layout.addWidget(self.button1, 0, 4)
         self.data_item.data_changed.connect(self.refreshUI)
         self.refreshUI()
@@ -164,8 +164,6 @@ class GroupActionWidget(ExecutionPlannerItem):
         self.setProperty("ExecutionPlannerWidget", "GroupItem")
         self.button1.setText("Start Group")
         self.data_item.executionStateChanged.connect(self.handleExecutionStateChange)
-       
-        
 
     def handleExecutionStateChange(self, state):
         if state in ["Finished with Errors", "Terminated"]:
@@ -176,9 +174,6 @@ class GroupActionWidget(ExecutionPlannerItem):
 
         self.setProperty("GroupExecutionState", state)
         self.setStyleSheet(self.styleSheet())
-        # if self.parent():
-        #     self.parent().setProperty("GroupExecutionState", state)
-        #     self.parent().setStyleSheet(self.parent().styleSheet())
     
 
 class ItemActionWidget(ExecutionPlannerItem):
@@ -208,15 +203,21 @@ class ItemActionWidget(ExecutionPlannerItem):
         dynamic_property_columns = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(self.data_item.task_class, "ShowInTreeView")
         # lay out items in columns (labels and values)
         layout_columns = 6
-        task_details_layout = QGridLayout()
-        # task_details_layout.setColumnStretch(layout_columns, 2)
         
+        # task_details_layout.setColumnStretch(layout_columns, 2)
+        task_details_layout = None
         if len(dynamic_property_columns) > 0:
+            managed_roles = ["DisplayRole", "DescriptionRole"]
+            task_details_layout = QGridLayout()
             row = task_details_layout.rowCount()
             column_count = 0
             for column, column_configuration in dynamic_property_columns.items():
                 show_entry = column_configuration.get("ShowInTreeView", True) == True
                 if not show_entry:
+                    continue
+
+                field_role = column_configuration.get("FieldRole", "")
+                if field_role in managed_roles:
                     continue
 
                 label = QLabel(f"{column}:")
@@ -244,7 +245,8 @@ class ItemActionWidget(ExecutionPlannerItem):
         task_params_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
         
         self.layout.addLayout(task_params_layout, 0, 1, 1, 3)
-        self.layout.addLayout(task_details_layout, 2, 0, 1, 3)
+        if task_details_layout:
+            self.layout.addLayout(task_details_layout, 2, 0, 1, 3)
         # self.layout.addWidget(self.run_status, 1, 3, 1, 2)
         self.run_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.run_status.setFixedWidth(75)

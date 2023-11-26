@@ -1,5 +1,5 @@
 
-from PyQt6 import QtWidgets
+from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, pyqtSignal
 from .ConfigurationSectionEditor import ConfigurationSectionEditor
 
@@ -35,10 +35,17 @@ class GeneralConfigurationEditor(ConfigurationSectionEditor):
 
         if DataType == "Boolean":
             new_value = new_value == 2
+        
+        if DataType == "Integer":
+            if not isinstance(new_value, int):
+                if len(new_value.strip()) == 0:
+                    new_value = 0
 
+                if str(new_value).isnumeric():
+                    new_value = int(new_value)
+                
         field_configuration["ConfigurationValue"] = new_value
 
-    
 
 class ConfigurationFieldEditorWidget(QtWidgets.QWidget):
     editorValueChanged = pyqtSignal(str, object)
@@ -78,6 +85,8 @@ class ConfigurationFieldEditorWidget(QtWidgets.QWidget):
         
         self.editor = None
         current_value = self.field_configuration.get("ConfigurationValue", None)
+        if not current_value:
+            current_value = self.field_configuration.get("DefaultValue", None)
 
         DataType = self.field_configuration.get("DataType", None)
         if not DataType:
@@ -110,6 +119,19 @@ class ConfigurationFieldEditorWidget(QtWidgets.QWidget):
                     lambda value=self.editor.text(), column=self.configuration_key: 
                     self.editorValueChanged.emit(column, value)
                     )
+        if DataType == "Integer":
+            self.editor = QtWidgets.QLineEdit()
+            
+            range_validator = QtGui.QIntValidator(self)
+            self.editor.setValidator(range_validator)
+
+            if current_value:
+                self.editor.setText(str(current_value))
+
+            self.editor.textChanged.connect(
+                lambda value=self.editor.text(), column=self.configuration_key: 
+                self.editorValueChanged.emit(column, value)
+                )
 
         if not self.editor:
             temp_label = QtWidgets.QLabel("Data Type not yet supported...")

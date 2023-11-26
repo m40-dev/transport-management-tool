@@ -10,7 +10,6 @@ class TaskExecutionModel(JSONDataModel):
             data=data, 
             model_item_class=TaskExecutionItem
             )
-
         self.headers = ["Actions"]
         
     def addExecutionGroup(self, task_data, parentIndex):
@@ -53,35 +52,96 @@ class TaskExecutionModel(JSONDataModel):
         return mimedata
 
     def dropMimeData(self, data, action, row, column, parentIndex):
+        migrate = True
         if (not data.hasFormat("application/vnd.jsondataitem") 
             and not data.hasFormat("application/vnd.ExecutionPlannerItem")):
             return False
-
+        
         if data.hasFormat("application/vnd.ExecutionPlannerItem"):
             encodedJson = data.data("application/vnd.ExecutionPlannerItem")            
             data.setData("application/vnd.jsondataitem", encodedJson)
+            migrate = False
         
-        if data.hasFormat("application/vnd.jsondataitem"):
+        if data.hasFormat("application/vnd.jsondataitem") and migrate:
             encodedJson = data.data("application/vnd.jsondataitem") 
             decodedData = bytes(encodedJson)
             jsondata = json.loads(decodedData)
             for dropped_item in jsondata:
-                item_object_class = dropped_item.get("objectclass", "JSONDataItem")
-                
-                if item_object_class == "JSONDataItem":
-                    dropped_item["objectclass"] = "ExecutionPlanner_ExecutionTask"
-
-                if item_object_class == "PackageManager_PackageDefinition":
-                    dropped_item["objectclass"] = "ExecutionPlanner_ExecutionGroup"
-                    
-                if item_object_class == "PackageManager_TaskDefinition":
-                    dropped_item["objectclass"] = "ExecutionPlanner_ExecutionTask"
-
+                self.migrate(source_dict=dropped_item)
             jsondata = json.dumps(jsondata, indent=4)
             encodedJson = jsondata.encode('utf-8')
             data.setData("application/vnd.jsondataitem", encodedJson)
         
         return super().dropMimeData(data, action, row, column, parentIndex)
+
+    def migrate(self, source_dict):
+        source_object_class = source_dict.get("objectclass", "JSONDataItem")
+        if source_object_class in ["ExecutionPlanner_ExecutionTask", "ExecutionPlanner_ExecutionGroup"]:
+            #nothing to migrate
+            return source_dict
+        
+        target_object_class = source_object_class
+        if source_object_class == "JSONDataItem":
+            target_object_class = "ExecutionPlanner_ExecutionTask"
+
+        if source_object_class == "PackageManager_PackageDefinition":
+            target_object_class = "ExecutionPlanner_ExecutionGroup"
+            
+        if source_object_class == "PackageManager_TaskDefinition":
+            target_object_class = "ExecutionPlanner_ExecutionTask"
+        
+        # map to target object class
+        source_dict["objectclass"] = target_object_class
+
+        #map source attributes by standard roles
+        source_display_attributes = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_role(source_object_class, "DisplayRole")
+        source_description_attributes = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_role(source_object_class, "DescriptionRole")
+        # print(f"source object configuration - display columns: {source_display_attributes.keys()}, description columns: {source_description_attributes.keys()}")
+
+        target_display_attributes = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_role(target_object_class, "DisplayRole")
+        target_description_attributes = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_role(target_object_class, "DescriptionRole")
+        # print(f"target object configuration - display columns: {target_display_attributes.keys()}, description columns: {target_description_attributes.keys()}")
+        
+
+        data_dict = self.mapSourceObjectAttributes(
+            source_dict=source_dict,
+            source_columns=source_display_attributes,
+            target_columns=target_display_attributes)
+
+        source_dict.update(data_dict)
+
+        data_dict = self.mapSourceObjectAttributes(
+            source_dict=source_dict,
+            source_columns=source_description_attributes,
+            target_columns=target_description_attributes)
+
+        source_dict.update(data_dict)
+        return source_dict
+    
+    def mapSourceObjectAttributes(self, source_dict, source_columns, target_columns):
+        i = 0
+        data_dict = {}
+        for source_display_column in source_columns.keys():
+            #for each target display column
+            if source_display_column in target_columns.keys():
+                # print(f"Map source display column {source_display_column} with exact target attribute")
+                data_dict[source_display_column] = source_dict.get(source_display_column, "")
+                i += 1
+                continue
+
+            #no direct mapping but something still remains
+            if i < len(target_columns.keys()):
+                target_display_column = list(target_columns.keys())[i]
+                # print(f"Map source display column {source_display_column} with target attribute: {target_display_column}")
+                data_dict[target_display_column] = source_dict.get(source_display_column, "")
+                i += 1
+                continue
+
+            data_dict[source_display_column] = source_dict.get(source_display_column, "")
+            i += 1
+            # print(f"still something left here, more source columns than target options? map directly", source_display_column)
+        return data_dict
+
 
 class TaskExecutionItem(JSONDataItem):
     # executionStateChanged = pyqtSignal(bool, bool, bool)
@@ -105,16 +165,10 @@ class TaskExecutionItem(JSONDataItem):
                 for column, value in source_files_data.items():
                     self.setData(column, value)
             
-            parent_data = task_data.get("PARENT_DEF", None)
-            if parent_data:
-                # print("parent data found", parent_data)
-                self.package_definition = parent_data
             if not task_data.get("ExecutionType", None):
                 self.setData("ExecutionType", "Export")
         self.migrate(task_class)
         self.initializeObjectData()
-
-
 
     def itemDataDropped(self, source_dict):
         if source_dict.get("children", None):
@@ -140,7 +194,7 @@ class TaskExecutionItem(JSONDataItem):
     def migrate(self, source_class):
         if source_class in ["ExecutionPlanner_ExecutionTask", "ExecutionPlanner_ExecutionGroup"]:
             return False
-            
+
         source_display = self.display
         source_description = self.description
         
@@ -158,7 +212,6 @@ class TaskExecutionItem(JSONDataItem):
 
     def initializeObjectData(self):
         application_connections = self.application.ConnectionHandler.connections
-        # if self.data("Connection"):
         if self.task_class == "ExecutionPlanner_ExecutionTask" and self.data("Connection") is None and len(application_connections.keys()):
             #TODO: add connection preference for the initial task setup
             self.setData("Connection", list(application_connections.keys())[0])

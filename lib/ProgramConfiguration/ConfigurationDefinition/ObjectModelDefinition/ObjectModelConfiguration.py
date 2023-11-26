@@ -17,7 +17,7 @@ ObjectModelConfiguration = {
                     "ShowInEditor",
                     "ShowInTreeView", 
                     "IsForDataExport",
-                    "MapValueFromSource"],
+                    "UseTemplates"],
                 "FieldType": {
                     "FixedInput":["Options"],
                     "IntegerInput":["MinValue","MaxValue"],
@@ -29,16 +29,15 @@ ObjectModelConfiguration = {
                 "FieldRole":{
                     "SortOrder": ["DistributeEvenly"]
                     },
-                "ConfigurationSectionId":{
-                    "PackageManager_TaskDefinition": ["Source"],
-                    "ExecutionPlanner_ExecutionTask": ["Source"],
-                    },
                 "ExecutionPlanner_ExecutionTask": {
                     "TaskType": ["Transporter", "SQLScript", "SchemaExtension"]
                     },
                 "PackageManager_TaskDefinition": {
                     "TaskType": ["XMLTemplateTypes"]
-                    }
+                    },
+                "UseTemplates":{
+                    True: ["ValuePattern"]
+                }
             },
             "FieldId":
                 {
@@ -146,19 +145,19 @@ ObjectModelConfiguration = {
                     "Display": "Placeholder Text",
                     "PlaceholderText": "Placeholder text visible in the text input box"
                 },
-            "MapValueFromSource":
+            "UseTemplates":
                 {
                     "Display": "Use Value Template",
                     "FieldType": "BooleanInput",
                     "DefaultValue": False,
                     "EditDependency": {}
                 },
-            "Source":
+            "ValuePattern":
                 {
                     "FieldType": "StringInput",
                     "Display": "Attribute value source mapping",
-                    "Description": "Allows to transfer the source attribute value from the task definition object",
-                    "EditDependency": {"MapValueFromSource": True}
+                    "Description": "Allows to transfer the source attribute value from the task definition object, use % mark as wrapping character to map other column value (%ColumnName%).\nParent column reference can be achieved with 'Parent.' prefix (%Parent.ColumnName%)",
+                    "EditDependency": {"UseTemplates": True}
                 },
             "MinValue":
                 {
