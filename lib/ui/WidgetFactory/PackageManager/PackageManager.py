@@ -189,15 +189,21 @@ class PackageManager(QtWidgets.QWidget):
         print(f"workdir reading time: {run_time}")
         print("task definitions loaded", len(definitions))
 
+        processQueueSize = self.application.ProgramConfiguration.getConfigurationValue("Package Manager", "ProcessQueueSize")
+        definition_data = definitions
+        delayed_loader_data = []
+
+        if processQueueSize < len(definitions):
+            definition_data = definitions[:processQueueSize]
+            delayed_loader_data = definitions[processQueueSize:]
+        
         self.setupModelData(
-            data=definitions[:2],
+            data=definition_data,
             application=self.application,
             treeview=self.PackageViewTreeView,
             package_manager=self)
-        
-        delayed_loader_data = definitions[2:]
-        self.modelWorker.dataChanged.emit(delayed_loader_data)
 
+        self.modelWorker.dataChanged.emit(delayed_loader_data)
         self.SearchPackageLineEdit.textChanged.connect(self.queryPackages)
         
         # Show the summary of skipped data files
