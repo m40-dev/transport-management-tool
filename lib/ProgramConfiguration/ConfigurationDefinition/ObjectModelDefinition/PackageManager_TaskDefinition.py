@@ -43,7 +43,7 @@ PackageManager_TaskDefinition = {
             "FieldRole":"SortOrder",
             "DefaultValue":99,
             "PlaceholderText":"",
-            "IsMandatory":False,
+            "IsMandatory":True,
             "ShowInEditor":True,
             "ShowInTreeView":False,
             "IsForDataExport":True,

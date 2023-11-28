@@ -27,7 +27,7 @@ from lib.ProgramConfiguration import ProgramConfiguration, ObjectConfiguration, 
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.7.8'
+VERSION = '0.7.9'
 
 class Transport_Manager(QMainWindow):
     """Main window class for connection launcher"""
@@ -47,10 +47,6 @@ class Transport_Manager(QMainWindow):
         self.clipboard = clipboard
         self.current_workdir = None
 
-        self.setWindowTitle(f"Transport Manager Tool - {VERSION}")
-        window_icon = QIcon("./icon.ico")
-        self.setWindowIcon(window_icon)
-
         self.color_theme = Application_Theme()
         self.qt_app.setPalette(self.color_theme)
         self.setStyleSheet(self.color_theme.style_sheet)
@@ -60,6 +56,10 @@ class Transport_Manager(QMainWindow):
         self._relation_presets = {}
 
         self.ui.setupUi(self)
+
+        self.setWindowTitle(f"Transport Manager Tool - {VERSION}")
+        window_icon = QIcon("./icon.ico")
+        self.setWindowIcon(window_icon)
 
         # Database and Connection handlers
         self.db = DatabaseConnection()
@@ -140,6 +140,14 @@ class Transport_Manager(QMainWindow):
 
         # Application development testing helpers
         # self.ui.MainTabWidget.setCurrentIndex(2)
+        self.setupApplication()
+
+    def setupApplication(self):
+        # load default workdir
+        startup_workdir = self.ProgramConfiguration.getConfigurationValue("Package Manager", "InitialWorkdir")
+        # print("startup workdir is set:", startup_workdir)
+        if startup_workdir:
+            self.PackageManager.loadWorkingDirectory(startup_workdir)
 
     def getConfigurationParameters(self, configuration_section):
         return self.ProgramConfiguration.getConfigurationParameters(configuration_section)

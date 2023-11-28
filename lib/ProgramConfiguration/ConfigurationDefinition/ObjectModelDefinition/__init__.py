@@ -15,7 +15,7 @@ OBJECT_MODEL_CONFIGURATION = {
         "ExportType": "ExportValues",
         "ConfigurationParameters":{
             "UseExperimental": {
-                "DataType": "Boolean",
+                "FieldType": "BooleanInput",
                 "Display": "Use Experimental Object Model",
                 "Description": "Turns on Experimental Object model features.",
                 "DefaultValue": False

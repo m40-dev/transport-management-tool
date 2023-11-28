@@ -69,20 +69,21 @@ class transport_template(transport_template_custom_object):
 
     def parse_xml_file(self, xml_file=None):
         if not xml_file:
-            return False
-
+            return False, "XML File to parse was not provided"
+        xmlObj = None
         xml_parser = etree.XMLParser(remove_comments=False, remove_blank_text=True)
         try:
             xmlObj = etree.parse(xml_file, parser=xml_parser)
-        except:
-            #TODO: fix temporary handling of file parsing issues
-            # self.parent.XMLTemplateEditor.newTransportTemplate(xml_file)
-            return False
+        except etree.XMLSyntaxError as ex:
+            # syntax errors will be returned to the calling method which can then show error message
+            return False, ex.msg
 
         if xmlObj is not None:
             self.data = xmlObj
             # self.parent.XMLTemplateEditor.xml_structure_changed.emit(xml_file)
             # self.parent.XMLTemplateEditor.reload_xml_structure()
+            return True, "XML data parsing successful!"
+        return False, "XML Parsing error not handled"
 
     def xml_remove_children(self):
         super().xml_remove_children(self.tasks_root)

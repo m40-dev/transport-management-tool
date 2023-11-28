@@ -4,6 +4,7 @@ from .xml_object_definitions import transport_template
 import json
 from .ObjectDataItem import ObjectDataItem
 from .XMLDataItem import XMLDataItem
+from lib.ui.WidgetFactory.DialogScreens.MessageBox import MsgBox
 
 class XMLDataModel(QAbstractItemModel):
     databaseObjectsLoaded = pyqtSignal(object, dict)
@@ -26,7 +27,11 @@ class XMLDataModel(QAbstractItemModel):
             model_reference=self)
 
         if data_source:
-            self.transport_template.parse_xml_file(data_source)
+            parsing_status, status_message = self.transport_template.parse_xml_file(data_source)
+            if parsing_status is False:
+                if "document is empty" not in status_message.lower():
+                    print("template parsing failed", status_message)
+                    MsgBox(self.application, "XML Template Parsing Failed!", f"<b>File path:</b> {data_source}\n<b>Error Message:</b> {status_message}")
 
         data = self.transport_template.children()
         if data:

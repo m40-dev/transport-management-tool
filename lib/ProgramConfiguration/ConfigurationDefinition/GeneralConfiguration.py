@@ -7,7 +7,7 @@ GENERAL_CONFIGURATION = {
         "TargetConfigurationFile": "ProgramConfiguration",
         "ConfigurationParameters":{
             "UseDarkTheme": {
-                "DataType": "Boolean",
+                "FieldType": "BooleanInput",
                 "Display": "Use Dark Theme",
                 "Description": "Turn on the dark color palette.",
                 "DefaultValue": False

@@ -15,24 +15,14 @@ FILTER_EXEC_TIMER = 650
 class PackageManager(QtWidgets.QWidget):
     uiRefreshRequested = QtCore.pyqtSignal()
     
-
     def __init__(self, application):
         super().__init__()
         self.application = application
         self.ProgramConfiguration = self.application.ProgramConfiguration
         self.current_workdir = None
+        self.WorkdirLoader = None
         self.setupUi()
         self.setupViewDelegate()
-
-        self.modelWorker = PMWorker(
-            application=application,
-            treeview=self.PackageViewTreeView,
-            package_manager=self,
-            definitions=None
-        )
-
-        self.modelWorker.start()
-        self.modelWorker.dataLoaded.connect(self.appendModelData)
 
         # Package Tree View and Navigation
         self.PackageViewTreeView.dragMoveEvent = self.PackageViewDragMoveEvent
@@ -46,6 +36,8 @@ class PackageManager(QtWidgets.QWidget):
         self.PackageViewTreeView.setAlternatingRowColors(False)
         self.PackageViewTreeView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.PackageViewTreeView.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
+
+        self.SearchPackageLineEdit.textChanged.connect(self.queryPackages)
 
         self.PackageManagerSplitter.setSizes(
             [round(self.application.width()*0.3), round(self.application.width()*0.7)])
@@ -70,7 +62,6 @@ class PackageManager(QtWidgets.QWidget):
         self.loadWorkingDirectory()
         self.uiRefreshRequested.emit()
 
-
     """ Workdir and File Operations """
     def changeWorkingDirectory(self):
         dialog = QtWidgets.QFileDialog(self, "Transport Manager - Select Working Directory")
@@ -78,8 +69,6 @@ class PackageManager(QtWidgets.QWidget):
 
         file_path = dialog.getExistingDirectory(options=QtWidgets.QFileDialog.Option.ReadOnly)
         if file_path != "":
-            self.current_workdir = file_path
-            self.application.current_workdir = file_path
             self.loadWorkingDirectory(file_path)
             return True
         return False
@@ -95,127 +84,59 @@ class PackageManager(QtWidgets.QWidget):
         self.application.ui.MainTabWidget.setCurrentWidget(self)
 
     def setupWorkingDirectory(self, workdir):
-        start_time = timer()
-        sort_attribute = ""
-        package_definition_config = self.application.getConfigurationParameters("PackageManager_PackageDefinition")
-        mandatory_columns = []
-        if package_definition_config:
-            for column, column_configuration in package_definition_config.items():
-                if column_configuration.get("FieldRole", None) == "SortOrder":
-                    sort_attribute = column
-                    break
-            
-            if len(sort_attribute.strip()) == 0:
-                for column, column_configuration in package_definition_config.items():
-                    if column_configuration.get("FieldRole", None) == "DisplayRole":
-                        sort_attribute = column
-                        break
-
-            for column, column_configuration in package_definition_config.items():
-                    if column_configuration.get("IsMandatory", None) == "True":
-                        mandatory_columns.append(column)
-        sort_attribute = sort_attribute.strip()
+        self.current_workdir = workdir
+        self.application.current_workdir = workdir
+        # Check existing worker status
+        if self.WorkdirLoader:
+            # print("worker existing, clearing queue", self.WorkdirLoader.isRunning)
+            #if it exists, clear definitions queue manually so it shuts down
+            self.WorkdirLoader.definitions = {}
         
-        workdir_path = Path(workdir).absolute()
-        definitions = []
-        skipped_definitions = []
-        whitelist_directories = self.application.getConfigurationValue("Package Manager", "WorkdirDirectoryWhitelist")
-        blacklist_directories = self.application.getConfigurationValue("Package Manager", "WorkdirDirectoryBlacklist")
-        excluded_files = self.application.getConfigurationValue("Package Manager", "ExcludedFiles")
-        definition_config = self.application.getConfigurationKey("PackageManager_PackageDefinition", "DefinitionFile")
-
-        for file_path in Path(workdir).rglob( '*.json' ):
-            if file_path.is_file():
-                feature_definition_location = file_path.relative_to(workdir_path)
-                accept = True
-                if whitelist_directories:
-                    accept = False
-                    for directory in whitelist_directories:
-                        # print(f"checking whitelist, {str(feature_definition_location)} compared with whitelist directory: {directory}", str(feature_definition_location).lower().startswith(directory.lower()))
-                        test_path = Path(directory)
-                        if str(feature_definition_location).lower().startswith(str(test_path).lower()):
-                            accept = True
-
-                if excluded_files and accept:
-                    for excluded_file_path in excluded_files:
-                        test_path = Path(excluded_file_path)
-                        if str(test_path) == str(feature_definition_location):
-                            accept = False
-                
-                if blacklist_directories and accept:
-                    if blacklist_directories:
-                        for directory in blacklist_directories:
-                            test_path = Path(directory)
-                            if str(feature_definition_location).lower().startswith(str(test_path).lower()):
-                                accept = False
-                if not accept:
-                    # program configuration excluded the file, continue
-                    continue
-                
-                #file went through the whitelist/blacklist configurations
-                json_content = self.application.load_file(file_path.absolute())
-                package_definition = json.loads(json_content)
-                
-                #keep relative path by default
-                package_definition["DefinitionFile"] = str(feature_definition_location)
-
-                if definition_config and definition_config.get("FileSelectionMode", "") == "FileName":
-                    #keep just the file name, location to be calculated dynamically
-                    package_definition["DefinitionFile"] = str(feature_definition_location.name)
-                # check the mandatory fields of the object to determine if file matches the definition
-
-                # check the definition file mandatory columns
-                for column_name in mandatory_columns:
-                    if column_name not in package_definition.keys():
-                        #skip entry with missing mandatory definition data
-                        accept = False
-                        break
-
-                if accept and len(sort_attribute) > 0 and sort_attribute not in package_definition.keys():
-                    package_definition[sort_attribute] = -1
-                
-                if accept:
-                    definitions.append(package_definition)
-                else:
-                    skipped_definitions.append(str(feature_definition_location))
-        
-        if len(sort_attribute) > 0:
-            definitions = sorted(
-                    definitions, 
-                    key=lambda d: (d.get(sort_attribute, ""))
-                    )
-        end_time = timer()
-        run_time = end_time - start_time
-        print(f"workdir reading time: {run_time}")
-        print("task definitions loaded", len(definitions))
-
-        processQueueSize = self.application.ProgramConfiguration.getConfigurationValue("Package Manager", "ProcessQueueSize")
-        definition_data = definitions
-        delayed_loader_data = []
-
-        if processQueueSize < len(definitions):
-            definition_data = definitions[:processQueueSize]
-            delayed_loader_data = definitions[processQueueSize:]
-        
+        # Clear model data
         self.setupModelData(
-            data=definition_data,
+            data={},
             application=self.application,
             treeview=self.PackageViewTreeView,
             package_manager=self)
 
-        self.modelWorker.dataChanged.emit(delayed_loader_data)
-        self.SearchPackageLineEdit.textChanged.connect(self.queryPackages)
+        # Create new worker for the workdir
+        self.WorkdirLoader = PMWorker(
+            application=self.application,
+            treeview=self.PackageViewTreeView,
+            package_manager=self,
+            workdir = workdir
+        )
+
+        # Connect output signals
+        self.WorkdirLoader.dataLoaded.connect(self.appendModelData)
+        self.WorkdirLoader.workdirLoaded.connect(self.onWorkdirFilesLoaded)
+
+        # Move worker to new thread
+        workdirLoaderThread = QtCore.QThread(self)
+        self.WorkdirLoader.moveToThread(workdirLoaderThread)
         
+        # Connect operational signals
+        workdirLoaderThread.started.connect(self.WorkdirLoader.loadWorkingDirectory)
+        self.WorkdirLoader.finished.connect(workdirLoaderThread.quit)
+        self.WorkdirLoader.finished.connect(self.WorkdirLoader.deleteLater)
+        workdirLoaderThread.finished.connect(workdirLoaderThread.deleteLater)
+
+        # Start worker thread
+        workdirLoaderThread.start()
+
+    def onWorkdirFilesLoaded(self, loaded_definitions, skipped_definitions, mandatory_columns):
         # Show the summary of skipped data files
+        # print("definitions loaded:",len(loaded_definitions), "definitions skipped:", len(skipped_definitions), "mandatory columns checked:", mandatory_columns )
         if len(skipped_definitions)>0:
             definition_list = "\r\n\t".join(skipped_definitions)
             file_count = len(skipped_definitions)
             MsgBox(self.application, "Some JSON definition files were ignored due to <b>missing mandatory data.</b><br>If this file should be ignored, please configure the filters in program configuration.", 
                 f"<b>Mandatory columns checked:</b> <i>{mandatory_columns}</i>.\r\n<b>Skipped Entries:</b> <i>{file_count}</i>.\r\n<b>Skipped files (workdir relative):</b>\r\n\t{definition_list}")
+        
 
     def setupViewDelegate(self):
-        print("Setup Model data finished")
-        start_time = timer()
+        # print("Setup Model data finished")
+        # start_time = timer()
         data_model = self.PackageViewTreeView.model()
         if not data_model:
             data_model =  PackageDefinitionModel(
@@ -230,12 +151,12 @@ class PackageManager(QtWidgets.QWidget):
             package_manager=self)
 
         self.PackageViewTreeView.setItemDelegate(packageViewDelegate)
-        end_time = timer()
-        run_time = end_time - start_time
-        print(f"delegate setup time: {run_time}")
+        # end_time = timer()
+        # run_time = end_time - start_time
+        # print(f"delegate setup time: {run_time}")
 
     def setupModelData(self, data, application, treeview, package_manager):
-        start_time = timer()
+        # start_time = timer()
         data_model =  PackageDefinitionModel(
             application=application,
             parent_widget=treeview, 
@@ -243,19 +164,19 @@ class PackageManager(QtWidgets.QWidget):
 
         treeview.setModel(data_model)
         
-        end_time = timer()
-        run_time = end_time - start_time
-        print(f"model setup time: {run_time}")
+        # end_time = timer()
+        # run_time = end_time - start_time
+        # print(f"model setup time: {run_time}")
         # self.setupFinished()
 
     def appendModelData(self, definition_data):
-        start_time = timer()
+        # start_time = timer()
         data_model = self.PackageViewTreeView.model()
         data_model.appendModelData(definition_data)
         data_model.layoutChanged.emit()
-        end_time = timer()
-        run_time = end_time - start_time
-        print(f"model update time: {run_time}")
+        # end_time = timer()
+        # run_time = end_time - start_time
+        # print(f"model update time: {run_time}")
 
     def addExecutionPlan(self):
         tabwidget = ExecutionPlannerWidget(self, self.application)
@@ -607,46 +528,149 @@ class PackageManager(QtWidgets.QWidget):
         # self.FindPackageButton.setText(_translate("Form", "Find"))
         self.AddPackageButton.setText(_translate("Form", "Add"))
 
-class PMWorker(QtCore.QThread):
+class PMWorker(QtCore.QObject):
     finished = QtCore.pyqtSignal()
     dataChanged = QtCore.pyqtSignal(object)
     dataLoaded = QtCore.pyqtSignal(object)
+    workdirLoaded = QtCore.pyqtSignal(list, list, list)
 
-    def __init__(self, application, treeview, package_manager, definitions=None):
+    def __init__(self, application, treeview, package_manager, definitions=None, workdir=None):
         super(PMWorker, self).__init__()
+        self.workdir = workdir
         self.definitions = definitions
         self.application = application
         self.treeview = treeview
         self.package_manager = package_manager
         self.dataChanged.connect(self.modelDataChanged)
         self.isRunning = True
-        self.modelDataAwaits = False
-
-    def run(self, *args, **kwargs):
-        while self.isRunning:
-            sleep(0.5)
-            queue = 0
-            if self.definitions:
-                queue = len(self.definitions)
-            
-            if queue > 0:
-                self.processQueue()
             
     def modelDataChanged(self, data):
-        
         self.definitions = data
-        self.modelDataAwaits = True
+        # self.processQueue()
 
     def processQueue(self):
-        processQueueSize = self.application.ProgramConfiguration.getConfigurationValue("Package Manager", "ProcessQueueSize")
-        print("worker thread is running, processing the queue", len(self.definitions), "Process step:", processQueueSize)
-        for i in range(0, processQueueSize):
-            self.loadSingleDefinition()
+        while len(self.definitions) > 0:
+            processQueueSize = self.application.ProgramConfiguration.getConfigurationValue("Package Manager", "ProcessQueueSize")
+            if not processQueueSize or processQueueSize < 0:
+                processQueueSize = 5
+            # print("worker thread is running, processing the queue", len(self.definitions), "Process step:", processQueueSize)
+            for i in range(0, processQueueSize):
+                self.loadSingleDefinition()
+            sleep(0.1)
+        self.finished.emit()
 
     def loadSingleDefinition(self):
         if self.definitions and len(self.definitions) > 0:
             self.dataLoaded.emit(self.definitions[0])
             self.definitions.remove(self.definitions[0])
         
+    def loadWorkingDirectory(self):
+        workdir = self.workdir
+        # start_time = timer()
+        sort_attribute = ""
+        package_definition_config = self.application.getConfigurationParameters("PackageManager_PackageDefinition")
+        mandatory_columns = []
+        if package_definition_config:
+            for column, column_configuration in package_definition_config.items():
+                if column_configuration.get("FieldRole", None) == "SortOrder":
+                    sort_attribute = column
+                    break
+            
+            if len(sort_attribute.strip()) == 0:
+                for column, column_configuration in package_definition_config.items():
+                    if column_configuration.get("FieldRole", None) == "DisplayRole":
+                        sort_attribute = column
+                        break
 
+            for column, column_configuration in package_definition_config.items():
+                    if column_configuration.get("IsMandatory", False) == True:
+                        mandatory_columns.append(column)
+        sort_attribute = sort_attribute.strip()
         
+        workdir_path = Path(workdir).absolute()
+        definitions = []
+        skipped_definitions = []
+        whitelist_directories = self.application.getConfigurationValue("Package Manager", "WorkdirDirectoryWhitelist")
+        blacklist_directories = self.application.getConfigurationValue("Package Manager", "WorkdirDirectoryBlacklist")
+        excluded_files = self.application.getConfigurationValue("Package Manager", "ExcludedFiles")
+        definition_config = self.application.getConfigurationKey("PackageManager_PackageDefinition", "DefinitionFile")
+        files_list = list(Path(workdir).rglob( '*.json' ))
+        # file_count = sum(1 for x in files_list)
+        i = 1
+        for file_path in files_list:
+            # print(f"loading file {i} out of {len(files_list)}")
+            i += 1
+            if file_path.is_file():
+                feature_definition_location = file_path.relative_to(workdir_path)
+                accept = True
+                if whitelist_directories:
+                    accept = False
+                    for directory in whitelist_directories:
+                        # print(f"checking whitelist, {str(feature_definition_location)} compared with whitelist directory: {directory}", str(feature_definition_location).lower().startswith(directory.lower()))
+                        test_path = Path(directory)
+                        if str(feature_definition_location).lower().startswith(str(test_path).lower()):
+                            accept = True
+
+                if excluded_files and accept:
+                    for excluded_file_path in excluded_files:
+                        test_path = Path(excluded_file_path)
+                        if str(test_path) == str(feature_definition_location):
+                            accept = False
+                
+                if blacklist_directories and accept:
+                    if blacklist_directories:
+                        for directory in blacklist_directories:
+                            test_path = Path(directory)
+                            if str(feature_definition_location).lower().startswith(str(test_path).lower()):
+                                accept = False
+                if not accept:
+                    # program configuration excluded the file, continue
+                    continue
+                
+                #file went through the whitelist/blacklist configurations
+                json_content = self.application.load_file(file_path.absolute())
+                package_definition = None
+                try:
+                    package_definition = json.loads(json_content)
+                except json.JSONDecodeError:
+                    accept = False
+                    skipped_definitions.append(str(feature_definition_location))
+                
+                # file is still ok to be used
+                # print(package_definition, str(feature_definition_location))
+                if package_definition and isinstance(package_definition, dict):
+                    #keep relative path by default
+                    package_definition["DefinitionFile"] = str(feature_definition_location)
+
+                    if definition_config and definition_config.get("FileSelectionMode", "") == "FileName":
+                        #keep just the file name, location to be calculated dynamically
+                        package_definition["DefinitionFile"] = str(feature_definition_location.name)
+                    # check the mandatory fields of the object to determine if file matches the definition
+
+                    # check the definition file mandatory columns
+                    for column_name in mandatory_columns:
+                        if column_name not in package_definition.keys():
+                            #skip entry with missing mandatory definition data
+                            accept = False
+                            break
+                
+                if accept and isinstance(package_definition, dict) and len(package_definition) > 0:
+                    if len(sort_attribute) > 0 and sort_attribute not in package_definition.keys():
+                        package_definition[sort_attribute] = -1
+
+                    definitions.append(package_definition)
+                else:
+                    skipped_definitions.append(str(feature_definition_location))
+        
+        if len(sort_attribute) > 0:
+            definitions = sorted(
+                    definitions, 
+                    key=lambda d: (d.get(sort_attribute, ""))
+                    )
+        # end_time = timer()
+        # run_time = end_time - start_time
+        # print(f"workdir reading time: {run_time}")
+        # print("task definitions loaded", len(definitions), definitions)
+        self.definitions = definitions
+        self.workdirLoaded.emit(definitions, skipped_definitions, mandatory_columns)
+        self.processQueue()

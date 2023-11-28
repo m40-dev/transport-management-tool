@@ -29,15 +29,15 @@ class ProgramConfiguration(QObject):
 
     def reloadUserConfiguration(self):
         self.ProgramConfiguration = deepcopy(PROGRAM_CONFIGURATION)
-        self.configuration = {}
+        # self.configuration = {}
         for configuration_file in CONFIGURATION_FILES.values():
             if Path(configuration_file).is_file():
                 json_data  = self.load_file(configuration_file)
                 if len(json_data.strip()) > 0:
                     configuration_dict = json.loads(json_data)
                     if isinstance(configuration_dict, dict):
-                        for section, configuration_data in configuration_dict.items():
-                            self.configuration[section] = configuration_data
+                        # for section, configuration_data in configuration_dict.items():
+                        #     self.configuration[section] = configuration_data
                         
                         self.updateProgramConfiguration(configuration_dict)
         
@@ -54,7 +54,7 @@ class ProgramConfiguration(QObject):
                     configuration_parameters = self.sortSectionItems(configuration_parameters)
 
                 section_configuration["ConfigurationParameters"] = configuration_parameters
-                self.configuration[configuration_section] = configuration_parameters
+                # self.configuration[configuration_section] = configuration_parameters
                 continue
 
             if "ConfigurationParameters" not in section_configuration.keys():
@@ -81,13 +81,13 @@ class ProgramConfiguration(QObject):
         return items_data_sorted
 
 
-    def isValidConfigurationSection(self, configuration_section):
-        if configuration_section in self.configuration.keys():
-            return True
+    # def isValidConfigurationSection(self, configuration_section):
+    #     if configuration_section in self.configuration.keys():
+    #         return True
                
-        #as last resort try to lookup if there are any subsections to check
-        found_section = self.getConfigurationSection(configuration_section)
-        return found_section.get("SectionName", None) == configuration_section
+    #     #as last resort try to lookup if there are any subsections to check
+    #     found_section = self.getConfigurationSection(configuration_section)
+    #     return found_section.get("SectionName", None) == configuration_section
 
     def getConfigurationSection(self, configuration_section, configuration_data=None):
         if not configuration_data:
@@ -108,8 +108,8 @@ class ProgramConfiguration(QObject):
         return {}
     
     def getConfigurationKey(self, configuration_section, configuration_key):
-        if configuration_section in self.configuration.keys() and configuration_key in self.configuration[configuration_section].keys():
-            return self.configuration[configuration_section][configuration_key]
+        # if configuration_section in self.configuration.keys() and configuration_key in self.configuration[configuration_section].keys():
+        #     return self.configuration[configuration_section][configuration_key]
         
         configuration_parameters = self.getConfigurationParameters(configuration_section)
         if configuration_key in configuration_parameters.keys():
@@ -118,8 +118,8 @@ class ProgramConfiguration(QObject):
         return {}
 
     def getConfigurationValue(self, configuration_section, configuration_key):
-        if configuration_section in self.configuration.keys() and configuration_key in self.configuration[configuration_section].keys():
-            return self.configuration[configuration_section][configuration_key]
+        # if configuration_section in self.configuration.keys() and configuration_key in self.configuration[configuration_section].keys():
+        #     return self.configuration[configuration_section][configuration_key]
         
         # not found in the user configuration
         # get the configuration from the default settings
@@ -131,25 +131,22 @@ class ProgramConfiguration(QObject):
             if not configuration_value:
                 configuration_value = default_configuration.get("DefaultValue", None)
             
-            if configuration_value is None and isinstance(default_configuration, dict):
-                return default_configuration
+            # if configuration_value is None and isinstance(default_configuration, dict):
+            #     return default_configuration
+
+            # return whatever is there
             return configuration_value
         return None
 
     def getConfigurationParameters(self, configuration_section):
-        # Search in the program configuration
-        if (configuration_section in self.configuration.keys() 
-            and self.isValidConfigurationSection(configuration_section)):
-                return self.configuration[configuration_section]
-        
         # search in default program configuration dictionaries
         section_data = self.getConfigurationSection(configuration_section=configuration_section)
         return section_data.get("ConfigurationParameters", {})
 
-    #currently not in use
-    def setConfigurationValue(self, configuration_section, configuration_key, configuration_value):
-        if configuration_section in self.configuration.keys():
-            self.configuration[configuration_section][configuration_key] = configuration_value
+    # #currently not in use
+    # def setConfigurationValue(self, configuration_section, configuration_key, configuration_value):
+    #     if configuration_section in self.configuration.keys():
+    #         self.configuration[configuration_section][configuration_key] = configuration_value
 
     def exportConfiguration(self, target_configuration="ProgramConfiguration", configuration_data=None, export_data={}):
         if configuration_data is None:

@@ -363,6 +363,12 @@ class FormEditorObject(QtCore.QObject):
     def update_form_data(self, column, value):
         if self.column_configuration.get("FieldType", None) == "BooleanInput":
             value = (str(value) == "2" or str(value) == "True")
+        
+        if self.column_configuration.get("FieldType", None) == "IntegerInput":
+            if len(str(value).strip()) == 0:
+                value = 0
+            if str(value).isnumeric():
+                value = int(value)
         self._current_value = value
         self.dataChanged.emit(self.column_name, value)
 

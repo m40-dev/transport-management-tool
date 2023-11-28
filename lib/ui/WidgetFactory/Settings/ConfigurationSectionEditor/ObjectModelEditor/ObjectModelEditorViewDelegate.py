@@ -94,7 +94,7 @@ class ObjectModelEditorViewDelegate(QStyledItemDelegate):
             super().paint(painter, option, index)
     
     def paintEvent(self, option, index):
-        print(option, index)
+        # print(option, index)
         QStyledItemDelegate.paintEvent(self, option, index)
 
     def sizeHint(self, option, index):
