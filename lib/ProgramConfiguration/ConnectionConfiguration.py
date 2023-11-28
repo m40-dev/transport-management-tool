@@ -40,9 +40,19 @@ class ConnectionHandler(QObject):
                 else:
                     # print("connection data decryption failed")
                     self.connections = {}
+                    decision = QMessageBox.question(self.application, "Connection data decryption failed", "Do you want to try again?\nIf not, the connection sessions will not be available.")
+                    if decision == QMessageBox.StandardButton.Yes:
+                        self.loadSavedConnections()
             else:
                 # print("connection details were not loaded")
                 self.connections = {}
+                decision = QMessageBox.question(
+                    self.application, 
+                    "Connection data decryption skipped.", 
+                    "There was no encryption key provided to decrypt data,\ndo you want to continue without session configurations?")
+                
+                if decision == QMessageBox.StandardButton.No:
+                    self.loadSavedConnections()
 
     """ connection Data Management """
     def getEncryptionKey(self, initial=False):
@@ -81,13 +91,10 @@ class ConnectionHandler(QObject):
             # random ApplicationId was not generated yet
             salt = os.urandom(32)
             self.application.settings.setValue("ApplicationId", salt)
-        
         try:
             crypto = Fernet(b64_byte_key)
             decrypted_connection_details = crypto.decrypt(encrypted_connection_details)
-
-        except Exception as ex:
-            # print(f"An error occurred: {ex}")
+        except:
             return False
 
         connection_data = json.loads(decrypted_connection_details)
@@ -217,7 +224,7 @@ Connection_Form_Configuration = {
                 "Display": "Connection Name",
                 "PlaceholderText": "Provide Connection Name",
                 "FieldRole": "DisplayRole",
-                "IsMandatory": "True"
+                "IsMandatory": True
             },
         "Description": 
             {
@@ -229,45 +236,45 @@ Connection_Form_Configuration = {
         "ServerAddress":
             {
                 "FieldType": "StringInput",
-                "IsMandatory": "True",
+                "IsMandatory": True,
                 "Display": "Server Address"
             },
         "DatabaseName":
             {
                 "FieldType": "StringInput",
-                "IsMandatory": "True",
+                "IsMandatory": True,
                 "Display": "Database Name"
             },
         "SQLUserName":
             {
                 "FieldType": "StringInput",
-                "IsMandatory": "True",
+                "IsMandatory": True,
                 "Display": "SQL User Name"
             },
         "SQLPassword":
             {
                 "FieldType": "StringInput",
-                "IsSensitive": "True" ,
-                "IsMandatory": "True",
+                "IsSensitive": True ,
+                "IsMandatory": True,
                 "Display": "SQL User Password"
             },
         "ApplicationUserName":
             {
                 "FieldType": "StringInput",
-                "IsMandatory": "True",
+                "IsMandatory": True,
                 "Display": "Application User Name"
             },
         "ApplicationPassword":
             {
                 "FieldType": "StringInput",
-                "IsSensitive": "True",
-                "IsMandatory": "True",
+                "IsSensitive": True,
+                "IsMandatory": True,
                 "Display": "Application User Password"
             },
         "EncryptConnection":
             {
                 "FieldType": "BooleanInput",
-                "DefaultValue": "True",
+                "DefaultValue": True,
                 "Display": "Force Encryption"
             },
         "ToolsDirectory":

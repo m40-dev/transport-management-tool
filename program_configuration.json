@@ -9,7 +9,7 @@
             "preset_data.json",
             "preset_data2.json"
         ],
-        "ProcessQueueSize":2,
+        "ProcessQueueSize":15,
         "InitialWorkdir":"C:/Users/m40/Downloads/transport manager test"
     },
     "ObjectModel":{
