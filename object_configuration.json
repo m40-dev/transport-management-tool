@@ -229,7 +229,7 @@
             "Description":"Holds the instruction for the installer, whether the automatic local files update is required before the database compiler can be initiated.",
             "FieldType":"BooleanInput",
             "FieldRole":"",
-            "DefaultValue":"",
+            "DefaultValue":false,
             "PlaceholderText":"",
             "IsMandatory":false,
             "ShowInEditor":true,

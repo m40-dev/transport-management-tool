@@ -691,7 +691,10 @@ class JSONDataItem(QObject):
                 continue
             
             if field_type and field_type == "BooleanInput":
-                export_data[field] = str(object_field_value)
+                object_field_value = str(object_field_value).strip()
+                if len(object_field_value) == 0:
+                    object_field_value = str(False)
+                export_data[field] = object_field_value
                 continue
 
         return export_data
