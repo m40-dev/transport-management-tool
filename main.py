@@ -22,12 +22,12 @@ import lib.ui.WidgetFactory.DialogScreens as DialogScreens
 from lib.ui.WidgetFactory.PackageManager import PackageManager
 from lib.ui.WidgetFactory.SideBar import SideBar
 from lib.ui.WidgetFactory.XMLTemplateEditor import XMLTemplateEditor
-from lib.ProgramConfiguration import ProgramConfiguration, ObjectConfiguration, ConnectionHandler
+from lib.ProgramConfiguration import ProgramConfiguration, ConnectionHandler
 
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.7.9'
+VERSION = '0.8'
 
 class Transport_Manager(QMainWindow):
     """Main window class for connection launcher"""
