@@ -136,12 +136,19 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         contextMenu.onEditSQLScript.connect(self.editSQLScript)
         contextMenu.onCopySelectedNodes.connect(self.copyXMLNodes)
         contextMenu.onPasteSelectedNodes.connect(self.pasteSelectedNodes)
+        contextMenu.onQueryTableData.connect(self.queryTaskData)
 
         if len(contextMenu.menu_items) > 0:
             menu_target = self.XMLStructureTreeView.mapToGlobal(menuPosition)
             contextMenu.popup(menu_target)
-    
+
     """ Context Menu handling functions  """
+    def queryTaskData(self, source_index):
+        if source_index.isValid():
+            source_item = source_index.internalPointer()
+            if isinstance(source_item, XMLDataItem):
+                self.parent.tableSelectionRequested.emit(source_item.table_name)
+                
     def pasteSelectedNodes(self, target_index):
         mimeData = self.application.clipboard.mimeData()
         xml_model = self.XMLStructureTreeView.model()
@@ -345,56 +352,6 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
             event.acceptProposedAction()
         else:
             event.ignore()
-
-    # def XMLStructureDragMoveEvent(self, event):
-    #     move_accept = False
-    #     source_index = event.source().currentIndex()
-    #     source_item = source_index.internalPointer()
-
-    #     QtWidgets.QTreeView.dragMoveEvent(self.XMLStructureTreeView, event)
-        
-    #     drop_index = self.XMLStructureTreeView.indexAt(event.position().toPoint())
-    #     drop_item = drop_index.internalPointer()
-
-    #     dropIndicator = self.XMLStructureTreeView.dropIndicatorPosition()
-
-    #     if drop_item:
-    #         self.XMLStructureTreeView.setDropIndicatorShown(True)
-        
-    #     if isinstance(source_item, XMLDataItem) and isinstance(drop_item, XMLDataItem):
-    #         if dropIndicator == QtWidgets.QAbstractItemView.DropIndicatorPosition.OnItem:
-    #             if drop_item and source_item:
-    #                 if source_item.xml_object_class == "Transport_Object" and drop_item.xml_object_class == "Object_Transport_Task":
-    #                     move_accept = True
-    #                 if source_item.xml_object_class == "Transport_SQL_Object" and drop_item.xml_object_class == "SQL_Transport_Task":
-    #                     move_accept = True
-
-    #         if dropIndicator in [QtWidgets.QAbstractItemView.DropIndicatorPosition.BelowItem, QtWidgets.QAbstractItemView.DropIndicatorPosition.AboveItem]:
-    #             if drop_item.xml_object_class == source_item.xml_object_class:
-    #                 move_accept = True
-
-    #     if (isinstance(source_item, ObjectDataItem) and isinstance(drop_item, XMLDataItem)) and source_item.model_reference != drop_item.model_reference:
-    #         if dropIndicator == QtWidgets.QAbstractItemView.DropIndicatorPosition.OnItem:
-    #             if drop_item.xml_object_class == "Object_Transport_Task":
-    #                 move_accept = True
-            
-    #         if dropIndicator in [QtWidgets.QAbstractItemView.DropIndicatorPosition.BelowItem, QtWidgets.QAbstractItemView.DropIndicatorPosition.AboveItem]:
-    #             if drop_item.xml_object_class == "Transport_Object":
-    #                 move_accept = True
-
-    #     if drop_item is None and isinstance(source_item, XMLDataItem):
-    #         # no target item - drop at top level
-    #         if source_item.xml_object_class in ["Object_Transport_Task", "SQL_Transport_Task"]:
-    #             move_accept = True
-
-    #     if drop_item is None and isinstance(source_item, ObjectDataItem) and source_item.model_reference != self.XMLStructureTreeView.model():
-    #         # no target item - drop at top level
-    #         move_accept = True
-
-    #     if (event.mimeData().hasFormat("application/vnd.xmldataitem") or event.mimeData().hasFormat("application/vnd.objectdataitem")) and move_accept:
-    #         event.acceptProposedAction()
-    #     else:
-    #         event.ignore()
 
     def onCurrentIndexChanged(self, current_index=None):
         if current_index:

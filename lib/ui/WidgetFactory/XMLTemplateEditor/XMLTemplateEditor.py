@@ -9,6 +9,7 @@ XML_PREVIEW_TIMER = 100
 class XMLTemplateEditor(QtWidgets.QWidget):
     refreshUi = QtCore.pyqtSignal()
     current_file_changed = QtCore.pyqtSignal(str)
+    tableSelectionRequested = QtCore.pyqtSignal(str)
     tabNameChanged = QtCore.pyqtSignal(object)
     
     def __init__(self, application):
@@ -21,6 +22,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
         # Database Relations Handling
         self.TableComboBox.currentTextChanged.connect(self.listTableObjects)
+        self.tableSelectionRequested.connect(self.onTableQueryRequested)
         self.DatabaseRelations.relationSettingsChanged.connect(self.relationSettingsChanged)
         self.DatabaseRelations.relationResetRequested.connect(self.resetRelationStates)
         self.tabNameChanged.connect(self.renameTabWidget)
@@ -29,12 +31,11 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         # Database Objects listing
         self.FindObjectButton.clicked.connect(self.queryDatabaseObjects)
 
-    # def eventFilter(self, source, event):
-    #     print("event filtering", event, source)
-    #     if source == self:
-    #         if event.type() == QtCore.QEvent.Type.DragEnter:
-    #             print("dragging something here!", event.position())
-    #     return super().eventFilter(source, event)
+    def onTableQueryRequested(self, table_name):
+        if self.application.db and not self.application.db.is_connected:
+            return self.application.databaseConnectionRequired()
+
+        self.TableComboBox.setCurrentText(table_name)
 
     def newTransportTemplate(self, file_path=None):
         tabWidget = XMLTemplateEditorWidget(self, self.application, file_path)

@@ -27,6 +27,7 @@ class XMLObjectContextMenu(QMenu):
     onAddSQLScript = pyqtSignal(object, str)
     onCopySelectedNodes = pyqtSignal()
     onPasteSelectedNodes = pyqtSignal(object)
+    onQueryTableData = pyqtSignal(object)
 
     def __init__(self, parent, source_index):
         super(XMLObjectContextMenu, self).__init__()
@@ -55,6 +56,25 @@ class XMLObjectContextMenu(QMenu):
                 self.menu_items.append(menuActionLoadDatabaseObject)
                 self.menu_items.append(menuActionSavePreset)
             
+            if source_item.xml_object_class == "VI.Transport.TagTransport, VI.Transport":
+                # Configure Task menu options
+                menuQueryDatabaseObject = self.addAction("Find Task objects")
+                menuQueryDatabaseObject.triggered.connect(lambda: self.onQueryTableData.emit(source_index))
+                self.menu_items.append(menuQueryDatabaseObject)
+
+            if source_item.xml_object_class == "VI.Transport.FileTransport, VI.Transport":
+                # Configure Task menu options
+                menuQueryDatabaseObject = self.addAction("Find Task objects")
+                menuQueryDatabaseObject.triggered.connect(lambda: self.onQueryTableData.emit(source_index))
+                self.menu_items.append(menuQueryDatabaseObject)
+                
+            if source_item.xml_object_class == "VI.Transport.DPR.ShellTransport, VI.Transport.DPR":
+                # Configure Task menu options
+                menuQueryDatabaseObject = self.addAction("Find Task objects")
+                menuQueryDatabaseObject.triggered.connect(lambda: self.onQueryTableData.emit(source_index))
+                self.menu_items.append(menuQueryDatabaseObject)
+
+
             self.addSeparator()
 
             menuActionCopyNodes = self.addAction("Copy Selected Nodes")
