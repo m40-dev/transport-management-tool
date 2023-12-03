@@ -261,6 +261,7 @@ class XMLDataModel(QAbstractItemModel):
             parentItem = parentIndex.internalPointer()
 
         for dropped_item in jsondata:
+
             source_item_uid = dropped_item.get('uid', None)
             source_item = None
             if source_item_uid:
@@ -268,7 +269,10 @@ class XMLDataModel(QAbstractItemModel):
                 source_item = self.find_item_by_attribute("uid", source_item_uid)
                 if source_item:
                     source_items.append(source_item)
-            
+                    
+            if dropped_item.get("objectclass", None) == "TableDataItem":
+                # do not include table data items
+                continue
             # print("dropped item:", dropped_item)
             # create new object from the source item data and add it to the list, all dropped items will be inserted at once
             new_item = XMLDataItem(

@@ -142,7 +142,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
                 
                 # add sort clause where possible, some tables do not have xdate fields
                 if "xdateinserted" in table_columns and "xdateupdated" in table_columns:
-                    sort_clause = "order by xdateinserted desc, xdateupdated desc"
+                    sort_clause = "order by xdateupdated desc, xdateinserted desc"
                 
                 query = f"select * from {table_name} {sort_clause}"
                 data_rows = self.application.db.run_db_query(query)

@@ -309,6 +309,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                 if (
                     (source_item.xml_object_class in drop_item.accepted_classes or len(drop_item.accepted_classes) == 0)
                     and (source_item.table_name in drop_item.accepted_tables or len(drop_item.accepted_tables) == 0)
+                    and (drop_item.xml_object_class not in TASKS.keys())
                 ):
                     move_accept = True
                 # alternatively check if we are moving top level items, making reorganization allowed
