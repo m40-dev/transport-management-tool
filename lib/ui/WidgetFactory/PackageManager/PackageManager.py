@@ -9,6 +9,7 @@ from .ContextMenu import PackageDefinitionMenu
 from ..DialogScreens.MultiObjectEditorForm import MultiObjectEditorForm
 from timeit import default_timer as timer
 from time import sleep
+from datetime import timedelta
 
 FILTER_EXEC_TIMER = 650
 
@@ -133,6 +134,7 @@ class PackageManager(QtWidgets.QWidget):
             MsgBox(self.application, "Some JSON definition files were ignored due to <b>missing mandatory data.</b><br>If this file should be ignored, please configure the filters in program configuration.", 
                 f"<b>Mandatory columns checked:</b> <i>{mandatory_columns}</i>.\r\n<b>Skipped Entries:</b> <i>{file_count}</i>.\r\n<b>Skipped files (workdir relative):</b>\r\n\t{definition_list}")
         
+        self.application.statusBarUpdated.emit("Workspace initialization completed.")
 
     def setupViewDelegate(self):
         # print("Setup Model data finished")
@@ -558,6 +560,8 @@ class PMWorker(QtCore.QObject):
                 self.loadSingleDefinition()
             sleep(0.1)
         self.finished.emit()
+        # self.application.statusBarUpdated.emit(f"All Definition files loaded")
+
 
     def loadSingleDefinition(self):
         if self.definitions and len(self.definitions) > 0:
@@ -566,7 +570,7 @@ class PMWorker(QtCore.QObject):
         
     def loadWorkingDirectory(self):
         workdir = self.workdir
-        # start_time = timer()
+        start_time = timer()
         sort_attribute = ""
         package_definition_config = self.application.getConfigurationParameters("PackageManager_PackageDefinition")
         mandatory_columns = []
@@ -595,11 +599,12 @@ class PMWorker(QtCore.QObject):
         excluded_files = self.application.getConfigurationValue("Package Manager", "ExcludedFiles")
         definition_config = self.application.getConfigurationKey("PackageManager_PackageDefinition", "DefinitionFile")
         files_list = list(Path(workdir).rglob( '*.json' ))
-        # file_count = sum(1 for x in files_list)
+        
         i = 1
         for file_path in files_list:
-            # print(f"loading file {i} out of {len(files_list)}")
+            self.application.statusBarUpdated.emit(f"loading workspace file {i} out of {len(files_list)}")
             i += 1
+            # sleep(0.1)
             if file_path.is_file():
                 feature_definition_location = file_path.relative_to(workdir_path)
                 accept = True
@@ -667,10 +672,12 @@ class PMWorker(QtCore.QObject):
                     definitions, 
                     key=lambda d: (d.get(sort_attribute, ""))
                     )
-        # end_time = timer()
-        # run_time = end_time - start_time
+        end_time = timer()
+        run_time = timedelta(seconds=end_time - start_time)
         # print(f"workdir reading time: {run_time}")
+        self.application.statusBarUpdated.emit(f"workspace files loading time: {run_time}, starting definition files processing...")
         # print("task definitions loaded", len(definitions), definitions)
+        # sleep(2)
         self.definitions = definitions
         self.workdirLoaded.emit(definitions, skipped_definitions, mandatory_columns)
         self.processQueue()

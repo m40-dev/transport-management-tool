@@ -1,4 +1,4 @@
-from .transport_template_custom_object import transport_template_custom_object
+from lib.data.DataModels.XMTemplateEditor.xml_object_definitions.transport_template_custom_object import transport_template_custom_object
             
 class sql_script_container(transport_template_custom_object):
     def __init__(self, parent, source_element=None, script_type="CommonSQL"):
@@ -26,3 +26,10 @@ class sql_script_container(transport_template_custom_object):
     @display.setter
     def display(self, value):
         self.xml_set_attribute("Display", value)
+    
+    @property
+    def accepted_classes(self):
+        # define what class is acceptable for the defined custom object
+        # this list will be processed when new element is being added/dropped on the XMLDataItem that carries the specified XML custom object
+        # empty list accepts all objects 
+        return ["Transport_SQL_Object"]

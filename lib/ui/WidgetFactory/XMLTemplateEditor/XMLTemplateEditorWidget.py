@@ -13,10 +13,11 @@ from .ContextMenu import XMLObjectContextMenu
 from ..DialogScreens import ScriptEditorDialog
 
 # Data Models
-from lib.data.DataModels import XMLDataItem, XMLDataModel, ObjectDataItem
+from lib.data.DataModels import XMLDataItem, XMLDataModel, ObjectDataItem, TASKS
 
 # Custom Widgets
 from lib.ui.WidgetFactory import FormEditorDialog
+
 
 XML_PREVIEW_TIMER = 100
 
@@ -281,44 +282,119 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         drop_item = drop_index.internalPointer()
 
         dropIndicator = self.XMLStructureTreeView.dropIndicatorPosition()
-
-        if drop_item:
-            self.XMLStructureTreeView.setDropIndicatorShown(True)
         
+        # Internal Move between XML Data structure nodes
         if isinstance(source_item, XMLDataItem) and isinstance(drop_item, XMLDataItem):
             if dropIndicator == QtWidgets.QAbstractItemView.DropIndicatorPosition.OnItem:
-                if drop_item and source_item:
-                    if source_item.xml_object_class == "Transport_Object" and drop_item.xml_object_class == "Object_Transport_Task":
-                        move_accept = True
-                    if source_item.xml_object_class == "Transport_SQL_Object" and drop_item.xml_object_class == "SQL_Transport_Task":
-                        move_accept = True
-
-            if dropIndicator in [QtWidgets.QAbstractItemView.DropIndicatorPosition.BelowItem, QtWidgets.QAbstractItemView.DropIndicatorPosition.AboveItem]:
-                if drop_item.xml_object_class == source_item.xml_object_class:
+                # print(drop_item.xml_object_class)
+                if (
+                    # Check target accepted classes
+                    (source_item.xml_object_class in drop_item.accepted_classes or len(drop_item.accepted_classes) == 0)
+                    # Check target accepted tables
+                    and (source_item.table_name in drop_item.accepted_tables or len(drop_item.accepted_tables) == 0)
+                    # Drop Allowed ON task objects only
+                    and (drop_item.xml_object_class in TASKS.keys())
+                    
+                ):
                     move_accept = True
 
-        if (isinstance(source_item, ObjectDataItem) and isinstance(drop_item, XMLDataItem)) and source_item.model_reference != drop_item.model_reference:
+            if dropIndicator in [QtWidgets.QAbstractItemView.DropIndicatorPosition.BelowItem, QtWidgets.QAbstractItemView.DropIndicatorPosition.AboveItem]:
+                if (
+                    (source_item.xml_object_class in drop_item.accepted_classes or len(drop_item.accepted_classes) == 0)
+                    and (source_item.table_name in drop_item.accepted_tables or len(drop_item.accepted_tables) == 0)
+                ):
+                    move_accept = True
+                # alternatively check if we are moving top level items, making reorganization allowed
+                if (
+                    (source_item.xml_object_class in TASKS.keys())
+                    and (drop_item.xml_object_class in TASKS.keys())
+                ):
+                    move_accept = True
+        
+        # Adding new elements from the database records list
+        if (isinstance(source_item, ObjectDataItem) and isinstance(drop_item, XMLDataItem)): # and source_item.model_reference != drop_item.model_reference:
+            # print(source_item.object_class, source_item.table_name, drop_item.accepted_tables, drop_item.xml_object_class)
             if dropIndicator == QtWidgets.QAbstractItemView.DropIndicatorPosition.OnItem:
-                if drop_item.xml_object_class == "Object_Transport_Task":
+                if (
+                    (source_item.table_name in drop_item.accepted_tables or len(drop_item.accepted_tables) == 0)
+                    # check if source object class is accepted
+                    and (source_item.object_class in drop_item.accepted_classes or len(drop_item.accepted_classes) == 0)
+                    # Drop Allowed ON task objects only
+                    and (drop_item.xml_object_class in TASKS.keys())
+                ):
                     move_accept = True
             
             if dropIndicator in [QtWidgets.QAbstractItemView.DropIndicatorPosition.BelowItem, QtWidgets.QAbstractItemView.DropIndicatorPosition.AboveItem]:
-                if drop_item.xml_object_class == "Transport_Object":
+                if (
+                    (source_item.table_name in drop_item.accepted_tables or len(drop_item.accepted_tables) == 0)
+                    # check if source object class is accepted
+                    and (source_item.object_class in drop_item.accepted_classes or len(drop_item.accepted_classes) == 0)
+                ):
                     move_accept = True
 
+        # no target item - internal move to the top level, only task items can be rearranged to top level
         if drop_item is None and isinstance(source_item, XMLDataItem):
-            # no target item - drop at top level
-            if source_item.xml_object_class in ["Object_Transport_Task", "SQL_Transport_Task"]:
+            if source_item.xml_object_class in TASKS.keys():
                 move_accept = True
-
+        
+        # no target item - drop new item at top level
         if drop_item is None and isinstance(source_item, ObjectDataItem) and source_item.model_reference != self.XMLStructureTreeView.model():
-            # no target item - drop at top level
             move_accept = True
 
         if (event.mimeData().hasFormat("application/vnd.xmldataitem") or event.mimeData().hasFormat("application/vnd.objectdataitem")) and move_accept:
             event.acceptProposedAction()
         else:
             event.ignore()
+
+    # def XMLStructureDragMoveEvent(self, event):
+    #     move_accept = False
+    #     source_index = event.source().currentIndex()
+    #     source_item = source_index.internalPointer()
+
+    #     QtWidgets.QTreeView.dragMoveEvent(self.XMLStructureTreeView, event)
+        
+    #     drop_index = self.XMLStructureTreeView.indexAt(event.position().toPoint())
+    #     drop_item = drop_index.internalPointer()
+
+    #     dropIndicator = self.XMLStructureTreeView.dropIndicatorPosition()
+
+    #     if drop_item:
+    #         self.XMLStructureTreeView.setDropIndicatorShown(True)
+        
+    #     if isinstance(source_item, XMLDataItem) and isinstance(drop_item, XMLDataItem):
+    #         if dropIndicator == QtWidgets.QAbstractItemView.DropIndicatorPosition.OnItem:
+    #             if drop_item and source_item:
+    #                 if source_item.xml_object_class == "Transport_Object" and drop_item.xml_object_class == "Object_Transport_Task":
+    #                     move_accept = True
+    #                 if source_item.xml_object_class == "Transport_SQL_Object" and drop_item.xml_object_class == "SQL_Transport_Task":
+    #                     move_accept = True
+
+    #         if dropIndicator in [QtWidgets.QAbstractItemView.DropIndicatorPosition.BelowItem, QtWidgets.QAbstractItemView.DropIndicatorPosition.AboveItem]:
+    #             if drop_item.xml_object_class == source_item.xml_object_class:
+    #                 move_accept = True
+
+    #     if (isinstance(source_item, ObjectDataItem) and isinstance(drop_item, XMLDataItem)) and source_item.model_reference != drop_item.model_reference:
+    #         if dropIndicator == QtWidgets.QAbstractItemView.DropIndicatorPosition.OnItem:
+    #             if drop_item.xml_object_class == "Object_Transport_Task":
+    #                 move_accept = True
+            
+    #         if dropIndicator in [QtWidgets.QAbstractItemView.DropIndicatorPosition.BelowItem, QtWidgets.QAbstractItemView.DropIndicatorPosition.AboveItem]:
+    #             if drop_item.xml_object_class == "Transport_Object":
+    #                 move_accept = True
+
+    #     if drop_item is None and isinstance(source_item, XMLDataItem):
+    #         # no target item - drop at top level
+    #         if source_item.xml_object_class in ["Object_Transport_Task", "SQL_Transport_Task"]:
+    #             move_accept = True
+
+    #     if drop_item is None and isinstance(source_item, ObjectDataItem) and source_item.model_reference != self.XMLStructureTreeView.model():
+    #         # no target item - drop at top level
+    #         move_accept = True
+
+    #     if (event.mimeData().hasFormat("application/vnd.xmldataitem") or event.mimeData().hasFormat("application/vnd.objectdataitem")) and move_accept:
+    #         event.acceptProposedAction()
+    #     else:
+    #         event.ignore()
 
     def onCurrentIndexChanged(self, current_index=None):
         if current_index:
@@ -395,6 +471,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.XMLStructureTreeView.setDropIndicatorShown(True)
         self.XMLStructureTreeView.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragDrop)
         self.XMLStructureTreeView.header().setStretchLastSection(False)
+        # self.XMLStructureTreeView.setDropIndicatorShown(True)
 
         self.verticalLayoutWidget = QtWidgets.QWidget(self.mainSplitter)
         self.verticalLayoutWidget.setObjectName("verticalLayoutWidget")

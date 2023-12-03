@@ -249,6 +249,8 @@ class XMLDataModel(QAbstractItemModel):
         newItems = []
         source_items = []
 
+        # print("Data dropped:", jsondata)
+
         if not parentIndex.isValid():
             # dropped at top level item
             parentItem = self.rootItem
@@ -325,7 +327,7 @@ class XMLDataModel(QAbstractItemModel):
         if source_index.isValid():
             parentItem = source_index.internalPointer() 
         
-        if not parentItem and not parentItem._xml_data and not parentItem.xml_object_class != "SQL_Transport_Task":
+        if not parentItem and not parentItem._xml_data:
             return False
 
         script_xml_object = parentItem._xml_data.add_sql_script(script_type)

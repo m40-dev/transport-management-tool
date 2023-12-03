@@ -2,11 +2,14 @@ from lxml import etree
 
 class transport_template_custom_object(object):
 
-    def __init__(self, parent, node_class, source_element=None):
+    def __init__(self, parent, node_class, source_element=None, xml_object_class=None):
         super(transport_template_custom_object, self).__init__()
         self.parent = parent
         self.data = None
         self._xml_object_class = node_class
+        self._table_name = None
+        if xml_object_class:
+            self._xml_object_class = xml_object_class
         self._state = 0
         self._option = ""
 
@@ -28,6 +31,28 @@ class transport_template_custom_object(object):
         return self._xml_object_class
 
     @property
+    def table_name(self):
+        return self._table_name
+    
+    @table_name.setter
+    def table_name(self, value):
+        self._table_name = value
+
+    @property
+    def accepted_classes(self):
+        # define what class is acceptable for the defined custom object
+        # this list will be processed when new element is being added/dropped on the XMLDataItem that carries the specified XML custom object
+        # empty list accepts all objects 
+        return []
+
+    @property
+    def accepted_tables(self):
+        # define what table is acceptable for the defined custom object
+        # this list will be processed when new element is being added/dropped on the XMLDataItem that carries the specified XML custom object
+        # empty list accepts all tables 
+        return []
+
+    @property
     def string(self):
         etree.indent(self.data)
         return etree.tostring(self.data, pretty_print=True, encoding='UTF-8', method="xml").decode('UTF-8')
@@ -39,6 +64,19 @@ class transport_template_custom_object(object):
     @display.setter
     def display(self, value):
         self._display = value
+
+    @property
+    def display(self):
+        xml_display = self.xml_get_attribute("Display")
+        if xml_display:
+            return xml_display
+        return self._display
+
+    @display.setter
+    def display(self, value):
+        self.xml_set_attribute("Display", value)
+        self._display = value
+
 
     @property
     def description(self):
@@ -108,7 +146,7 @@ class transport_template_custom_object(object):
         child_elements = parent_element.getchildren()
 
         if class_lookup is not None:
-            child_elements = self.find_children(parent_element, class_lookup)
+            child_elements = self.xml_find_children(parent_element, class_lookup)
         if child_elements is not None:
             for element in child_elements:
                 if not isinstance(element, etree._Comment) and isinstance(element, etree._Element):
@@ -156,3 +194,15 @@ class transport_template_custom_object(object):
     
     def xml_add_child_node(self, object_info_dict):
         pass
+
+    def xml_get_parameter(self, parameter_name, source_data=None):
+        if source_data is not None:
+            child_nodes = self.xml_get_children(parent_element=source_data)
+        else:
+            child_nodes = self.xml_get_children()
+        
+        for node in child_nodes:
+            node_name = node.attrib.get("Name", None)
+            if node_name is not None and node_name == parameter_name:
+                return node
+        return None

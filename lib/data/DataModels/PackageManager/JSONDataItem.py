@@ -643,6 +643,9 @@ class JSONDataItem(QObject):
         
         export_data = {}
         object_data = self.task_data()
+
+        exportBooleanAsString = self.ProgramConfiguration.getConfigurationValue("Package Manager", "ExportBooleanAsString")
+        exportIntegerAsString = self.ProgramConfiguration.getConfigurationValue("Package Manager", "ExportIntegerAsString")
         
         if configuration is None:
             return object_data
@@ -659,7 +662,10 @@ class JSONDataItem(QObject):
             
             if field_role and field_role == "SortOrder":
                 #set sort order
-                export_data[field] = int(self.sortOrder)
+                export_value = int(self.sortOrder)
+                if exportIntegerAsString:
+                    export_value = str(export_value)
+                export_data[field] = export_value
                 continue
 
             if field_role and field_role == "UniqueIdentifier" and len(object_field_value) == 0:
@@ -691,10 +697,31 @@ class JSONDataItem(QObject):
                 continue
             
             if field_type and field_type == "BooleanInput":
+
                 object_field_value = str(object_field_value).strip()
                 if len(object_field_value) == 0:
-                    object_field_value = str(False)
+                    object_field_value = "False"
+                
+                object_field_value = object_field_value.upper() == "TRUE"
+
+                if exportBooleanAsString:
+                    object_field_value = str(object_field_value)
+
                 export_data[field] = object_field_value
+                continue
+            
+            if field_type and field_type == "IntegerInput":
+                #set sort order
+                export_value = str(object_field_value)
+                if export_value.isnumeric():
+                    export_value = int(export_value)
+                else:
+                    export_value = field_configuration.get("DefaultValue", 0)
+
+                if exportIntegerAsString:
+                    export_value = str(export_value)
+
+                export_data[field] = export_value
                 continue
 
         return export_data

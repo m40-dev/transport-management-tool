@@ -1,7 +1,8 @@
 from lxml import etree
-from .transport_template_custom_object import transport_template_custom_object
-from .object_parameter import object_parameter
+from lib.data.DataModels.XMTemplateEditor.xml_object_definitions.transport_template_custom_object import transport_template_custom_object
+from lib.data.DataModels.XMTemplateEditor.xml_object_definitions.object_parameter import object_parameter
             
+
 class object_container(transport_template_custom_object):
     def __init__(self, parent, source_element=None, base_table=None, display_name=None, delete_residual_objects=0, pk_columns={}, relations={}):
         super(object_container, self).__init__(parent=parent, node_class="Parameter", source_element=source_element)
@@ -61,6 +62,20 @@ class object_container(transport_template_custom_object):
     @property
     def xml_object_class(self):
         return "Transport_Object"
+
+    @property
+    def accepted_classes(self):
+        # define what class is acceptable for the defined custom object
+        # this list will be processed when new element is being added/dropped on the XMLDataItem that carries the specified XML custom object
+        # empty list accepts all objects 
+        return ["Transport_Object", "ObjectDataItem"]
+
+    @property
+    def accepted_tables(self):
+        # define what table is acceptable for the defined custom object
+        # this list will be processed when new element is being added/dropped on the XMLDataItem that carries the specified XML custom object
+        # empty list accepts all tables 
+        return []
 
     @property
     def option(self):

@@ -1,61 +1,7 @@
-from ..xml_object_definitions import *
-
-class transport_task(transport_template_custom_object):
-    
-    def __init__(self, parent, object_class="VI.Transport.ObjectTransport, VI.Transport", source_element=None):
-        super(transport_task, self).__init__(parent=parent, node_class="Task", source_element=source_element)
-        
-        """ Task Node setup"""
-        if source_element is not None:
-            self.data = source_element
-        else:
-            self.data.attrib["Class"] = object_class
-
-            if object_class == "VI.Transport.ObjectTransport, VI.Transport":
-                self.data.attrib["Display"] = "Object Transport Task"
-
-    def add_container(self, source_element=None, base_table=None, display_name=None, delete_residual_objects=0, pk_columns={}, relations=[]):
-        container = object_container(self.parent, source_element, base_table, display_name, delete_residual_objects, pk_columns, relations)
-        if container.description is not None:
-            self.xml_append_node(container.description)
-        self.xml_append_node(container)
-        return container
-
-    @property
-    def xml_object_class(self):
-        return "Object_Transport_Task"
-
-    @property
-    def display(self):
-        return self.xml_get_attribute("Display")
-
-    @display.setter
-    def display(self, value):
-        self.xml_set_attribute("Display", value)
-
-    def children(self):
-        task_nodes = self.data.getchildren()
-        child_objects = []
-        if task_nodes:
-            for task in task_nodes:
-                if not isinstance(task, etree._Comment) and isinstance(task, etree._Element):
-                    task_type = task.attrib.get("Name", None)
-                    xml_obj = None
-                    if task_type:
-                        if task_type == "Container":
-                            xml_obj = object_container(self.parent, task)
-                        
-                    if xml_obj:
-                        child_objects.append(xml_obj)
-        return child_objects
-    
-    def xml_add_child_node(self, object_info_dict, row=-1):
-        # print("add child to transport task")
-        base_table = object_info_dict.get("table_name", None)
-        display_name = object_info_dict.get("object_display", None)
-        pk_columns = object_info_dict.get("pk_columns", None)
-        xml_obj = object_container(parent=self.parent, base_table=base_table, display_name=display_name, pk_columns=pk_columns)
-        return xml_obj
+from lxml import etree
+from .transport_task import transport_task
+from .task_containers.sql_script_container import sql_script_container
+from ..object_parameter import object_parameter
 
 
 class sql_script_transport_task(transport_task):
@@ -66,6 +12,13 @@ class sql_script_transport_task(transport_task):
         if source_element is None:
             self.data.attrib["Display"] = "SQL Script Transport"
             self.set_pre_import(0)
+
+    @property
+    def accepted_classes(self):
+        # define what class is acceptable for the defined custom object
+        # this list will be processed when new element is being added/dropped on the XMLDataItem that carries the specified XML custom object
+        # empty list accepts all objects 
+        return ["Transport_SQL_Object"]
 
     @property
     def state(self):
@@ -79,10 +32,6 @@ class sql_script_transport_task(transport_task):
         if value > 0:
             value = 1
         self.set_pre_import(value)
-
-    @property
-    def xml_object_class(self):
-        return "SQL_Transport_Task"
 
     @property
     def pre_import(self):

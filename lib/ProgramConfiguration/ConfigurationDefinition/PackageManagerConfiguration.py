@@ -36,9 +36,22 @@ PACKAGE_MANAGER_CONFIGURATION = {
                 },
                 "InitialWorkdir":{
                     "FieldType": "FileInput",
-                    "Display": "Initial Workdir",
+                    "Display": "Initial Working Directory",
+                    "Description":"Configure the default working directory to load automatically when the program is started.",
                     "FileSelectionMode": "DirectoryPath",
                     "DefaultValue": None
+                },
+                "ExportBooleanAsString":{
+                    "FieldType": "BooleanInput",
+                    "Display": "Export Boolean As String",
+                    "Description":"Wraps the Boolean values during JSON data export to be saved as string rather than raw boolean value.",
+                    "DefaultValue": False
+                },
+                "ExportIntegerAsString":{
+                    "FieldType": "BooleanInput",
+                    "Display": "Export Integer As String",
+                    "Description":"Wraps the Integer values during JSON data export to be saved as string rather than raw integer value.",
+                    "DefaultValue": False
                 }
             }
     }

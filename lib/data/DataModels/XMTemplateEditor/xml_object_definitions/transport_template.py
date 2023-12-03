@@ -1,7 +1,6 @@
 from lxml import etree
-from .transport_template_custom_object import transport_template_custom_object
-from .object_parameter import object_parameter
-from .transport_task import transport_task, sql_script_transport_task
+from ..xml_object_definitions import transport_template_custom_object, object_parameter, TASKS, transport_task
+
 
 class transport_template(transport_template_custom_object):
 
@@ -30,11 +29,13 @@ class transport_template(transport_template_custom_object):
 
     def add_transport_task(self, task_class):
         task_obj = None
-        if task_class == "VI.Transport.ObjectTransport, VI.Transport":
-            task_obj = transport_task(self.parent, task_class)
-        elif task_class == "VI.Transport.SQLTransport, VI.Transport":
-            task_obj = sql_script_transport_task(self.parent, task_class)
+        xml_object_class = TASKS.get(task_class, None)
+
+        if xml_object_class:
+            # map the object class with the supported dictionary
+            task_obj = xml_object_class(self.parent, task_class)
         else:
+            # fallback to the default transport task, whatever it might be so even unsupported classes get listed and can be saved back
             task_obj = transport_task(self.parent, task_class)
 
         if task_obj:
@@ -51,14 +52,16 @@ class transport_template(transport_template_custom_object):
         if task_nodes:
             for task in task_nodes:
                 if not isinstance(task, etree._Comment) and isinstance(task, etree._Element):
-                    task_type = task.attrib.get("Class", None)
-                    if task_type:
-                        if task_type == "VI.Transport.ObjectTransport, VI.Transport":
-                            task_obj = transport_task(self.parent, task_type, task)
-                        if task_type == "VI.Transport.SQLTransport, VI.Transport":
-                            task_obj = sql_script_transport_task(self.parent, task_type, task)
+                    task_obj = None
+                    task_class = task.attrib.get("Class", None)
+                    if task_class:
+                        xml_object_class = TASKS.get(task_class, None)
+                        if xml_object_class:
+                            # map the object class with the supported dictionary
+                            task_obj = xml_object_class(self.parent, task_class, task)
                         else:
-                            task_obj = transport_task(self.parent, task_type, task)
+                            # fallback to the default transport task, whatever it might be so even unsupported classes get listed and can be saved back
+                            task_obj = transport_task(self.parent, task_class, task)
                     if task_obj:
                         task_list.append(task_obj)
         return task_list
@@ -80,8 +83,6 @@ class transport_template(transport_template_custom_object):
 
         if xmlObj is not None:
             self.data = xmlObj
-            # self.parent.XMLTemplateEditor.xml_structure_changed.emit(xml_file)
-            # self.parent.XMLTemplateEditor.reload_xml_structure()
             return True, "XML data parsing successful!"
         return False, "XML Parsing error not handled"
 

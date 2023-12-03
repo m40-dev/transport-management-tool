@@ -204,7 +204,7 @@ class ConnectionHandler(QObject):
         if connection_name not in self.connections.keys():
             return False
         
-        self.application.ui.statusbar.showMessage(f"Using connection info: {connection_name}")
+        self.application.statusBarUpdated.emit(f"Using connection info: {connection_name}")
 
         connection_params = self.connections[connection_name]
 

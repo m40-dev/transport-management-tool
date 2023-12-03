@@ -125,6 +125,7 @@ QTreeWidget::item, QListWidget::item, QListView::item, QTreeView::item{
 	min-height: 1.8em;
     color: palette(Text);
 	background-color: palette(Base);
+	margin-top: 2px;
 }
 
 QTreeWidget::item:alternate, QListWidget::item:alternate, QListView::item:alternate, QTreeView::item:alternate{

@@ -3,7 +3,7 @@ from PyQt6.QtCore import Qt, pyqtSignal, QObject, pyqtSignal, QTimer
 from copy import deepcopy
 from lxml.etree import _Element, _Comment, fromstring
 from lib.ui.WidgetFactory import MsgBox
-
+from .ObjectDataItem import ObjectDataItem
 from .xml_object_definitions import *
 
 FILTER_MIN_LEN = 1
@@ -51,9 +51,28 @@ class XMLDataItem(QObject):
         self.locationChanged.connect(self.itemLocationChanged)
     
     @property
+    def accepted_classes(self):
+        # define what class is acceptable for the defined custom object
+        # this list will be processed when new element is being added/dropped on the XMLDataItem that carries the specified XML custom object
+        # empty list accepts all objects 
+        if self._xml_data is not None:
+            return self._xml_data.accepted_classes
+        return []
+
+    @property
+    def accepted_tables(self):
+        # define what table is acceptable for the defined custom object
+        # this list will be processed when new element is being added/dropped on the XMLDataItem that carries the specified XML custom object
+        # empty list accepts all tables 
+        if self._xml_data is not None:
+            return self._xml_data.accepted_tables
+        return []
+
+    @property
     def table_name(self):
         if self._xml_data is not None:            
             return self._xml_data.table_name
+        return None
     
     def objectRelationsChanged(self):
         # print("relations changed")
@@ -123,6 +142,11 @@ class XMLDataItem(QObject):
     def itemLocationChanged(self, source_item):
         # print("object location changed", self.display(0), source_item)
         #pass over the source files configuration
+
+        if isinstance(source_item, ObjectDataItem):
+            #moved listed object to another target
+            return self.itemDataDropped(source_item.task_data())
+
         if not isinstance(source_item, XMLDataItem):
             return False
 
@@ -332,20 +356,26 @@ class XMLDataItem(QObject):
         # print("create xml node from string", xml_object_class)
         xml_node = fromstring(xml_string)
         parent_node = self.parent()._xml_data
-
-        if xml_object_class == "Transport_Object":
-            xml_object = object_container(parent=parent_node, source_element=xml_node)
-
-        if xml_object_class == "Object_Transport_Task":
-            xml_object = transport_task(parent=parent_node, source_element=xml_node)
-
-        if xml_object_class == "SQL_Transport_Task":
-            xml_object = sql_script_transport_task(parent=parent_node, source_element=xml_node)
+        xml_object = None
         
-        if xml_object_class == "Transport_SQL_Object":
-            xml_object = sql_script_container(parent=parent_node, source_element=xml_node)
-    
-        if not xml_object:
+        # Try to get the object class from the TASKS mapping
+        target_object_class = TASKS.get(xml_object_class, None)
+
+        # If not in TASKS, check the known TASK_CONTAINERS mapping
+        if target_object_class is None:
+            target_object_class = TASK_CONTAINERS.get(xml_object_class, None)
+        
+        # if the class is now known, create xml object
+        if target_object_class:
+            xml_object = target_object_class(parent=parent_node, source_element=xml_node)
+
+        else:
+            # fallback to generic class
+            node_class = xml_node.tag
+            print("Using FALLBACK CLASS when parsing XML Node", node_class)
+            xml_object = transport_template_custom_object(parent=parent_node, node_class=node_class, source_element=xml_node)
+
+        if xml_object is None:
             return False
 
         self._xml_data = xml_object

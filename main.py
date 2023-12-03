@@ -31,7 +31,7 @@ VERSION = '0.7.9'
 
 class Transport_Manager(QMainWindow):
     """Main window class for connection launcher"""
-
+    statusBarUpdated = pyqtSignal(str)
     connectionDataChanged = pyqtSignal()
     currentViewChanged = pyqtSignal(int)
     
@@ -52,6 +52,7 @@ class Transport_Manager(QMainWindow):
         self.setStyleSheet(self.color_theme.style_sheet)
 
         self.ProgramConfiguration = ProgramConfiguration(self)
+        self.statusBarUpdated.connect(self.onStatusBarMessageReceived)
         self.settings = QSettings("EmergencyCode", "Transport_Manager")
         self._relation_presets = {}
 
@@ -157,6 +158,9 @@ class Transport_Manager(QMainWindow):
 
     def getConfigurationValue(self, configuration_section, configuration_key):
         return self.ProgramConfiguration.getConfigurationValue(configuration_section, configuration_key)
+
+    def onStatusBarMessageReceived(self, message):
+        self.ui.statusbar.showMessage(message)
 
     @property
     def relation_presets(self):

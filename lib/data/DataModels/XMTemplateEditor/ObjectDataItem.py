@@ -22,6 +22,10 @@ class ObjectDataItem(QObject):
         if object_class == "TableDataItem" and object_data:
             self.loadChildren(object_data)
     
+    @property
+    def table_name(self):
+        return self.objectkey_table(self.object_data)
+
     def itemDataDropped(self, source_dict):
         # print("foreign model object dropped", source_dict.get("objectclass", None), self.object_class)
         pass
