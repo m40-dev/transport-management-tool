@@ -148,9 +148,9 @@ class DatabaseConnection(object):
     #         self.column_info[row.ColumnName] = row
 
     def get_change_labels(self, list_all=False):
-        query = "select * from DialogTag where isClosed=0 order by ObjectId asc"
+        query = "select * from DialogTag where isClosed=0 order by Ident_DialogTag asc"
         if list_all:
-            query = "select * from DialogTag order by ObjectId asc"
+            query = "select * from DialogTag order by Ident_DialogTag asc"
         query_result = self.run_db_query(query)
         return query_result
 
