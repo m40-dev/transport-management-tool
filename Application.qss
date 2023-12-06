@@ -9,6 +9,8 @@ QLabel{
 
 QTreeWidget, QTreeView, QListView{
 	border: 0px;
+	font-size: 12px;
+	font-family: "Consolas";
 }
 
 QPlainTextEdit, QTextEdit, QComboBox{
@@ -17,12 +19,15 @@ QPlainTextEdit, QTextEdit, QComboBox{
 	min-height: 1.7em;
 	margin: 2px;
 	min-width: 10em;
+	font-size: 12px;
+	font-family: "Consolas";
 }
 
 QLineEdit, QComboBox{
 	border: 1px solid palette(Dark);
     margin: 0px;
     padding: 2px;
+	font-family: "Consolas";
 }
 
 QLineEdit::selection{
@@ -129,7 +134,7 @@ QTreeWidget::item, QListWidget::item, QListView::item, QTreeView::item{
 }
 
 QTreeWidget::item:alternate, QListWidget::item:alternate, QListView::item:alternate, QTreeView::item:alternate{
-	background-color: #e7e6e1;
+	background-color: #f1f1f1;
 }
 
 QListView::item::hover, QTreeView::item:hover{

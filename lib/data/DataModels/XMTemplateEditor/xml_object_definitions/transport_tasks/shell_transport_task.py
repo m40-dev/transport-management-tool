@@ -23,6 +23,8 @@ class shell_transport_task(transport_task):
                 if param_name == "PK":
                     xml_obj = object_reference(self.parent, param_name, xml_entry.text, xml_entry)
                     xml_obj.table_name = self.table_name
+                    xml_obj.key_column = self.key_column_name
+
                 if xml_obj:
                     child_objects.append(xml_obj)
         return child_objects
@@ -40,11 +42,17 @@ class shell_transport_task(transport_task):
             parent = self.parent,
             display_name = display_name,
             parameter_value = object_uid)
+        xml_obj.table_name = self.table_name
+        xml_obj.key_column = self.key_column_name
         return xml_obj
 
     @property
     def table_name(self):
         return "DPRShell"
+
+    @property
+    def key_column_name(self):
+        return "UID_DPRShell"
 
     @property
     def accepted_tables(self):

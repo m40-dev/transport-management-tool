@@ -147,6 +147,56 @@ class DatabaseConnection(object):
     #     for row in query_result:
     #         self.column_info[row.ColumnName] = row
 
+    def get_change_labels(self, list_all=False):
+        query = "select * from DialogTag where isClosed=0 order by ObjectId asc"
+        if list_all:
+            query = "select * from DialogTag order by ObjectId asc"
+        query_result = self.run_db_query(query)
+        return query_result
+
+    def get_objects_by_change_label(self, change_label_uid):
+        objectkeys = self.get_tagged_object_keys(change_label_uid)
+        return self.get_objects_by_xobjectkey(objectkeys)
+
+    def get_objects_by_xobjectkey(self, objectkey_list):
+        data_rows = {}
+        for objectkey in objectkey_list:
+            objectkey = objectkey.strip()
+            table_name = self.get_objectkey_table(objectkey)
+            if table_name is not None:
+                query = f"select * from {table_name} where XObjectKey = '{objectkey}'"
+                query_result = self.run_db_query(query)
+                if len(query_result) > 0:
+                    if table_name not in data_rows.keys():
+                        data_rows[table_name] = query_result
+                    else:
+                        data_rows[table_name] += query_result
+        return data_rows
+
+    def get_tagged_object_keys(self, change_label_uid):
+        # Get ObjectKeys of the tagged Items
+        object_keys = []
+        data_rows = []
+        query = f"select ObjectKey from DialogTaggedItem where UID_DialogTag in ('{change_label_uid}')"
+        query_result = self.run_db_query(query)
+
+        if len(query_result) > 0:
+            data_rows += query_result
+
+        # Get ObjectKeys of the tagged changes
+        query = f"select ObjectKey from QBMTaggedChange where UID_DialogTag in ('{change_label_uid}')"
+        query_result = self.run_db_query(query)
+
+        if len(query_result) > 0:
+            data_rows += query_result
+
+        for db_row in data_rows:
+            raw_objectkey = db_row.ObjectKey
+            if raw_objectkey not in object_keys:
+                object_keys.append(raw_objectkey)
+
+        return object_keys
+
     def load_table_relations_data(self):
         query = "select \
         BASE.Caption, \
@@ -193,14 +243,16 @@ class DatabaseConnection(object):
             return table_info.DisplayPattern
         return None
     
-    def get_object_display_name(self, table_name, db_object_attrs):
+    def get_object_display_name(self, table_name, db_object):
         display_pattern = self.get_table_display_pattern(table_name)
-        db_objects = self.get_db_object(table_name, db_object_attrs, "and")
-        objects_display_name = []
-        for db_object in db_objects:
-            objects_display_name.append(self.parse_object_display(db_object, display_pattern))
-        return " ".join(objects_display_name)
-    
+        if display_pattern:
+            return self.parse_object_display(db_object, display_pattern)
+
+        if "XObjectKey" in self.get_object_columns(db_object):
+            return f"Object without display - {db_object.XObjectKey}"
+        
+        return "Object without display"
+        
     def parse_object_display(self, db_object, display_pattern):
         object_display = display_pattern.upper()
         if "%" in display_pattern:

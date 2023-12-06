@@ -8,6 +8,7 @@ class transport_template_custom_object(object):
         self.data = None
         self._xml_object_class = node_class
         self._table_name = None
+        self._key_column = None
         if xml_object_class:
             self._xml_object_class = xml_object_class
         self._state = 0
@@ -37,6 +38,14 @@ class transport_template_custom_object(object):
     @table_name.setter
     def table_name(self, value):
         self._table_name = value
+    
+    @property
+    def key_column(self):
+        return self._key_column
+    
+    @key_column.setter
+    def key_column(self, value):
+        self._key_column = value
 
     @property
     def accepted_classes(self):

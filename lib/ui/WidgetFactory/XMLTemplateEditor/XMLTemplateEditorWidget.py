@@ -125,7 +125,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
             parent=self, 
             source_index=clickedIndex)
         
-        contextMenu.onListRelatedObjectData.connect(lambda: self.listRelatedObjectData(
+        contextMenu.onListRelatedObjectData.connect(lambda: self.listObjectDataRequested(
             source_index = clickedIndex, 
             override = True))
 
@@ -231,15 +231,19 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                 source_item.loadDatabaseObject()
         self.parent.reloadDatabaseRelations(source_index)
 
-    def listRelatedObjectData(self, source_index, override=False):
+    def listObjectDataRequested(self, source_index, override=False):
         for source_item in self.selectedItems(object_class=XMLDataItem):
-            if source_item.xml_object_class == "Transport_Object":
-                source_item.listRelatedObjectData(override)
+            source_item.listObjectData(override)
+
+            # if source_item.xml_object_class == "Transport_Object":
+            #     source_item.listRelatedObjectData(override)
         
         if len(self.XMLStructureTreeView.selectedIndexes()) == 0 and source_index.isValid():
             source_item = source_index.internalPointer()
-            if source_item.xml_object_class == "Transport_Object":
-                source_item.listRelatedObjectData(override)
+            source_item.listObjectData(override)
+
+            # if source_item.xml_object_class == "Transport_Object":
+            #     source_item.listRelatedObjectData(override)
  
     def saveRelationPreset(self, source_index):
         if not source_index.isValid():

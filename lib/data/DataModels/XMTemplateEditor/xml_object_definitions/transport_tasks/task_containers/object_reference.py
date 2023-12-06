@@ -24,4 +24,8 @@ class object_reference(transport_template_custom_object):
     def accepted_tables(self):
         return [self.table_name]
 
+    @property
+    def query_dict(self):
+        return {self.key_column: self.data.text}
+
     

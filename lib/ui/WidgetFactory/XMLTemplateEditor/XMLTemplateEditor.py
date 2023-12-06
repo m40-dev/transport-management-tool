@@ -22,6 +22,8 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
         # Database Relations Handling
         self.TableComboBox.currentTextChanged.connect(self.listTableObjects)
+        self.ListClosedLabelsCheckBox.stateChanged.connect(self.reloadChangeLabels)
+        self.ChangeLabelComboBox.currentIndexChanged.connect(self.listChangeLabelObjects)
         self.tableSelectionRequested.connect(self.onTableQueryRequested)
         self.DatabaseRelations.relationSettingsChanged.connect(self.relationSettingsChanged)
         self.DatabaseRelations.relationResetRequested.connect(self.resetRelationStates)
@@ -106,12 +108,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
         if self.XObjectKeysFilterRadioButton.isChecked():
             filter_rows = filter.splitlines()
-            for object_query in filter_rows:
-                object_query = object_query.strip()
-                table_name = self.application.db.get_objectkey_table(object_query)
-                if table_name is not None:
-                    query = f"select * from {table_name} where XObjectKey = '{object_query}'"
-                    data_rows += self.application.db.run_db_query(query)
+            data_rows = self.application.db.get_objects_by_xobjectkey(filter_rows).values()
 
         if self.SelectedTableFilterRadioButton.isChecked() and self.TableComboBox.currentText().strip() != "":
             object_query = filter.strip()
@@ -148,6 +145,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
                 data_rows = self.application.db.run_db_query(query)
 
         # print(f"table data loaded, {table_name} - ({len(data_rows)})")
+        self.SearchResultsListView.model().tableNameInDisplay = False
         self.SearchResultsListView.model().reloadModelData(data_rows)
 
     def SearchResultsListDragMoveEvent(self, event):
@@ -173,9 +171,38 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         if self.application.db and self.application.db.is_connected:
             self.FindObjectButton.setEnabled(True)
             self.TableComboBox.setEnabled(True)
+            self.ChangeLabelComboBox.setEnabled(True)
+            self.ListClosedLabelsCheckBox.setEnabled(True)
+
             for table_name in self.application.db.table_info.keys():
                 self.TableComboBox.addItem(table_name)
+
+            self.reloadChangeLabels()
         self.refreshUi.emit()
+
+    def reloadChangeLabels(self):
+        self.ChangeLabelComboBox.clear()
+        label_states = self.ListClosedLabelsCheckBox.isChecked()
+        change_labels = self.application.db.get_change_labels(label_states)
+        for data_row in change_labels:
+            display_name = self.application.db.get_object_display_name("DialogTag", data_row)
+            self.ChangeLabelComboBox.addItem(display_name, data_row.UID_DialogTag)
+            # print(display_name, data_row.UID_DialogTag)
+        self.ChangeLabelComboBox.model().sort(0)
+
+    def listChangeLabelObjects(self, current_index):
+        selected_label_uid = self.ChangeLabelComboBox.itemData(current_index)
+
+        if self.application.db and not self.application.db.is_connected:
+            return self.application.databaseConnectionRequired()
+        
+        data_rows = []
+
+        label_data = self.application.db.get_objects_by_change_label(selected_label_uid)
+        for table_name, label_data_rows in label_data.items():
+            data_rows += label_data_rows
+        self.SearchResultsListView.model().tableNameInDisplay = True
+        self.SearchResultsListView.model().reloadModelData(data_rows)
 
     def relationSettingsChanged(self, source_item):
         if self.XMLTemplateEditorTabWidget.count() == 0:
@@ -254,38 +281,58 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.TemplateEditorSplitter_Search.setSizePolicy(sizePolicy)
         self.TemplateEditorSplitter_Search.setOrientation(QtCore.Qt.Orientation.Vertical)
         self.TemplateEditorSplitter_Search.setObjectName("TemplateEditorSplitter_Search")
+
+        # Search GroupBox Widgets Preparation
         self.SearchGroupBox = QtWidgets.QGroupBox(self.TemplateEditorSplitter_Search)
         self.SearchGroupBox.setSizePolicy(sizePolicy)
         self.SearchGroupBox.setObjectName("SearchGroupBox")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.SearchGroupBox)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
+
+        self.SearchGroupBoxLayout = QtWidgets.QGridLayout(self.SearchGroupBox)
+        self.SearchGroupBoxLayout.setObjectName("SearchGroupBoxLayout")
+
         self.TableComboBox = QtWidgets.QComboBox(self.SearchGroupBox)
         self.TableComboBox.setObjectName("TableComboBox")
-        self.verticalLayout_2.addWidget(self.TableComboBox)
         self.ObjectQueryTextEdit = QtWidgets.QTextEdit(self.SearchGroupBox)
         self.ObjectQueryTextEdit.setTabChangesFocus(False)
         self.ObjectQueryTextEdit.setAcceptRichText(False)
         self.ObjectQueryTextEdit.setObjectName("ObjectQueryTextEdit")
         self.ObjectQueryTextEdit.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-        self.verticalLayout_2.addWidget(self.ObjectQueryTextEdit)
-        self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
-        self.horizontalLayout_2.setContentsMargins(-1, 2, -1, 2)
-        self.horizontalLayout_2.setSpacing(2)
-        self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        self.horizontalLayout_2.addItem(spacerItem)
+
         self.XObjectKeysFilterRadioButton = QtWidgets.QRadioButton(self.SearchGroupBox)
         self.XObjectKeysFilterRadioButton.setChecked(True)
         self.XObjectKeysFilterRadioButton.setObjectName("XObjectKeysFilterRadioButton")
-        self.horizontalLayout_2.addWidget(self.XObjectKeysFilterRadioButton)
+
         self.SelectedTableFilterRadioButton = QtWidgets.QRadioButton(self.SearchGroupBox)
         self.SelectedTableFilterRadioButton.setEnabled(True)
         self.SelectedTableFilterRadioButton.setObjectName("SelectedTableFilterRadioButton")
-        self.horizontalLayout_2.addWidget(self.SelectedTableFilterRadioButton)
+
         self.FindObjectButton = QtWidgets.QToolButton(self.SearchGroupBox)
         self.FindObjectButton.setObjectName("FindObjectButton")
-        self.horizontalLayout_2.addWidget(self.FindObjectButton)
-        self.verticalLayout_2.addLayout(self.horizontalLayout_2)
+        
+        self.ChangeLabelComboBox = QtWidgets.QComboBox()
+        self.ChangeLabelComboBox.setPlaceholderText("Select Objects by Change Label")
+        self.ListClosedLabelsCheckBox = QtWidgets.QCheckBox("Show All\nLabels")
+        
+        #Search GroupBox Layout Configuration
+        self.SearchGroupBoxLayout.addWidget(self.TableComboBox, 0, 0, 1, 3)
+        self.SearchGroupBoxLayout.addWidget(self.ChangeLabelComboBox, 1, 0, 1, 2)
+        self.SearchGroupBoxLayout.addWidget(self.ListClosedLabelsCheckBox, 1, 2, 1, 1, QtCore.Qt.AlignmentFlag.AlignRight)
+
+        self.SearchGroupBoxLayout.addWidget(self.ObjectQueryTextEdit, 2, 0, 1, 3)
+
+        self.SearchGroupBoxLayout.addWidget(self.XObjectKeysFilterRadioButton, 3, 0, 1, 1)
+        self.SearchGroupBoxLayout.addWidget(self.SelectedTableFilterRadioButton, 3, 1, 1, 1)
+        self.SearchGroupBoxLayout.addWidget(self.FindObjectButton, 3, 2, 1, 1, QtCore.Qt.AlignmentFlag.AlignRight)
+
+        self.SearchGroupBoxLayout.setColumnStretch(0, 2)
+        self.SearchGroupBoxLayout.setColumnStretch(1, 2)
+
+        #Deactivate widgets where connection is required
+        self.FindObjectButton.setEnabled(False)
+        self.TableComboBox.setEnabled(False)
+        self.ChangeLabelComboBox.setEnabled(False)
+        self.ListClosedLabelsCheckBox.setEnabled(False)
+
         self.SearchResultsGroupBox = QtWidgets.QGroupBox(self.TemplateEditorSplitter_Search)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
@@ -336,8 +383,6 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             [round(self.application.width()*0.25), round(self.application.width()*0.9)]
             )
 
-        self.FindObjectButton.setEnabled(False)
-        self.TableComboBox.setEnabled(False)
         self.retranslateUi(self)
 
         QtCore.QMetaObject.connectSlotsByName(self)

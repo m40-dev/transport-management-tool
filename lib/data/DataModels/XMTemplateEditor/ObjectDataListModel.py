@@ -11,7 +11,7 @@ class ObjectDataListModel(QAbstractItemModel):
         self.application = application
         self._headers = ["Database Object"]
         self.treeview = parent_widget
-
+        self.tableNameInDisplay = False
         self.rootItem = ObjectDataItem(
             application=application, 
             object_class="RootItem",
@@ -22,6 +22,7 @@ class ObjectDataListModel(QAbstractItemModel):
 
     def setupModelData(self, data):
         """ Main method used to load all data into the model """
+
         for task_object in data:
             task_item = ObjectDataItem(
                 application=self.application, 
@@ -29,6 +30,7 @@ class ObjectDataListModel(QAbstractItemModel):
                 object_data=task_object,
                 model_reference=self,
                 parent=self.rootItem)
+            task_item.tableNameInDisplay = self.tableNameInDisplay
             self.rootItem.addChild(task_item)
 
     def reloadModelData(self, object_data):

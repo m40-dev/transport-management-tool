@@ -16,6 +16,7 @@ class ObjectDataItem(QObject):
         self._object_class = object_class
         self.object_data = object_data
         self.table_data = table_data
+        self.tableNameInDisplay = False
         self._children = []
         self._parent = parent
         self._uid = str(uuid.uuid4())
@@ -96,10 +97,13 @@ class ObjectDataItem(QObject):
                 object_display = self.application.db.parse_object_display(
                     data_row,
                     self.table_display_pattern)
+                
                 display = object_display
+                if self.tableNameInDisplay:
+                    display = f"{self.objectkey_table(data_row)}: {object_display}"
                 
             if display is None:
-                display = f"{self.objectkey_table(data_row)} - ({self.xobjectkey(data_row)})"
+                display = f"{self.objectkey_table(data_row)}: ({self.xobjectkey(data_row)})"
 
             if display is None:
                 display = "Object without display name"

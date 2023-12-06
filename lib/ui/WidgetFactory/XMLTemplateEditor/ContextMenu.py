@@ -16,6 +16,8 @@ class RelationContextMenu(QMenu):
                 menuActionFollowRelation = self.addAction(f"Add Table Relations: {source_item.follow_table}")
                 menuActionFollowRelation.triggered.connect(lambda: self.onFollowTableRelation.emit(source_index))
 
+OBJECT_LISTING_TABLES = ["DialogTag"]
+
 class XMLObjectContextMenu(QMenu):
     """ Custom QMenu used to manage relation items """
     
@@ -40,7 +42,7 @@ class XMLObjectContextMenu(QMenu):
             print("object clicked", source_item.xml_object_class)
             
             # Prepare Transport Object specific menu items
-            if source_item.xml_object_class == "Transport_Object":
+            if source_item.xml_object_class == "Transport_Object" or (source_item.xml_object_class == "Table_Object_Reference" and source_item.table_name in OBJECT_LISTING_TABLES):
                 menuActionListRelatedObjectData = self.addAction("List Related Objects")
                 menuActionListRelatedObjectData.triggered.connect(lambda: self.onListRelatedObjectData.emit(source_index))
                 

@@ -5,6 +5,7 @@ from lxml.etree import _Element, _Comment, fromstring
 from lib.ui.WidgetFactory import MsgBox
 from .ObjectDataItem import ObjectDataItem
 from .xml_object_definitions import *
+from pyodbc import Row
 
 FILTER_MIN_LEN = 1
 LISTING_TIMER = 120
@@ -128,6 +129,7 @@ class XMLDataItem(QObject):
         if parent_xml_node:
             object_xml_node = parent_xml_node.xml_add_child_node(object_info)
             self._xml_data = object_xml_node
+        
         # load initial object relations
         if not object_info:
             return
@@ -439,6 +441,63 @@ class XMLDataItem(QObject):
             """ save final relation data """
             self.object_relations = relations_sorted
             # self._xml_data.relations = relations_sorted
+
+        if self._xml_data is not None and self._xml_data.xml_object_class == "Table_Object_Reference":
+            table_name = self.table_name
+            
+            if not table_name:
+                return
+                
+            self.object_data = self.application.db.get_db_object(table_name, self._xml_data.query_dict, " and " )
+            
+            if self.object_data and len(self.object_data) > 0:
+                self.object_data = self.object_data[0]
+    
+    def listObjectData(self, override=False):
+        if self._xml_data:
+            if self._xml_data.xml_object_class == "Transport_Object":
+                self.listRelatedObjectData(override=override)
+            
+            if self._xml_data.xml_object_class == "Table_Object_Reference" and self.table_name == "DialogTag":
+                self.listTaggedObjectData(override=override)
+    
+    def listTaggedObjectData(self, override=False):
+        
+        if self._xml_data.xml_object_class != "Table_Object_Reference" or self.table_name != "DialogTag":
+            return False
+        
+        if not self.application.autoListDatabaseObjects() and not override:
+            return False
+
+        if self.application.db and not self.application.db.is_connected:
+            return self.application.databaseConnectionRequired()
+        
+        self._children = []
+
+        data_dict = self.getTaggedObjectsData()
+        if len(data_dict) > 0:
+            self.model_reference.databaseObjectsLoaded.emit(self, data_dict)
+    
+    def getTaggedObjectsData(self):
+        # selected_objects = {self.table_name: [self.object_data]}
+        if self.object_data is None:
+            self.loadDatabaseObject()
+        
+        # ensure we have the loaded database object entry
+        if self.object_data is None or not isinstance(self.object_data, Row):
+            return {}
+        
+        object_columns = self.application.db.get_object_columns(self.object_data)
+
+        if self._xml_data.key_column not in object_columns:
+            return False
+
+        label_uid = self.object_data.__getattribute__(self._xml_data.key_column)
+        # print(f"Get Change label data for label: {label_uid}", self.object_data)
+        selected_objects = self.application.db.get_objects_by_change_label(label_uid)
+
+        return selected_objects
+
 
     def listRelatedObjectData(self, override=False):
         if self._xml_data and self._xml_data.xml_object_class != "Transport_Object":
