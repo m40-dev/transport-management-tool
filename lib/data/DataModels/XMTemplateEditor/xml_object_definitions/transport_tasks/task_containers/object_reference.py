@@ -1,10 +1,10 @@
 from lib.data.DataModels.XMTemplateEditor.xml_object_definitions.transport_template_custom_object import transport_template_custom_object
 
 class object_reference(transport_template_custom_object):
-    def __init__(self, parent, parameter_name="PK", parameter_value="", source_element=None, display_name=None):
+    def __init__(self, parent=None, parameter_name="PK", parameter_value="", source_element=None, display_name=None):
         
         super(object_reference, self).__init__(
-            parent=parent, 
+            parent=parent,
             node_class="Parameter", 
             source_element=source_element, 
             xml_object_class="Table_Object_Reference")

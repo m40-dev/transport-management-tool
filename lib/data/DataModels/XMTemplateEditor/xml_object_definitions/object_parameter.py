@@ -10,4 +10,3 @@ class object_parameter(transport_template_custom_object):
             self.data.attrib["Name"] = parameter_name
             self.data.text = str(parameter_value)
     
-

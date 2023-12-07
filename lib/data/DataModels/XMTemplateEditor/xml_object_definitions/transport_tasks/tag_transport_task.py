@@ -10,14 +10,28 @@ class tag_transport_task(transport_task):
         self._option = "Lock Labels on Export"
         if source_element is None:
             self.data.attrib["Display"] = "Change Label Transport"
-            tags = object_parameter(self.parent, "Tags")
-            xml_options = object_parameter(self.parent, "Options")
-            xml_lock_tags = object_parameter(xml_options, "LockTags", 0)
-            xml_use_relations = object_parameter(xml_options, "UseRelations", 0)
-            xml_options.xml_append_node(xml_lock_tags)
-            xml_options.xml_append_node(xml_use_relations)
-            self.xml_append_node(tags)
-            self.xml_append_node(xml_options)
+            self.tags = object_parameter(self.parent, "Tags")
+            self.xml_options = object_parameter(self.parent, "Options")
+            self.xml_lock_tags = object_parameter(self.xml_options, "LockTags", 0)
+            self.xml_use_relations = object_parameter(self.xml_options, "UseRelations", 1)
+            self.xml_options.xml_append_node(self.xml_lock_tags)
+            self.xml_options.xml_append_node(self.xml_use_relations)
+            self.xml_append_node(self.tags)
+            self.xml_append_node(self.xml_options)
+        else:
+            parent_node = self.xml_get_parameter("Tags")
+            if not parent_node:
+                self.tags = object_parameter(self.parent, "Tags")
+                self.xml_append_node(self.tags)
+
+            self.xml_options = self.xml_get_parameter("Options")
+            if not self.xml_options:
+                self.xml_options = object_parameter(self.parent, "Options")
+                self.xml_lock_tags = object_parameter(self.xml_options, "LockTags", 0)
+                self.xml_use_relations = object_parameter(self.xml_options, "UseRelations", 1)
+                self.xml_options.xml_append_node(self.xml_lock_tags)
+                self.xml_options.xml_append_node(self.xml_use_relations)
+                self.xml_append_node(self.xml_options)
 
     @property
     def table_name(self):
@@ -72,15 +86,16 @@ class tag_transport_task(transport_task):
         return 0
 
     def children(self):
-        parent_node = self.xml_get_parameter("Tags")
-        child_entries = self.xml_get_children(parent_element=parent_node)
+        # parent_node = self.xml_get_parameter("Tags")
+        child_entries = self.tags.xml_get_children()
+
         child_objects = []
         for xml_entry in child_entries:
             if not isinstance(xml_entry, etree._Comment) and isinstance(xml_entry, etree._Element):
                 param_name = xml_entry.attrib.get("Name", None)
                 xml_obj = None
                 if param_name == "PK":
-                    xml_obj = object_reference(self.parent, param_name, xml_entry.text, xml_entry)
+                    xml_obj = object_reference(param_name, xml_entry.text, xml_entry)
                     xml_obj.table_name = self.table_name
                     xml_obj.key_column = self.key_column_name
                 if xml_obj:
@@ -94,12 +109,16 @@ class tag_transport_task(transport_task):
         object_uid = ""
         if pk_columns:
             object_uid = list(pk_columns.values())[0]
-
+        
+        # tags_xml_node = self.xml_get_parameter("Tags")
+        # tags_node_object = object_parameter(self.tags, "Tags", source_element=tags_xml_node)
         xml_obj = object_reference(
-            parent = self.parent,
             display_name = display_name,
             parameter_value = object_uid)
+
         xml_obj.table_name = self.table_name
         xml_obj.key_column = self.key_column_name
+
+        self.tags.xml_append_node(xml_obj)
         return xml_obj
-            
+        

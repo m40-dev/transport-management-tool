@@ -4,7 +4,8 @@ class transport_template_custom_object(object):
 
     def __init__(self, parent, node_class, source_element=None, xml_object_class=None):
         super(transport_template_custom_object, self).__init__()
-        self.parent = parent
+
+        self._parent = parent
         self.data = None
         self._xml_object_class = node_class
         self._table_name = None
@@ -26,7 +27,10 @@ class transport_template_custom_object(object):
 
         self._display = "\n".join(self.data.itertext()).strip()
         self._description = ""
-
+    @property
+    def parent(self):
+        return self._parent
+        
     @property
     def xml_object_class(self):
         return self._xml_object_class
