@@ -11,7 +11,7 @@ class ExecutionPlannerGroupDialog(QtWidgets.QDialog):
         self.application = application
         self._form_data = form_data
 
-        self.setWindowTitle(self.application.windowTitle() + " - Execution Planner Group Configuration") 
+        self.setWindowTitle(self.application.application_name + " - Execution Planner Group Configuration") 
 
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("layout")

@@ -7,7 +7,7 @@ class RelationPresetDialog(QtWidgets.QDialog):
         super(RelationPresetDialog, self).__init__(flags=QtCore.Qt.WindowType.Dialog, parent=application)
 
         self.application = application
-        self.setWindowTitle(self.application.windowTitle() + " - Preset Configuration") 
+        self.setWindowTitle(self.application.application_name + " - Preset Configuration") 
         self.relations = []
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("layout")

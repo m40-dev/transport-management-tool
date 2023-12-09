@@ -2,36 +2,32 @@ from lxml import etree
 from .transport_task import transport_task
 from .task_containers.object_reference import object_reference
 from ..object_parameter import object_parameter
+from ..transport_template_custom_object import transport_template_custom_object
 
 class tag_transport_task(transport_task):
     
-    def __init__(self, parent, object_class="VI.Transport.TagTransport, VI.Transport", source_element=None):
+    def __init__(self, parent, object_class="VI.Transport.TagTransport, VI.Transport", source_element=None):   
         super(tag_transport_task, self).__init__(parent=parent, object_class=object_class, source_element=source_element)
+        
         self._option = "Lock Labels on Export"
-        if source_element is None:
-            self.data.attrib["Display"] = "Change Label Transport"
-            self.tags = object_parameter(self.parent, "Tags")
-            self.xml_options = object_parameter(self.parent, "Options")
-            self.xml_lock_tags = object_parameter(self.xml_options, "LockTags", 0)
-            self.xml_use_relations = object_parameter(self.xml_options, "UseRelations", 1)
-            self.xml_options.xml_append_node(self.xml_lock_tags)
-            self.xml_options.xml_append_node(self.xml_use_relations)
-            self.xml_append_node(self.tags)
-            self.xml_append_node(self.xml_options)
-        else:
-            parent_node = self.xml_get_parameter("Tags")
-            if not parent_node:
-                self.tags = object_parameter(self.parent, "Tags")
-                self.xml_append_node(self.tags)
 
-            self.xml_options = self.xml_get_parameter("Options")
-            if not self.xml_options:
-                self.xml_options = object_parameter(self.parent, "Options")
-                self.xml_lock_tags = object_parameter(self.xml_options, "LockTags", 0)
-                self.xml_use_relations = object_parameter(self.xml_options, "UseRelations", 1)
-                self.xml_options.xml_append_node(self.xml_lock_tags)
-                self.xml_options.xml_append_node(self.xml_use_relations)
-                self.xml_append_node(self.xml_options)
+        if source_element is None:
+            self.xml_set_attribute("Display", "Change Label Transport")
+        
+        self.remap_XML_nodes()
+    
+    def remap_XML_nodes(self, reassign=False):
+        xml_tags = self.xml_get_parameter("Tags")
+        self.tags = object_parameter(self, "Tags", source_element=xml_tags)
+        
+        xml_options = self.xml_get_parameter("Options")
+        self.xml_options = object_parameter(self, "Options", source_element=xml_options)
+
+        xml_lock_tags = self.xml_get_parameter("LockTags", self.xml_options.data)
+        self.xml_lock_tags = object_parameter(self.xml_options, "LockTags", 0, source_element=xml_lock_tags)
+
+        xml_use_relations = self.xml_get_parameter("UseRelations", self.xml_options.data)
+        self.xml_use_relations = object_parameter(self.xml_options, "UseRelations", 1, source_element=xml_use_relations)
 
     @property
     def table_name(self):
@@ -69,37 +65,29 @@ class tag_transport_task(transport_task):
         self.setLockTags(value)
 
     def setLockTags(self, status):
-        options_node = self.xml_get_parameter("Options")
-        # print("node found, options", options_node)
-        lock_tags_node = self.xml_get_parameter("LockTags", options_node)
-        # print("node found, lock tags", lock_tags_node, "set status", status)
-
-        if lock_tags_node is not None:
-            # print("set state", status)
-            lock_tags_node.text = str(status)
+        self.xml_lock_tags.text = str(status)
     
     def lockTags(self):
-        options_node = self.xml_get_parameter("Options")
-        lock_tags_node = self.xml_get_parameter("LockTags", options_node)
-        if lock_tags_node  is not None and lock_tags_node.text.isnumeric():
-            return int(lock_tags_node.text)
+        if len(self.xml_lock_tags.text.strip()) > 0:
+            if self.xml_lock_tags.text.isnumeric():
+                return int(self.xml_lock_tags.text)
         return 0
 
     def children(self):
-        # parent_node = self.xml_get_parameter("Tags")
-        child_entries = self.tags.xml_get_children()
-
+        child_entries = self.xml_get_children(parent_element=self.data)
+        child_entries += self.xml_get_children(parent_element=self.tags.data)
         child_objects = []
         for xml_entry in child_entries:
             if not isinstance(xml_entry, etree._Comment) and isinstance(xml_entry, etree._Element):
                 param_name = xml_entry.attrib.get("Name", None)
                 xml_obj = None
                 if param_name == "PK":
-                    xml_obj = object_reference(param_name, xml_entry.text, xml_entry)
+                    xml_obj = object_reference(self.tags, param_name, xml_entry.text, xml_entry)
                     xml_obj.table_name = self.table_name
                     xml_obj.key_column = self.key_column_name
                 if xml_obj:
                     child_objects.append(xml_obj)
+               
         return child_objects
 
     def xml_add_child_node(self, object_info_dict, row=-1):
@@ -110,15 +98,21 @@ class tag_transport_task(transport_task):
         if pk_columns:
             object_uid = list(pk_columns.values())[0]
         
-        # tags_xml_node = self.xml_get_parameter("Tags")
-        # tags_node_object = object_parameter(self.tags, "Tags", source_element=tags_xml_node)
         xml_obj = object_reference(
+            parent=self,
             display_name = display_name,
             parameter_value = object_uid)
-
+        
         xml_obj.table_name = self.table_name
         xml_obj.key_column = self.key_column_name
 
-        self.tags.xml_append_node(xml_obj)
         return xml_obj
-        
+
+    def prepare_export_data(self):
+        for tag_element in self.children():
+            self.tags.xml_append_node(tag_element)
+
+        self.xml_append_node(self.tags)
+        self.xml_append_node(self.xml_options)
+
+        return self.string

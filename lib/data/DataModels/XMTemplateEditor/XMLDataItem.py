@@ -122,14 +122,13 @@ class XMLDataItem(QObject):
 
     def itemDataDropped(self, source_dict):
         # print("foreign model object dropped", source_dict.get("objectclass", None))
-        source_dict.get("object_data", {})
+        # source_dict.get("object_data", {})
         object_info = source_dict.get("object_info", None)
 
         parent_xml_node = self.parent()._xml_data
-        if parent_xml_node:
+        if parent_xml_node is not None:
             object_xml_node = parent_xml_node.xml_add_child_node(object_info)
             self._xml_data = object_xml_node
-        
         # load initial object relations
         if not object_info:
             return
@@ -162,6 +161,7 @@ class XMLDataItem(QObject):
         return len(total_childitems)
 
     def loadChildren(self, child_tasks):
+        self._children = []
         if child_tasks:
             for task_object in child_tasks:
                 if not isinstance(task_object, _Element) and not isinstance(task_object, _Comment):
@@ -798,3 +798,7 @@ class XMLDataItem(QObject):
             byte_data = bytes(script_value, 'utf-8')
             byte_data = byte_data.replace(b'\r\n', b'\n')
             self._xml_data.text = byte_data.decode('utf-8')
+
+    def prepareExportData(self):
+        if isinstance(self._xml_data, transport_template_custom_object):
+            return self._xml_data.prepare_export_data()

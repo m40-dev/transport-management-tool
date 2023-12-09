@@ -6,36 +6,36 @@ from lib.data.DataModels.XMTemplateEditor.xml_object_definitions.object_paramete
 class object_container(transport_template_custom_object):
     def __init__(self, parent, source_element=None, base_table=None, display_name=None, delete_residual_objects=0, pk_columns={}, relations={}):
         super(object_container, self).__init__(parent=parent, node_class="Parameter", source_element=source_element)
+        
         self._object_relations = relations
         self.pk_columns = pk_columns
         self.base_object_node = None
         self.delete_residuals_node = None
         self.object_relations_node = None
 
-
         """ Main Container Node setup"""
         if source_element is None:
             self.data.attrib['Name'] = "Container"
 
             """ Container transport settings """
-            self.delete_residuals_node = object_parameter(self.parent, "DeleteResiduals", delete_residual_objects)
+            self.delete_residuals_node = object_parameter(self, "DeleteResiduals", delete_residual_objects)
 
             """ Add selected Transport relations """
-            self.object_relations_node = object_parameter(self.parent, "Relations")
+            self.object_relations_node = object_parameter(self, "Relations")
 
-            self.base_object_node = object_parameter(self.parent, "BaseObject")
+            self.base_object_node = object_parameter(self, "BaseObject")
 
-            base_object_table = object_parameter(self.parent, "Tablename", base_table)
-            base_object_display = object_parameter(self.parent, "Display", display_name)
+            base_object_table = object_parameter(self, "Tablename", base_table)
+            base_object_display = object_parameter(self, "Display", display_name)
             
             """ build the object container """
             self.base_object_node.xml_append_node(base_object_table)
             self.base_object_node.xml_append_node(base_object_display)
 
-            base_object_columns = object_parameter(self.parent, "Columns")
+            base_object_columns = object_parameter(self, "Columns")
             for pk_column, pk_column_value in pk_columns.items():
                 if pk_column is not None:
-                    base_object_column = object_parameter(self.parent, pk_column, pk_column_value)
+                    base_object_column = object_parameter(self, pk_column, pk_column_value)
                     base_object_columns.xml_append_node(base_object_column)
 
             self.base_object_node.xml_append_node(base_object_columns)
@@ -51,13 +51,13 @@ class object_container(transport_template_custom_object):
             """ load data from source element """
             for element in self.children():
                 if element.attrib["Name"] == "BaseObject":
-                    self.base_object_node = object_parameter(self.parent, "BaseObject", source_element=element)
+                    self.base_object_node = object_parameter(self, "BaseObject", source_element=element)
                     # print(element)
                     
                 if element.attrib["Name"] == "DeleteResiduals":
-                    self.delete_residuals_node = object_parameter(self.parent, "DeleteResiduals", source_element=element)
+                    self.delete_residuals_node = object_parameter(self, "DeleteResiduals", source_element=element)
                 if element.attrib["Name"] == "Relations":
-                    self.object_relations_node = object_parameter(self.parent, "Relations", source_element=element)
+                    self.object_relations_node = object_parameter(self, "Relations", source_element=element)
     
     @property
     def xml_object_class(self):
@@ -138,7 +138,6 @@ class object_container(transport_template_custom_object):
                     return
         self.xml_set_attribute("Display", value)
             
-        
     @property
     def xml_object_relations(self):
         object_relations = {}
@@ -230,7 +229,7 @@ class object_container(transport_template_custom_object):
                         for relation_key in relation_keys:
                             if relation_key not in local_relation_list:
                                 local_relation_list.append(relation_key)
-                                relation_object = object_parameter(self.parent, "Relation", relation_key)
+                                relation_object = object_parameter(self, "Relation", relation_key)
                                 self.object_relations_node.xml_append_node(relation_object)
             return True
         return False

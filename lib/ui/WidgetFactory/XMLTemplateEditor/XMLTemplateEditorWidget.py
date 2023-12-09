@@ -14,7 +14,7 @@ from ..DialogScreens import ScriptEditorDialog
 
 # Data Models
 from lib.data.DataModels import XMLDataItem, XMLDataModel, ObjectDataItem, TASKS
-
+from lib.data.DataModels.XMTemplateEditor.xml_object_definitions import transport_template
 # Custom Widgets
 from lib.ui.WidgetFactory import FormEditorDialog
 
@@ -30,10 +30,13 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.application = application
         self.current_file = file_path
         self.setupUi()
+        self.transport_template = transport_template(self)
 
         # Initial refresh
+
         self.loadXMLStructureView()
         self.onXMLPreviewRefresh()
+        
         self.xmlStructureChanged.connect(self.onXMLPreviewRefresh)
         self.XMLStructureTreeView.mousePressEvent = self.XMLStructureTreeViewMousePressEvent
         self.XMLStructureTreeView.setWordWrap(True)
@@ -61,8 +64,9 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         data_model =  XMLDataModel(
             application=self.application,
             parent_widget=self.XMLStructureTreeView,
-            data_source=self.current_file)
-
+            data_source=self.current_file,
+            transport_template=self.transport_template)
+        
         self.XMLStructureTreeView.setModel(data_model)
         data_model.xmlDataStructureChanged.connect(self.xmlStructureChanged)
         data_model.modelItemChecked.connect(self.onItemCheckStateChange)
@@ -78,6 +82,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
     
     def refresh_ui(self):
         self.XMLPreviewBrowser.setText(self.XMLStructureTreeView.model().exportXMLData())
+        # self.XMLPreviewBrowser.setText(self.transport_template.string)
         self.XMLPreviewBrowser.reconfigure_editor()
         self.setCurrentXMLTemplate()
 
@@ -88,6 +93,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                 Path(self.current_file).parent.mkdir(parents=True, exist_ok=True)
                 with open(self.current_file, 'w') as doc:
                     doc.write(self.XMLStructureTreeView.model().exportXMLData())
+                    # doc.write(self.transport_template.string)
                 self.XMLStructureTreeView.model().fileSaved()
                 return self.current_file
             return self.saveXMLTemplateAs(self.current_file)
@@ -104,6 +110,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         if file_path[0] != "":
             with open(file_path[0], 'w') as doc:
                 doc.write(self.XMLStructureTreeView.model().exportXMLData())
+                # doc.write(self.transport_template.string)
             self.current_file = file_path[0]
             self.parent.tabNameChanged.emit(self)
             self.setCurrentXMLTemplate()

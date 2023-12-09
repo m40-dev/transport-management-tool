@@ -2,10 +2,10 @@ import pyodbc, copy, re
 
 
 class DatabaseConnection(object):
-    def __init__(self, connection_parameters={}):
+    def __init__(self, application, connection_parameters={}):
 
         super(DatabaseConnection, self).__init__()
-
+        self.application=application
         self.connection_parameters = connection_parameters
         self.db_session = None
         self.db_cursor = None
@@ -13,6 +13,7 @@ class DatabaseConnection(object):
         # self.column_info = {}
         self.table_relations = {}
         self.child_table_relations = {}
+        
 
     def connect_db(self):
         # Some other example server values are
@@ -43,7 +44,7 @@ class DatabaseConnection(object):
         SQLPassword = self.connection_parameters.get("SQLPassword", None)
 
         if ServerAddress and DatabaseName and SQLUserName and SQLPassword:
-            connection_string = "DRIVER={ODBC Driver 18 for SQL Server};" + f"SERVER={ServerAddress};DATABASE={DatabaseName};ENCRYPT={EncryptConnection};UID={SQLUserName};PWD={SQLPassword}"
+            connection_string = "DRIVER={ODBC Driver 18 for SQL Server};" + f"SERVER={ServerAddress};DATABASE={DatabaseName};ENCRYPT={EncryptConnection};UID={SQLUserName};PWD={SQLPassword};App={self.application.application_name}"
             if EncryptConnection.upper() == "NO":
                 connection_string += ';TrustServerCertificate=yes'
         return connection_string
@@ -64,7 +65,7 @@ class DatabaseConnection(object):
         SQLPassword = self.connection_parameters.get("SQLPassword", None)
 
         if ServerAddress and DatabaseName and SQLUserName and SQLPassword:
-            connection_string = f'Data Source={ServerAddress};Initial Catalog={DatabaseName};User ID="{SQLUserName}";Password="{SQLPassword}"'
+            connection_string = f'Data Source={ServerAddress};Initial Catalog={DatabaseName};User ID="{SQLUserName}";Password="{SQLPassword};App={self.application.application_name}"'
             if EncryptConnection.upper() == "NO":
                 connection_string += ';TrustServerCertificate=yes'
         return connection_string

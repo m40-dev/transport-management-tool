@@ -6,7 +6,6 @@ class transport_template_custom_object(object):
         super(transport_template_custom_object, self).__init__()
 
         self._parent = parent
-        self.data = None
         self._xml_object_class = node_class
         self._table_name = None
         self._key_column = None
@@ -14,6 +13,9 @@ class transport_template_custom_object(object):
             self._xml_object_class = xml_object_class
         self._state = 0
         self._option = ""
+        self.data = source_element
+        if self.data is not None:
+            self.data.tail = None
 
         """ Node setup for new objects """
         if source_element is None:
@@ -21,12 +23,13 @@ class transport_template_custom_object(object):
             self.data.tag = node_class
             self.data.text = None
             self.data.tail = None
-        else:
-            self.data = source_element
-            self.data.tail = None
 
         self._display = "\n".join(self.data.itertext()).strip()
         self._description = ""
+
+        if self._parent is not None and isinstance(self._parent, transport_template_custom_object) and source_element is None:
+            self._parent.xml_append_node(self)
+    
     @property
     def parent(self):
         return self._parent
@@ -187,17 +190,26 @@ class transport_template_custom_object(object):
     def xml_set_attribute(self, attribute, value):
         self.data.attrib[attribute] = str(value)
 
-    def xml_append_node(self, node_object):
-        if isinstance(node_object, etree._Element):
-            self.data.append(node_object)
+    def xml_append_node(self, node_object, root_object=None):
+        if root_object is None:
+            root_object = self.data
+
+        if root_object == node_object:
+            return False
+
+        if root_object is not None and isinstance(node_object, etree._Element):
+            root_object.append(node_object)
             return True
         
-        if isinstance(node_object, transport_template_custom_object):
-            self.data.append(node_object.data)
+        if root_object is not None and isinstance(node_object, transport_template_custom_object):
+            root_object.append(node_object.data)
     
     def xml_remove_children(self, element=None):
         if element is None:
             element = self.data
+        
+        if isinstance(element, transport_template_custom_object):
+            element = element.data
 
         for child_element in element.getchildren():
             element.remove(child_element)
@@ -219,3 +231,6 @@ class transport_template_custom_object(object):
             if node_name is not None and node_name == parameter_name:
                 return node
         return None
+    
+    def prepare_export_data(self):
+        return self.string

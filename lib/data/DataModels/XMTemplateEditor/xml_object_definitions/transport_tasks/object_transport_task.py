@@ -6,12 +6,13 @@ class object_transport_task(transport_task):
     
     def __init__(self, parent, object_class="VI.Transport.ObjectTransport, VI.Transport", source_element=None):
         super(object_transport_task, self).__init__(parent=parent, object_class=object_class, source_element=source_element)
-        
+        # self._parent = parent
+
         if source_element is None:
             self.data.attrib["Display"] = "Object Transport Task"
 
     def add_container(self, source_element=None, base_table=None, display_name=None, delete_residual_objects=0, pk_columns={}, relations=[]):
-        container = object_container(self.parent, source_element, base_table, display_name, delete_residual_objects, pk_columns, relations)
+        container = object_container(self, source_element, base_table, display_name, delete_residual_objects, pk_columns, relations)
         if container.description is not None:
             self.xml_append_node(container.description)
         self.xml_append_node(container)
@@ -31,7 +32,7 @@ class object_transport_task(transport_task):
                     xml_obj = None
                     if task_type:
                         if task_type == "Container":
-                            xml_obj = object_container(self.parent, task)
+                            xml_obj = object_container(self, task)
                     if xml_obj:
                         child_objects.append(xml_obj)
         return child_objects
@@ -42,6 +43,6 @@ class object_transport_task(transport_task):
         base_table = object_info_dict.get("table_name", None)
         display_name = object_info_dict.get("object_display", None)
         pk_columns = object_info_dict.get("pk_columns", None)
-        xml_obj = object_container(parent=self.parent, base_table=base_table, display_name=display_name, pk_columns=pk_columns)
+        xml_obj = object_container(parent=self, base_table=base_table, display_name=display_name, pk_columns=pk_columns)
         return xml_obj
 

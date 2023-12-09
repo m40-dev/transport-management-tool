@@ -10,7 +10,7 @@ class ExecutionPlannerConfigDialog(QtWidgets.QDialog):
 
         self.application = application
 
-        self.setWindowTitle(self.application.windowTitle() + " - Execution Planner Configuration") 
+        self.setWindowTitle(self.application.application_name + " - Execution Planner Configuration") 
 
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("layout")

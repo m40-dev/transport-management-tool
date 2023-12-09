@@ -9,7 +9,7 @@ class ScriptEditorDialog(QtWidgets.QDialog):
 
         self.application = application
 
-        self.setWindowTitle(self.application.windowTitle() + " - SQL Editor") 
+        self.setWindowTitle(self.application.application_name + " - SQL Editor") 
         self.setMinimumSize(500, 500)
 
         self.layout = QtWidgets.QGridLayout(self)

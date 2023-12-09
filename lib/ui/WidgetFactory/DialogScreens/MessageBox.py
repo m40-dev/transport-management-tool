@@ -11,7 +11,7 @@ class MsgBox(QtWidgets.QDialog):
 
         self.application = application
 
-        self.setWindowTitle(f"{self.application.windowTitle()} - {window_mode}") 
+        self.setWindowTitle(f"{self.application.application_name} - {window_mode}") 
         # self.setMinimumSize(400, 250)
         self.setModal(True)
 

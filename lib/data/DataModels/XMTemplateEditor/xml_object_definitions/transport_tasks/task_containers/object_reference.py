@@ -8,6 +8,7 @@ class object_reference(transport_template_custom_object):
             node_class="Parameter", 
             source_element=source_element, 
             xml_object_class="Table_Object_Reference")
+        # self._parent = parent
 
         """ Container Node setup"""
         if source_element is None:

@@ -16,7 +16,7 @@ class TaskDefinitionDialog(QtWidgets.QDialog):
             self._form_data = deepcopy(source_item.edit_data)
         self.setMinimumSize(400, 400)
 
-        self.setWindowTitle(self.application.windowTitle() + " - Task Definition") 
+        self.setWindowTitle(self.application.application_name + " - Task Definition") 
 
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("layout")

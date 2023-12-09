@@ -8,10 +8,22 @@ class sql_script_transport_task(transport_task):
     
     def __init__(self, parent, object_class="VI.Transport.SQLTransport, VI.Transport", source_element=None):
         super(sql_script_transport_task, self).__init__(parent=parent, object_class=object_class, source_element=source_element)
+        # self._parent = parent
         self._option = "Run At Start"
         if source_element is None:
-            self.data.attrib["Display"] = "SQL Script Transport"
-            self.set_pre_import(0)
+            self.xml_set_attribute("Display", "SQL Script Transport")
+
+        self.remap_XML_nodes(reassign=True)
+
+    def remap_XML_nodes(self, reassign=False):
+        xml_pre_import = self.xml_get_parameter("PreImport")
+        self.pre_import = object_parameter(self, "PreImport", 0, xml_pre_import)
+
+        xml_common_sql = self.xml_get_parameter("CommonSQL")
+        self.common_sql = object_parameter(self, "CommonSQL", "", xml_common_sql)
+
+        xml_payload_sql = self.xml_get_parameter("PayloadSQL")
+        self.payload_sql = object_parameter(self, "PayloadSQL", "", xml_payload_sql)
 
     @property
     def accepted_classes(self):
@@ -22,7 +34,10 @@ class sql_script_transport_task(transport_task):
 
     @property
     def state(self):
-        value = self.pre_import 
+        value = 0
+        if len(self.pre_import.text.strip()) > 0:
+            if self.pre_import.text.isnumeric():
+                value = int(self.pre_import.text)
         if value > 0:
             value = 2
         return value
@@ -31,63 +46,27 @@ class sql_script_transport_task(transport_task):
     def state(self, value):
         if value > 0:
             value = 1
-        self.set_pre_import(value)
-
-    @property
-    def pre_import(self):
-        child_nodes = self.xml_get_children()
-        for node in child_nodes:
-            node_name = node.attrib.get("Name", None)
-            if node_name and node_name == "PreImport" and node.text.isnumeric():
-                return int(node.text)
-        return 0
-
-    def set_pre_import(self, status):
-        node_found = False
-        child_nodes = self.xml_get_children()
-        for node in child_nodes:
-            node_name = node.attrib.get("Name", None)
-            if node_name and node_name == "PreImport":
-                node.text = str(status)
-                node_found = True
-        if not node_found:
-            parameter = object_parameter(self.parent, "PreImport", str(status))
-            self.xml_append_node(parameter)
+        self.pre_import.text = str(value)
 
     def add_sql_script(self, script_type):
-        sql_script_node = sql_script_container(self.parent, script_type=script_type)
+        sql_script_node = sql_script_container(self, script_type=script_type)
         self.xml_append_node(sql_script_node)
         return sql_script_node
-    
-    @property
-    def common_sql(self):
-        child_nodes = self.xml_get_children()
-        for node in child_nodes:
-            node_name = node.attrib.get("Name", None)
-            if node_name and node_name == "CommonSQL":
-                return sql_script_container(self.parent, source_element=node, script_type=node_name)
-        return None
-    
-    @property
-    def payload_sql(self):
-        child_nodes = self.xml_get_children()
-        for node in child_nodes:
-            node_name = node.attrib.get("Name", None)
-            if node_name and node_name == "PayloadSQL":
-                return sql_script_container(self.parent, source_element=node, script_type=node_name)
-        return None
 
     def children(self):
-        task_nodes = self.data.getchildren()
+        task_nodes = self.xml_get_children()
         child_objects = []
-        if task_nodes:
-            for task in task_nodes:
-                if not isinstance(task, etree._Comment) and isinstance(task, etree._Element):
-                    task_type = task.attrib.get("Name", None)
-                    xml_obj = None
-                    if task_type:
-                        if task_type in ["PayloadSQL", "CommonSQL"]:
-                            xml_obj = sql_script_container(self.parent, task)
-                            if xml_obj:
-                                child_objects.append(xml_obj)
+        for task in task_nodes:
+            if not isinstance(task, etree._Comment) and isinstance(task, etree._Element):
+                task_type = task.attrib.get("Name", None)
+                xml_obj = None
+                if task_type:
+                    if task_type in ["PayloadSQL", "CommonSQL"]:
+                        xml_obj = sql_script_container(parent=self, source_element=task)
+                        if xml_obj:
+                            child_objects.append(xml_obj)
         return child_objects
+
+    def prepare_export_data(self):
+        self.xml_append_node(self.pre_import)
+        return self.string

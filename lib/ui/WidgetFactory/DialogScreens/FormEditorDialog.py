@@ -24,7 +24,7 @@ class FormEditorDialog(QtWidgets.QDialog):
         self.useExperimentalFeatures = self.ProgramConfiguration.getConfigurationValue("ObjectModel", "UseExperimental")
         self.columnMappings = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(configuration_class, "ValuePattern")
             
-        self.setWindowTitle(f"{self.application.windowTitle()} - {dialog_name}") 
+        self.setWindowTitle(f"{self.application.application_name} - {dialog_name}") 
 
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("layout")

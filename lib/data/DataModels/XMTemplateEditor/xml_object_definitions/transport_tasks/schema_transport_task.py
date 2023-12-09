@@ -4,6 +4,7 @@ class schema_transport_task(transport_task):
     
     def __init__(self, parent, object_class="VI.Transport.SchemaTransport, VI.Transport", source_element=None):
         super(schema_transport_task, self).__init__(parent=parent, object_class=object_class, source_element=source_element)
+        # self._parent = parent
         if source_element is None:
             self.data.attrib["Display"] = "Schema Transport"
 

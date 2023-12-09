@@ -22,7 +22,7 @@ class RelationPresetManager(QtWidgets.QWidget):
         self.parent = parent
         self.application = parent
         self.preset_data = preset_data
-        self.setWindowTitle(self.application.windowTitle() + " - Manage Relation Presets") 
+        self.setWindowTitle(self.application.application_name + " - Manage Relation Presets") 
         
         self.setupUi()
         self.loadPresetData()

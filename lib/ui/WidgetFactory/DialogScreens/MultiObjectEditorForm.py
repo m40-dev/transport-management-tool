@@ -15,7 +15,7 @@ class MultiObjectEditorForm(QtWidgets.QDialog):
         self._base_object_data = None
         self.setMinimumSize(400, 400)
 
-        self.setWindowTitle(f"{self.application.windowTitle()} - {dialog_name}") 
+        self.setWindowTitle(f"{self.application.application_name} - {dialog_name}") 
 
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setObjectName("layout")

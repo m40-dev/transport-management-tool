@@ -27,7 +27,8 @@ from lib.ProgramConfiguration import ProgramConfiguration, ConnectionHandler
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.8.1'
+VERSION = '0.8.2'
+APP_NAME = f"Transport Management Tool - {VERSION}"
 
 class Transport_Manager(QMainWindow):
     """Main window class for connection launcher"""
@@ -41,6 +42,7 @@ class Transport_Manager(QMainWindow):
         QMainWindow.__init__(self, parent)
         """ Map QT UI from parsed file - created and updated in qt designer """
 
+        self.application_name = APP_NAME
         self.ui = Ui_MainWindow()
         
         self.qt_app = qapplication
@@ -58,12 +60,13 @@ class Transport_Manager(QMainWindow):
 
         self.ui.setupUi(self)
 
-        self.setWindowTitle(f"Transport Manager Tool - {VERSION}")
+        self.setWindowTitle(self.application_name)
+        self.qt_app.setApplicationName(self.application_name)
         window_icon = QIcon("./icon.ico")
         self.setWindowIcon(window_icon)
 
         # Database and Connection handlers
-        self.db = DatabaseConnection()
+        self.db = DatabaseConnection(self)
         self.ConnectionHandler = ConnectionHandler(self) 
         self.ConnectionHandler.databaseConnectionEstablished.connect(self.onDatabaseConnection)
 

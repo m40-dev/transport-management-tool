@@ -211,7 +211,7 @@ class ConnectionHandler(QObject):
         if self.application.db is not None:
             self.application.db.disconnect_db()
 
-        self.application.db = DatabaseConnection(connection_params)
+        self.application.db = DatabaseConnection(self.application, connection_params)
         self.application.db.connect_db()
         
         if self.application.db and self.application.db.is_connected:

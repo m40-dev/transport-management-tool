@@ -11,10 +11,14 @@ class XMLDataModel(QAbstractItemModel):
     xmlDataStructureChanged = pyqtSignal()
     modelItemChecked = pyqtSignal(object, str, int)
 
-    def __init__(self, application, data_source, parent_widget=None):
+    def __init__(self, application, data_source, parent_widget=None, transport_template=None):
         super().__init__(parent_widget)
         self.application = application
-        self.transport_template = transport_template(self)
+        if transport_template is None:
+            self.transport_template = transport_template(self)
+        else:
+            self.transport_template = transport_template
+            
         self._headers = ["XML Transport Structure", "Options"]
         self.treeview = parent_widget
         self.export_file_path = data_source
@@ -419,6 +423,8 @@ class XMLDataModel(QAbstractItemModel):
         return False
 
     def exportXMLData(self):
+        for childItem in self.rootItem._children:
+            childItem.prepareExportData()
         return self.transport_template.string
 
     def isDifferent(self):

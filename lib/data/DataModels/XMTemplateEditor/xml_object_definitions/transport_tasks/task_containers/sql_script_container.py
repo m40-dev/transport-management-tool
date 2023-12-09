@@ -3,6 +3,7 @@ from lib.data.DataModels.XMTemplateEditor.xml_object_definitions.transport_templ
 class sql_script_container(transport_template_custom_object):
     def __init__(self, parent, source_element=None, script_type="CommonSQL"):
         super(sql_script_container, self).__init__(parent=parent, node_class="Parameter", source_element=source_element)
+        # self._parent = parent
 
         """ Main Container Node setup"""
         if source_element is None and script_type:
