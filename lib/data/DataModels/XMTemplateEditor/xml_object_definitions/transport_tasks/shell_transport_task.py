@@ -35,8 +35,6 @@ class shell_transport_task(transport_task):
         return child_objects
 
     def xml_add_child_node(self, object_info_dict, row=-1):
-        # print("add child to transport task")
-        # print(object_info_dict)
         display_name = object_info_dict.get("object_display", None)
         pk_columns = object_info_dict.get("pk_columns", None)
         object_uid = ""
@@ -77,6 +75,9 @@ class shell_transport_task(transport_task):
 
 
     def prepare_export_data(self):
+        # Fixes xml data structure hierarchy and moves the child nodes into correct sub-container in the task structure. 
+        # Collect all object reference elements currently available on the task node and reassign them to correct parent node under the task structure 
+
         for custom_object in self.children():
             self.shells.xml_append_node(custom_object)
 

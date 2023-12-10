@@ -75,6 +75,9 @@ class file_transport_task(transport_task):
         return ["Table_Object_Reference", "ObjectDataItem"]
 
     def prepare_export_data(self):
+        # Fixes xml data structure hierarchy and moves the child nodes into correct sub-container in the task structure. 
+        # Collect all object reference elements currently available on the task node and reassign them to correct parent node under the task structure
+
         for custom_object in self.children():
             self.files.xml_append_node(custom_object)
 

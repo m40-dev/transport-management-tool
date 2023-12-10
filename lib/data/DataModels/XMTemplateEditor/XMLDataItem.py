@@ -800,5 +800,8 @@ class XMLDataItem(QObject):
             self._xml_data.text = byte_data.decode('utf-8')
 
     def prepareExportData(self):
+        # this function is used for XML data items in the model data to fix the underlaying xml structures where required
+        # calling 'prepare_export_data' on the corresponding xml custom object
+
         if isinstance(self._xml_data, transport_template_custom_object):
             return self._xml_data.prepare_export_data()

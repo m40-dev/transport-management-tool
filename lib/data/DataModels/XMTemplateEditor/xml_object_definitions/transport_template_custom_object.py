@@ -233,4 +233,10 @@ class transport_template_custom_object(object):
         return None
     
     def prepare_export_data(self):
+        # Use this function to remap, update or add xml structures 
+        # that should be present when the xml object data is being exported.
+        # Override this in any custom xml object class where this mechanism is required
+        # By default no actions are executed and node string representation is returned
+        # It is usually not required to execute any actions for nodes where the model structure directly applies to the xml data structure 
+        # where XMLDataItem custom object carries entire xml data container and there are no 'unmanaged' nodes around it
         return self.string
