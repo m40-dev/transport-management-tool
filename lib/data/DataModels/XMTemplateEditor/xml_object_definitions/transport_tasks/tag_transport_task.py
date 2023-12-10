@@ -109,6 +109,10 @@ class tag_transport_task(transport_task):
         return xml_obj
 
     def prepare_export_data(self):
+        # Fixes xml data structure hierarchy and moves the child nodes into correct sub-container in the task structure. 
+        # Collect all object reference elements currently available on the task node and reassign them to correct parent node under the task structure
+        # Additionally add task configuration nodes that were deleted by the model operations 
+
         for tag_element in self.children():
             self.tags.xml_append_node(tag_element)
 

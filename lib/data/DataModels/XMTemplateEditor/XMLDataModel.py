@@ -392,17 +392,6 @@ class XMLDataModel(QAbstractItemModel):
         if event.mimeData().hasFormat("application/vnd.xmldataitem"):
             event.acceptProposedAction()
 
-    def exportModelToJson(self):
-        data = []
-        root = self.rootItem
-        for i in range(root.childCount()):
-            group_item = root.child(i)
-            group_data = group_item.task_data()
-            data.append(group_data)
-        jsondata = json.dumps(data, indent=4)
-        # print(jsondata)
-        return jsondata
-
     def find_item_by_attribute(self, column, value, parent=QModelIndex()):
         """
         Finds the first item in the model with a matching attribute value in the given column.
@@ -422,9 +411,28 @@ class XMLDataModel(QAbstractItemModel):
                             return result
         return False
 
+    def exportModelToJson(self):
+        data = []
+        root = self.rootItem
+        for i in range(root.childCount()):
+            group_item = root.child(i)
+            group_data = group_item.task_data()
+            data.append(group_data)
+        jsondata = json.dumps(data, indent=4)
+        return jsondata
+
     def exportXMLData(self):
+        # This section is required to 'fix' the xml structures before the entire structure can be exported
+        # In cases where the model data representation does not exactly match the target XML structures, 
+        # the nodes which are not part of the model are being deleted from the transport template (broken parent chain most likely?). 
+        # This mechanism allows for the existing, but detached elements to be restored in the xml structure
+        
         for childItem in self.rootItem._children:
+            # custom xml object classes are accessed through XMLDataItem objects
+            # in this case the call is only executed for the top level items (transport tasks) 
             childItem.prepareExportData()
+
+        # return entire transport template xml structure once all preparation tasks are completed
         return self.transport_template.string
 
     def isDifferent(self):
