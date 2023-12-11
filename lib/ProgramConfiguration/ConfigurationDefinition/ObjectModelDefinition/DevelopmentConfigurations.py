@@ -3,7 +3,7 @@ from lib.ui.WidgetFactory.Settings.ConfigurationSectionEditor import ObjectModel
 DEVELOPMENT_CONFIGURATION = {
     "ObjectModelDevelopment":{
         "SectionName": "ObjectModelDevelopmentConfiguration",
-        "IsEditable": False,
+        "IsEditable": True,
         "DisplayName": "Object Model Development Configurations",
         "Description": "Configuration Parameters section for the object model definitions.",
         "TargetConfigurationFile": "DevelopmentConfiguration",

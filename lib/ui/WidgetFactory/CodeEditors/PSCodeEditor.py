@@ -1,10 +1,11 @@
+from PyQt6.Qsci import QsciLexerPOV
 from .CodeEditor import BaseCodeEditor
-from PyQt6.Qsci import QsciLexerXML
 
-class xml_editor(BaseCodeEditor):
+        
+class ps_editor(BaseCodeEditor):
     def __init__(self, parent):
-
         BaseCodeEditor.__init__(self, parent)
-        self.lexer = QsciLexerXML()
+
+        self.lexer = QsciLexerPOV()
         self.setLexer(self.lexer)
         self.reconfigure_editor()

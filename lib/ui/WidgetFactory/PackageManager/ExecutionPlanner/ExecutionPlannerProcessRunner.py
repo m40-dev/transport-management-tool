@@ -31,6 +31,7 @@ class ProcessRunner(QProcess):
         self.task_queue = []
         self.sql_thread = None
         self.was_error = False
+        self.hasExecutionErrors = False
 
     @property
     def current_workdir(self):
@@ -48,9 +49,14 @@ class ProcessRunner(QProcess):
 
     def queuePlannerTasks(self, task_items):
         for task_item in task_items:
-            # task_data = task_item.task_data()
-            task_item.ExecutionState = ""
-            self.startProcessTask(task_item)
+            if task_item.task_class in ["ExecutionPlanner_ExecutionTask", "PackageManager_TaskDefinition"]:
+                self.message.emit(f"Adding task to the execution queue.. ({task_item.display})", "Transport Manager")
+                task_item.ExecutionState = "Queued"
+                self.task_queue.append(task_item)
+    
+    def continueExecutionQueue(self):
+        if len(self.task_queue) > 0 and self.state() != QProcess.ProcessState.Running:
+            self.startProcessTask(self.task_queue[0], queued_task=True)
 
     def checkTaskType(self, task_type):
         task_configuration = self.application.getConfigurationParameters("ExecutionPlanner_ExecutionTask")
@@ -146,6 +152,7 @@ class ProcessRunner(QProcess):
         
         # prepare some task variables
         self.current_item = task_item
+        self.hasExecutionErrors = False
         self.start_time = timer()
         
         connection_name = task_data.get("Connection", None)
@@ -200,8 +207,15 @@ class ProcessRunner(QProcess):
         if len(post_processing_commands) > 0:
             self.message.emit("Post processing commands ready.", "Transport Manager")
 
+        post_script = ""
+        always_run_post_script = self.application.getConfigurationValue("ExecutionPlannerSettings", "AlwaysRunPostScript")
+        
+        if always_run_post_script or len(self.task_queue) == 0:
+            print("add post script", len(self.task_queue))
+            post_script = self.application.getConfigurationValue("ExecutionPlannerSettings", "ExecutionPostScript") + "\r\n"
+
         self.start("powershell", 
-        [variables_script, initializer_script, command, post_processing_commands], 
+        [variables_script, initializer_script, command, post_processing_commands, post_script], 
         mode=QIODeviceBase.OpenModeFlag.ReadWrite)
 
         return True
@@ -209,6 +223,12 @@ class ProcessRunner(QProcess):
     def handleProcessStdErr(self):
         data = self.readAllStandardError()
         stderr = bytes(data).decode("cp1252")
+        self.hasExecutionErrors = True
+        continue_on_error = self.application.getConfigurationValue("ExecutionPlannerSettings", "IgnoreExecutionErrors")
+       
+        if not continue_on_error:
+            self.stopExecutionPlanner()
+
         self.message.emit(stderr, "Error")
 
     def handleProcessStdOut(self):
@@ -227,25 +247,22 @@ class ProcessRunner(QProcess):
         self.message.emit(f"State changed: {state_name}", "Transport Manager")
 
     def processExecutionFinished(self, exitCode=0, exitStatus=QProcess.ExitStatus.NormalExit):
+        # print("Task Execution Finished", exitCode, exitStatus, self.hasExecutionErrors)
         end_time = timer()
         self.execution_time = timedelta(seconds=end_time - self.start_time)
-        self.was_error = (exitCode != 0)
+        self.was_error = (exitCode != 0) or self.hasExecutionErrors
         self.message.emit("Task Execution Finished", "FINISHED")
         self.current_item.onTaskExecutionFinished(exitCode)
         self.is_running = False
         
-        #TODO: error handling to be moved to the configurtion
-        continue_on_error = (exitCode==0)
+        continue_on_error = self.application.getConfigurationValue("ExecutionPlannerSettings", "IgnoreExecutionErrors")
 
-        if not continue_on_error:
-            for task in self.task_queue:
-                task.ExecutionState = "Terminated"
-            self.task_queue = []
+        if self.was_error and not continue_on_error:
+            self.stopExecutionPlanner()
 
         if len(self.task_queue) > 0:
-            self.startProcessTask(self.task_queue[0], queued_task=True)
+            self.continueExecutionQueue()
         
-
     def prepareProcessVariables(self, task_data):
         task_configuration = self.application.getConfigurationParameters("ExecutionPlanner_ExecutionTask")
         

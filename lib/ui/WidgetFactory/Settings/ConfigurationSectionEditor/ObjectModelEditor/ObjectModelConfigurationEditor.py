@@ -143,7 +143,7 @@ class ObjectModelConfigurationEditor(ConfigurationSectionEditor):
         self.DefaultConfigurationView.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.DefaultConfigurationView.setAlternatingRowColors(False)
         self.DefaultConfigurationView.setViewportMargins(2,2,2,2)
-        self.DefaultConfigurationView.setWordWrap(True)
+        # self.DefaultConfigurationView.setWordWrap(True)
         self.DefaultConfigurationView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.DefaultConfigurationView.setProperty("ConfigurationEditor", "ObjectModelListView")
 
@@ -161,9 +161,10 @@ class ObjectModelConfigurationEditor(ConfigurationSectionEditor):
         self.ConfigurationSamplesView.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.ConfigurationSamplesView.setAlternatingRowColors(False)
         self.ConfigurationSamplesView.setViewportMargins(2,2,2,2)
-        self.ConfigurationSamplesView.setWordWrap(True)
+        # self.ConfigurationSamplesView.setWordWrap(True)
         self.ConfigurationSamplesView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.ConfigurationSamplesView.setProperty("ConfigurationEditor", "ObjectModelListView")
+        # self.ConfigurationSamplesView.setUniformItemSizes(False)
 
 
         default_configuration_layout.addWidget(self.ConfigurationSamplesView)

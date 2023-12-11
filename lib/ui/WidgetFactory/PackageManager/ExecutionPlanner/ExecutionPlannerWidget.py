@@ -169,18 +169,22 @@ class ExecutionPlannerWidget(QWidget):
                 source_item.update_data(data)
 
     def queueExecutionTask(self, task_item):
-        self.ProcessRunner.startProcessTask(task_item)
         self.console.show()
+
+        self.ProcessRunner.queuePlannerTasks([task_item])
+        self.ProcessRunner.continueExecutionQueue()
         
     def queueExecutionGroup(self, task_item):
-        self.console.show()
-        for child_task in task_item._children:
-            # print("Start task", child_task.task_class)
-            if child_task.task_class in ["ExecutionPlanner_ExecutionTask", "PackageManager_TaskDefinition"]:
-                self.ProcessRunner.startProcessTask(child_task)
 
+        self.console.show()
+
+        for child_task in task_item._children:
             if child_task.childCount() > 0:
                 self.queueExecutionGroup(child_task)
+
+            self.ProcessRunner.queuePlannerTasks([child_task])
+
+        self.ProcessRunner.continueExecutionQueue()
 
     def logExecutionPlannerMessage(self, message, message_format=None):
         if len(message.strip()) == 0:
@@ -193,8 +197,11 @@ class ExecutionPlannerWidget(QWidget):
         if cursor.blockNumber() > 0:
             cursor.insertBlock(self.defaultBlockFormat)
 
-        # self.console.setTextCursor(cursor)
-        message = message.strip()
+        # setup the log entry to remove whitespaces around
+        # replace the line break characters to avoid doubled line break handling
+        bytes_log = bytes(message.strip(), 'utf-8')
+        bytes_log_trimmed = bytes_log.replace(b'\r\n', b'\n')
+        message = bytes_log_trimmed.decode('utf-8')
 
         if message_format:
             if message_format.upper() == "ERROR":

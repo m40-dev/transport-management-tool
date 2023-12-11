@@ -1,11 +1,11 @@
 from PyQt6.QtWidgets import (QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, 
 QHBoxLayout, QGraphicsOpacityEffect, QSizePolicy, QLineEdit, QComboBox, QApplication, QGroupBox,
-QWidget)
+QWidget, QTextEdit, QPlainTextEdit, QAbstractScrollArea)
 from PyQt6.QtCore import Qt, QRectF, pyqtSignal, QPropertyAnimation, QEasingCurve, QAbstractAnimation, QSize, QMimeData
 from PyQt6.QtGui import QPalette, QPen, QPainterPath,QDrag, QColor, QBrush
 
 
-from lib.ui.WidgetFactory.DialogScreens.FormEditorDialog import FormEditorObject
+from lib.ui.WidgetFactory.DialogScreens.FormEditorDialog import FormEditorObject, FormEditorWidget
 
 class ObjectModelEditorViewDelegate(QStyledItemDelegate):
 
@@ -102,7 +102,7 @@ class ObjectModelEditorViewDelegate(QStyledItemDelegate):
             widget = self.parent().indexWidget(index)
             if widget and isinstance(widget, QWidget):
                 return widget.sizeHint()
-        return QSize(70, 70)
+        return QSize(50, 50)
 
 class ObjectModelConfigurationWidget(QFrame):
 
@@ -140,7 +140,7 @@ class ObjectModelConfigurationWidget(QFrame):
         animation = QPropertyAnimation(self)
         animation.setPropertyName(bytes("opacity", "utf-8"))
         animation.setTargetObject(effect)
-        animation.setDuration(400)
+        animation.setDuration(200)
         animation.setStartValue(0)
         animation.setEndValue(1)
         if reverse:
@@ -187,6 +187,7 @@ class ObjectModelConfigurationWidget(QFrame):
         self.layout.setContentsMargins(2,2,2,2)
         self.layout.setSpacing(4)
 
+        # self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         self.handleBar = QLabel(self)
         self.handleBar.setText("::")
@@ -194,11 +195,15 @@ class ObjectModelConfigurationWidget(QFrame):
 
         self.layout.addWidget(self.handleBar, 0, 0, 3, 1)
 
+        self.layout.setColumnStretch(1, 1)
+        self.layout.setColumnStretch(2, 6)
+        self.layout.setColumnStretch(3, 1)
+
         # Collapsed view
-        self.addToFormLayout(self.layout,"FieldId", 0, 1)
-        self.addToFormLayout(self.layout,"Display", 1, 1)
-        self.addToFormLayout(self.layout,"IsMandatory", 0, 3)
-        self.addToFormLayout(self.layout,"ShowInEditor", 1, 3)
+        self.addToFormLayout(self.layout, "FieldId", 0, 1)
+        self.addToFormLayout(self.layout, "Display", 1, 1)
+        self.addToFormLayout(self.layout, "IsMandatory", 0, 3)
+        self.addToFormLayout(self.layout, "ShowInEditor", 1, 3)
 
         #Extended view
         self.subFrame = QGroupBox("Field Configuration Options", self)
@@ -213,7 +218,16 @@ class ObjectModelConfigurationWidget(QFrame):
         subFrameLayout.setContentsMargins(2,15,2,2)
         subFrameLayout.setSpacing(4)
 
-        # subFrameLayout.setColumnStretch(7, 1)
+        subFrameLayout.setColumnStretch(0, 2)
+        subFrameLayout.setColumnStretch(1, 6)
+        subFrameLayout.setColumnStretch(2, 2)
+        subFrameLayout.setColumnStretch(3, 4)
+
+        # subFrameLayout.setRowStretch(0, 0)
+        # subFrameLayout.setRowStretch(1, 0)
+        # subFrameLayout.setRowStretch(2, 0)
+        # subFrameLayout.setRowStretch(3, 0)
+        # subFrameLayout.setRowStretch(4, 1)
         # Default property values setting
 
         self.addToFormLayout(subFrameLayout, "FieldType", 0, 0)
@@ -225,24 +239,28 @@ class ObjectModelConfigurationWidget(QFrame):
         self.addToFormLayout(subFrameLayout, "ShowInTreeView", 2, 2)
 
         deleteItemButton = QToolButton(self)
-        deleteItemButton.setText("[ X ]")
+        deleteItemButton.setText("[X]")
         deleteItemButton.setProperty("ToolButton", "DeleteItem")
         deleteItemButton.clicked.connect(self.removeItem)
         subFrameLayout.addWidget(deleteItemButton, 2, 4)
 
-        self.addToFormLayout(subFrameLayout, "Description", 3, 0, 1, 4)
+        editor = self.addToFormLayout(subFrameLayout, "Description", 3, 0, 1, 4)
+        if editor and editor.editor:
+            # editor.editor.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+            editor.editor.setMaximumHeight(75)
 
         separator = QFrame(self)
         separator.setFrameShape(QFrame.Shape.HLine)
-        subFrameLayout.addWidget(separator, 4, 0, 1, 5)
+        subFrameLayout.addWidget(separator, 4, 0, 1, 4, Qt.AlignmentFlag.AlignTop)
         separator.setProperty("FieldConfigurationFrame", "Separator")
-
+        
         #Add field specific editors
         fieldSpecificLayout = QGridLayout()
         fieldSpecificLayout.setContentsMargins(0,0,0,0)
-        fieldSpecificLayout.setSpacing(3)
+        fieldSpecificLayout.setSpacing(2)
 
         subFrameLayout.addLayout(fieldSpecificLayout, 5, 0, 1, 5)
+        # subFrameLayout.setRowStretch(5, 1)
 
         #Dynamically load editor widgets into the subframe layout
         default_fields = ["FieldId", "Display", "IsMandatory", "ShowInEditor", "FieldType",
@@ -254,45 +272,10 @@ class ObjectModelConfigurationWidget(QFrame):
                 self.addToFormLayout(fieldSpecificLayout, column_name, row, 0)
                 row += 1
 
-        # #Integer input mode controls
-        # self.addToFormLayout(fieldSpecificLayout, "MinValue", row, 0)
-        # self.addToFormLayout(fieldSpecificLayout, "MaxValue", row, 2)
-
+        fieldSpecificLayout.setColumnStretch(0, 2)
+        fieldSpecificLayout.setColumnStretch(1, 12)
         
-        # row +=1
-        # self.addToFormLayout(fieldSpecificLayout, "DistributeEvenly", row, 0)
-
-        # row +=1
-        # #File selection Modes
-        # self.addToFormLayout(fieldSpecificLayout, "FileSelectionMode", row, 0)
-        # row +=1
-
-        # self.addToFormLayout(fieldSpecificLayout, "RedirectDirectoryStatic", row, 0)
-        # row +=1
-
-        # self.addToFormLayout(fieldSpecificLayout, "RedirectDirectoryDynamic", row, 0)
-
-        # row += 1
-        # self.addToFormLayout(fieldSpecificLayout, "RedirectDirectoryRelativeTo", row, 0)
-
-        # #Object References
-        # row += 1
-        # self.addToFormLayout(fieldSpecificLayout, "Class", row, 0)
-        # row += 1
-        # self.addToFormLayout(fieldSpecificLayout, "MapValueFromParent", row, 0)
-
-        # self.addToFormLayout(fieldSpecificLayout, "MapColumnName", row, 2)
-
-        # #List property configuration
-        # row += 1
-        # self.addToFormLayout(fieldSpecificLayout, "Separator", row, 0)
-
-        # row += 1
-        # self.addToFormLayout(fieldSpecificLayout, "Options", row, 0, 2)
-        fieldSpecificLayout.setRowStretch(row, 1)
-        fieldSpecificLayout.setColumnStretch(1, 2)
-        
-        # subFrameLayout.setRowStretch(subFrameLayout.rowCount(), 1)
+        fieldSpecificLayout.setRowStretch(fieldSpecificLayout.rowCount()+1, 1)
         self.listview.model().layoutChanged.emit()
 
     def removeItem(self):
@@ -327,6 +310,9 @@ class ObjectModelConfigurationWidget(QFrame):
 
                 field_editor.label.setProperty("ConfigurationEditor", "PropertyLabel")
                 field_editor.editor.setProperty("ConfigurationEditor", "PropertyEditor")
+                
+                # if isinstance(field_editor.editor, (QTextEdit, QPlainTextEdit, FormEditorWidget)):
+                #     field_editor.editor.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
             else:
                 if field_editor.label:
                     field_editor.label.deleteLater()
@@ -353,4 +339,12 @@ class ObjectModelConfigurationWidget(QFrame):
             self.configuration_editor.currentItemChanged.emit(self.configuration_item)
         QFrame.mousePressEvent(self, event)
     
+    def sizeHint(self):
+        if not self.isActive:
+            return super().minimumSizeHint()
+        else:
+            minimum_size = super().sizeHint()
+            minimum_size.setHeight(minimum_size.height()*0.9)
+            return minimum_size
+        return super().sizeHint()
     

@@ -85,17 +85,22 @@ class SettingsWidget(QtWidgets.QWidget):
                 continue
 
             configuration_section = ConfigurationSectionTreeWidgetItem(
-                parent=None, 
+                parent=None,
                 application=self.application,
                 settings_module=self,
-                section_name=section, 
+                section_name=section,
                 section_data=section_data)
             configuration_items.append(configuration_section)
 
         self.ConfigurationSectionTreeWidget.addTopLevelItems(configuration_items)
 
     def saveConfigurationData(self):
-        self.ProgramConfiguration.saveConfiguration()
+        if self.ProgramConfiguration.saveConfiguration():
+            info = QtWidgets.QMessageBox(
+                QtWidgets.QMessageBox.Icon.Information, 
+                "Configuration Saved", 
+                "All configuration sections have been saved.")
+            info.exec()
 
         
 

@@ -27,7 +27,7 @@ from lib.ProgramConfiguration import ProgramConfiguration, ConnectionHandler
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.8.2'
+VERSION = '0.8.3'
 APP_NAME = f"Transport Management Tool - {VERSION}"
 
 class Transport_Manager(QMainWindow):
@@ -53,9 +53,10 @@ class Transport_Manager(QMainWindow):
         self.qt_app.setPalette(self.color_theme)
         self.setStyleSheet(self.color_theme.style_sheet)
 
+        self.settings = QSettings("EmergencyCode", "Transport_Manager")
+
         self.ProgramConfiguration = ProgramConfiguration(self)
         self.statusBarUpdated.connect(self.onStatusBarMessageReceived)
-        self.settings = QSettings("EmergencyCode", "Transport_Manager")
         self._relation_presets = {}
 
         self.ui.setupUi(self)
@@ -114,9 +115,7 @@ class Transport_Manager(QMainWindow):
         #TODO: Definitely rework required
         planner_menu = self.ui.menubar.addMenu("Execution Planner")
         new_plan_action = planner_menu.addAction("Add New Plan")
-        config_action = planner_menu.addAction("Configure")
         # Connect Menu Signals
-        config_action.triggered.connect(self.configure_execution_planner)
         new_plan_action.triggered.connect(self.PackageManager.addExecutionPlan)
         new_plan_action.triggered.connect(lambda: self.ui.MainTabWidget.setCurrentWidget(self.PackageManager))
 
@@ -284,7 +283,6 @@ class Transport_Manager(QMainWindow):
         self.XMLTemplateEditor.refresh_ui()
         self.PackageManager.refresh_ui()
         self.SettingsWidget.configurationReloaded.emit()
-        
     
     def getObjectData(self, object_class, dialog_name="Object Data", source_index=None, editor_configuration=None):
         if editor_configuration is None:
@@ -304,15 +302,6 @@ class Transport_Manager(QMainWindow):
                 return data
         return None
 
-    """ Execution Planner Configuration """
-    def configure_execution_planner(self):
-        configuration = self.settings.value("ExecutionPlannerSettings")
-        new_configuration = WidgetFactory.DialogScreens.ExecutionPlannerConfigDialog(self)
-        new_configuration.setupForm(configuration)
-        if new_configuration.exec():
-            new_config_data = new_configuration.to_dict
-            self.settings.setValue("ExecutionPlannerSettings", new_config_data)
-        
     def load_file(self, file_path):
         file_content = ""
         with open(file_path, 'rb') as f:

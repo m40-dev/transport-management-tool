@@ -1,4 +1,4 @@
-from PyQt6.Qsci import QsciScintilla, QsciLexerXML
+from PyQt6.Qsci import QsciScintilla, QsciLexerPython
 from PyQt6.QtGui import QColor, QFont
 
 class BaseCodeEditor(QsciScintilla):
@@ -26,7 +26,7 @@ class BaseCodeEditor(QsciScintilla):
         self.setMarginWidth(0, 0)
         self.setWrapMode(QsciScintilla.WrapMode.WrapWord)
 
-        self.lexer = QsciLexerXML()
+        self.lexer = QsciLexerPython()
         self.setLexer(self.lexer)
 
         #line color
@@ -75,7 +75,6 @@ class BaseCodeEditor(QsciScintilla):
 
         self.SendScintilla(QsciScintilla.SCI_SETFOLDMARGINHICOLOUR, True, editor_bg_color)
         self.SendScintilla(QsciScintilla.SCI_SETFOLDMARGINCOLOUR, True, editor_bg_color)
-        
 
     def find_text(self, text):
         if text == self.text_to_find:

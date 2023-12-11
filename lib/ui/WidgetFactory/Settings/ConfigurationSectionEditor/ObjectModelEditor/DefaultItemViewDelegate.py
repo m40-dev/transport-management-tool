@@ -135,7 +135,7 @@ class DefaultConfigurationWidget(QFrame):
         animation = QPropertyAnimation(self)
         animation.setPropertyName(bytes("opacity", "utf-8"))
         animation.setTargetObject(effect)
-        animation.setDuration(500)
+        animation.setDuration(300)
         animation.setStartValue(0)
         animation.setEndValue(1)
         if reverse:
@@ -158,9 +158,9 @@ class DefaultConfigurationWidget(QFrame):
     def setupUi(self):
         self.layout = QGridLayout(self)
         self.layout.setContentsMargins(1,1,1,1)
-        self.layout.setSpacing(2)
+        self.layout.setSpacing(1)
 
-        # self.setSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         handleBar = QLabel()
         handleBar.setText("::")
         # handleBar.setProperty("ConfigurationEditor", "Handle")
@@ -177,10 +177,16 @@ class DefaultConfigurationWidget(QFrame):
         description.setText(self.configuration_item.description)
 
         self.layout.addWidget(handleBar, 0, 0, 2, 1, Qt.AlignmentFlag.AlignLeft)
-        self.layout.addWidget(label, 0, 1)
-        self.layout.addWidget(description, 1, 1)
-        self.layout.setColumnStretch(1, 5)
-        self.resize(50,50)
+        self.layout.addWidget(label, 0, 1, 1, 1)
+        self.layout.addWidget(description, 1, 1, 1, 1)
+        self.layout.setColumnStretch(1, 2)
+        self.layout.setRowStretch(0, 0)
+        self.layout.setRowStretch(1, 1)
 
         # Collapsed view
         
+    def sizeHint(self):
+        minimum_size = super().minimumSizeHint()
+        minimum_size.setHeight(minimum_size.height()*1.3)
+
+        return minimum_size

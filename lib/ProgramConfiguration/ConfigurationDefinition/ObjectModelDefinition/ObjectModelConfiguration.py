@@ -24,7 +24,8 @@ ObjectModelConfiguration = {
                     "FileInput":["FileSelectionMode", "RedirectDirectoryStatic", "RedirectDirectoryDynamic", "RedirectDirectoryRelativeTo"],
                     "ListInput":["Separator"],
                     "ChildObjectReference":["Class"],
-                    "StringInput":["IsSensitive"]
+                    "StringInput":["IsSensitive"],
+                    "CodeInput": ["CodeSyntax"]
                     },
                 "FieldRole":{
                     "SortOrder": ["DistributeEvenly"]
@@ -73,7 +74,19 @@ ObjectModelConfiguration = {
                         "Child Reference": "ChildObjectReference",
                         "File Path": "FileInput",
                         "Predefined List": "FixedInput",
-                        "Multivalue field":"ListInput"}
+                        "Multivalue field":"ListInput",
+                        "Code Editor Field":"CodeInput"}
+                },
+            "CodeSyntax":
+                {
+                    "Display": "Code Syntax",
+                    "FieldType": "FixedInput",
+                    "DefaultValue": "Powershell",
+                    "Options": {
+                        "SQL Script": "SQL", 
+                        "Powershell Script": "Powershell",
+                        "XML File": "XML"},
+                    "EditDependency": {"FieldType": "CodeInput"}
                 },
             "IsMandatory":
                 {

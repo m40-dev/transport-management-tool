@@ -399,6 +399,10 @@ QWidget[ExecutionState="Finished with Errors"]{
 	border-left: 3px solid rgba(233, 45, 12, 0.699);
 }
 
+QWidget[ExecutionState="Terminated"]{
+	border-left: 3px solid rgba(233, 45, 12, 0.699);
+}
+
 QLabel[ExecutionState="Finished with Errors"]{
 	font: bold;
 	border-left: 0px;
@@ -524,13 +528,19 @@ QWidget[ConfigurationEditor="Handle"]::hover{
 QWidget[ConfigurationEditor="ObjectModelItemWidget"]{
 	background-color: rgba(239, 239, 245, 0.2);
 	border: 1px solid rgba(125, 138, 141, 0.644);
-	padding: 2px;
 	margin-top: 4px;
 	margin-bottom: 4px;
+	min-height: 50px;
 }
 
 QWidget[ConfigurationEditor="PropertyLabel"]{
-	color:#626363;
+	color:#181a1a;
+	text-align: right;
+
+}
+QWidget[ConfigurationEditor="PropertyDescription"]{
+	color:#1f8b8b;
+	margin-top: 2px;
 }
 
 QWidget[ConfigurationEditor="PropertyEditor"]{

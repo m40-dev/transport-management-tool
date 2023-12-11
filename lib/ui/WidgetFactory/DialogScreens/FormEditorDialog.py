@@ -5,6 +5,7 @@ import json
 import uuid
 from .MessageBox import MsgBox
 import re
+from ..CodeEditors import *
 
 class FormEditorDialog(QtWidgets.QDialog):
 
@@ -134,6 +135,9 @@ class FormEditorDialog(QtWidgets.QDialog):
                 if editor_object.isMandatory:
                     self.layout.addWidget(editor_object.MandatoryLabel, row_id, 1)
                 self.layout.addWidget(editor_object.editor, row_id, 2)
+
+                if isinstance(editor_object.editor, (QtWidgets.QTextEdit, QtWidgets.QPlainTextEdit, FormEditorWidget)):
+                    editor_object.editor.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
 
                 # editor_object.set_editor_data(default_value)
         if self.useExperimentalFeatures and len(self.columnMappings) > 0:
@@ -339,6 +343,7 @@ class FormEditorObject(QtCore.QObject):
             widgets.append(self.MandatoryLabel)
 
         self.label = QtWidgets.QLabel(self.parent)
+        self.label.setWordWrap(True)
         self.label.setText(f"<b>{str(self.display_name)}</b>")
         self.editor = self.get_editor()
 
@@ -346,6 +351,7 @@ class FormEditorObject(QtCore.QObject):
         if len(tooltip.strip()) > 0: 
             if self.label:
                 self.label.setToolTip(f"<i>{tooltip}</i>")
+
             if self.editor:
                 self.editor.setToolTip(f"<i>{tooltip}</i>")
 
@@ -354,7 +360,7 @@ class FormEditorObject(QtCore.QObject):
 
         self.set_editor_data(self.default_value)
         self.update_form_data(self.column_name, self.default_value)
-
+        
         self.widgets = widgets
 
         if self.useExperimentalFeatures and len(self.column_configuration.get("ValuePattern", "")) > 0:
@@ -376,8 +382,10 @@ class FormEditorObject(QtCore.QObject):
         self._current_value = value
         editor_widget = self.editor
         if isinstance(editor_widget, (QtWidgets.QLineEdit, QtWidgets.QTextEdit)):
+            if value is None:
+                value = ""
+                self._current_value = ""
             editor_widget.setText(str(value))
-            # editor_widget.adjustSize()
 
         if isinstance(editor_widget, QtWidgets.QComboBox):
             index = editor_widget.findData(value, QtCore.Qt.ItemDataRole.UserRole)
@@ -392,12 +400,16 @@ class FormEditorObject(QtCore.QObject):
         if isinstance(editor_widget, QtWidgets.QCheckBox):
             state = str(value) == "2" or str(value).upper() == "TRUE"
             editor_widget.setChecked(state)
+        
+        if isinstance(editor_widget, BaseCodeEditor):
+            editor_widget.setText(str(value))
+
 
     def get_editor(self):
         column = self.column_name
         column_configuration = self.column_configuration
 
-        supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput", "IntegerInput", "BooleanInput"]
+        supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput", "IntegerInput", "BooleanInput", "CodeInput"]
 
         field_type = column_configuration.get("FieldType", None)
         
@@ -406,6 +418,9 @@ class FormEditorObject(QtCore.QObject):
 
         if field_type == "StringInput":
             return self.string_input(column, column_configuration)
+
+        if field_type == "CodeInput":
+            return self.code_input(column, column_configuration)
 
         if field_type == "TextInput":
             return self.text_input(column, column_configuration)
@@ -508,9 +523,37 @@ class FormEditorObject(QtCore.QObject):
                 self.update_form_data(column, editor.toPlainText())
                 )
         
-        editor.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        # editor.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         editor.setProperty("Widget", "EditorDialog")
         
+        return editor
+
+    def code_input(self, column, column_configuration):
+        placeholder_text = column_configuration.get("PlaceholderText", "")
+        supported_types = ["Powershell", "SQL", "XML"]
+
+        code_syntax = column_configuration.get("CodeSyntax", None)
+        
+        if code_syntax is None or code_syntax not in supported_types:
+            return self.text_input
+
+        if code_syntax.upper() == "POWERSHELL":
+            editor = ps_editor(self.application)
+
+        if code_syntax.upper() == "SQL":
+            editor = sql_editor(self.application)
+        
+        if code_syntax.upper() == "XML":
+            editor = xml_editor(self.application)
+
+        editor.setProperty("Widget", "CodeEditor")
+
+        editor.textChanged.connect(
+                lambda column=column: 
+                self.update_form_data(column, editor.text())
+                )
+        
+        # editor.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         return editor
 
     def file_input(self, column, column_configuration):
@@ -540,6 +583,9 @@ class FormEditorWidget(QtWidgets.QWidget):
         self.layout.setContentsMargins(QtCore.QMargins(0,0,0,0))
         self.setProperty("Widget", "EditorDialog")
 
+    def setSizeAdjustPolicy(self, policy):
+        pass
+
 class ListInputWidget(FormEditorWidget):
     list_changed = QtCore.pyqtSignal(list)
 
@@ -559,7 +605,7 @@ class ListInputWidget(FormEditorWidget):
         self.layout.addWidget(self.list_input)
 
         self.list_input.setProperty("Widget", "EditorDialog")
-        self.list_input.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
+        # self.list_input.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
 
     def setValues(self, value_list):
         if value_list is None:
@@ -576,7 +622,9 @@ class ListInputWidget(FormEditorWidget):
 
     def updateValues(self):
         self.list_changed.emit(self.getValues())
-
+    
+    def setSizeAdjustPolicy(self, policy):
+        self.list_input.setSizeAdjustPolicy(policy)
 
 class FileInputWidget(FormEditorWidget):
     file_path_changed = QtCore.pyqtSignal(str)

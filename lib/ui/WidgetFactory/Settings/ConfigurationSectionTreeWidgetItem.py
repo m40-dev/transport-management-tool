@@ -39,6 +39,7 @@ class ConfigurationSectionTreeWidgetItem(QtWidgets.QTreeWidgetItem):
     def getSectionEditorWidget(self):
         #refresh the configuration section data
         section_data = self.application.ProgramConfiguration.getConfigurationSection(self.SectionName)
+        # print("Section Data for section", self.SectionName, section_data)
         if section_data:
             self._section_data = section_data
         

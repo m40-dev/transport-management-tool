@@ -4,7 +4,6 @@ from .CodeEditor import BaseCodeEditor
         
 class sql_editor(BaseCodeEditor):
     def __init__(self, parent):
-        self.parent = parent
         BaseCodeEditor.__init__(self, parent)
 
         self.lexer = QsciLexerSQL()

@@ -11,6 +11,7 @@ class ProgramConfiguration(QObject):
     def __init__(self, application):
         super().__init__()
         self.application = application
+        self.settings = self.application.settings
         self.configuration = {}
         self.ObjectModel = ObjectModel(self, application)
         self.ProgramConfiguration = deepcopy(PROGRAM_CONFIGURATION)
@@ -40,6 +41,12 @@ class ProgramConfiguration(QObject):
                         #     self.configuration[section] = configuration_data
                         
                         self.updateProgramConfiguration(configuration_dict)
+        
+        # Reload Execution Planner configuration
+        execution_planner_configuration = self.settings.value("ExecutionPlannerSettings")
+        if execution_planner_configuration:
+            configuration = {"ExecutionPlannerSettings": execution_planner_configuration}
+            self.updateProgramConfiguration(configuration)
         
     def updateProgramConfiguration(self, configuration_dict, sort_items=True):
         for configuration_section, configuration_parameters in configuration_dict.items():
@@ -202,7 +209,19 @@ class ProgramConfiguration(QObject):
             export_json = json.dumps(export_data, indent=4, separators=(',',':'))
             with open(str(file_path), 'w', encoding="utf-8") as doc:
                 doc.write(export_json)
-        # self.application.refresh_ui()
+
+        if target_configuration_group is None:
+            #Save the Execution Planner configurations
+            ExecutionPlannerConfiguration = self.exportConfiguration("ExecutionPlannerSettings")
+            
+            # Get the values to be saved into the user settings cache
+            ExecutionPlannerConfiguration = ExecutionPlannerConfiguration.get("ExecutionPlannerSettings", None)
+            
+            # Overwrite configuration if the correct key exists
+            if ExecutionPlannerConfiguration:
+                self.settings.setValue("ExecutionPlannerSettings", ExecutionPlannerConfiguration)
+        
+        return True
         
             
                             

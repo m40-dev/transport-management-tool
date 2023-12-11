@@ -13,8 +13,11 @@ class GeneralConfigurationEditor(ConfigurationSectionEditor):
             for configuration_key, field_configuration in self._section_source.ConfigurationParameters.items():
                 self.addToFormLayout(self.editor_layout, configuration_key, field_configuration, self.editor_layout.rowCount(), 0, 1, 1)
                 # row += 1
+        self.editor_layout.setSpacing(10)
         self.editor_layout.setRowStretch(self.editor_layout.rowCount()+1, 10)
-        self.editor_layout.setColumnStretch(1, 2)
+        self.editor_layout.setColumnStretch(0, 1)
+        self.editor_layout.setColumnStretch(1, 5)
+
     
     def updateTempDisplay(self, configuration_key, test_label):
         field_configuration = self._section_source.ConfigurationParameters.get(configuration_key, "")
@@ -45,7 +48,8 @@ class GeneralConfigurationEditor(ConfigurationSectionEditor):
             if current_value is None and "DefaultValue" in field_configuration.keys():
                 current_value = field_configuration["DefaultValue"]
                 # self.configuration_item.setData(column_name, current_value)
-                
+            field_description = field_configuration.get("Description", None)
+
             field_editor = FormEditorObject(
                 parent=self,
                 application=self.application,
@@ -55,8 +59,17 @@ class GeneralConfigurationEditor(ConfigurationSectionEditor):
             if field_editor.editor:
                 layout.addWidget(field_editor.label, row, column, rowSpan, 1)
 
-                column+=1
-                layout.addWidget(field_editor.editor, row, column, rowSpan, colSpan)
+                if field_description:
+                    description_label = QtWidgets.QLabel(self)
+                    description_label.setText(f"<i>{field_description}</i>")
+                    description_label.setWordWrap(True)
+                    description_label.setProperty("ConfigurationEditor", "PropertyDescription")
+                    layout.addWidget(description_label, row+1, column, 1, 1, Qt.AlignmentFlag.AlignTop)
+                    layout.setRowStretch(row+1, 5)
+                    rowSpan = 2
+
+                column += 1
+                layout.addWidget(field_editor.editor, row, column, rowSpan, colSpan, Qt.AlignmentFlag.AlignTop)
                 
                 # if current_value:
                 field_editor.set_editor_data(current_value)
