@@ -1,6 +1,7 @@
 import uuid, re
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, pyqtSignal
 from pyodbc import Row
+from PyQt6.QtGui import QIcon
 
 class ObjectDataItem(QObject):
     data_changed = pyqtSignal()
@@ -253,5 +254,9 @@ class ObjectDataItem(QObject):
         object_info_dict["object_display"] = f"{table_name} - ({display_name})"
         object_info_dict["pk_columns"] = pk_columns_dict
         return object_info_dict
-
     
+    def prepareExportData(self):
+        pass
+
+    def icon(self):
+        return self.application.ProgramConfiguration.getIcon(self.object_class)

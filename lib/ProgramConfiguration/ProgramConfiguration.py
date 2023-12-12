@@ -1,9 +1,10 @@
 from PyQt6.QtCore import QObject
+from PyQt6.QtGui import QIcon
 import json
 from pathlib import Path
 from copy import deepcopy
 from .ObjectConfiguration import ObjectModel
-from .ConfigurationDefinition import PROGRAM_CONFIGURATION, CONFIGURATION_FILES
+from .ConfigurationDefinition import PROGRAM_CONFIGURATION, CONFIGURATION_FILES, PROGRAM_ICONS
 from lib.data.DataModels.Settings.ObjectConfigurationModel import ObjectConfigurationModel
 
 class ProgramConfiguration(QObject):
@@ -15,7 +16,13 @@ class ProgramConfiguration(QObject):
         self.configuration = {}
         self.ObjectModel = ObjectModel(self, application)
         self.ProgramConfiguration = deepcopy(PROGRAM_CONFIGURATION)
+        self.ApplicationIcons = {}
         self.reloadUserConfiguration()
+
+    def loadIcons(self):
+        for icon_id, file_path in PROGRAM_ICONS.items():
+            if len(file_path.strip()) > 0:
+                self.ApplicationIcons[icon_id] = QIcon(file_path)
 
     def load_file(self, file_path):
         file_content = ""
@@ -47,7 +54,9 @@ class ProgramConfiguration(QObject):
         if execution_planner_configuration:
             configuration = {"ExecutionPlannerSettings": execution_planner_configuration}
             self.updateProgramConfiguration(configuration)
+        self.loadIcons()
         
+
     def updateProgramConfiguration(self, configuration_dict, sort_items=True):
         for configuration_section, configuration_parameters in configuration_dict.items():
             
@@ -223,5 +232,5 @@ class ProgramConfiguration(QObject):
         
         return True
         
-            
-                            
+    def getIcon(self, icon_id):
+        return self.ApplicationIcons.get(icon_id, None)

@@ -95,7 +95,8 @@ class XMLDataModel(QAbstractItemModel):
 
             if column_name == "XML Transport Structure":
                 return item.display()
-        
+        if role == Qt.ItemDataRole.DecorationRole and column_name == "XML Transport Structure":
+            return item.icon()
         if (isinstance(item, XMLDataItem) and item.isCheckable(column_name) 
             and role == Qt.ItemDataRole.CheckStateRole and column_name in ["Options"]):
                 return item.checkState(column_name)

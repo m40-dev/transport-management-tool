@@ -20,20 +20,22 @@ class SideBar(QWidget):
 
         # PackageManagerButton.setText("PM")
         PackageManagerButton.clicked.connect(lambda: self.buttonClicked.emit(0))
-        PM_icon = QIcon("./lib/ui/img/icons/PackageManager.png")
+        PM_icon = self.application.ProgramConfiguration.getIcon("PackageManager")
         PackageManagerButton.setIcon(PM_icon)
         PackageManagerButton.setIconSize(QSize(round(PackageManagerButton.width()*0.7), round(PackageManagerButton.height()*0.7)))
 
         TemplateEditorButton = QToolButton()
         # TemplateEditorButton.setText("TE")
-        TE_icon = QIcon("./lib/ui/img/icons/XMLTemplateEditor.png")
+        TE_icon = self.application.ProgramConfiguration.getIcon("XMLTemplateEditor")
+
         TemplateEditorButton.setIcon(TE_icon)
         TemplateEditorButton.setIconSize(QSize(round(TemplateEditorButton.width()*0.7), round(TemplateEditorButton.height()*0.7)))
         TemplateEditorButton.clicked.connect(lambda: self.buttonClicked.emit(1))
 
         SettingsButton = QToolButton()
         # SettingsButton.setText("S")
-        Settings_icon = QIcon("./lib/ui/img/icons/Settings.png")
+        Settings_icon = self.application.ProgramConfiguration.getIcon("Settings")
+
         SettingsButton.setIcon(Settings_icon)
         SettingsButton.setIconSize(QSize(round(SettingsButton.width()*0.7), round(SettingsButton.height()*0.7)))
         SettingsButton.clicked.connect(lambda: self.buttonClicked.emit(2))

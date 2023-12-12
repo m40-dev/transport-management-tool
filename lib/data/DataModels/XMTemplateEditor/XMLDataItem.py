@@ -1,5 +1,6 @@
 import uuid, re
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, pyqtSignal, QTimer
+from PyQt6.QtGui import QIcon
 from copy import deepcopy
 from lxml.etree import _Element, _Comment, fromstring
 from lib.ui.WidgetFactory import MsgBox
@@ -805,3 +806,8 @@ class XMLDataItem(QObject):
 
         if isinstance(self._xml_data, transport_template_custom_object):
             return self._xml_data.prepare_export_data()
+
+    def icon(self):
+        if isinstance(self._xml_data, transport_template_custom_object):
+            return self.application.ProgramConfiguration.getIcon(self._xml_data.xml_object_class)
+        return None

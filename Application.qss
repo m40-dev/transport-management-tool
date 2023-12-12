@@ -125,9 +125,10 @@ QTabBar::tab:left{
 QTreeWidget::indicator, QTreeView::indicator { 
 	width: 30px; 
 	height: 30px; }
+	
 
 QTreeWidget::item, QListWidget::item, QListView::item, QTreeView::item{
-	min-height: 1.8em;
+	min-height: 2em;
     color: palette(Text);
 	background-color: palette(Base);
 	margin-top: 2px;

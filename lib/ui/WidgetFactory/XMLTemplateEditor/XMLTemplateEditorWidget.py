@@ -4,7 +4,7 @@ from copy import deepcopy
 import json
 
 #""" Required QT Libraries """
-from PyQt6.QtCore import pyqtSignal, QTimer, Qt, QMimeData
+from PyQt6.QtCore import pyqtSignal, QTimer, Qt, QMimeData, QSize
 from PyQt6 import QtWidgets
 
 # XML Management
@@ -440,6 +440,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.XMLStructureTreeView.setDropIndicatorShown(True)
         self.XMLStructureTreeView.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragDrop)
         self.XMLStructureTreeView.header().setStretchLastSection(False)
+        self.XMLStructureTreeView.setIconSize(QSize(25,25))
         # self.XMLStructureTreeView.setDropIndicatorShown(True)
 
         self.verticalLayoutWidget = QtWidgets.QWidget(self.mainSplitter)
