@@ -108,7 +108,9 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
         if self.XObjectKeysFilterRadioButton.isChecked():
             filter_rows = filter.splitlines()
-            data_rows = self.application.db.get_objects_by_xobjectkey(filter_rows).values()
+            query_data = self.application.db.get_objects_by_xobjectkey(filter_rows)
+            for table_name, label_data_rows in query_data.items():
+                data_rows += label_data_rows
 
         if self.SelectedTableFilterRadioButton.isChecked() and self.TableComboBox.currentText().strip() != "":
             object_query = filter.strip()
@@ -119,6 +121,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             else:
                 query = f"select * from {table_name}"
                 data_rows += self.application.db.run_db_query(query)
+
         self.listTableObjects(data_rows=data_rows)
 
     def listTableObjects(self, table_name=None, data_rows=[]):
