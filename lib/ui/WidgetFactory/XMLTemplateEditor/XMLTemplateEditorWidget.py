@@ -40,6 +40,9 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.xmlStructureChanged.connect(self.onXMLPreviewRefresh)
         self.XMLStructureTreeView.mousePressEvent = self.XMLStructureTreeViewMousePressEvent
         self.XMLStructureTreeView.setWordWrap(True)
+        self.parent.refreshUi.connect(self.refresh_ui)
+        self.setStyleSheet(self.application.styleSheet())
+
 
     def XMLStructureTreeViewMousePressEvent(self, event):
         QtWidgets.QTreeView.mousePressEvent(self.XMLStructureTreeView, event)
@@ -56,7 +59,9 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         if self.current_file:
             display_name = Path(self.current_file).name
         return display_name
-        
+    
+
+
     def reloadXMLFile(self):
         self.XMLStructureTreeView.model().reload_model_data()
 
@@ -70,9 +75,10 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.XMLStructureTreeView.setModel(data_model)
         data_model.xmlDataStructureChanged.connect(self.xmlStructureChanged)
         data_model.modelItemChecked.connect(self.onItemCheckStateChange)
-        self.XMLStructureTreeView.header().resizeSection(0, round(self.width() * 1))
-        self.XMLStructureTreeView.header().resizeSection(1, round(self.width() * 0.3))
         self.setCurrentXMLTemplate()
+
+        self.XMLStructureTreeView.header().resizeSection(0, round(self.application.width() * 0.25))
+        self.XMLStructureTreeView.header().resizeSection(1, round(self.application.width() * 0.1))
 
     def onXMLPreviewRefresh(self):
         self.xml_preview_timer.start(XML_PREVIEW_TIMER)
@@ -82,9 +88,10 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
     
     def refresh_ui(self):
         self.XMLPreviewBrowser.setText(self.XMLStructureTreeView.model().exportXMLData())
-        # self.XMLPreviewBrowser.setText(self.transport_template.string)
         self.XMLPreviewBrowser.reconfigure_editor()
         self.setCurrentXMLTemplate()
+        self.setStyleSheet(self.application.styleSheet())
+        # self.XMLStructureTreeView.setStyleSheet(self.styleSheet())
 
     def saveXMLTemplate(self):
         if self.current_file:
@@ -129,7 +136,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
             return False
 
         contextMenu = XMLObjectContextMenu(
-            parent=self, 
+            parent=self.application, 
             source_index=clickedIndex)
         
         contextMenu.onListRelatedObjectData.connect(lambda: self.listObjectDataRequested(
@@ -419,6 +426,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
     def setupUi(self):
         self.layout = QtWidgets.QGridLayout(self)
         self.mainSplitter = QtWidgets.QSplitter(self)
+        
         self.layout.addWidget(self.mainSplitter, 0, 0, 1, 1)
         
         self.mainSplitter.setOrientation(Qt.Orientation.Horizontal)
@@ -426,6 +434,8 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
 
         self.XMLStructureTreeView = QtWidgets.QTreeView(self.mainSplitter)
         self.XMLStructureTreeView.setObjectName("XMLStructureTreeView")
+        self.XMLStructureTreeView.setProperty("Widget", "XMLTemplateEditorWidget")
+        self.XMLStructureTreeView.header().setProperty("Widget", "XMLTemplateEditorWidget")
         self.XMLStructureTreeView.setSortingEnabled(False)
         self.XMLStructureTreeView.setWordWrap(True)
         self.XMLStructureTreeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -464,6 +474,9 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.xml_preview_timer.setSingleShot(True)
         self.xml_preview_timer.timeout.connect(self.refreshXMLPreview)
         self.xmlStructureChanged.connect(self.onXMLPreviewRefresh)
+
+        # adjust UI Sections and widget sizes
+        self.mainSplitter.setSizes([round(self.application.width()*0.6), round(self.application.width()*0.45)])
     
     def onWidgetClose(self):
         if self.XMLStructureTreeView.model().isDifferent():

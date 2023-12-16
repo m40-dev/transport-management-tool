@@ -1,5 +1,4 @@
 from PyQt6 import QtCore, QtWidgets, QtGui
-
 from pathlib import Path
 import json
 import uuid
@@ -43,8 +42,11 @@ class FormEditorDialog(QtWidgets.QDialog):
 
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
+
         self.layout.setRowStretch(self.layout.rowCount(), 2)
-        self.layout.setColumnStretch(self.layout.columnCount()-1, 2)
+
+        self.layout.setColumnStretch(0, 2)
+        self.layout.setColumnStretch(self.layout.columnCount()-1, 5)
         self.layout.addWidget(self.buttonBox, self.layout.rowCount()+1, 1, 1, 2)
         self.restoreWindowState()
 
@@ -132,6 +134,7 @@ class FormEditorDialog(QtWidgets.QDialog):
             if editor_object.editor:
                 self.editors[column] = editor_object
                 self.layout.addWidget(editor_object.label, row_id, 0)
+                editor_object.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
                 if editor_object.isMandatory:
                     self.layout.addWidget(editor_object.MandatoryLabel, row_id, 1)
                 self.layout.addWidget(editor_object.editor, row_id, 2)
@@ -142,13 +145,12 @@ class FormEditorDialog(QtWidgets.QDialog):
                 # editor_object.set_editor_data(default_value)
         if self.useExperimentalFeatures and len(self.columnMappings) > 0:
             self.useMappings = QtWidgets.QCheckBox("Use Value Templates")
+
             # self.useMappings.setChecked(True)
             self.useMappings.setProperty("EditorDialog", "PropertyHasValueTemplate")
             self.layout.addWidget(
                 self.useMappings, 
-                self.layout.rowCount(), 0)
-        self.layout.setRowStretch(self.layout.rowCount(), 2)
-            
+                self.layout.rowCount(), 0, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
     def updateFormPatterns(self, source_column, source_editor):
         if not self.useMappings.isChecked():
@@ -274,6 +276,7 @@ class FormEditorObject(QtCore.QObject):
         self.column_configuration = column_configuration
         self.display_name = column_name
         self._current_value = ""
+        self.canMaximize = False
 
         display = column_configuration.get("Display", column_name)
         if len(display.strip()) > 0:
@@ -297,6 +300,16 @@ class FormEditorObject(QtCore.QObject):
         if self.isVisible:
             self.setupUi()
             # self.setVisible(True)
+
+    def maximizeEditor(self):
+        dialog = QtWidgets.QDialog(self.application)
+        dialog.setMinimumSize(800, 500)
+        layout = QtWidgets.QGridLayout(dialog)
+        editor = self.get_editor()
+        dialog.finished.connect(lambda: self.set_editor_data(self._current_value))
+        self.set_editor_data(editor_widget=editor, value=self.getValue())
+        layout.addWidget(editor)
+        dialog.show()
 
     def validate(self, check_value):
         validation_status = True
@@ -375,12 +388,16 @@ class FormEditorObject(QtCore.QObject):
                 value = 0
             if str(value).isnumeric():
                 value = int(value)
+
         self._current_value = value
         self.dataChanged.emit(self.column_name, value)
 
-    def set_editor_data(self, value):
+    def set_editor_data(self, value, editor_widget=None):
         self._current_value = value
-        editor_widget = self.editor
+
+        if editor_widget is None:
+            editor_widget = self.editor
+
         if isinstance(editor_widget, (QtWidgets.QLineEdit, QtWidgets.QTextEdit)):
             if value is None:
                 value = ""
@@ -403,13 +420,15 @@ class FormEditorObject(QtCore.QObject):
         
         if isinstance(editor_widget, BaseCodeEditor):
             editor_widget.setText(str(value))
-
+        
+        if isinstance(editor_widget, ColorInputWidget):
+            editor_widget.setValue(str(value))
 
     def get_editor(self):
         column = self.column_name
         column_configuration = self.column_configuration
 
-        supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput", "IntegerInput", "BooleanInput", "CodeInput"]
+        supported_types = ["StringInput", "TextInput", "FixedInput", "FileInput", "ListInput", "IntegerInput", "BooleanInput", "CodeInput", "ColorInput"]
 
         field_type = column_configuration.get("FieldType", None)
         
@@ -442,7 +461,19 @@ class FormEditorObject(QtCore.QObject):
             editor = self.boolean_input(column, column_configuration)
             return editor
         
+        if field_type == "ColorInput":
+            editor = self.color_input(column, column_configuration)
+            return editor
+        
         return None
+
+    def color_input(self, column, column_configuration):
+        editor = ColorInputWidget(self.application, column, column_configuration)
+        editor.valueChanged.connect(lambda value, column=column: 
+                    self.update_form_data(column, value)
+                    )
+        editor.setProperty("Widget", "EditorDialog")
+        return editor
 
     def boolean_input(self, column, column_configuration):
         editor = QtWidgets.QCheckBox()
@@ -539,6 +570,7 @@ class FormEditorObject(QtCore.QObject):
 
         if code_syntax.upper() == "POWERSHELL":
             editor = ps_editor(self.application)
+            self.canMaximize = True
 
         if code_syntax.upper() == "SQL":
             editor = sql_editor(self.application)
@@ -571,7 +603,6 @@ class FormEditorObject(QtCore.QObject):
 class FormEditorWidget(QtWidgets.QWidget):
     def __init__(self, application, column_name, column_configuration):
         super(FormEditorWidget, self).__init__(
-            flags=QtCore.Qt.WindowType.Dialog, 
             parent=application)
         
         self.application = application
@@ -585,6 +616,95 @@ class FormEditorWidget(QtWidgets.QWidget):
 
     def setSizeAdjustPolicy(self, policy):
         pass
+
+class ColorInputWidget(FormEditorWidget):
+    valueChanged = QtCore.pyqtSignal(str)
+
+    def __init__(self, application, column_name, column_configuration):
+        super(ColorInputWidget, self).__init__(
+            application=application, 
+            column_name=column_name, 
+            column_configuration=column_configuration)
+        
+        self._current_value = ""
+        self.color_input=QtWidgets.QLineEdit()
+        self.color_preview = QtWidgets.QToolButton(self)
+        self.color_input.setFixedWidth(200)
+
+        self.layout.addWidget(self.color_input)
+        self.layout.addWidget(self.color_preview)
+
+        self.color_input.setProperty("Widget", "EditorDialog")
+        self.color_preview.setProperty("Widget", "EditorDialog")
+        
+        self.layout.addStretch(5)
+        self.color_input.textChanged.connect(self.colorValueChanged)
+        self.color_preview.clicked.connect(self.getColorPicker)
+
+    def getColorFromRGBAString(self, color_string):
+        parsed_color = QColor()
+        if "," in color_string:
+            #try to work with the data
+            temp_data = color_string.replace("rgba(", "")
+            temp_data = temp_data.replace(")", "")
+            color_configuration = temp_data.split(",")
+            i = 0
+            for index in color_configuration:
+                if index and not str(index).strip().isnumeric():
+                    return False
+                
+                color_configuration[i] = int(str(index).strip())
+                i += 1
+
+            if len(color_configuration) > 2:
+                parsed_color.setRed(color_configuration[0])
+                parsed_color.setGreen(color_configuration[1])
+                parsed_color.setBlue(color_configuration[2])
+            
+            if len(color_configuration) > 3:
+                parsed_color.setAlpha(color_configuration[3])
+
+            # print(f"{color_string} -> {color_configuration}")
+            return parsed_color
+        return parsed_color
+
+    def colorValueChanged(self, value):
+        new_style = f"background-color: {value}"
+        self._current_value = value
+        self.color_preview.setStyleSheet(new_style)
+
+        selected_color = self.getColorFromRGBAString(value)
+        if selected_color:
+            # color_text = f"rgba({selected_color.red()}, {selected_color.green()}, {selected_color.blue()}, {selected_color.alpha()})"
+            # print("color value changed:", value, color_text)
+            if selected_color.isValid():
+                self.valueChanged.emit(value)
+       
+    def setValue(self, value):
+        self._current_value = value
+        if value is None:
+            value = ""
+        self.color_input.setText(value)
+
+    def getValue(self):
+        return self.color_input.text()
+    
+    def getColorPicker(self):
+        ColorPicker = QtWidgets.QColorDialog(self)
+        ColorPicker.setOption(QtWidgets.QColorDialog.ColorDialogOption.ShowAlphaChannel, True)
+
+        current_color = self.getColorFromRGBAString(self._current_value)
+        
+        if not current_color.isValid():
+            current_color = QtGui.QColor("#000")
+
+        ColorPicker.setCurrentColor(current_color)
+
+        if ColorPicker.exec():
+            selected_color = ColorPicker.selectedColor()
+            color_text = f"rgba({selected_color.red()}, {selected_color.green()}, {selected_color.blue()}, {selected_color.alpha()})"
+            self.setValue(color_text)
+            # self.color_input.setText(selected_color.name())
 
 class ListInputWidget(FormEditorWidget):
     list_changed = QtCore.pyqtSignal(list)

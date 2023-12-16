@@ -1,11 +1,12 @@
 from PyQt6.QtCore import QObject
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QColor
 import json
 from pathlib import Path
 from copy import deepcopy
 from .ObjectConfiguration import ObjectModel
 from .ConfigurationDefinition import PROGRAM_CONFIGURATION, CONFIGURATION_FILES, PROGRAM_ICONS
 from lib.data.DataModels.Settings.ObjectConfigurationModel import ObjectConfigurationModel
+from .ApplicationTheme import ApplicationTheme
 
 class ProgramConfiguration(QObject):
 
@@ -19,10 +20,15 @@ class ProgramConfiguration(QObject):
         self.ApplicationIcons = {}
         self.reloadUserConfiguration()
 
+        self.ColorPalette = ApplicationTheme(ProgramConfiguration=self)
+        self.reloadStyleSheet()
+
     def loadIcons(self):
         for icon_id, file_path in PROGRAM_ICONS.items():
-            if len(file_path.strip()) > 0:
-                self.ApplicationIcons[icon_id] = QIcon(file_path)
+            if len(file_path.strip()) > 0 and Path(file_path).is_file():
+                icon = QIcon(file_path)
+                if not icon.isNull():
+                    self.ApplicationIcons[icon_id] = icon
 
     def load_file(self, file_path):
         file_content = ""
@@ -155,9 +161,21 @@ class ProgramConfiguration(QObject):
         return None
 
     def getConfigurationParameters(self, configuration_section):
-        # search in default program configuration dictionaries
         section_data = self.getConfigurationSection(configuration_section=configuration_section)
         return section_data.get("ConfigurationParameters", {})
+    
+    def getConfigurationParameterValues(self, configuration_section):
+        configuration_dict = {}
+        configuration_parameters = self.getConfigurationParameters(configuration_section=configuration_section)
+        for configuration_key, key_configuration in configuration_parameters.items():
+           
+            configuration_value = key_configuration.get("ConfigurationValue", None)
+            if not configuration_value:
+                configuration_value = key_configuration.get("DefaultValue", None)
+            
+            configuration_dict[configuration_key] = configuration_value
+
+        return configuration_dict
 
     # #currently not in use
     # def setConfigurationValue(self, configuration_section, configuration_key, configuration_value):
@@ -229,8 +247,48 @@ class ProgramConfiguration(QObject):
             # Overwrite configuration if the correct key exists
             if ExecutionPlannerConfiguration:
                 self.settings.setValue("ExecutionPlannerSettings", ExecutionPlannerConfiguration)
-        
         return True
-        
+    
+    def styleSheet(self):
+        return self.ColorPalette.style_sheet
+
+    def reloadStyleSheet(self):
+        self.application.setStyleSheet(self.ColorPalette.styleSheet())
+        self.application.qt_app.setPalette(self.ColorPalette)
+
+        return self.styleSheet()
+    
     def getIcon(self, icon_id):
         return self.ApplicationIcons.get(icon_id, None)
+
+    def getColor(self, color_id):
+        color_string = self.getConfigurationValue("Appearance", color_id)
+        base_color = self.getColorFromRGBAString(color_string)
+        if base_color.isValid():
+            return base_color
+        return QColor()
+
+    def getColorFromRGBAString(self, color_string):
+        parsed_color = QColor(color_string)
+        if "," in color_string:
+            #try to work with the data
+            temp_data = color_string.replace("rgba(", "")
+            temp_data = temp_data.replace(")", "")
+            color_configuration = temp_data.split(",")
+            i = 0
+            for index in color_configuration:
+                if index and not index.strip().isnumeric():
+                    return False
+                
+                color_configuration[i] = int(str(index).strip())
+                i += 1
+
+            if len(color_configuration) >=3:
+                parsed_color.setRed(int(color_configuration[0]))
+                parsed_color.setGreen(int(color_configuration[1]))
+                parsed_color.setBlue(int(color_configuration[2]))
+            
+            if len(color_configuration) > 3:
+                parsed_color.setAlpha(int(color_configuration[3]))
+
+        return parsed_color

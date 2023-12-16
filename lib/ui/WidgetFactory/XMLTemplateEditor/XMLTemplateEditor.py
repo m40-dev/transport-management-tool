@@ -170,18 +170,23 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.DatabaseRelations.loadRelationData(source_index)
 
     def refresh_ui(self):
+        self.setStyleSheet(self.application.ProgramConfiguration.styleSheet())
+        self.refreshUi.emit()
+
+    def reloadView(self):
         self.TableComboBox.clear()
         if self.application.db and self.application.db.is_connected:
             self.FindObjectButton.setEnabled(True)
             self.TableComboBox.setEnabled(True)
             self.ChangeLabelComboBox.setEnabled(True)
             self.ListClosedLabelsCheckBox.setEnabled(True)
+            self.XObjectKeysFilterRadioButton.setEnabled(True)
+            self.SelectedTableFilterRadioButton.setEnabled(True)
+            self.ObjectQueryTextEdit.setEnabled(True)
 
             for table_name in self.application.db.table_info.keys():
                 self.TableComboBox.addItem(table_name)
-
             self.reloadChangeLabels()
-        self.refreshUi.emit()
 
     def reloadChangeLabels(self):
         self.ChangeLabelComboBox.clear()
@@ -331,10 +336,14 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.SearchGroupBoxLayout.setColumnStretch(1, 2)
 
         #Deactivate widgets where connection is required
+
         self.FindObjectButton.setEnabled(False)
         self.TableComboBox.setEnabled(False)
         self.ChangeLabelComboBox.setEnabled(False)
         self.ListClosedLabelsCheckBox.setEnabled(False)
+        self.XObjectKeysFilterRadioButton.setEnabled(False)
+        self.SelectedTableFilterRadioButton.setEnabled(False)
+        self.ObjectQueryTextEdit.setEnabled(False)
 
         self.SearchResultsGroupBox = QtWidgets.QGroupBox(self.TemplateEditorSplitter_Search)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Preferred)
@@ -383,7 +392,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             )
         
         self.TemplateEditorSplitter_Left.setSizes(
-            [round(self.application.width()*0.25), round(self.application.width()*0.9)]
+            [round(self.application.width()*0.2), round(self.application.width()*0.8)]
             )
 
         self.retranslateUi(self)
@@ -399,6 +408,4 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.SelectedTableFilterRadioButton.setText(_translate("Form", "Selected Table Filter"))
         self.FindObjectButton.setText(_translate("Form", "Find Objects"))
         self.SearchResultsGroupBox.setTitle(_translate("Form", "Search Results"))
-        # self.AddSelectedObjectsWithRelationsButton.setText(_translate("Form", "Add With Selected Relations"))
-        # self.AddAsSingleObjectsButton.setText(_translate("Form", "Add Without Relations"))
 

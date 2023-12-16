@@ -64,6 +64,7 @@ class DatabaseRelations(QtWidgets.QWidget):
         self.current_index = source_index
         self.current_item = source_object
         self.relation_data_model.reloadModelData(relation_data, filter_state=self.getRelationsViewFilterState())
+        # self.RelationsViewTreeView.resizeColumnToContents(0)
         
     def deleteSelectedItems(self):
         if not self.RelationsViewTreeView.hasFocus():
@@ -80,7 +81,7 @@ class DatabaseRelations(QtWidgets.QWidget):
     def relationContextMenuRequested(self, menuPosition):
         clickedIndex = self.RelationsViewTreeView.indexAt(menuPosition)
         contextMenu = RelationContextMenu(
-            parent=self.RelationsViewTreeView, 
+            parent=self, 
             source_index=clickedIndex)
         contextMenu.onFollowTableRelation.connect(self.extendTableRelations)
         menu_target = self.RelationsViewTreeView.mapToGlobal(menuPosition)
@@ -119,6 +120,7 @@ class DatabaseRelations(QtWidgets.QWidget):
                         # update existing table relations with NEW entries only
                         existing_relations = self.current_item.object_relations[table_name]
                         self.current_item.object_relations[table_name] = self.application.db.extend_table_relations(existing_relations, extended_relations)
+        self.RelationsViewTreeView.resizeColumnToContents(0)
 
     def loadRelationPresets(self):
         self.RelationPresetsComboBox.clear()
@@ -240,7 +242,7 @@ class DatabaseRelations(QtWidgets.QWidget):
         self.RelationsViewTreeView.setModel(self.relation_data_model)
         self.relation_data_model.dataChanged.connect(self.relationStatusChanged)
         self.RelationsViewTreeView.header().setStretchLastSection(False)
-        self.RelationsViewTreeView.header().resizeSection(0, round(self.width() * 0.55) )
+        self.RelationsViewTreeView.header().resizeSection(0, round(self.application.width()*0.12))
         self.RelationsViewTreeView.header().resizeSection(1, 30)
         self.RelationsViewTreeView.header().resizeSection(2, 30)
         self.RelationsViewTreeView.header().resizeSection(3, 30)

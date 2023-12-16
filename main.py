@@ -9,8 +9,6 @@ from PyQt6.QtGui import QShortcut, QKeySequence, QIcon
 import traceback
 import json
 
-from lib.ui.Theme import Application_Theme
-
 from PyQt6.QtCore import pyqtSignal
 
 #""" Main UI import """
@@ -35,6 +33,7 @@ class Transport_Manager(QMainWindow):
     statusBarUpdated = pyqtSignal(str)
     connectionDataChanged = pyqtSignal()
     currentViewChanged = pyqtSignal(int)
+    styleSheetChanged = pyqtSignal()
     
     def __init__(
         self, parent=None, clipboard=None, event_filter=None, qapplication=None
@@ -49,13 +48,16 @@ class Transport_Manager(QMainWindow):
         self.clipboard = clipboard
         self.current_workdir = None
 
-        self.color_theme = Application_Theme()
-        self.qt_app.setPalette(self.color_theme)
-        self.setStyleSheet(self.color_theme.style_sheet)
+        # self.color_theme = Application_Theme()
+        # self.qt_app.setPalette(self.color_theme)
+        # self.setStyleSheet(self.color_theme.style_sheet)
 
         self.settings = QSettings("EmergencyCode", "Transport_Manager")
 
         self.ProgramConfiguration = ProgramConfiguration(self)
+        self.color_theme = self.ProgramConfiguration.ColorPalette
+        
+
         self.statusBarUpdated.connect(self.onStatusBarMessageReceived)
         self._relation_presets = {}
 
@@ -127,6 +129,7 @@ class Transport_Manager(QMainWindow):
         action_managePresets.triggered.connect(self.manageRelationPresets)
         action_ExportPresetData.triggered.connect(self.exportRelationPresets)
         action_ImportPresetData.triggered.connect(self.importRelationPresets)
+        self.styleSheetChanged.connect(self.onStyleSheetChange)
 
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.deleteKeyPressEvent)
@@ -180,7 +183,7 @@ class Transport_Manager(QMainWindow):
 
     def onDatabaseConnection(self):
         self.db.load_session_data()
-        self.XMLTemplateEditor.refresh_ui()
+        self.XMLTemplateEditor.reloadView()
 
     def manageRelationPresets(self):
         # print("manage relation presets")
@@ -267,9 +270,15 @@ class Transport_Manager(QMainWindow):
         state = self.XMLTemplateEditor.DatabaseRelations.AutoListObjectsFromDatabaseCheckBox.isChecked()
         return state
 
+    def onStyleSheetChange(self):
+        self.setStyleSheet(self.ProgramConfiguration.styleSheet())
+        self.XMLTemplateEditor.refresh_ui()
+        self.PackageManager.refresh_ui()
+        self.SettingsWidget.refresh_ui()
+
     def refresh_ui(self):
         """ UI style scheme """
-        self.setStyleSheet(self.color_theme.style_sheet)
+        self.ProgramConfiguration.reloadStyleSheet()
 
         """ Restore window settings """
         if self.settings.value("MainWindowGeometry") is not None:
@@ -279,9 +288,11 @@ class Transport_Manager(QMainWindow):
         
         """ Reload Working Directory """
         self.ProgramConfiguration.reloadUserConfiguration()
-        # self.ui.XMLEditorWidget.reconfigure_editor()
+
         self.XMLTemplateEditor.refresh_ui()
         self.PackageManager.refresh_ui()
+
+        self.PackageManager.loadWorkingDirectory()
         self.SettingsWidget.configurationReloaded.emit()
     
     def getObjectData(self, object_class, dialog_name="Object Data", source_index=None, editor_configuration=None):

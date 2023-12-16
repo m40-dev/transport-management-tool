@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout, QGraphicsOpacityEffect, QSizePolicy
-from PyQt6.QtCore import Qt, QRectF, pyqtSignal, QPropertyAnimation, QEasingCurve, QAbstractAnimation
-from PyQt6.QtGui import QPalette, QPen, QPainterPath
+from PyQt6.QtWidgets import (QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout, 
+QGraphicsOpacityEffect, QSizePolicy, QTreeWidgetItem, QWidget, QRubberBand)
+from PyQt6.QtCore import Qt, QSize, QRectF, pyqtSignal, QPropertyAnimation, QEasingCurve, QAbstractAnimation, QRect, QPoint
+from PyQt6.QtGui import QPalette, QPen, QPainterPath, QPainter
 from lib.ui.WidgetFactory import MsgBox
 
 class PackageViewDelegate(QStyledItemDelegate):
@@ -64,26 +65,29 @@ class PackageViewDelegate(QStyledItemDelegate):
                 widget.setGeometry(option.rect)
             else:
                 widget.setGeometry(option.rect)
-            # widget.show()
+            
             # Check if the item is selected
+            if option.state & QStyle.StateFlag.State_Selected:  
+                widget.isSelected = True
 
-            if option.state & QStyle.StateFlag.State_Selected:
-                selection_color = self.application_palette.color(QPalette.ColorRole.Highlight)
-                if selection_color:
-                    selection_color.setAlphaF(0.2)
-                # Set the pen color to the selection color
+                target_x = option.rect.x() + ((widget.rect().width() - widget.frame.rect().width()) / 2)
+
+                # divide by 2 to get just widget size (difference includes both margins)
+                target_y = option.rect.y() + ((widget.rect().height() - widget.frame.rect().height()) / 2)
+                # print(target_x, target_y)
+                # target_rect = QRect(QPoint(target_x, target_y), widget.frame.size())
+                target_rect = QRect(QPoint(target_x, target_y), widget.frame.size())
+
+                selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")
+                # selection_color.setAlphaF(0.4)
+                # # # Set the pen color to the selection color
                 pen = QPen(selection_color)
-                pen.setWidth(3)
+                pen.setWidth(2)
                 painter.setPen(pen)
                 painter.setBrush(selection_color)
-
-                # Set the border color of the item
-                painter.drawRoundedRect(option.rect, 4.0, 4.0, Qt.SizeMode.AbsoluteSize)
-                # Fill the rounded rectangle with the brush
-                painter_path = QPainterPath()
-                rectf = QRectF(option.rect)
-                painter_path.addRoundedRect(rectf, 4.0, 4.0)
-                painter.fillPath(painter_path, painter.brush())
+                painter.drawRect(target_rect)
+            else:
+                widget.isSelected = False
         else:
             super().paint(painter, option, index)
 
@@ -99,14 +103,27 @@ class PackageManagerItemWidget(QFrame):
         self.parent = parent
         self.object_configuration = self.application.getConfigurationParameters(data_item.task_class)
 
-        self.layout = QGridLayout(self)
+        # self.layout = QGridLayout(self)
+        self.main_layout = QGridLayout(self)
+        self.main_layout.setContentsMargins(1,1,1,1)
+        self.main_layout.setSpacing(1)
+        self.isSelected = False
+        self.frame = QFrame()
+        self.setProperty("PackageManager", "PackageManagerWidget")
+
+        self.main_layout.addWidget(self.frame, 0, 0)
+
+        self.layout = QGridLayout(self.frame)
+
+        # self.layout = QGridLayout(self)
+
         self.layout.setContentsMargins(2, 2, 2, 2)
 
         self.element_label = QLabel(self)
-        self.element_label.setProperty("ExecutionPlannerWidget", "ItemLabel")
+        self.element_label.setProperty("CustomWidget", "ItemLabel")
                 
         self.element_description = QLabel(self)
-        self.element_description.setProperty("ExecutionPlannerWidget", "ItemDescription")
+        self.element_description.setProperty("CustomWidget", "ItemDescription")
         self.element_description.setWordWrap(True)
 
         description_config = self.object_configuration.get("Description", None)
@@ -165,10 +182,6 @@ class PackageManagerItemWidget(QFrame):
         self.treeview.expanded.connect(self.expand_children)
         self.treeview.collapsed.connect(self.collapse_children)
         self.animate()
-    
-    # def sizeHint(self):
-    #     # print("getting size hint for widget", self.layout.sizeHint())
-    #     return self.layout.sizeHint()
 
     def animate(self, reverse=False):
         # animate startup
@@ -234,13 +247,29 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
         self.edit_feature_button.setText("Properties")
         self.edit_feature_button.clicked.connect(self.edit_feature)
 
+        edit_properties_icon = self.application.ProgramConfiguration.getIcon("ObjectProperties")
+        if edit_properties_icon:
+            self.edit_feature_button.setText("")
+            self.edit_feature_button.setToolTip("<i>Edit Object Properties..</i>")
+            self.edit_feature_button.setIcon(edit_properties_icon)
+            self.edit_feature_button.setProperty("PackageManager", "PackageManagerIcon")
+            self.edit_feature_button.setIconSize(QSize(20,20))
+
         self.save_feature_button = QToolButton()
         self.save_feature_button.setText("Save")
+
+        save_icon = self.application.ProgramConfiguration.getIcon("SaveObject")
+        if save_icon:
+            self.save_feature_button.setText("")
+            self.save_feature_button.setToolTip("<i>Save Package Definition..</i>")
+            self.save_feature_button.setIcon(save_icon)
+            self.save_feature_button.setProperty("PackageManager", "PackageManagerIcon")
+            self.save_feature_button.setIconSize(QSize(20,20))
 
         self.layout.addWidget(self.edit_feature_button, 0, 4, 1, 1, Qt.AlignmentFlag.AlignRight)
         self.layout.addWidget(self.save_feature_button, 0, 5, 1, 1, Qt.AlignmentFlag.AlignRight)
 
-        self.setProperty("ExecutionPlannerWidget", "GroupItem")
+        self.frame.setProperty("PackageManagerWidget", "PackageItem")
 
         self.save_feature_button.clicked.connect(self.save_feature)
 
@@ -266,12 +295,32 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         self.edit_xml_definition_button = QToolButton()
         self.edit_task_definition_button = QToolButton()
 
+        self.edit_xml_definition_button.setText("Edit XML")
+        self.edit_task_definition_button.setText("Properties")
+
+        edit_properties_icon = self.application.ProgramConfiguration.getIcon("ObjectProperties")
+        
+        if edit_properties_icon:
+            self.edit_task_definition_button.setText("")
+            self.edit_task_definition_button.setToolTip("<i>Edit Object Properties..</i>")
+            self.edit_task_definition_button.setIcon(edit_properties_icon)
+            self.edit_task_definition_button.setProperty("PackageManager", "PackageManagerIcon")
+            self.edit_task_definition_button.setIconSize(QSize(20,20))
+
+        edit_xml_icon = self.application.ProgramConfiguration.getIcon("EditXMLDefinition")
+        if edit_xml_icon:
+            self.edit_xml_definition_button.setText("")
+            self.edit_xml_definition_button.setToolTip("<i>Edit XML Template..</i>")
+            self.edit_xml_definition_button.setIcon(edit_xml_icon)
+            self.edit_xml_definition_button.setProperty("PackageManager", "PackageManagerIcon")
+            self.edit_xml_definition_button.setIconSize(QSize(20,20))
+
         task_buttons_layout = QHBoxLayout()
         task_buttons_layout.addStretch(2)
         task_buttons_layout.addWidget(self.edit_xml_definition_button)
         task_buttons_layout.addWidget(self.edit_task_definition_button)
         
-        self.setProperty("ExecutionPlannerWidget", "TaskItem")
+        self.frame.setProperty("PackageManagerWidget", "TaskItem")
 
         """ Connect Signals """
         self.edit_xml_definition_button.clicked.connect(self.edit_task_xml_definition)
@@ -292,9 +341,6 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         self.package_manager.editXMLTemplate(index)
 
     def refresh_item_data(self):
-        self.edit_xml_definition_button.setText("Edit XML")
-        self.edit_task_definition_button.setText("Properties")
-        
         """ hide the edit button for non-transport tasks """               
         self.edit_xml_definition_button.setVisible(self.data_item.is_transport)
 

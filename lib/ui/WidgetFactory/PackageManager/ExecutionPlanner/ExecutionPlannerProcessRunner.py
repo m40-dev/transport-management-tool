@@ -211,7 +211,7 @@ class ProcessRunner(QProcess):
         always_run_post_script = self.application.getConfigurationValue("ExecutionPlannerSettings", "AlwaysRunPostScript")
         
         if always_run_post_script or len(self.task_queue) == 0:
-            print("add post script", len(self.task_queue))
+            # print("add post script", len(self.task_queue))
             post_script = self.application.getConfigurationValue("ExecutionPlannerSettings", "ExecutionPostScript") + "\r\n"
 
         self.start("powershell", 

@@ -15,7 +15,10 @@ class RelationContextMenu(QMenu):
             if source_item.follow_table:
                 menuActionFollowRelation = self.addAction(f"Add Table Relations: {source_item.follow_table}")
                 menuActionFollowRelation.triggered.connect(lambda: self.onFollowTableRelation.emit(source_index))
+        
+        self.setStyleSheet(self.parent.styleSheet())
 
+# Configure table names where the additional object listing option will be available
 OBJECT_LISTING_TABLES = ["DialogTag"]
 
 class XMLObjectContextMenu(QMenu):
@@ -35,7 +38,7 @@ class XMLObjectContextMenu(QMenu):
         super(XMLObjectContextMenu, self).__init__()
         self.parent = parent
         self.menu_items = []
-
+        self.setStyleSheet(self.parent.styleSheet())
         #clicked on a specific object
         if source_index and source_index.isValid():
             source_item = source_index.internalPointer()
@@ -75,7 +78,6 @@ class XMLObjectContextMenu(QMenu):
                 menuQueryDatabaseObject = self.addAction("Find Task objects")
                 menuQueryDatabaseObject.triggered.connect(lambda: self.onQueryTableData.emit(source_index))
                 self.menu_items.append(menuQueryDatabaseObject)
-
 
             self.addSeparator()
 
@@ -148,7 +150,7 @@ class XMLObjectContextMenu(QMenu):
             self.menu_items.append(menuActionShellTransportTask)
             self.menu_items.append(menuActionSchemaTransportTask)
             self.menu_items.append(menuActionBufferTransportTask)
-
+        
 
 
         

@@ -1,4 +1,4 @@
-from PyQt6 import QtCore, QtWidgets
+from PyQt6 import QtCore, QtWidgets, QtGui
 from .ExecutionPlanner import ExecutionPlannerWidget
 from ...WidgetFactory import MsgBox
 from pathlib import Path
@@ -24,6 +24,7 @@ class PackageManager(QtWidgets.QWidget):
         self.WorkdirLoader = None
         self.setupUi()
         self.setupViewDelegate()
+        self.rubberBand = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Shape.Rectangle, self.PackageViewTreeView) 
 
         # Package Tree View and Navigation
         self.PackageViewTreeView.dragMoveEvent = self.PackageViewDragMoveEvent
@@ -60,7 +61,7 @@ class PackageManager(QtWidgets.QWidget):
         self.queryPackagesTimer.timeout.connect(self.queryPackages)
 
     def refresh_ui(self):
-        self.loadWorkingDirectory()
+        self.setStyleSheet(self.ProgramConfiguration.styleSheet())
         self.uiRefreshRequested.emit()
 
     """ Workdir and File Operations """
@@ -82,7 +83,7 @@ class PackageManager(QtWidgets.QWidget):
             return False
         
         self.setupWorkingDirectory(workdir)
-        self.application.ui.MainTabWidget.setCurrentWidget(self)
+        # self.application.ui.MainTabWidget.setCurrentWidget(self)
 
     def setupWorkingDirectory(self, workdir):
         self.current_workdir = workdir
@@ -424,6 +425,12 @@ class PackageManager(QtWidgets.QWidget):
         move_accept = False
         source_index = event.source().currentIndex()
         source_item = source_index.internalPointer()
+        source_widget = self.PackageViewTreeView.indexWidget(source_index)
+        
+        # if source_widget:
+        #     print("Drag source widget!")
+        #     self.rubberBand.setGeometry(QtCore.QRect(event.position().toPoint(), source_widget.size()).normalized())
+        #     self.rubberBand.show()
 
         QtWidgets.QTreeView.dragMoveEvent(self.PackageViewTreeView, event)
         

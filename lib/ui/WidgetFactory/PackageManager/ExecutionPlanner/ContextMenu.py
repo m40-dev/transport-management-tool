@@ -29,6 +29,8 @@ class ExecutionPlannerContextMenu(QMenu):
                 self.menu_items.append(action_edit_execution_group)
         else:
             self.menu_items.append(action_add_execution_group)
+            
+        self.setStyleSheet(self.parent.styleSheet())
 
         
 

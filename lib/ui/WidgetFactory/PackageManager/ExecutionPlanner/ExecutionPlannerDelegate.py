@@ -1,7 +1,10 @@
 from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QRadioButton, QComboBox, QHBoxLayout, QVBoxLayout, QSpacerItem
+from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout, QGraphicsOpacityEffect, QSizePolicy, QTreeWidgetItem, QWidget
+from PyQt6.QtCore import Qt, QRectF, QRect, pyqtSignal, QPropertyAnimation, QEasingCurve, QAbstractAnimation, QPoint, QSize
+from PyQt6.QtGui import QPalette, QPen, QPainterPath, QPainter
 from PyQt6.QtCore import Qt, QRectF, pyqtSignal
 from PyQt6.QtGui import QPalette, QPen, QPainterPath 
-from lib.ui.Theme import Application_Theme
+# from lib.ui.Theme import Application_Theme
 from lib.ui.WidgetFactory.PackageManager.PackageViewDelegate import PackageDefinitionWidget
 
 class ExecutionPlannerDelegate(QStyledItemDelegate):
@@ -78,31 +81,41 @@ class ExecutionPlannerDelegate(QStyledItemDelegate):
                 self.setEditorData(widget, index)
                 self.parent().setIndexWidget(index, widget)
                 widget.setGeometry(option.rect)
-                widget.show()
             else:
                 widget.setGeometry(option.rect)
+
             # Check if the item is selected
-            
-            if option.state & QStyle.StateFlag.State_Selected:
-                palette = Application_Theme()
-                selection_color = palette.color(QPalette.ColorRole.Highlight)
-                if selection_color:
-                    selection_color.setAlphaF(0.2)
-                # Set the pen color to the selection color
+            if option.state & QStyle.StateFlag.State_Selected:  
+                widget.isSelected = True
+
+                target_x = option.rect.x() + ((widget.rect().width() - widget.frame.rect().width()) / 2)
+
+                # divide by 2 to get just widget size (difference includes both margins)
+                target_y = option.rect.y() + ((widget.rect().height() - widget.frame.rect().height()) / 2)
+                # print(target_x, target_y)
+                # target_rect = QRect(QPoint(target_x, target_y), widget.frame.size())
+                target_rect = QRect(QPoint(target_x, target_y), widget.frame.size())
+
+                selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")
+                # selection_color.setAlphaF(0.4)
+                # # # Set the pen color to the selection color
                 pen = QPen(selection_color)
-                pen.setWidth(3)
+                pen.setWidth(2)
                 painter.setPen(pen)
                 painter.setBrush(selection_color)
+                painter.drawRect(target_rect)
+            else:
+                widget.isSelected = False
 
-                # Set the border color of the item
-                painter.drawRoundedRect(option.rect, 3.0, 3.0, Qt.SizeMode.AbsoluteSize)
-                # Fill the rounded rectangle with the brush
-                painter_path = QPainterPath()
-                rectf = QRectF(option.rect)
-                painter_path.addRoundedRect(rectf, 3.0, 3.0)
-                painter.fillPath(painter_path, painter.brush())
         else:
             super().paint(painter, option, index)
+
+    def sizeHint(self, option, index):
+        if index.isValid():
+            widget = self.parent().indexWidget(index)
+            if widget and isinstance(widget, QWidget):
+                return widget.sizeHint()
+        return QSize(30, 30)
 
 class ExecutionPlannerItem(QFrame):
     taskExecutionRequested = pyqtSignal(object)
@@ -116,20 +129,34 @@ class ExecutionPlannerItem(QFrame):
         self.data_item = data_item
         self.button1 = QToolButton(self)
         self.is_refresh = False
+        self.isSelected = False
 
         self.button1.setText("Start")
-        self.button1.setProperty("ExecutionPlannerWidget", "ActionItem")
+        self.button1.setIconSize(QSize(20,20))
 
-        self.layout = QGridLayout(self)
+        # self.layout = QGridLayout(self)
+        self.main_layout = QGridLayout(self)
+        self.main_layout.setContentsMargins(1,1,1,1)
+        self.main_layout.setSpacing(1)
+        self.isSelected = False
+
+        self.frame = QFrame()
+        self.setProperty("ExecutionPlanner", "ExecutionPlannerWidget")
+        self.frame.setProperty("ExecutionPlannerWidget", "ExecutionPlannerFrame")
+
+        self.main_layout.addWidget(self.frame, 0, 0)
+
+        self.layout = QGridLayout(self.frame)
+
         self.layout.setContentsMargins(2, 2, 2, 2)
         self.layout.setSpacing(1)
 
         self.element_label = QLabel(self)
-        self.element_label.setProperty("ExecutionPlannerWidget", "ItemLabel")
+        self.element_label.setProperty("CustomWidget", "ItemLabel")
         self.element_label.setWordWrap(True)
 
         self.element_description = QLabel(self)
-        self.element_description.setProperty("ExecutionPlannerWidget", "ItemDescription")
+        self.element_description.setProperty("CustomWidget", "ItemDescription")
         self.element_description.setWordWrap(True)
 
         object_configuration = self.application.getConfigurationParameters(self.data_item.task_class)
@@ -142,10 +169,10 @@ class ExecutionPlannerItem(QFrame):
 
         self.layout.addWidget(self.element_label, 0, 0, 1, 2)
         self.layout.addWidget(self.element_description, 1, 0, 1, 4)
-        self.layout.addWidget(self.button1, 0, 4)
+        self.layout.addWidget(self.button1, 0, 4, 1, 1)
         self.data_item.data_changed.connect(self.refreshUI)
         self.refreshUI()
-
+        self.animate()
         self.button1.clicked.connect(self.startTaskExecution)
     
     def startTaskExecution(self):
@@ -157,24 +184,56 @@ class ExecutionPlannerItem(QFrame):
         if self.tree_view.model():
             self.tree_view.model().layoutChanged.emit()
 
+    def animate(self, reverse=False):
+        # animate startup
+        effect = QGraphicsOpacityEffect(self)
+        self.setGraphicsEffect(effect)
+        animation = QPropertyAnimation(self)
+        animation.setPropertyName(bytes("opacity", "utf-8"))
+        animation.setTargetObject(effect)
+        animation.setDuration(200)
+        animation.setStartValue(0)
+        animation.setEndValue(1)
+        if reverse:
+            animation.setStartValue(1)
+            animation.setEndValue(0)
+            animation.setDuration(200)
+        
+        animation.setEasingCurve(QEasingCurve.Type.OutInCubic)
+        animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
+
 class GroupActionWidget(ExecutionPlannerItem):
     
     def __init__(self, data_item, tree_view, application, planner_widget, parent=None):
         super().__init__(data_item=data_item, tree_view=tree_view, application=application, planner_widget=planner_widget, parent=parent)
-        self.setProperty("ExecutionPlannerWidget", "GroupItem")
+        self.frame.setProperty("ExecutionPlannerWidget", "ExecutionGroup")
+
         self.button1.setText("Start Group")
+        start_icon = self.application.ProgramConfiguration.getIcon("ExecutionGroupAction")
+        if start_icon:
+            self.button1.setText("")
+            self.button1.setToolTip("<i>Start Execution Group</i>")
+            self.button1.setIcon(start_icon)
+
+        self.button1.setProperty("ExecutionPlannerWidget", "ExecutionGroupAction")
+
         self.data_item.executionStateChanged.connect(self.handleExecutionStateChange)
 
     def handleExecutionStateChange(self, state):
+        
         if state in ["Finished with Errors", "Terminated"]:
             state = "HasErrors"
 
         if state in ["Running", "Queued"]:
             state = "Running"
 
-        self.setProperty("GroupExecutionState", state)
+        self.frame.setProperty("GroupExecutionState", state)
         self.setStyleSheet(self.styleSheet())
     
+    def sizeHint(self):
+        minimum_size = super().minimumSizeHint()
+        minimum_size.setHeight(minimum_size.height()*1.5)
+        return minimum_size
 
 class ItemActionWidget(ExecutionPlannerItem):
     
@@ -182,21 +241,36 @@ class ItemActionWidget(ExecutionPlannerItem):
         super().__init__(data_item=data_item, tree_view=tree_view, application=application, planner_widget=planner_widget, parent=parent)
 
         self.treeview = self.parent()
-        self.setProperty("ExecutionPlannerWidget", "TaskItem")
-        self.button1.setText("Start Task")
-        
+        self.frame.setProperty("ExecutionPlannerWidget", "ExecutionTask")
 
+        self.button1.setText("Start Task")
+        self.button1.setProperty("ExecutionPlannerWidget", "ExecutionTaskAction")
+        start_icon = self.application.ProgramConfiguration.getIcon("ExecutionTaskAction")
+        if start_icon:
+            self.button1.setText("")
+            self.button1.setToolTip("<i>Start Execution Task</i>")
+            self.button1.setIcon(start_icon)
+        
         """ Add Custom Widgets """
         self.connection_box_label = QLabel("Use Connection:")
+        self.connection_box_label.setProperty("Label", "PropertyName")
+
         self.task_execution_import = QRadioButton("Run Import Task")
+        self.task_execution_import.setProperty("Label", "PropertyValue")
+
         self.task_execution_export = QRadioButton("Run Export Task")
         self.task_execution_export.setChecked(True)
+        
+        self.task_execution_export.setProperty("Label", "PropertyValue")
 
         self.connection_box = QComboBox(self)
+        self.connection_box.setProperty("Label", "PropertyValue")
         self.refreshConnections()
         self.application.connectionDataChanged.connect(self.refreshConnections)
 
         self.run_status = QLabel(self)
+        self.run_status.setFixedWidth(100)
+        self.run_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.run_status.setWordWrap(True)
         
         self.dynamic_property_labels = {}
@@ -248,15 +322,14 @@ class ItemActionWidget(ExecutionPlannerItem):
         if task_details_layout:
             self.layout.addLayout(task_details_layout, 2, 0, 1, 3)
         # self.layout.addWidget(self.run_status, 1, 3, 1, 2)
-        self.run_status.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.run_status.setFixedWidth(75)
-        # self.layout.setColumnStretch(3, 1)
 
-        """ Refresh state based on the model data """
-        self.refreshTaskUI()
+        # self.layout.setColumnStretch(3, 1)
 
         """ Set initial values """
         self.configureTask()
+
+        """ Refresh state based on the model data """
+        self.refreshTaskUI()
 
         """ Connect Signals """
         self.task_execution_import.toggled.connect(self.setExecutionType)
@@ -284,7 +357,7 @@ class ItemActionWidget(ExecutionPlannerItem):
         self.connection_box.setCurrentText(self.data_item.Connection)
         self.run_status.setText(self.data_item.ExecutionState)
         
-        self.setProperty("ExecutionState", str(self.data_item.ExecutionState))
+        self.frame.setProperty("ExecutionState", str(self.data_item.ExecutionState))
         self.run_status.setProperty("ExecutionState", str(self.data_item.ExecutionState))
         self.setStyleSheet(self.styleSheet())
 
@@ -311,5 +384,6 @@ class ItemActionWidget(ExecutionPlannerItem):
             selected_item.setData("Connection", connection)
 
     def configureTask(self):
+        self.data_item.setData("ExecutionState", "Ready")
         self.setConnection()
         self.setExecutionType()

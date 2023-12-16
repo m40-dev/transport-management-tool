@@ -79,7 +79,7 @@ class PackageDefinitionMenu(QMenu):
                 action_reapplyTemplates = self.addAction("Reapply Attribute Templates")
                 action_reapplyTemplates.triggered.connect(lambda: self.reapplyTemplates.emit(source_index))
                 self.menu_items.append(action_reapplyTemplates)
-
+        self.setStyleSheet(self.parent.styleSheet())
         
 
             

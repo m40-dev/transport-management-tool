@@ -1,76 +1,89 @@
-QMainWindow, QDialog, QTreeWidget, QTreeView, QSplitter{
-	background: palette(Base);
-	border: 0px;
+/* Application Defined Color Variables: 
+
+
+*/
+
+/* Global Widget Configurations */
+QMainWindow, QDialog, QWidget{
+	background-color: @BaseColor;
 }
 
-QLabel{
+QLabel, QCheckBox, QRadioButton{
 	background: transparent;
 }
 
-QTreeWidget, QTreeView, QListView{
-	border: 0px;
-	font-size: 12px;
-	font-family: "Consolas";
-}
-
-QPlainTextEdit, QTextEdit, QComboBox{
-	border: 1px solid palette(Dark);
+QPlainTextEdit, QTextEdit, QLineEdit, QComboBox{
+	background-color: @AlternativeBaseColor;
+	border: 1px solid @BorderColor;
 	border-radius: 2px;
 	min-height: 1.7em;
-	margin: 2px;
+	margin: 1px;
 	min-width: 10em;
 	font-size: 12px;
-	font-family: "Consolas";
 }
 
-QLineEdit, QComboBox{
-	border: 1px solid palette(Dark);
-    margin: 0px;
-    padding: 2px;
-	font-family: "Consolas";
-}
-
-QLineEdit::selection{
-	background-color: palette(Highlight)
+QLineEdit::selection, QTextEdit::selection, QPlainTextEdit::selection{
+	background-color: @HighlightColor
 }
 
 QStatusBar, QSizeGrip{
-	color: palette(Light);
+	color: @HighlightedText;
 	font: bold;
-	background-color: #9e2015;
+	/* background-color: @SelectedObjectColor; */
+	background: transparent;
 }
 
-QMenu{
-	background-color: rgb(250, 250, 250);
-	min-width: 15em;
+QCheckBox::indicator{
+	width: 25px;
+	height: 25px;
 }
 
-QMenu::item{
-	padding: 5px;
-	min-height: 1.1em;
-	min-width: 15em;
+
+QComboBox:!enabled,
+QPushButton:!enabled,
+QToolButton:!enabled,
+QTextEdit:!enabled,
+QPlainTextEdit:!enabled
+{
+	background-color: @InactiveObjectColor;
 }
 
-QMenu::item:selected{
-	background-color: palette(Highlight)
+/* Global Group boxes configurations (In XML Template Editor view mostly) */
+QGroupBox{
+	font: bold 14px;
+	color: @TextColor;
 }
 
+QGroupBox::title{
+	margin-top:2px;
+	margin-bottom:2px;
+	padding: 0px;
+}
+
+/* Message Box extended log message styling */
+.MessageBox-DetailedMessage{
+	font-size: 14px;
+	font-family: "Courier New";
+	color:#252529;
+}
+
+/* Global ScrollBar Configurations */
 QScrollBar::vertical,QScrollBar::horizontal{
 	width:12px;
 	height:12px;
 	border-radius:2px;
-	border: 1px solid palette(Dark);
+	border: 1px solid @DarkerBaseColor;
 }
 
 QScrollBar::handle:vertical{
-	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Midlight));
-	border:1px solid palette(Dark);
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @AlternativeBaseColor, stop: 1 @DarkerBaseColor);
+	border:1px solid @DarkerBaseColor;
 	border-radius:2px;
 }
 
 QScrollBar::handle:horizontal{
-	background-color: qlineargradient(x1: 1, x2: 1, y1: 0, y2:1, stop: 0 palette(Light), stop: 1 palette(Midlight));
-	border:1px solid palette(Dark);
+	background-color: qlineargradient(x1: 1, x2: 1, y1: 0, y2:1, stop: 0 @AlternativeBaseColor, stop: 1 @DarkerBaseColor);
+	border:1px solid @DarkerBaseColor;
 	border-radius:2px;
 }
 
@@ -84,34 +97,53 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal,QScrollBar::sub
 	width:0px;height:1px;
 }
 
-QPushButton{
-    background-color: palette(Button.Active);
-	min-height: 2em;
-	min-width: 6em;
-	border: 1px solid palette(Dark);
-	border-radius: 2px;
-	border-style: outset;
-	text-align: center;
-    margin: 0px;
-    padding: 0px;
+/* Application and context menu configurations */
+QMenuBar{
+	font-size: 13px;
 }
+
+QMenuBar::item:selected{
+	background-color: @SelectedObjectColor;
+	color: @HighlightedText;
+	font: bold;
+}
+
+QMenu{
+	min-width: 15em;
+	font-size: 12px;
+}
+
+QMenu::item{
+	padding: 5px;
+	min-height: 1.1em;
+	min-width: 15em;
+}
+
+QMenu::item:selected{
+	background-color: @SelectedObjectColor;
+	font: bold;
+	color: @HighlightedText;
+}
+
+/* Tab Widgets Configuration */
+
 QTabBar{
 	border: 0px;
 }
 QTabBar::tab{
-	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Light));
-	border: 1px solid palette(Dark);
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @BaseColor, stop: 1 @BaseColor);
+	border: 1px solid @BorderColor;
 	border-style: outset;
 	border-radius: 2px;
-	color: palette(Text);
+	color: @TextColor;
 	padding: 0.6em;
 }
 
 QTabBar::tab:selected{
-	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Midlight));
-	border: 1px solid palette(Highlight);
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @BaseColor, stop: 1 @AlternativeBaseColor);
+	border: 1px solid @BorderColor;
 	font: bold;
-	color: palette(Text);
+	color: @TextColor;
 }
 
 QTabBar::tab:top{
@@ -122,6 +154,35 @@ QTabBar::tab:left{
 	min-width: 2em;
 }
 
+/* Tree and List Views styling */
+
+QHeaderView:section:horizontal{
+	margin-left: 3px;
+	padding-left: 8px;
+	padding-right: 8px;
+	font: 14px;
+	text-align: center;
+	border-bottom: 2px solid @BorderColor;
+	background-color: @BaseColor;
+	border-style: solid;
+	border-left-width: 1px;
+	border-left-color: @BorderColor;
+	border-right-color: @BorderColor;
+    border-right-width: 1px;
+}
+
+QHeaderView:section:first{
+	background-color: @BaseColor;
+	border-style: solid;
+	border-left-width: 0px;
+}
+
+
+QTreeWidget, QTreeView, QListView{
+	font-size: 13px;
+	border: 0px;
+}
+
 QTreeWidget::indicator, QTreeView::indicator { 
 	width: 30px; 
 	height: 30px; }
@@ -129,215 +190,74 @@ QTreeWidget::indicator, QTreeView::indicator {
 
 QTreeWidget::item, QListWidget::item, QListView::item, QTreeView::item{
 	min-height: 2em;
-    color: palette(Text);
-	background-color: palette(Base);
+    color: @TextColor;
+	background-color: @BaseColor;
 	margin-top: 2px;
 }
 
 QTreeWidget::item:alternate, QListWidget::item:alternate, QListView::item:alternate, QTreeView::item:alternate{
-	background-color: #f1f1f1;
+	background-color: @AlternativeBaseColor;
 }
 
-QListView::item::hover, QTreeView::item:hover{
+QListView::item:hover, QTreeView::item:hover{
 	height: 2em;
-	font: bold;
-	background-color: #d9e7e9;
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @SelectedObjectColor, stop: 1 transparent);
+	font-weight: bolder;
+	color: @HighlightedText;
 }
 
 QListView::item:selected, QTreeView::item:selected{
-	background-color: rgb(217, 231, 233);
+	background-color: @SelectedObjectColor;
+	color: @HighlightedText;
+	margin-left: 5px;
 }
 
-QLabel{
+/* Global Buttons configuration */
+QPushButton{
+    background-color: @ButtonColor;
+	min-height: 2em;
+	min-width: 6em;
+	border: 1px solid @BorderColor;
 	border-radius: 2px;
-	padding-left: 2px;
-}
-
-QLabel[Widget=FilePathLabel]{
-	font-size: 15px;
-	font: bold;
-	margin-left: 2px;
-	color: palette(Text);
-	min-height: 25px;
-}
-
-QLabel[Widget=Header1]{
-	font-size: 18px;
-	background-color: #d5f2e5;
-	min-height: 40px;
-	color: palette(Text);
-	font: bold;
-}
-
-QLabel[Widget=Header2]{
-	font-size: 15px;
-	font: bold;
-	margin-left: 2px;
-	background-color: #d5edf2;
-	color: palette(Text);
-	min-height: 25px;
-}
-
-QLabel[Widget=Header3]{
-	font-size: 14px;
-	font: bold;
-	background-color: #d64b79;
-	min-height: 25px;
-	color: palette(Text);
+	border-style: outset;
+	text-align: center;
+    margin: 0px;
+    padding: 0px;
 }
 
 QToolButton{
-    background-color:palette(Button.Active);
-	color:#626363;
+    background-color:@ButtonColor;
+	color:	@TextColor;
 	margin: 1px;
 	border: 1px solid #dfd9d9;
 	border-radius: 2px;
 	padding: 3px;
-	min-height: 1.5em;
+	min-height: 1.7em;
+	font-size: 12px;
 }
 
 QPushButton:hover, QToolButton:hover{
-	background-color: rgba(216, 216, 216, 0.486);
-	border: 1px solid rgba(114, 114, 116, 0.726);;
-}
-
-QToolButton[Widget=AddButton]{
-	background-image: url("./lib/ui/img/add_btn.png");
-	border-radius: 16px;
-	border: none;
-}
-
-
-QToolButton[Widget=DeleteButton]{
-	background-image: url("./lib/ui/img/delete_btn.png");
-	border-radius: 16px;
-	border: none;
-}
-
-QToolButton[Widget=UpArrow]{
-	background-image: url("./lib/ui/img/up_arrow.png");
-	border: none;
-}
-
-QToolButton[Widget=DownArrow]{
-	background-image: url("./lib/ui/img/down_arrow.png");
-	border: none;
-}
-
-QToolButton[Widget=DeleteButton]::hover{
-	background-color: #f7b3a3;
-}
-
-QCheckBox[Widget=CheckBoxHeader]{
-	font-size: 15px;
-	color: palette(Text);
-}
-
-QCheckBox::indicator{
-	width: 25px;
-	height: 25px;
-}
-
-QToolButton[Widget=SelectFileButton]{
-	background-image: url("./lib/ui/img/search_btn.png");
-	border-radius: 16px;
-	border: none;
-}
-
-QFrame[ExecutionPlannerWidget="GroupItem"]{
-	background-color: rgba(239, 239, 245, 0.2);
-	border: 1px solid rgba(125, 138, 141, 0.4);
-	/* min-height: 3em; */
-	margin-top: 2px; 
-	margin-bottom: 2px;
-}
-
-QFrame[ExecutionPlannerWidget="TaskItem"]{
-	background-color: rgba(239, 239, 245, 0.4);
-	border: 1px solid rgba(125, 138, 141, 0.4);
-	border-left: 3px solid rgba(62, 66, 66, 0.575);
-	/* min-height: 2em; */
-	margin-top: 2px; 
-	margin-bottom: 2px;
-}
-
-QFrame[ExecutionPlannerWidget="GroupItem"]::hover, QFrame[ExecutionPlannerWidget="TaskItem"]::hover{
-	background-color: palette(Highlight);
-}
-
-QLabel[ExecutionPlannerWidget="ItemLabel"]{
-	font-size: 13px;
-	color: palette(Text);
+	background-color: @SelectedObjectColor;
+	border: 1px solid @BorderColor;
+	color: @HighlightedText;
 	font: bold;
-	margin-right: 2em;
 }
 
-QLabel[ExecutionPlannerWidget="ItemLabel"]{
-	font-size: 13px;
-	color: palette(Text);
-	font: bold;
-	margin-right: 2em;
-}
-
-QLabel[ExecutionPlannerWidget="ItemDescription"]{
-	font-size: 11px;
-	color: palette(Text);
-}
-
-QLabel[Label="PropertyName"]{
-	font: bold;
-	font-size: 11px;
-	color: palette(Text);
-	margin: 2px;
-}
-
-QLabel,QRadioButton[Label="PropertyValue"]{
-	color: palette(Text);
-	margin: 1px;
-}
-
-QWidget[Widget="EditorDialog"]{
-	margin: 0px;
-	margin-left: 0px;
-	min-height: 1.3em;
-	padding:2px;
-}
-
-QLabel[EditorDialog="PropertyHasValueTemplate"]{
-	border-left: 3px solid #5e9e14;
-	color:#5e9e14;
-}
-
-QCheckBox[EditorDialog="PropertyHasValueTemplate"]{
-	color:#5e9e14;
-	font:bold;
-	margin-top: 2ex;
-}
-
-QTextEdit[Widget="EditorDialog"]{
-	margin: 0px;
-}
-
-QWidget[ObjectSaved="False"]{
-	border-left: 3px solid rgba(233, 181, 12, 0.575);
-}
-
-QLabel[PropertyEditor="IsMandatory"]{
-	font: bold;
-	padding: 0px;
-	margin: 0px;
-	color: rgba(184, 30, 30, 0.856);
-	text-align: center;
-}
-
+/* Configuration of the custom sidebar buttons */
 QToolButton[ToolButton=SideBar]{
+	background: transparent;
 	border: none;
 	width: 30px;
 	height: 30px;
 }
 
+QToolButton[ToolButton=SideBar]:hover{
+	background: @SelectedObjectColor;
+}
+
 QToolButton[ToolButton=SideBar]:checked{
 	border-left: 3px solid #9da09f;
+	background: transparent;
 }
 
 QToolButton[ToolButton=DeleteItem]{
@@ -358,92 +278,325 @@ QToolButton#TemplateEditorButton{
 QToolButton#SettingsButton{
 }
 
-/* Message Box styling */
-.MessageBox-DetailedMessage{
-	font-size: 14px;
-	font-family: "Courier New";
-	color:#252529;
+/* Not in use yet */
+QToolButton[Widget=AddButton]{
+	background-image: url("./lib/ui/img/add_btn.png");
+	border-radius: 16px;
+	border: none;
 }
 
-/* Execution Planner configuration - Execution states handling for running task elements */
-QWidget[GroupExecutionState="Inactive"]{
-	border: 1px solid rgba(125, 138, 141, 0.4);
+QToolButton[Widget=DeleteButton]::hover{
+	background-color: #f7b3a3;
 }
+
+
+QToolButton[Widget=SelectFileButton]{
+	background-image: url("./lib/ui/img/search_btn.png");
+	border-radius: 16px;
+	border: none;
+}
+
+/* Package Manager Custom widgets configuration */
+
+/* Global setting for any object in the unsaved state */
+QWidget[ObjectSaved="False"]{
+	border-left: 3px solid rgba(233, 181, 12, 0.575);
+}
+
+/* Central widget for any item displayed in the package manager view */
+QWidget[PackageManager="PackageManagerWidget"]{
+	background: transparent;
+	margin-top: 2px; 
+	margin-bottom: 2px;
+}
+
+QWidget[PackageManager="PackageManagerIcon"]{
+	min-height: 20px;
+	min-width: 20px;
+	border: 0px;
+	background-color: transparent;
+}
+QWidget[PackageManager="PackageManagerIcon"]:hover{
+	border: 1px solid @BorderColor;
+	background-color: @SelectedObjectColor;
+}
+
+/* Inner widget Frame configuration for the Package Definition item objects */
+QFrame[PackageManagerWidget="PackageItem"]{
+	background-color: @GroupObjectColor;
+	/* background: transparent; */
+	border: 1px solid @BorderColor;
+	/* min-height: 3em; */
+}
+
+QFrame[PackageManagerWidget="TaskItem"]{
+	/* background: transparent; */
+	background-color: @TaskObjectColor;
+	border: 1px solid @BorderColor;
+	border-left: 3px solid @BorderColor;
+	/* min-height: 2em; */
+}
+
+QWidget[PackageManagerWidget="PackageItem"]::hover,
+QWidget[PackageManagerWidget="TaskItem"]::hover{
+	/* background-color: @SelectedObjectColor; */
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @SelectedObjectColor, stop: 1 transparent);
+}
+
+
+/* Execution Planner Custom widgets configuration */
+
+QWidget[ExecutionPlanner="ExecutionPlannerWidget"]{
+	background: transparent;
+	margin-top: 2px; 
+	margin-bottom: 2px;
+	min-height: 1em;
+}
+
+QFrame[ExecutionPlannerWidget="ExecutionGroup"]{
+	background-color: @GroupObjectColor;
+	border: 1px solid @BorderColor;
+	border-left: 3px solid @BorderColor;
+	
+}
+
+QFrame[ExecutionPlannerWidget="ExecutionTask"]{
+	/* background: transparent; */
+	background-color: @TaskObjectColor;
+	border: 1px solid @BorderColor;
+	border-left: 3px solid @BorderColor;
+}
+
+QFrame[ExecutionPlannerWidget="ExecutionGroup"]::hover,
+QFrame[ExecutionPlannerWidget="ExecutionTask"]::hover{
+	/* background-color: @SelectedObjectColor; */
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @SelectedObjectColor, stop: 1 transparent);
+}
+
+/* Start Group button */
+QToolButton[ExecutionPlannerWidget="ExecutionGroupAction"]{
+	min-height: 10px;
+	min-width: 10px;
+	border: 0px;
+	background-color: transparent;
+}
+
+QToolButton[ExecutionPlannerWidget="ExecutionGroupAction"]::hover{
+	min-height: 10px;
+	min-width: 10px;
+	border: 1px solid @BorderColor;
+	background-color: @SelectedObjectColor;
+}
+
+/* Start task button */
+QToolButton[ExecutionPlannerWidget="ExecutionTaskAction"]{
+	min-height: 10px;
+	min-width: 10px;
+	border: 0px;
+	background-color: transparent;
+}
+
+QToolButton[ExecutionPlannerWidget="ExecutionTaskAction"]::hover{
+	border: 1px solid @BorderColor;
+	background-color: @SelectedObjectColor;
+}
+
+QWidget[ExecutionPlannerWidget="StopExecutionQueue"]{
+	min-width: 25px;
+	min-height: 25px;
+	border: 0px;
+	background-color: transparent;
+}
+
+QWidget[ExecutionPlannerWidget="StopExecutionQueue"]:hover{
+	border: 1px solid #9e2015;
+}
+
+
+/* Execution Planner configuration - Execution states handling for Execution Group widgets (Frames) */
 
 QWidget[GroupExecutionState="Running"]{
 	border-left: 3px solid rgba(233, 181, 12, 0.575);
+	font: bold;
+	color: rgba(233, 181, 12, 0.575);
 }
 
 QWidget[GroupExecutionState="Finished"]{
 	border-left: 3px solid rgba(6, 117, 6, 0.795);
+	font: bold;
+	color: rgba(6, 117, 6, 0.795);
 }
 
 QWidget[GroupExecutionState="HasErrors"]{
-	border-left: 3px solid rgba(233, 45, 12, 0.699);
+	border-left: 3px solid rgba(165, 37, 15, 0.89);
+	font: bold;
+	color: rgba(165, 37, 15, 0.89);
 }
 
-/* Execution Planner configuration - Execution states handling for running task elements */
+/* Execution Planner configuration - Execution states handling for execution task wigdets (Frames) */
 
 QWidget[ExecutionState="Running"]{
 	border-left: 3px solid rgba(233, 181, 12, 0.575);
-}
-
-QWidget[ExecutionState="Queued"]{
-	border-left: 3px solid rgba(0, 202, 238, 0.918);
-}
-
-QWidget[ExecutionState="Finished"]{
-	border-left: 3px solid rgba(6, 117, 6, 0.795);
-}
-
-QWidget[ExecutionState="Finished with Errors"]{
-	border-left: 3px solid rgba(233, 45, 12, 0.699);
-}
-
-QWidget[ExecutionState="Terminated"]{
-	border-left: 3px solid rgba(233, 45, 12, 0.699);
-}
-
-QLabel[ExecutionState="Finished with Errors"]{
-	font: bold;
-	border-left: 0px;
-	color: rgba(233, 12, 12, 0.918);
-}
-
-QLabel[ExecutionState="Running"]{
-	border-left: 0px;
 	color:  rgba(233, 163, 12, 0.863);
 	font: bold;
 }
 
-QLabel[ExecutionState="Finished"]{
-	border-left: 0px;
-	color:  rgba(6, 117, 6, 0.795);
+QWidget[ExecutionState="Queued"]{
+	border-left: 3px solid rgba(0, 202, 238, 0.918);
+	color: rgba(0, 202, 238, 0.918);
 	font: bold;
 }
 
-QLabel[ExecutionState="Terminated"]{
+QWidget[ExecutionState="Finished"]{
+	border-left: 3px solid rgba(6, 117, 6, 0.795);
+	font: bold;
+	color: rgba(6, 117, 6, 0.795);
+}
+
+QWidget[ExecutionState="Finished with Errors"]{
+	border-left: 3px solid rgba(165, 37, 15, 0.89);
+	font: bold;
+	color: rgba(165, 37, 15, 0.89);
+}
+
+QWidget[ExecutionState="Terminated"]{
+	border-left: 3px solid rgba(165, 37, 15, 0.89);
+	font: bold;
+	color: rgba(196, 41, 14, 0.89);
+}
+
+/* Configure Execution status tracker labels formatting */
+QLabel[ExecutionState="Ready"]{
 	border-left: 0px;
-	color: rgba(233, 12, 12, 0.918);
 	font: bold;
 }
 
 QLabel[ExecutionState="Queued"]{
 	border-left: 0px;
-	color: rgba(0, 202, 238, 0.918);
-	font: bold;
 }
+
+QLabel[ExecutionState="Running"]{
+	border-left: 0px;
+}
+
+QLabel[ExecutionState="Finished"]{
+	border-left: 0px;
+}
+
+QLabel[ExecutionState="Finished with Errors"]{
+	border-left: 0px;
+}
+
+QLabel[ExecutionState="Terminated"]{
+	border-left: 0px;
+}
+
+/* Custom Labels Configurations */
+
+/* Generic label for dynamically added object display name and description in the package manager or execution planner treeview */
+QLabel[CustomWidget="ItemLabel"]{
+	font-size: 13px;
+	color: @TextColor;
+	font: bold;
+	margin-right: 2em;
+}
+
+QLabel[CustomWidget="ItemDescription"]{
+	font-size: 11px;
+	color: @DescriptionTextColor;
+	margin: 0px;
+}
+
+/* Generic Label used in the custom treeview items (package view, execution planner view) to set the style of dynamic property names  */
+QLabel[Label="PropertyName"]{
+	font: bold 12px;
+	color: @TextColor;
+	margin: 2px;
+}
+
+/* Generic Label used in the custom treeview items (package view, execution planner view) to set the style of dynamic property values where it is applicable  */
+
+QLabel[Label="PropertyValue"], QCheckbox[Label="PropertyValue"], QRadioButton[Label="PropertyValue"]{
+	color: @TextColor;
+	margin: 1px;
+	font-size: 12px;
+}
+
+/* XML Template Editor Custom Configurations */
+
+/* File Path label seen in the xml template editor above the xml preview browser */
+QLabel[Widget="FilePathLabel"]{
+	background-color: @AlternativeBaseColor;
+	font: bold 15px;
+	margin-left: 2px;
+	color: @TextColor;
+	min-height: 25px;
+}
+
+QHeaderView:section:horizontal[Widget="XMLTemplateEditorWidget"]{
+}
+
+QHeaderView:section:last[Widget="XMLTemplateEditorWidget"]{
+	border-right-width: 0px;
+}
+
+QTreeView[Widget="XMLTemplateEditorWidget"]{
+}
+
+QTreeView[Widget="XMLTemplateEditorWidget"]:item{
+}
+
+QTreeView[Widget="XMLTemplateEditorWidget"]:item:hover{
+	font: bold;
+	background-color: @SelectedObjectColor;
+}
+
+/* Object Properties editor dialog configurations */
+
+/* Global property for any editor widget in the form editor dialog view 
+To Customize specific object class, use the [Widget="EditorDialog"] property for the object class to be redefined */
+
+QWidget[Widget="EditorDialog"]{
+	margin: 0px;
+	margin-left: 0px;
+	min-height: 1.3em;
+	padding:2px;
+}
+
+/* Customize the label where the value template has been defined */
+QLabel[EditorDialog="PropertyHasValueTemplate"]{
+	border-left: 3px solid #5e9e14;
+	color:#5e9e14;
+	margin-left: 5px;
+}
+
+/* Customize the checkbox that is used to toggle the template activation switch */
+QCheckBox[EditorDialog="PropertyHasValueTemplate"]{
+	color:#5e9e14;
+	font:bold;
+	margin-top: 2ex;
+}
+
+/* Custom Configuration of the label with the mandatory marker asterisk(*) */
+QLabel[PropertyEditor="IsMandatory"]{
+	font: bold;
+	padding: 0px;
+	margin: 0px;
+	color: rgba(184, 30, 30, 0.856);
+	text-align: center;
+}
+
+/* Execution Console styling */
 
 /* Console stylesheet - standard console output */
 .execution-log{
 	font-size: 14px;
 	font-family: "Courier New";
-	color:#212124;
+	color:@TextColor;
 	padding: 1px;
 	word-wrap: break-word;
 	white-space:pre-wrap;
 }
-
 
 /* Console stylesheet - console error output formatting */
 .execution-error{
@@ -493,63 +646,161 @@ QLabel[ExecutionState="Queued"]{
 	background-color: #f18775;
 }
 
+/* Application Settings View */
+
+/* Configuration Sections navigation  */
+QHeaderView:section:horizontal[SettingsWidget="ConfigurationSectionsTreeView"]{
+	font: bold;
+	border-style: solid;
+	border-left-width: 0px;
+	border-right-width: 0px;
+}
+
+QTreeView[SettingsWidget="ConfigurationSectionsTreeView"]{
+	font: bold;
+	font-size: 14px;
+	
+}
+
+QTreeView[SettingsWidget="ConfigurationSectionsTreeView"]::item{
+	font: bold;
+	font-size: 14px;
+	min-height: 1.8em;
+	margin-top: 5px;
+	/* border-left: 2px solid @BorderColor; */
+}
+
+QTreeView[SettingsWidget="ConfigurationSectionsTreeView"]::item:selected{
+	border-left: 2px solid @SelectedObjectColor;
+	margin-left: 10px;
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @SelectedObjectColor, stop: 1 transparent);
+	/* background-color: @SelectedObjectColor; */
+}
+
 /* Configuration Editor custom widgets */
+
+/* Header configuration above the list views of the object model configuration editors */
 QLabel[ConfigurationEditor="ListViewHeader"]{
 	font-size: 15px;
 	font: bold;
-	color:#333633;
+	color: @TextColor;
 }
 
 QListView[ConfigurationEditor="ObjectModelListView"]{
-	border: 1px solid rgba(125, 138, 141, 0.4);
+	border: 1px solid @BorderColor;
 }
 
 QListView[ConfigurationEditor="ObjectModelListView"]::item{
 	padding: 0px;
-	margin: 0px;
-	border: 1px solid #272928;
+	border: 1px solid @BorderColor;
 }
 
-QWidget[ConfigurationEditor="Active"]{
-	background-color: rgba(216, 220, 224, 0.24);
-	border-radius: 3px;
-	border: 1px solid #7575cf9d;
-	padding: 2px;
+QListView[ConfigurationEditor="ObjectModelListView"]::item:selected{
+	margin-top: 75px;
+	margin-bottom: 75px;
 }
 
+/* Label that is used as handle to drag widgets in the object model editors */
 QWidget[ConfigurationEditor="Handle"]{
-	color:#222121;
-	border: 1px solid #9da09f8c;
+	color: @TextColor;
+	border: 1px solid @BorderColor;
 }
 
 QWidget[ConfigurationEditor="Handle"]::hover{
-	background-color :#cccfce8c;
+	background-color :@SelectedObjectColor;
 }
 
-QWidget[ConfigurationEditor="ObjectModelItemWidget"]{
-	background-color: rgba(239, 239, 245, 0.2);
-	border: 1px solid rgba(125, 138, 141, 0.644);
+/* Custom property for any ObjectModelItemWidget displayed in the main view of object model editor*/
+
+QWidget[ConfigurationEditor="ObjectModelEditorWidget"]{
+	/* background-color: @TaskObjectColor;
+	border: 1px solid @BorderColor; */
 	margin-top: 4px;
 	margin-bottom: 4px;
-	min-height: 50px;
+}
+
+QFrame[ConfigurationEditor="ObjectModelEditorFrame"]{
+	background-color: @TaskObjectColor;
+	border: 1px solid @BorderColor;
+}
+
+/* Configuration of the widget that is currently active and expanded */
+QWidget[ConfigurationEditor="Active"]{
+	background-color: @BaseColor;
+	/* border-radius: 2px; */
+	border: 5px solid @SelectedObjectColor;
+	padding: 2px;
+	margin-left: 15px;
+	margin-right: 15px;
+	margin-top: 25px;
+	margin-bottom: 25px;
+}
+
+/* Object model editor frame with extended field properties view (visible when configuration editor is active) */
+QGroupBox[ConfigurationEditor="FieldConfigurationFrame"]{
+	border-radius: 3px;
+	border: 1px solid @BorderColor;
+	margin-top:12px;
+	margin-left: 1ex;
+	margin-right: 1ex;
+}
+
+/* Customization of the frame title */
+QGroupBox[ConfigurationEditor="FieldConfigurationFrame"]::title{
+	subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+}
+
+/* Horizontal line separator that keeps standard fields separated from dynamic ones */
+
+QFrame[FieldConfigurationFrame="Separator"]{
+	border-top: 2px solid qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 transparent, stop: 0.5 #615c51b6, stop: 1 transparent);
+}
+
+/* This is entire widget including margins etc, here the list spacing can be configured for the Object model samples and default objects */
+QWidget[ConfigurationEditor="ObjectModelSampleWidget"]{
+	background: transparent;
+	margin-top: 2%;
+	margin-bottom: 2px;
+}
+
+/* This is the inner widget frame that is rendered on the list as widget */
+QFrame[ConfigurationEditor="ObjectModelWidgetFrame"]{
+	background-color: @TaskObjectColor;
+	border: 1px solid @BorderColor;
+}
+
+QFrame[ConfigurationEditor="ObjectModelWidgetFrame"]::hover{
+	background-color: @SelectedObjectColor;
+}
+
+/* Shared properties of object model editor widgets */
+
+QWidget[ConfigurationEditor="SectionLabel"]{
+	font-size: 28px;
+	color:@TextColor;
+}
+
+QWidget[ConfigurationEditor="SectionDescription"]{
+	color: @DescriptionTextColor;
 }
 
 QWidget[ConfigurationEditor="PropertyLabel"]{
-	color:#181a1a;
+	color:@TextColor;
 	text-align: right;
-
 }
+
 QWidget[ConfigurationEditor="PropertyDescription"]{
-	color:#1f8b8b;
+	color: @DescriptionTextColor;
 	margin-top: 2px;
 }
 
 QWidget[ConfigurationEditor="PropertyEditor"]{
-	color:#626363;
+	color:@TextColor;
 }
 
 QWidget[ConfigurationEditor="FieldLabel"]{
-	color:#626363;
+	color:@TextColor;
 	font: bold;
 	font-size: 14px;
 	margin-top: 0px;
@@ -558,43 +809,18 @@ QWidget[ConfigurationEditor="FieldLabel"]{
 }
 
 QWidget[ConfigurationEditor="FieldDescription"]{
-	color:#626363;
+	color:@DescriptionTextColor;;
 	margin-top: 0px;
 	margin-bottom: 2px;
 	padding-left: 5px;
 	padding-top: 0;
 }
 
-/* Object model editor frame with field properties */
-QGroupBox[ConfigurationEditor="FieldConfigurationFrame"]{
-	border-radius: 3px;
-	border: 1px solid #615c51b6;
-	margin-top:12px;
-	font: bold 14px;
-	color:#272928;
-	margin-left: 1ex;
-	margin-right: 1ex;
-}
-
-QGroupBox[ConfigurationEditor="FieldConfigurationFrame"]::title{
-	subcontrol-origin: margin;
-    subcontrol-position: top center; /* position at the top center */
-	padding: 0px;
-	/* border: 1px solid #9e2015; */
-	margin-top:2px;
-	margin-bottom:2px;
-	color:#626363;
-}
-
-QFrame[FieldConfigurationFrame="Separator"]{
-	border-top: 2px solid qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 transparent, stop: 0.5 #615c51b6, stop: 1 transparent);
-}
-
-
-QLineEdit:!enabled{
-	background-color: #a39797a9;
-}
-
-QLabel:!enabled{
-	color: #7e7676;
+/* Custom button configuration that lets the editor to pop out to a window for bigger view */
+QToolButton[ConfigurationEditor="MaximizePropertyEditor"]{
+	min-height: 1px;
+	min-width: 1px;
+	height: 5px;
+	width: 5px;
+	border: 1px solid @BorderColor;
 }

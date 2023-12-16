@@ -52,14 +52,17 @@ class BaseCodeEditor(QsciScintilla):
 
     def reconfigure_editor(self):
         lexer = self.lexer
-        editor_bg_color = QColor("#fff")
-        editor_text_color = QColor("#222")
-        caret_bg_color = QColor("#eee")
+        # editor_bg_color = QColor("#fff")
+        # editor_text_color = QColor("#222")
+        # caret_bg_color = QColor("#eee")
+        editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
+        editor_text_color = self.ProgramConfiguration.getColor("TextColor")
+        caret_bg_color = self.ProgramConfiguration.getColor("AlternativeBaseColor")
 
         if self.dark_mode:
-            editor_bg_color = QColor("#1e1f1c")
-            editor_text_color = QColor("#eee")
-            caret_bg_color = QColor("#555")
+            editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
+            editor_text_color = self.ProgramConfiguration.getColor("TextColor")
+            caret_bg_color = self.ProgramConfiguration.getColor("AlternativeBaseColor")
         
         # TODO: set color for light or dark theme
         # lexer.setColor(editor_text_color)

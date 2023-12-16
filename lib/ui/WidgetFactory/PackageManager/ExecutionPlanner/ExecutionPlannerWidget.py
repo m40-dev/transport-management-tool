@@ -1,5 +1,5 @@
 from PyQt6.QtWidgets import QWidget, QGridLayout, QTreeView, QAbstractItemView, QTextEdit, QSplitter, QLineEdit, QLabel, QToolButton
-from PyQt6.QtCore import Qt, pyqtSignal, QProcess
+from PyQt6.QtCore import Qt, pyqtSignal, QProcess, QSize
 from PyQt6.QtGui import QTextCursor, QTextDocumentFragment, QTextOption
 from .ContextMenu import ExecutionPlannerContextMenu
 from lib.data.DataModels import TaskExecutionModel
@@ -34,10 +34,21 @@ class ExecutionPlannerWidget(QWidget):
 
         self.stop_execution = QToolButton()
         self.stop_execution.setText("Stop Execution")
+
+        StopExecutionQueueIcon = self.application.ProgramConfiguration.getIcon("StopExecutionQueue")
+        
+        if StopExecutionQueueIcon:
+            self.stop_execution.setText("")
+            self.stop_execution.setToolTip("<b>Stop Execution Queue!</b>")
+            self.stop_execution.setIcon(StopExecutionQueueIcon)
+            self.stop_execution.setIconSize(QSize(23,23))
+            self.stop_execution.setProperty("ExecutionPlannerWidget", "StopExecutionQueue")
+
         self.stop_execution.setEnabled(False)
         self.stop_execution.clicked.connect(self.ProcessRunner.stopExecutionPlanner)
 
         self.treeview = QTreeView()
+        self.treeview.setProperty("TreeView", "ExecutionPlanner")
         self.console = QTextEdit()
         self.console.setAcceptRichText(True)
         self.console.setWordWrapMode(QTextOption.WrapMode.WordWrap)
@@ -99,7 +110,7 @@ class ExecutionPlannerWidget(QWidget):
         self.treeview.setDragDropMode(QAbstractItemView.DragDropMode.DragDrop)
         self.treeview.dragMoveEvent = self.dragMoveEvent
         
-        self.treeview.setAlternatingRowColors(True)
+        self.treeview.setAlternatingRowColors(False)
         self.treeview.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
         self.treeview.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -107,7 +118,7 @@ class ExecutionPlannerWidget(QWidget):
         self.refresh_ui()
 
     def refresh_ui(self):
-        self.console.document().setDefaultStyleSheet(self.application.color_theme.style_sheet)
+        self.console.document().setDefaultStyleSheet(self.application.ProgramConfiguration.styleSheet())
 
     def processRunnerStateChanged(self, running_state):
         is_running = True

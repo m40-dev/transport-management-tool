@@ -9,7 +9,7 @@ CONFIGURATION_FILES = {
     # "DevelopmentConfiguration": "development_configuration.json"
     }
 
-PROGRAM_CONFIGURATION = GENERAL_CONFIGURATION | PACKAGE_MANAGER_CONFIGURATION | EXECUTION_PLANNER_CONFIGURATION | OBJECT_MODEL_CONFIGURATION | DEVELOPMENT_CONFIGURATION
+PROGRAM_CONFIGURATION = APPEARANCE_CONFIGURATION | PACKAGE_MANAGER_CONFIGURATION | EXECUTION_PLANNER_CONFIGURATION | OBJECT_MODEL_CONFIGURATION #| DEVELOPMENT_CONFIGURATION
 
 PROGRAM_ICONS = {
     "VI.Transport.ObjectTransport, VI.Transport": "./lib/ui/img/icons/ObjectTransportTask.png",
@@ -26,6 +26,11 @@ PROGRAM_ICONS = {
     "ObjectDataItem": "./lib/ui/img/icons/ObjectDataItem.png",
     "PackageManager": "./lib/ui/img/icons/PackageManager.png",
     "XMLTemplateEditor":"./lib/ui/img/icons/XMLTemplateEditor.png",
-    "Settings": "./lib/ui/img/icons/Settings.png"
-
+    "Settings": "./lib/ui/img/icons/Settings.png",
+    "ExecutionGroupAction":"./lib/ui/img/icons/ExecuteGroup.png",
+    "ExecutionTaskAction":"./lib/ui/img/icons/ExecuteTask.png",
+    "StopExecutionQueue": "./lib/ui/img/icons/StopExecutionQueue.png",
+    "ObjectProperties": "./lib/ui/img/icons/Properties.png",
+    "SaveObject": "./lib/ui/img/icons/SaveObject.png",
+    "EditXMLDefinition": "./lib/ui/img/icons/EditXMLDefinition.png",
 }

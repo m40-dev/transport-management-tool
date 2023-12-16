@@ -18,6 +18,10 @@ class SettingsWidget(QtWidgets.QWidget):
         self.ConfigurationSectionTreeWidget.itemClicked.connect(self.onSectionChanged)
         self.configurationReloaded.connect(lambda current=self.current_section: self.onSectionChanged(self.current_section))
 
+    def refresh_ui(self):
+        self.setStyleSheet(self.ProgramConfiguration.styleSheet())
+        self.ConfigurationSectionTreeWidget.setStyleSheet(self.styleSheet())
+
     def onSectionChanged(self, source_item):
         if not source_item:
             return False
@@ -40,6 +44,8 @@ class SettingsWidget(QtWidgets.QWidget):
         # Configuration sections navigation
         self.ConfigurationSectionTreeWidget = QtWidgets.QTreeWidget()
         self.ConfigurationSectionTreeWidget.setHeaderLabels(["Program Configuration Sections"])
+        self.ConfigurationSectionTreeWidget.setProperty("SettingsWidget", "ConfigurationSectionsTreeView")
+        self.ConfigurationSectionTreeWidget.header().setProperty("SettingsWidget", "ConfigurationSectionsTreeView")
 
         # Configuration section viewport
         # Configuration Toolbox

@@ -1,0 +1,600 @@
+QMainWindow, QDialog, QTreeWidget, QTreeView, QSplitter{
+	background: palette(Base);
+	border: 0px;
+}
+
+QLabel{
+	background: transparent;
+}
+
+QTreeWidget, QTreeView, QListView{
+	border: 0px;
+	font-size: 12px;
+	font-family: "Consolas";
+}
+
+QPlainTextEdit, QTextEdit, QComboBox{
+	border: 1px solid palette(Dark);
+	border-radius: 2px;
+	min-height: 1.7em;
+	margin: 2px;
+	min-width: 10em;
+	font-size: 12px;
+	font-family: "Consolas";
+}
+
+QLineEdit, QComboBox{
+	border: 1px solid palette(Dark);
+    margin: 0px;
+    padding: 2px;
+	font-family: "Consolas";
+}
+
+QLineEdit::selection{
+	background-color: palette(Highlight)
+}
+
+QStatusBar, QSizeGrip{
+	color: palette(Light);
+	font: bold;
+	background-color: #9e2015;
+}
+
+QMenu{
+	background-color: rgb(250, 250, 250);
+	min-width: 15em;
+}
+
+QMenu::item{
+	padding: 5px;
+	min-height: 1.1em;
+	min-width: 15em;
+}
+
+QMenu::item:selected{
+	background-color: palette(Highlight)
+}
+
+QScrollBar::vertical,QScrollBar::horizontal{
+	width:12px;
+	height:12px;
+	border-radius:2px;
+	border: 1px solid palette(Dark);
+}
+
+QScrollBar::handle:vertical{
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Midlight));
+	border:1px solid palette(Dark);
+	border-radius:2px;
+}
+
+QScrollBar::handle:horizontal{
+	background-color: qlineargradient(x1: 1, x2: 1, y1: 0, y2:1, stop: 0 palette(Light), stop: 1 palette(Midlight));
+	border:1px solid palette(Dark);
+	border-radius:2px;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical,QScrollBar::sub-page:vertical,QScrollBar::add-page:vertical{
+	background: transparent;
+	width:0px;height:1px;
+}
+
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal,QScrollBar::sub-page:horizontal,QScrollBar::add-page:horizontal{
+	background: transparent;
+	width:0px;height:1px;
+}
+
+QPushButton{
+    background-color: palette(Button.Active);
+	min-height: 2em;
+	min-width: 6em;
+	border: 1px solid palette(Dark);
+	border-radius: 2px;
+	border-style: outset;
+	text-align: center;
+    margin: 0px;
+    padding: 0px;
+}
+QTabBar{
+	border: 0px;
+}
+QTabBar::tab{
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Light));
+	border: 1px solid palette(Dark);
+	border-style: outset;
+	border-radius: 2px;
+	color: palette(Text);
+	padding: 0.6em;
+}
+
+QTabBar::tab:selected{
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 palette(Light), stop: 1 palette(Midlight));
+	border: 1px solid palette(Highlight);
+	font: bold;
+	color: palette(Text);
+}
+
+QTabBar::tab:top{
+	min-width: 12em;
+}
+
+QTabBar::tab:left{
+	min-width: 2em;
+}
+
+QTreeWidget::indicator, QTreeView::indicator { 
+	width: 30px; 
+	height: 30px; }
+	
+
+QTreeWidget::item, QListWidget::item, QListView::item, QTreeView::item{
+	min-height: 2em;
+    color: palette(Text);
+	background-color: palette(Base);
+	margin-top: 2px;
+}
+
+QTreeWidget::item:alternate, QListWidget::item:alternate, QListView::item:alternate, QTreeView::item:alternate{
+	background-color: #f1f1f1;
+}
+
+QListView::item::hover, QTreeView::item:hover{
+	height: 2em;
+	font: bold;
+	background-color: #d9e7e9;
+}
+
+QListView::item:selected, QTreeView::item:selected{
+	background-color: rgb(217, 231, 233);
+}
+
+QLabel{
+	border-radius: 2px;
+	padding-left: 2px;
+}
+
+QLabel[Widget=FilePathLabel]{
+	font-size: 15px;
+	font: bold;
+	margin-left: 2px;
+	color: palette(Text);
+	min-height: 25px;
+}
+
+QLabel[Widget=Header1]{
+	font-size: 18px;
+	background-color: #d5f2e5;
+	min-height: 40px;
+	color: palette(Text);
+	font: bold;
+}
+
+QLabel[Widget=Header2]{
+	font-size: 15px;
+	font: bold;
+	margin-left: 2px;
+	background-color: #d5edf2;
+	color: palette(Text);
+	min-height: 25px;
+}
+
+QLabel[Widget=Header3]{
+	font-size: 14px;
+	font: bold;
+	background-color: #d64b79;
+	min-height: 25px;
+	color: palette(Text);
+}
+
+QToolButton{
+    background-color:palette(Button.Active);
+	color:#626363;
+	margin: 1px;
+	border: 1px solid #dfd9d9;
+	border-radius: 2px;
+	padding: 3px;
+	min-height: 1.5em;
+}
+
+QPushButton:hover, QToolButton:hover{
+	background-color: rgba(216, 216, 216, 0.486);
+	border: 1px solid rgba(114, 114, 116, 0.726);;
+}
+
+QToolButton[Widget=AddButton]{
+	background-image: url("./lib/ui/img/add_btn.png");
+	border-radius: 16px;
+	border: none;
+}
+
+
+QToolButton[Widget=DeleteButton]{
+	background-image: url("./lib/ui/img/delete_btn.png");
+	border-radius: 16px;
+	border: none;
+}
+
+QToolButton[Widget=UpArrow]{
+	background-image: url("./lib/ui/img/up_arrow.png");
+	border: none;
+}
+
+QToolButton[Widget=DownArrow]{
+	background-image: url("./lib/ui/img/down_arrow.png");
+	border: none;
+}
+
+QToolButton[Widget=DeleteButton]::hover{
+	background-color: #f7b3a3;
+}
+
+QCheckBox[Widget=CheckBoxHeader]{
+	font-size: 15px;
+	color: palette(Text);
+}
+
+QCheckBox::indicator{
+	width: 25px;
+	height: 25px;
+}
+
+QToolButton[Widget=SelectFileButton]{
+	background-image: url("./lib/ui/img/search_btn.png");
+	border-radius: 16px;
+	border: none;
+}
+
+QFrame[ExecutionPlannerWidget="GroupItem"]{
+	background-color: rgba(239, 239, 245, 0.2);
+	border: 1px solid rgba(125, 138, 141, 0.4);
+	/* min-height: 3em; */
+	margin-top: 2px; 
+	margin-bottom: 2px;
+}
+
+QFrame[ExecutionPlannerWidget="TaskItem"]{
+	background-color: rgba(239, 239, 245, 0.4);
+	border: 1px solid rgba(125, 138, 141, 0.4);
+	border-left: 3px solid rgba(62, 66, 66, 0.575);
+	/* min-height: 2em; */
+	margin-top: 2px; 
+	margin-bottom: 2px;
+}
+
+QFrame[ExecutionPlannerWidget="GroupItem"]::hover, QFrame[ExecutionPlannerWidget="TaskItem"]::hover{
+	background-color: palette(Highlight);
+}
+
+QLabel[ExecutionPlannerWidget="ItemLabel"]{
+	font-size: 13px;
+	color: palette(Text);
+	font: bold;
+	margin-right: 2em;
+}
+
+QLabel[ExecutionPlannerWidget="ItemLabel"]{
+	font-size: 13px;
+	color: palette(Text);
+	font: bold;
+	margin-right: 2em;
+}
+
+QLabel[ExecutionPlannerWidget="ItemDescription"]{
+	font-size: 11px;
+	color: palette(Text);
+}
+
+QLabel[Label="PropertyName"]{
+	font: bold;
+	font-size: 11px;
+	color: palette(Text);
+	margin: 2px;
+}
+
+QLabel,QRadioButton[Label="PropertyValue"]{
+	color: palette(Text);
+	margin: 1px;
+}
+
+QWidget[Widget="EditorDialog"]{
+	margin: 0px;
+	margin-left: 0px;
+	min-height: 1.3em;
+	padding:2px;
+}
+
+QLabel[EditorDialog="PropertyHasValueTemplate"]{
+	border-left: 3px solid #5e9e14;
+	color:#5e9e14;
+}
+
+QCheckBox[EditorDialog="PropertyHasValueTemplate"]{
+	color:#5e9e14;
+	font:bold;
+	margin-top: 2ex;
+}
+
+QTextEdit[Widget="EditorDialog"]{
+	margin: 0px;
+}
+
+QWidget[ObjectSaved="False"]{
+	border-left: 3px solid rgba(233, 181, 12, 0.575);
+}
+
+QLabel[PropertyEditor="IsMandatory"]{
+	font: bold;
+	padding: 0px;
+	margin: 0px;
+	color: rgba(184, 30, 30, 0.856);
+	text-align: center;
+}
+
+QToolButton[ToolButton=SideBar]{
+	border: none;
+	width: 30px;
+	height: 30px;
+}
+
+QToolButton[ToolButton=SideBar]:checked{
+	border-left: 3px solid #9da09f;
+}
+
+QToolButton[ToolButton=DeleteItem]{
+	color:#9e2015;
+	font: bold;
+}
+
+QToolButton[ToolButton=DeleteItem]:hover{
+	color:#ffffff;
+	background-color: #c5675e;
+	border:1px solid #9e2015;
+}
+
+QToolButton#PackageManagerButton{
+}
+QToolButton#TemplateEditorButton{
+}
+QToolButton#SettingsButton{
+}
+
+/* Message Box styling */
+.MessageBox-DetailedMessage{
+	font-size: 14px;
+	font-family: "Courier New";
+	color:#252529;
+}
+
+/* Execution Planner configuration - Execution states handling for running task elements */
+QWidget[GroupExecutionState="Inactive"]{
+	border: 1px solid rgba(125, 138, 141, 0.4);
+}
+
+QWidget[GroupExecutionState="Running"]{
+	border-left: 3px solid rgba(233, 181, 12, 0.575);
+}
+
+QWidget[GroupExecutionState="Finished"]{
+	border-left: 3px solid rgba(6, 117, 6, 0.795);
+}
+
+QWidget[GroupExecutionState="HasErrors"]{
+	border-left: 3px solid rgba(233, 45, 12, 0.699);
+}
+
+/* Execution Planner configuration - Execution states handling for running task elements */
+
+QWidget[ExecutionState="Running"]{
+	border-left: 3px solid rgba(233, 181, 12, 0.575);
+}
+
+QWidget[ExecutionState="Queued"]{
+	border-left: 3px solid rgba(0, 202, 238, 0.918);
+}
+
+QWidget[ExecutionState="Finished"]{
+	border-left: 3px solid rgba(6, 117, 6, 0.795);
+}
+
+QWidget[ExecutionState="Finished with Errors"]{
+	border-left: 3px solid rgba(233, 45, 12, 0.699);
+}
+
+QWidget[ExecutionState="Terminated"]{
+	border-left: 3px solid rgba(233, 45, 12, 0.699);
+}
+
+QLabel[ExecutionState="Finished with Errors"]{
+	font: bold;
+	border-left: 0px;
+	color: rgba(233, 12, 12, 0.918);
+}
+
+QLabel[ExecutionState="Running"]{
+	border-left: 0px;
+	color:  rgba(233, 163, 12, 0.863);
+	font: bold;
+}
+
+QLabel[ExecutionState="Finished"]{
+	border-left: 0px;
+	color:  rgba(6, 117, 6, 0.795);
+	font: bold;
+}
+
+QLabel[ExecutionState="Terminated"]{
+	border-left: 0px;
+	color: rgba(233, 12, 12, 0.918);
+	font: bold;
+}
+
+QLabel[ExecutionState="Queued"]{
+	border-left: 0px;
+	color: rgba(0, 202, 238, 0.918);
+	font: bold;
+}
+
+/* Console stylesheet - standard console output */
+.execution-log{
+	font-size: 14px;
+	font-family: "Courier New";
+	color:#212124;
+	padding: 1px;
+	word-wrap: break-word;
+	white-space:pre-wrap;
+}
+
+
+/* Console stylesheet - console error output formatting */
+.execution-error{
+	color: #c7260a;
+	font: bold;
+	padding: 5px;
+}
+
+/* Console stylesheet - transport manager messages formatting */
+.transport-manager{
+	color:#626363;
+	font: italic;
+}
+
+/* Console stylesheet - task initialization table headers formatting */
+.task-init-header{
+	color: #6ab390;
+	text-align: center;
+	border-top: 2px solid #92dba1;
+	font: bold;
+}
+.task-init-footer{
+	color: #6ab390;
+	text-align: center;
+	border-bottom: 2px solid #92dba1;
+	font: bold;
+}
+
+/* Console stylesheet - task information data formatting */
+.task-info{
+	color: #272928;
+	text-align: center;
+	padding: 2px;
+}
+
+/* Console stylesheet - task execution success status formatting */
+.task-finished-success{
+	text-align: center;
+	color: #272928;
+	background-color: #92dba1;
+}
+
+/* Console stylesheet - task execution error status formatting */
+.task-finished-error{
+	text-align: center;
+	color: #272928;
+	background-color: #f18775;
+}
+
+/* Configuration Editor custom widgets */
+QLabel[ConfigurationEditor="ListViewHeader"]{
+	font-size: 15px;
+	font: bold;
+	color:#333633;
+}
+
+QListView[ConfigurationEditor="ObjectModelListView"]{
+	border: 1px solid rgba(125, 138, 141, 0.4);
+}
+
+QListView[ConfigurationEditor="ObjectModelListView"]::item{
+	padding: 0px;
+	margin: 0px;
+	border: 1px solid #272928;
+}
+
+QWidget[ConfigurationEditor="Active"]{
+	background-color: rgba(216, 220, 224, 0.24);
+	border-radius: 3px;
+	border: 1px solid #7575cf9d;
+	padding: 2px;
+}
+
+QWidget[ConfigurationEditor="Handle"]{
+	color:#222121;
+	border: 1px solid #9da09f8c;
+}
+
+QWidget[ConfigurationEditor="Handle"]::hover{
+	background-color :#cccfce8c;
+}
+
+QWidget[ConfigurationEditor="ObjectModelItemWidget"]{
+	background-color: rgba(239, 239, 245, 0.2);
+	border: 1px solid rgba(125, 138, 141, 0.644);
+	margin-top: 4px;
+	margin-bottom: 4px;
+	min-height: 50px;
+}
+
+QWidget[ConfigurationEditor="PropertyLabel"]{
+	color:#181a1a;
+	text-align: right;
+
+}
+QWidget[ConfigurationEditor="PropertyDescription"]{
+	color:#1f8b8b;
+	margin-top: 2px;
+}
+
+QWidget[ConfigurationEditor="PropertyEditor"]{
+	color:#626363;
+}
+
+QWidget[ConfigurationEditor="FieldLabel"]{
+	color:#626363;
+	font: bold;
+	font-size: 14px;
+	margin-top: 0px;
+	margin-bottom: 2px;
+	padding:0;
+}
+
+QWidget[ConfigurationEditor="FieldDescription"]{
+	color:#626363;
+	margin-top: 0px;
+	margin-bottom: 2px;
+	padding-left: 5px;
+	padding-top: 0;
+}
+
+/* Object model editor frame with field properties */
+QGroupBox[ConfigurationEditor="FieldConfigurationFrame"]{
+	border-radius: 3px;
+	border: 1px solid #615c51b6;
+	margin-top:12px;
+	font: bold 14px;
+	color:#272928;
+	margin-left: 1ex;
+	margin-right: 1ex;
+}
+
+QGroupBox[ConfigurationEditor="FieldConfigurationFrame"]::title{
+	subcontrol-origin: margin;
+    subcontrol-position: top center; /* position at the top center */
+	padding: 0px;
+	/* border: 1px solid #9e2015; */
+	margin-top:2px;
+	margin-bottom:2px;
+	color:#626363;
+}
+
+QFrame[FieldConfigurationFrame="Separator"]{
+	border-top: 2px solid qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 transparent, stop: 0.5 #615c51b6, stop: 1 transparent);
+}
+
+
+QLineEdit:!enabled{
+	background-color: #a39797a9;
+}
+
+QLabel:!enabled{
+	color: #7e7676;
+}

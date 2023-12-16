@@ -1,6 +1,19 @@
 {
     "Appearance":{
-        "UseDarkTheme":false
+        "UseDarkTheme":false,
+        "BaseColor":"rgba(240, 243, 242, 255)",
+        "AlternativeBaseColor":"rgba(239, 238, 236, 255)",
+        "DarkerBaseColor":"rgba(127, 127, 127, 255)",
+        "BorderColor":"rgba(179, 179, 179, 255)",
+        "HighlightColor":"rgba(161, 163, 158, 120)",
+        "TextColor":"rgba(34, 34, 34, 220)",
+        "DescriptionTextColor":"rgba(11, 170, 151, 255)",
+        "HighlightedText":"rgba(170, 0, 0, 255)",
+        "ButtonColor":"rgba(239, 239, 239, 120)",
+        "SelectedObjectColor":"rgba(162, 162, 154, 150)",
+        "InactiveObjectColor":"rgba(195, 195, 195, 100)",
+        "GroupObjectColor":"rgba(204, 211, 217, 55)",
+        "TaskObjectColor":"rgba(229, 232, 232, 55)"
     },
     "Package Manager":{
         "WorkdirDirectoryBlacklist":[],

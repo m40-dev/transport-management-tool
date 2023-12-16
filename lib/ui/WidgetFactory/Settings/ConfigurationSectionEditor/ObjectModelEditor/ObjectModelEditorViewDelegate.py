@@ -1,8 +1,8 @@
 from PyQt6.QtWidgets import (QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, 
 QHBoxLayout, QGraphicsOpacityEffect, QSizePolicy, QLineEdit, QComboBox, QApplication, QGroupBox,
 QWidget, QTextEdit, QPlainTextEdit, QAbstractScrollArea)
-from PyQt6.QtCore import Qt, QRectF, pyqtSignal, QPropertyAnimation, QEasingCurve, QAbstractAnimation, QSize, QMimeData
-from PyQt6.QtGui import QPalette, QPen, QPainterPath,QDrag, QColor, QBrush
+from PyQt6.QtCore import Qt, QRect, pyqtSignal, QPropertyAnimation, QEasingCurve, QAbstractAnimation, QSize, QMimeData, QPoint
+from PyQt6.QtGui import QPalette, QPen, QPainterPath,QDrag, QColor, QBrush, QPainter
 
 
 from lib.ui.WidgetFactory.DialogScreens.FormEditorDialog import FormEditorObject, FormEditorWidget
@@ -14,6 +14,7 @@ class ObjectModelEditorViewDelegate(QStyledItemDelegate):
         # self.items = ["", "Import", "Export"]
         self.model_data = model_data
         self.application = application
+        self.ProgramConfiguration = self.application.ProgramConfiguration
         self.configuration_editor = configuration_editor
         self.application_palette = self.application.color_theme    
     
@@ -70,32 +71,29 @@ class ObjectModelEditorViewDelegate(QStyledItemDelegate):
                 widget.setGeometry(option.rect)
 
             # Check if the item is selected
-            if option.state & QStyle.StateFlag.State_Selected:
-                selection_color = self.application_palette.color(QPalette.ColorRole.Highlight)
-                if selection_color:
-                    selection_color.setAlphaF(0.3)
-                # Set the pen color to the selection color
+            if option.state & QStyle.StateFlag.State_Selected:  
+                widget.isSelected = True
+
+                target_x = option.rect.x() + ((widget.rect().width() - widget.frame.rect().width()) / 2)
+
+                # divide by 2 to get just widget size (difference includes both margins)
+                target_y = option.rect.y() + ((widget.rect().height() - widget.frame.rect().height()) / 2)
+                # print(target_x, target_y)
+                # target_rect = QRect(QPoint(target_x, target_y), widget.frame.size())
+                target_rect = QRect(QPoint(target_x, target_y), widget.frame.size())
+
+                selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")
+                # selection_color.setAlphaF(0.4)
+                # # # Set the pen color to the selection color
                 pen = QPen(selection_color)
-                pen.setWidth(3)
+                pen.setWidth(2)
                 painter.setPen(pen)
-                # painter.setBrush(selection_color)
-                painter.save()
-
-                # Set the border color of the item
-                painter.drawRoundedRect(option.rect, 4.0, 4.0, Qt.SizeMode.AbsoluteSize)
-                # Fill the rounded rectangle with the brush
-                painter_path = QPainterPath()
-                rectf = QRectF(option.rect)
-                painter_path.addRoundedRect(rectf, 4.0, 4.0)
-
-                painter.fillPath(painter_path, painter.brush())
-                painter.restore()
+                painter.setBrush(selection_color)
+                painter.drawRect(target_rect)
+            else:
+                widget.isSelected = False
         else:
             super().paint(painter, option, index)
-    
-    def paintEvent(self, option, index):
-        # print(option, index)
-        QStyledItemDelegate.paintEvent(self, option, index)
 
     def sizeHint(self, option, index):
         if index.isValid():
@@ -116,10 +114,11 @@ class ObjectModelConfigurationWidget(QFrame):
         self.listview = parent
         self.parent = parent
         self.isActive = configuration_item.isActive
+        self.isSelected = False
         # self.drag_start_position = None
         self.setAcceptDrops(True)
 
-        self.setProperty("ConfigurationEditor", "ObjectModelItemWidget")
+        self.setProperty("ConfigurationEditor", "ObjectModelEditorWidget")
         self.editors = {}
         self.setupUi()
 
@@ -150,10 +149,29 @@ class ObjectModelConfigurationWidget(QFrame):
         animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
         animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
         return animation
+    
+    # def paintEvent(self, event):
+    #     super().paintEvent(event)
+
+    #     if self.isSelected:
+    #         painter = QPainter(self)
+    #         frame_geo = self.frame.geometry().getRect()
+    #         widget_rect = QRect(frame_geo[0], frame_geo[1], frame_geo[2], frame_geo[3])
+            
+    #         selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")
+    #         # Set the pen color to the selection color
+    #         selection_color.setAlphaF(0.5)
+    #         pen = QPen(selection_color)
+    #         pen.setWidth(1)
+    #         painter.setPen(pen)
+    #         painter.setBrush(selection_color)
+
+    #         # Set the border color of the item
+    #         painter.drawRect(widget_rect)
 
     def refreshUi(self):
         #UI refresh
-        self.setStyleSheet(self.application.color_theme.style_sheet)
+        self.setStyleSheet(self.styleSheet())
 
         #Attributes refresh - configure editors activity
         self.deactivateEditors()
@@ -183,7 +201,16 @@ class ObjectModelConfigurationWidget(QFrame):
         self.configuration_editor.configurationDataChanged()
 
     def setupUi(self):
-        self.layout = QGridLayout(self)
+        self.main_layout = QGridLayout(self)
+        self.main_layout.setContentsMargins(1,1,1,1)
+        self.main_layout.setSpacing(1)
+
+        self.frame = QFrame()
+        self.frame.setProperty("ConfigurationEditor", "ObjectModelEditorFrame")
+
+        self.main_layout.addWidget(self.frame, 0, 0)
+        self.layout = QGridLayout(self.frame)
+
         self.layout.setContentsMargins(2,2,2,2)
         self.layout.setSpacing(4)
 
@@ -330,7 +357,7 @@ class ObjectModelConfigurationWidget(QFrame):
         if isCurrentItem:
             self.setProperty("ConfigurationEditor", "Active")
         else:
-            self.setProperty("ConfigurationEditor", "ObjectModelItemWidget")
+            self.setProperty("ConfigurationEditor", "ObjectModelEditorWidget")
         self.refreshUi()
         # self.listview.model().layoutChanged.emit()
 
