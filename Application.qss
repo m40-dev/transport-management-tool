@@ -6,6 +6,7 @@
 /* Global Widget Configurations */
 QMainWindow, QDialog, QWidget{
 	background-color: @BaseColor;
+	border-color: @BorderColor;
 }
 
 QLabel, QCheckBox, QRadioButton{
@@ -23,7 +24,8 @@ QPlainTextEdit, QTextEdit, QLineEdit, QComboBox{
 }
 
 QLineEdit::selection, QTextEdit::selection, QPlainTextEdit::selection{
-	background-color: @HighlightColor
+	background-color: @HighlightColor;
+	color: @HighlightedText;
 }
 
 QStatusBar, QSizeGrip{
@@ -298,11 +300,6 @@ QToolButton[Widget=SelectFileButton]{
 
 /* Package Manager Custom widgets configuration */
 
-/* Global setting for any object in the unsaved state */
-QWidget[ObjectSaved="False"]{
-	border-left: 3px solid rgba(233, 181, 12, 0.575);
-}
-
 /* Central widget for any item displayed in the package manager view */
 QWidget[PackageManager="PackageManagerWidget"]{
 	background: transparent;
@@ -343,6 +340,10 @@ QWidget[PackageManagerWidget="TaskItem"]::hover{
 	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @SelectedObjectColor, stop: 1 transparent);
 }
 
+/* Global setting for any object in the unsaved state - this definition always needs to be at the bottom to take effect over other stylesheets */
+QWidget[ObjectSaved="False"]{
+	border-left: 3px solid rgba(233, 181, 12, 0.575);
+}
 
 /* Execution Planner Custom widgets configuration */
 
@@ -504,7 +505,7 @@ QLabel[CustomWidget="ItemLabel"]{
 QLabel[CustomWidget="ItemDescription"]{
 	font-size: 11px;
 	color: @DescriptionTextColor;
-	margin: 0px;
+	margin: 1px;
 }
 
 /* Generic Label used in the custom treeview items (package view, execution planner view) to set the style of dynamic property names  */

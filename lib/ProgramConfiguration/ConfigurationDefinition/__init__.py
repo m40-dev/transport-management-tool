@@ -33,4 +33,5 @@ PROGRAM_ICONS = {
     "ObjectProperties": "./lib/ui/img/icons/Properties.png",
     "SaveObject": "./lib/ui/img/icons/SaveObject.png",
     "EditXMLDefinition": "./lib/ui/img/icons/EditXMLDefinition.png",
+    "ExecutionLogs": "./lib/ui/img/icons/Console.png",
 }

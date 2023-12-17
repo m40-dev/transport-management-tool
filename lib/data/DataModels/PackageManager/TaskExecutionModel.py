@@ -146,6 +146,7 @@ class TaskExecutionModel(JSONDataModel):
 class TaskExecutionItem(JSONDataItem):
     # executionStateChanged = pyqtSignal(bool, bool, bool)
     executionStateChanged = pyqtSignal(str)
+    logExecutionState = pyqtSignal(str)
 
     def __init__(self, application, task_class="ExecutionPlanner_ExecutionTask", task_data=None, parent=None, model_reference=None):
         super().__init__(
@@ -157,6 +158,8 @@ class TaskExecutionItem(JSONDataItem):
             )
         self._package_definition_data = {}
         self.definition_file_path = None
+        self.execution_log = []
+
         #Configure Default Value
         if task_data: 
             source_files_data = task_data.get("source_file_data", {})
@@ -182,6 +185,7 @@ class TaskExecutionItem(JSONDataItem):
         #pass the package definition over to new item
         super().itemLocationChanged(source_item)
         self.package_definition = source_item.package_definition
+        self.execution_log = source_item.execution_log
 
     @property
     def package_definition(self):
@@ -255,3 +259,4 @@ class TaskExecutionItem(JSONDataItem):
             self.ExecutionState = "Finished"
         if exitCode == 62097:
             self.ExecutionState = "Terminated"
+        print(len(self.execution_log))

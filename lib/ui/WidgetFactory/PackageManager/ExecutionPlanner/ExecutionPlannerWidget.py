@@ -19,7 +19,7 @@ class ExecutionPlannerWidget(QWidget):
         self.parent = parent
         self.application = application
         self.ProcessRunner = ProcessRunner(self)
-        self.ProcessRunner.message.connect(self.logExecutionPlannerMessage)
+        self.ProcessRunner.logPreformattedMessage.connect(self.logExecutionPlannerMessage)
         self.ProcessRunner.stateChanged.connect(self.processRunnerStateChanged)
 
         self.layout = QGridLayout(self)
@@ -91,9 +91,9 @@ class ExecutionPlannerWidget(QWidget):
 
         itemDelegate = ExecutionPlannerDelegate(
             model_data=self.model_data, 
-            parent=self.treeview, 
+            parent_view=self.treeview, 
             application=self.application, 
-            planner_widget=self
+            parent_module=self
             )
         
         itemDelegate.queueExecutionTask.connect(self.queueExecutionTask)
@@ -197,8 +197,8 @@ class ExecutionPlannerWidget(QWidget):
 
         self.ProcessRunner.continueExecutionQueue()
 
-    def logExecutionPlannerMessage(self, message, message_format=None):
-        if len(message.strip()) == 0:
+    def logExecutionPlannerMessage(self, formatted_message):
+        if len(formatted_message.strip()) == 0:
             return False
 
         cursor = self.console.textCursor()
@@ -208,114 +208,107 @@ class ExecutionPlannerWidget(QWidget):
         if cursor.blockNumber() > 0:
             cursor.insertBlock(self.defaultBlockFormat)
 
+        cursor.insertHtml(formatted_message)
+
+        # restore cursor location at the end, this effectively scrolls the log view automatically
+        self.console.setTextCursor(cursor)
+
         # setup the log entry to remove whitespaces around
         # replace the line break characters to avoid doubled line break handling
-        bytes_log = bytes(message.strip(), 'utf-8')
-        bytes_log_trimmed = bytes_log.replace(b'\r\n', b'\n')
-        message = bytes_log_trimmed.decode('utf-8')
+        # bytes_log = bytes(message.strip(), 'utf-8')
+        # bytes_log_trimmed = bytes_log.replace(b'\r\n', b'\n')
+        # message = bytes_log_trimmed.decode('utf-8')
 
-        if message_format:
-            if message_format.upper() == "ERROR":
-                # log_info = f'<p class="execution-error">[Error] {message}</p>'
+        # if message_format:
+        #     if message_format.upper() == "ERROR":
+        #         # log_info = f'<p class="execution-error">[Error] {message}</p>'
 
-                log_info = '<table width="100%" class="execution-log">'
-                log_info += '<tr>'
-                log_info += f'<td class="execution-error"><b>[Error]</b> {message}</td>'
-                log_info += '</tr>'
-                log_info += '</table>'
+        #         log_info = '<table width="100%" class="execution-log">'
+        #         log_info += '<tr>'
+        #         log_info += f'<td class="execution-error"><b>[Error]</b> {message}</td>'
+        #         log_info += '</tr>'
+        #         log_info += '</table>'
 
-                cursor.insertHtml(log_info)
-                self.console.setTextCursor(cursor)
-                return True
+        #         cursor.insertHtml(log_info)
+        #         self.console.setTextCursor(cursor)
+        #         return True
 
-            if message_format.upper() == "TRANSPORT MANAGER":
-                # log_info = f'<p class="transport-manager">[Transport Manager] {message}</p>'
+        #     if message_format.upper() == "TRANSPORT MANAGER":
+        #         # log_info = f'<p class="transport-manager">[Transport Manager] {message}</p>'
 
-                log_info = '<table width="100%" class="execution-log">'
-                log_info += '<tr>'
-                log_info += f'<td class="transport-manager"><b>[Transport Manager]</b> {message}</td>'
-                log_info += '</tr>'
-                log_info += '</table>'
+        #         log_info = '<table width="100%" class="execution-log">'
+        #         log_info += '<tr>'
+        #         log_info += f'<td class="transport-manager"><b>[Transport Manager]</b> {message}</td>'
+        #         log_info += '</tr>'
+        #         log_info += '</table>'
                 
-                cursor.insertHtml(log_info)
-                self.console.setTextCursor(cursor)
-                return True
+        #         cursor.insertHtml(log_info)
+        #         self.console.setTextCursor(cursor)
+        #         return True
             
-            if message_format.upper() == "INIT":
-                time_info = datetime.now()
-                time_info = time_info.strftime(TIME_FORMAT)
+        #     if message_format.upper() == "INIT":
+        #         time_info = datetime.now()
+        #         time_info = time_info.strftime(TIME_FORMAT)
 
-                log_info = '<table width="100%" align="center" class="execution-log">'
-                log_info += '<tr>'
-                log_info += f'<td colspan="2"; class="task-init-header">Starting task execution [{self.ProcessRunner.current_item.display}].</td>'
-                log_info += '</tr>'
-                log_info += '<tr>'
-                log_info += f'<td class="task-info"><b>Action:</b> [{self.ProcessRunner.current_item.ExecutionType}]</td>'
-                log_info += f'<td class="task-info"><b>Task Type:</b> [{self.ProcessRunner.current_item.TaskType}]</td>'
-                log_info += '</tr>'
+        #         log_info = '<table width="100%" align="center" class="execution-log">'
+        #         log_info += '<tr>'
+        #         log_info += f'<td colspan="2"; class="task-init-header">Starting task execution [{self.ProcessRunner.current_item.display}].</td>'
+        #         log_info += '</tr>'
+        #         log_info += '<tr>'
+        #         log_info += f'<td class="task-info"><b>Action:</b> [{self.ProcessRunner.current_item.ExecutionType}]</td>'
+        #         log_info += f'<td class="task-info"><b>Task Type:</b> [{self.ProcessRunner.current_item.TaskType}]</td>'
+        #         log_info += '</tr>'
 
-                log_info += '<tr>'
-                log_info += f'<td class="task-info"><b>Compilation:</b> [{self.ProcessRunner.current_item.CompilerOption}]</td>'
-                log_info += f'<td class="task-info"><b>AutoUpdate:</b> [{self.ProcessRunner.current_item.AutoUpdate}]</td>'
-                log_info += '</tr>'
+        #         log_info += '<tr>'
+        #         log_info += f'<td class="task-info"><b>Compilation:</b> [{self.ProcessRunner.current_item.CompilerOption}]</td>'
+        #         log_info += f'<td class="task-info"><b>AutoUpdate:</b> [{self.ProcessRunner.current_item.AutoUpdate}]</td>'
+        #         log_info += '</tr>'
 
-                log_info += '<tr>'
-                log_info += f'<td class="task-info"><b>Connection:</b> [{self.ProcessRunner.current_item.Connection}]</td>'
-                log_info += '<td class="task-info"></td>'
-                log_info += '<tr>'
-                log_info += f'<td colspan="2"; class="task-init-footer">Start time: [{time_info}]</td>'
-                log_info += '</tr>'
-                log_info += '</table>'
+        #         log_info += '<tr>'
+        #         log_info += f'<td class="task-info"><b>Connection:</b> [{self.ProcessRunner.current_item.Connection}]</td>'
+        #         log_info += '<td class="task-info"></td>'
+        #         log_info += '<tr>'
+        #         log_info += f'<td colspan="2"; class="task-init-footer">Start time: [{time_info}]</td>'
+        #         log_info += '</tr>'
+        #         log_info += '</table>'
 
-                cursor.insertHtml(log_info)
-                self.console.setTextCursor(cursor)
-                
-                return True
+        #         cursor.insertHtml(log_info)
+        #         self.console.setTextCursor(cursor)
+        #         return True
             
-            if message_format.upper() == "FINISHED":
+        #     if message_format.upper() == "FINISHED":
 
-                time_info = self.ProcessRunner.execution_time
-                time_info = self.strfdelta(time_info, "{%D}d {%H}:{%M}:{%S}")
+        #         time_info = self.ProcessRunner.execution_time
+        #         time_info = self.strfdelta(time_info, "{%D}d {%H}:{%M}:{%S}")
 
-                end_state = "Successfully"
-                finished_class = "task-finished-success"
-                if self.ProcessRunner.was_error:
-                    end_state = "with Error"
-                    finished_class = "task-finished-error"
+        #         end_state = "Successfully"
+        #         finished_class = "task-finished-success"
+        #         if self.ProcessRunner.was_error:
+        #             end_state = "with Error"
+        #             finished_class = "task-finished-error"
 
-                log_info = '<table width="100%" align="center" class="execution-log">'
-                log_info += '<tr>'
-                log_info += f'<td colspan="2" class="{finished_class}">Task Execution Finished {end_state}!</td>'
-                log_info += '</tr>'
-                log_info += '<tr>'
-                log_info += f'<td class="task-info"><b>Executed Task:</b> [{self.ProcessRunner.current_item.display}]</td>'
-                log_info += f'<td class="task-info"><b>Task Execution time:</b> ({time_info})</td>'
-                log_info += '</tr>'
-                log_info += '</table>'
+        #         log_info = '<table width="100%" align="center" class="execution-log">'
+        #         log_info += '<tr>'
+        #         log_info += f'<td colspan="2" class="{finished_class}">Task Execution Finished {end_state}!</td>'
+        #         log_info += '</tr>'
+        #         log_info += '<tr>'
+        #         log_info += f'<td class="task-info"><b>Executed Task:</b> [{self.ProcessRunner.current_item.display}]</td>'
+        #         log_info += f'<td class="task-info"><b>Task Execution time:</b> ({time_info})</td>'
+        #         log_info += '</tr>'
+        #         log_info += '</table>'
 
-                cursor.insertHtml(log_info)
-                self.console.setTextCursor(cursor)
-                return True
+        #         cursor.insertHtml(log_info)
+        #         self.console.setTextCursor(cursor)
+        #         return True
 
-        log_info = '<table width="100%" class="log-table">'
-        log_info += '<tr>'
-        log_info += f'<td class="log-row"><pre class="execution-log">{message}</pre></td>'
-        log_info += '</tr>'
-        log_info += '</table>'
+        # log_info = '<table width="100%" class="log-table">'
+        # log_info += '<tr>'
+        # log_info += f'<td class="log-row"><pre class="execution-log">{message}</pre></td>'
+        # log_info += '</tr>'
+        # log_info += '</table>'
 
-        cursor.insertHtml(log_info)
-        self.console.setTextCursor(cursor)
-    
-    def strfdelta(self, tdelta, fmt):
-        hours, rem = divmod(tdelta.seconds, 3600)
-        minutes, seconds = divmod(rem, 60)
-
-        d = {"%D": tdelta.days}
-        d["%H"] = '{:02d}'.format(hours)
-        d["%M"] = '{:02d}'.format(minutes)
-        d["%S"] = '{:02d}'.format(seconds)
-
-        return fmt.format(**d)
+        # cursor.insertHtml(log_info)
+        # self.console.setTextCursor(cursor)
 
     def changeData(self, col, row):
         # print("data changed in ", col, row)

@@ -121,7 +121,7 @@
             "PlaceholderText":"",
             "IsMandatory":true,
             "ShowInEditor":true,
-            "ShowInTreeView":false,
+            "ShowInTreeView":true,
             "IsForDataExport":true,
             "UseTemplates":false
         },

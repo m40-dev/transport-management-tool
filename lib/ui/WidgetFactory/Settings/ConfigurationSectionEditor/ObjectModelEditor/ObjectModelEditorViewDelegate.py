@@ -149,25 +149,6 @@ class ObjectModelConfigurationWidget(QFrame):
         animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
         animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
         return animation
-    
-    # def paintEvent(self, event):
-    #     super().paintEvent(event)
-
-    #     if self.isSelected:
-    #         painter = QPainter(self)
-    #         frame_geo = self.frame.geometry().getRect()
-    #         widget_rect = QRect(frame_geo[0], frame_geo[1], frame_geo[2], frame_geo[3])
-            
-    #         selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")
-    #         # Set the pen color to the selection color
-    #         selection_color.setAlphaF(0.5)
-    #         pen = QPen(selection_color)
-    #         pen.setWidth(1)
-    #         painter.setPen(pen)
-    #         painter.setBrush(selection_color)
-
-    #         # Set the border color of the item
-    #         painter.drawRect(widget_rect)
 
     def refreshUi(self):
         #UI refresh
@@ -250,11 +231,6 @@ class ObjectModelConfigurationWidget(QFrame):
         subFrameLayout.setColumnStretch(2, 2)
         subFrameLayout.setColumnStretch(3, 4)
 
-        # subFrameLayout.setRowStretch(0, 0)
-        # subFrameLayout.setRowStretch(1, 0)
-        # subFrameLayout.setRowStretch(2, 0)
-        # subFrameLayout.setRowStretch(3, 0)
-        # subFrameLayout.setRowStretch(4, 1)
         # Default property values setting
 
         self.addToFormLayout(subFrameLayout, "FieldType", 0, 0)

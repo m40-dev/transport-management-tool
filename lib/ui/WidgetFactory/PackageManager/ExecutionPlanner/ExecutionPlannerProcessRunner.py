@@ -4,10 +4,13 @@ from lib.db.database import DatabaseConnection
 import pathlib, shutil
 from lib.ui.WidgetFactory import MsgBox
 from timeit import default_timer as timer
-from datetime import timedelta
+from datetime import timedelta, datetime
+
+TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 class ProcessRunner(QProcess):
     message = pyqtSignal(str, str)
+    logPreformattedMessage = pyqtSignal(str)
     taskStatusChanged = pyqtSignal(object, str)
     taskCompleted = pyqtSignal(object)
     stageFinished = pyqtSignal(object, object)
@@ -22,6 +25,8 @@ class ProcessRunner(QProcess):
         self.readyReadStandardError.connect(self.handleProcessStdErr)
         self.finished.connect(self.processExecutionFinished)
         self.stateChanged.connect(self.handleProcessState)
+        self.message.connect(self.handleMessageLogFormat)
+        self.logPreformattedMessage.connect(self.redirectLogToCurrentItem)
         
         self.is_running = False
         self.start_time = timer()
@@ -38,6 +43,120 @@ class ProcessRunner(QProcess):
         if self._current_workdir:
             return self._current_workdir
         return self.planner_widget.current_workdir
+
+    def handleMessageLogFormat(self, message, message_format):
+        if len(message.strip()) == 0:
+            return False
+
+        # setup the log entry to remove whitespaces around
+        # replace the line break characters to avoid doubled line break handling
+        bytes_log = bytes(message.strip(), 'utf-8')
+        bytes_log_trimmed = bytes_log.replace(b'\r\n', b'\n')
+        message = bytes_log_trimmed.decode('utf-8')
+
+        if message_format:
+            if message_format.upper() == "ERROR":
+                # log_info = f'<p class="execution-error">[Error] {message}</p>'
+
+                log_info = '<table width="100%" class="execution-log">'
+                log_info += '<tr>'
+                log_info += f'<td class="execution-error"><b>[Error]</b> {message}</td>'
+                log_info += '</tr>'
+                log_info += '</table>'
+
+                self.logPreformattedMessage.emit(log_info)
+                return True
+
+            if message_format.upper() == "TRANSPORT MANAGER":
+                # log_info = f'<p class="transport-manager">[Transport Manager] {message}</p>'
+
+                log_info = '<table width="100%" class="execution-log">'
+                log_info += '<tr>'
+                log_info += f'<td class="transport-manager"><b>[Transport Manager]</b> {message}</td>'
+                log_info += '</tr>'
+                log_info += '</table>'
+                
+                self.logPreformattedMessage.emit(log_info)
+                return True
+            
+            if message_format.upper() == "INIT":
+                time_info = datetime.now()
+                time_info = time_info.strftime(TIME_FORMAT)
+
+                log_info = '<table width="100%" align="center" class="execution-log">'
+                log_info += '<tr>'
+                log_info += f'<td colspan="2"; class="task-init-header">Starting task execution [{self.current_item.display}].</td>'
+                log_info += '</tr>'
+                log_info += '<tr>'
+                log_info += f'<td class="task-info"><b>Action:</b> [{self.current_item.ExecutionType}]</td>'
+                log_info += f'<td class="task-info"><b>Task Type:</b> [{self.current_item.TaskType}]</td>'
+                log_info += '</tr>'
+
+                log_info += '<tr>'
+                log_info += f'<td class="task-info"><b>Compilation:</b> [{self.current_item.CompilerOption}]</td>'
+                log_info += f'<td class="task-info"><b>AutoUpdate:</b> [{self.current_item.AutoUpdate}]</td>'
+                log_info += '</tr>'
+
+                log_info += '<tr>'
+                log_info += f'<td class="task-info"><b>Connection:</b> [{self.current_item.Connection}]</td>'
+                log_info += '<td class="task-info"></td>'
+                log_info += '<tr>'
+                log_info += f'<td colspan="2"; class="task-init-footer">Start time: [{time_info}]</td>'
+                log_info += '</tr>'
+                log_info += '</table>'
+
+                self.logPreformattedMessage.emit(log_info)
+                return True
+            
+            if message_format.upper() == "FINISHED":
+
+                time_info = self.execution_time
+                time_info = self.strfdelta(time_info, "{%D}d {%H}:{%M}:{%S}")
+
+                end_state = "Successfully"
+                finished_class = "task-finished-success"
+                if self.was_error:
+                    end_state = "with Error"
+                    finished_class = "task-finished-error"
+
+                log_info = '<table width="100%" align="center" class="execution-log">'
+                log_info += '<tr>'
+                log_info += f'<td colspan="2" class="{finished_class}">Task Execution Finished {end_state}!</td>'
+                log_info += '</tr>'
+                log_info += '<tr>'
+                log_info += f'<td class="task-info"><b>Executed Task:</b> [{self.current_item.display}]</td>'
+                log_info += f'<td class="task-info"><b>Task Execution time:</b> ({time_info})</td>'
+                log_info += '</tr>'
+                log_info += '</table>'
+
+                self.logPreformattedMessage.emit(log_info)
+                return True
+
+        log_info = '<table width="100%" class="log-table">'
+        log_info += '<tr>'
+        log_info += f'<td class="log-row"><pre class="execution-log">{message}</pre></td>'
+        log_info += '</tr>'
+        log_info += '</table>'
+
+        self.logPreformattedMessage.emit(log_info)
+
+    def redirectLogToCurrentItem(self, formatted_message):
+        if len(formatted_message.strip()) == 0:
+            return False
+            
+        if self.current_item:
+            self.current_item.execution_log.append(formatted_message)
+
+    def strfdelta(self, tdelta, fmt):
+        hours, rem = divmod(tdelta.seconds, 3600)
+        minutes, seconds = divmod(rem, 60)
+
+        d = {"%D": tdelta.days}
+        d["%H"] = '{:02d}'.format(hours)
+        d["%M"] = '{:02d}'.format(minutes)
+        d["%S"] = '{:02d}'.format(seconds)
+
+        return fmt.format(**d)
 
     def stopExecutionPlanner(self):
         for task in self.task_queue:

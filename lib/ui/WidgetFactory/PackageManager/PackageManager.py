@@ -150,8 +150,8 @@ class PackageManager(QtWidgets.QWidget):
         packageViewDelegate = PackageViewDelegate(
             model_data=data_model, 
             application=self.application, 
-            parent_widget=self.PackageViewTreeView,
-            package_manager=self)
+            parent_view=self.PackageViewTreeView,
+            parent_module=self)
 
         self.PackageViewTreeView.setItemDelegate(packageViewDelegate)
         # end_time = timer()

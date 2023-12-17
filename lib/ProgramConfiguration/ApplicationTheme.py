@@ -64,7 +64,7 @@ class ApplicationTheme(QPalette):
         self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Base, brush)
         self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Window, brush)
         self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Highlight, brush)
-        self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Text, brush)
+        
 
         brush = QBrush(self.ProgramConfiguration.getColor("AlternativeBaseColor"))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
@@ -79,13 +79,17 @@ class ApplicationTheme(QPalette):
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.Highlight, brush)
         
-        brush = QBrush(self.ProgramConfiguration.getColor("TextColor"))
+        text_color = self.ProgramConfiguration.getColor("TextColor")
+        brush = QBrush(text_color)
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.Text, brush)
-
-        brush = QBrush(self.ProgramConfiguration.getColor("TextColor"))
+        self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Text, brush)
+        
+        text_color.setAlphaF(0.7)
+        brush = QBrush(text_color)
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.PlaceholderText, brush)
+        
 
         brush = QBrush(self.ProgramConfiguration.getColor("HighlightedText"))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
