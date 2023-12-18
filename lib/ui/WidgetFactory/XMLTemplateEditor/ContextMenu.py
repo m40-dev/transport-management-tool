@@ -43,6 +43,12 @@ class XMLObjectContextMenu(QMenu):
         if source_index and source_index.isValid():
             source_item = source_index.internalPointer()
             print("object clicked", source_item.xml_object_class)
+
+            # Add Table Query task on top of the list
+            if source_item.table_name is not None:
+                menuQueryDatabaseObject = self.addAction("Query this table")
+                menuQueryDatabaseObject.triggered.connect(lambda: self.onQueryTableData.emit(source_index))
+                self.menu_items.append(menuQueryDatabaseObject)
             
             # Prepare Transport Object specific menu items
             if source_item.xml_object_class == "Transport_Object" or (source_item.xml_object_class == "Table_Object_Reference" and source_item.table_name in OBJECT_LISTING_TABLES):
@@ -152,7 +158,20 @@ class XMLObjectContextMenu(QMenu):
             self.menu_items.append(menuActionBufferTransportTask)
         
 
+class ObjectDataItemContextMenu(QMenu):
+    """ Custom QMenu used to manage relation items """
+    onQueryTableData = pyqtSignal(object)
 
-        
+    def __init__(self, parent, source_index):
+        super(ObjectDataItemContextMenu, self).__init__()
+        self.parent = parent
+        self.menu_items = []
+        self.setStyleSheet(self.parent.styleSheet())
+        #clicked on a specific object
+        if source_index and source_index.isValid():
+            source_item = source_index.internalPointer()
+            print("object clicked", source_item, source_item.table_name)
 
-            
+            menuQueryDatabaseObject = self.addAction("Query this table")
+            menuQueryDatabaseObject.triggered.connect(lambda: self.onQueryTableData.emit(source_index))
+            self.menu_items.append(menuQueryDatabaseObject)

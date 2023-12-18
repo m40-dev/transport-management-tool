@@ -101,7 +101,7 @@ class XMLDataModel(QAbstractItemModel):
             and role == Qt.ItemDataRole.CheckStateRole and column_name in ["Options"]):
                 return item.checkState(column_name)
 
-        if role == Qt.ItemDataRole.EditRole and column_name == "XML Transport Structure":
+        if role == Qt.ItemDataRole.EditRole and column_name == "XML Transport Structure" and isinstance(item, XMLDataItem):
             return item.display(column_name)
         
         return None

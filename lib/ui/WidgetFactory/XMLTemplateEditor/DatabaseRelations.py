@@ -1,6 +1,6 @@
 # from PyQt6 import QtCore, QtWidgets
 
-from PyQt6.QtCore import Qt, QMetaObject, QCoreApplication, pyqtSignal
+from PyQt6.QtCore import Qt, QMetaObject, QCoreApplication, pyqtSignal, QSize
 
 #""" Required QT Libraries """
 from PyQt6 import QtWidgets
@@ -13,11 +13,11 @@ class DatabaseRelations(QtWidgets.QWidget):
     relationSettingsChanged = pyqtSignal(object)
     relationResetRequested = pyqtSignal(object, int)
 
-
     def __init__(self, parent, application):
         super().__init__()
 
         self.application = application
+        self.ProgramConfiguration = self.application.ProgramConfiguration
         self.XMLTemplateEditor = parent
         self.current_index = None
         self.current_item = None
@@ -187,6 +187,15 @@ class DatabaseRelations(QtWidgets.QWidget):
         self.horizontalLayout.addWidget(self.RelationPresetsComboBox)
         self.ApplyPresetToolButton = QtWidgets.QToolButton(self.SelectedObjectRelationsGroupBox)
         self.ApplyPresetToolButton.setObjectName("ApplyPresetToolButton")
+        
+        apply_icon = self.ProgramConfiguration.getIcon("ApplyPreset")
+        if apply_icon:
+            self.ApplyPresetToolButton.setText("")
+            self.ApplyPresetToolButton.setToolTip("<i>Apply Relation Preset Configuration..</i>")
+            self.ApplyPresetToolButton.setIcon(apply_icon)
+            self.ApplyPresetToolButton.setIconSize(QSize(20, 20))
+            self.ApplyPresetToolButton.setProperty("Widget", "CustomToolButton")
+
         self.horizontalLayout.addWidget(self.ApplyPresetToolButton)
         
         self.optionsLayout = QtWidgets.QGridLayout()
@@ -242,7 +251,7 @@ class DatabaseRelations(QtWidgets.QWidget):
         self.RelationsViewTreeView.setModel(self.relation_data_model)
         self.relation_data_model.dataChanged.connect(self.relationStatusChanged)
         self.RelationsViewTreeView.header().setStretchLastSection(False)
-        self.RelationsViewTreeView.header().resizeSection(0, round(self.application.width()*0.12))
+        self.RelationsViewTreeView.header().resizeSection(0, round(self.application.width()*0.1))
         self.RelationsViewTreeView.header().resizeSection(1, 30)
         self.RelationsViewTreeView.header().resizeSection(2, 30)
         self.RelationsViewTreeView.header().resizeSection(3, 30)

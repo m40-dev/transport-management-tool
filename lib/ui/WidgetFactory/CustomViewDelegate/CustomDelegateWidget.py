@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QGridLayout, QFrame, QGraphicsOpacityEffect, QSizePolicy
+from PyQt6.QtWidgets import QGridLayout, QFrame, QGraphicsOpacityEffect, QSizePolicy, QTreeView
 from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, QAbstractAnimation
 
 class CustomDelegateWidget(QFrame):
@@ -39,8 +39,9 @@ class CustomDelegateWidget(QFrame):
         
         self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
 
-        self.parent_view.expanded.connect(self.expand_children)
-        self.parent_view.collapsed.connect(self.collapse_children)
+        if isinstance(self.parent_view, QTreeView):
+            self.parent_view.expanded.connect(self.expand_children)
+            self.parent_view.collapsed.connect(self.collapse_children)
 
         # custom widget show animation
         self.animate()
@@ -86,6 +87,6 @@ class CustomDelegateWidget(QFrame):
         self.parent_view.model().layoutChanged.emit()
 
     def sizeHint(self):
-        preffered_size = super().sizeHint()
+        preffered_size = super().minimumSizeHint()
         preffered_size.setHeight(preffered_size.height() * 1.2)
         return preffered_size

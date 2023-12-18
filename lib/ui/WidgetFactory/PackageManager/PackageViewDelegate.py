@@ -40,7 +40,8 @@ class PackageManagerItemWidget(CustomDelegateWidget):
 
         self.element_label = QLabel(self)
         self.element_label.setProperty("CustomWidget", "ItemLabel")
-                
+        self.setToolTip(f"<i>{self.model_item.description}</i>")
+        
         self.element_description = QLabel(self)
         self.element_description.setProperty("CustomWidget", "ItemDescription")
         self.element_description.setWordWrap(True)
@@ -109,7 +110,10 @@ class PackageManagerItemWidget(CustomDelegateWidget):
             object_display = f"* {object_display}"
         
         self.element_label.setText(object_display)
-        self.element_description.setText(self.model_item.description)
+        description_text = self.model_item.description
+        if self.model_item.description and len(str(self.model_item.description)) > 60:
+            description_text = self.model_item.description[:60] + "..."
+        self.element_description.setText(description_text)
         
         self.parent_view.model().layoutChanged.emit()
 

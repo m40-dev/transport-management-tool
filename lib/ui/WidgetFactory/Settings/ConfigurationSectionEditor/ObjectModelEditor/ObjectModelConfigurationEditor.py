@@ -3,8 +3,10 @@ from PyQt6 import QtWidgets
 from PyQt6.QtCore import pyqtSignal, Qt
 from ..ConfigurationSectionEditor import ConfigurationSectionEditor
 from lib.data.DataModels.Settings.ObjectConfigurationModel import ObjectConfigurationModel
-from .ObjectModelEditorViewDelegate import ObjectModelEditorViewDelegate
-from .DefaultItemViewDelegate import DefaultItemViewDelegate
+from .ObjectModelEditorViewDelegate import ObjectModelConfigurationWidget
+# from .DefaultItemViewDelegate import DefaultItemViewDelegate
+from .DefaultItemViewDelegate import DefaultConfigurationWidget
+from lib.ui.WidgetFactory.CustomViewDelegate import CustomViewDelegate
 
 from lib.ui.WidgetFactory import FormEditorDialog
 
@@ -26,12 +28,13 @@ class ObjectModelConfigurationEditor(ConfigurationSectionEditor):
 
         # model_data.dataChanged.connect(self.configurationDataChanged)
         
-        ConfigurationViewDelegate = ObjectModelEditorViewDelegate(
+        ConfigurationViewDelegate = CustomViewDelegate(
             model_data=model_data, 
-            parent_widget=self.ObjectModelConfigurationView,
+            parent_view=self.ObjectModelConfigurationView,
             application=self.application, 
-            configuration_editor=self)
-
+            parent_module=self)
+        ConfigurationViewDelegate.setCustomWidgetClass(ObjectModelConfigurationWidget)
+        
         self.ObjectModelConfigurationView.setModel(model_data)
         self.ObjectModelConfigurationView.setItemDelegate(ConfigurationViewDelegate)
         
@@ -44,11 +47,19 @@ class ObjectModelConfigurationEditor(ConfigurationSectionEditor):
             parent_widget=self.DefaultConfigurationView)
         self.DefaultConfigurationView.setModel(default_config_model_data)
         
-        DefaultViewDelegate = DefaultItemViewDelegate(
+        # DefaultViewDelegate = DefaultItemViewDelegate(
+        #     model_data=default_config_model_data, 
+        #     parent_widget=self.DefaultConfigurationView,
+        #     application=self.application, 
+        #     configuration_editor=self)
+
+        DefaultViewDelegate = CustomViewDelegate(
             model_data=default_config_model_data, 
-            parent_widget=self.DefaultConfigurationView,
+            parent_view=self.DefaultConfigurationView,
             application=self.application, 
-            configuration_editor=self)
+            parent_module=self)
+
+        DefaultViewDelegate.setCustomWidgetClass(DefaultConfigurationWidget)
         
         self.DefaultConfigurationView.setItemDelegate(DefaultViewDelegate)
 
@@ -62,12 +73,13 @@ class ObjectModelConfigurationEditor(ConfigurationSectionEditor):
             parent_widget=self.ConfigurationSamplesView)
         
         self.ConfigurationSamplesView.setModel(configuration_samples_model)
-        
-        SamplesViewDelegate = DefaultItemViewDelegate(
+
+        SamplesViewDelegate = CustomViewDelegate(
             model_data=configuration_samples_model, 
-            parent_widget=self.ConfigurationSamplesView,
+            parent_view=self.ConfigurationSamplesView,
             application=self.application, 
-            configuration_editor=self)
+            parent_module=self)
+        SamplesViewDelegate.setCustomWidgetClass(DefaultConfigurationWidget)
         
         self.ConfigurationSamplesView.setItemDelegate(SamplesViewDelegate)
 
@@ -126,6 +138,9 @@ class ObjectModelConfigurationEditor(ConfigurationSectionEditor):
         view_Label.setProperty("ConfigurationEditor", "ListViewHeader")
         configuration_view = QtWidgets.QWidget(self)
         configuration_layout = QtWidgets.QVBoxLayout(configuration_view)
+        configuration_layout.setSpacing(2)
+        configuration_layout.setContentsMargins(1,1,1,1)
+
         configuration_layout.addWidget(view_Label)
         configuration_layout.addWidget(self.ObjectModelConfigurationView)
 
@@ -135,6 +150,9 @@ class ObjectModelConfigurationEditor(ConfigurationSectionEditor):
         
         default_configuration_view = QtWidgets.QWidget(self)
         default_configuration_layout = QtWidgets.QVBoxLayout(default_configuration_view)
+        default_configuration_layout.setSpacing(2)
+        default_configuration_layout.setContentsMargins(1,1,1,1)
+
         default_configuration_layout.addWidget(mandatory_fields_Label)
 
         self.DefaultConfigurationView = QtWidgets.QListView(self)
@@ -173,7 +191,7 @@ class ObjectModelConfigurationEditor(ConfigurationSectionEditor):
         ConfigurationViewSplitter.addWidget(configuration_view)
         ConfigurationViewSplitter.addWidget(default_configuration_view)
 
-        ConfigurationViewSplitter.setSizes([round(self.width()*0.6), round(self.width()*0.3)])
+        ConfigurationViewSplitter.setSizes([round(self.width()*0.6), round(self.width()*0.4)])
 
         #add widgets to layout
 

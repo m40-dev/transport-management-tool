@@ -145,7 +145,7 @@ class ProcessRunner(QProcess):
             return False
             
         if self.current_item:
-            self.current_item.execution_log.append(formatted_message)
+            self.current_item.logExecutionState.emit(formatted_message)
 
     def strfdelta(self, tdelta, fmt):
         hours, rem = divmod(tdelta.seconds, 3600)

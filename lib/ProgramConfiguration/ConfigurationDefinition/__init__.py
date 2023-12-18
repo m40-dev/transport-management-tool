@@ -34,4 +34,6 @@ PROGRAM_ICONS = {
     "SaveObject": "./lib/ui/img/icons/SaveObject.png",
     "EditXMLDefinition": "./lib/ui/img/icons/EditXMLDefinition.png",
     "ExecutionLogs": "./lib/ui/img/icons/Console.png",
+    "RunQuery": "lib/ui/img/icons/StartBlue.png",
+    "ApplyPreset": "./lib/ui/img/icons/ApplyPreset.png",
 }

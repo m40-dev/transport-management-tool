@@ -26,6 +26,9 @@ class ObjectDataItem(QObject):
     
     @property
     def table_name(self):
+        if self.table_data:
+            return self.table_data.TableName
+
         return self.objectkey_table(self.object_data)
 
     def itemDataDropped(self, source_dict):

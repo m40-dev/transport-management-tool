@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QRadioButton, QDialog, QComboBox, QHBoxLayout, QVBoxLayout, QSpacerItem
 from PyQt6.QtWidgets import QGridLayout, QStyledItemDelegate, QStyle, QToolButton, QFrame, QLabel, QHBoxLayout, QTextEdit, QGraphicsOpacityEffect, QSizePolicy, QTreeWidgetItem, QWidget
 from PyQt6.QtCore import Qt, QRectF, QRect, pyqtSignal, QPropertyAnimation, QEasingCurve, QAbstractAnimation, QPoint, QSize
-from PyQt6.QtGui import QPalette, QPen, QPainterPath, QPainter, QTextOption
+from PyQt6.QtGui import QPalette, QPen, QPainterPath, QPainter, QTextOption, QTextCursor
 from PyQt6.QtCore import Qt, QRectF, pyqtSignal
 from PyQt6.QtGui import QPalette, QPen, QPainterPath 
 # from lib.ui.Theme import Application_Theme
@@ -242,14 +242,14 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
         self.log_reader_console.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
         self.log_reader_console.setLineWrapColumnOrWidth(self.log_reader_console.width())
 
-        defaultBlockFormat = self.log_reader_console.textCursor().blockFormat()
-        defaultBlockFormat.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        defaultBlockFormat.setTopMargin(0)
-        defaultBlockFormat.setBottomMargin(0)
-        defaultBlockFormat.setLeftMargin(0)
-        defaultBlockFormat.setRightMargin(0)
+        self.defaultBlockFormat = self.log_reader_console.textCursor().blockFormat()
+        self.defaultBlockFormat.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.defaultBlockFormat.setTopMargin(0)
+        self.defaultBlockFormat.setBottomMargin(0)
+        self.defaultBlockFormat.setLeftMargin(0)
+        self.defaultBlockFormat.setRightMargin(0)
 
-        self.log_reader_console.textCursor().setBlockFormat(defaultBlockFormat)
+        self.log_reader_console.textCursor().setBlockFormat(self.defaultBlockFormat)
         self.log_reader_console.document().setDefaultStyleSheet(self.ProgramConfiguration.styleSheet())
 
         """ Set initial values """
@@ -265,12 +265,23 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
         self.connection_box.currentTextChanged.connect(self.setConnection)
         self.model_item.data_changed.connect(self.refreshTaskUI)
         self.ExecutionLogs.clicked.connect(self.showLogs)
+        self.model_item.logExecutionState.connect(self.appendLogs)
         # self.model_item.executionStateChanged.connect(self.handleExecutionStateChange)
 
     def showLogs(self):
-        print(len(self.model_item.execution_log))
         self.log_reader_console.setHtml("\n".join(self.model_item.execution_log))
         self.log_reader.show()
+
+    def appendLogs(self, formatted_message):
+        cursor = self.log_reader_console.textCursor()
+        cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.MoveAnchor)
+        if cursor.blockNumber() > 0:
+            cursor.insertBlock(self.defaultBlockFormat)
+
+        cursor.insertHtml(formatted_message)
+
+        # restore cursor location at the end, this effectively scrolls the log view automatically
+        self.log_reader_console.setTextCursor(cursor)
 
     def refreshConnections(self):
         connections = list(self.application.ConnectionHandler.connections.keys())

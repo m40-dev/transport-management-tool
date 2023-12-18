@@ -9,6 +9,12 @@ QMainWindow, QDialog, QWidget{
 	border-color: @BorderColor;
 }
 
+QSplitter::handle{
+	border:0px;
+	background-color: qlineargradient(x1: 0, x2: 0, y1: 0, y2:1, stop: 0 transparent, stop: 0.5 @BorderColor, stop: 1 transparent); ;
+	margin: 0px;
+}
+
 QLabel, QCheckBox, QRadioButton{
 	background: transparent;
 }
@@ -139,6 +145,7 @@ QTabBar::tab{
 	border-radius: 2px;
 	color: @TextColor;
 	padding: 0.6em;
+	font-size: 12px;
 }
 
 QTabBar::tab:selected{
@@ -150,10 +157,12 @@ QTabBar::tab:selected{
 
 QTabBar::tab:top{
 	min-width: 12em;
+	min-height: 10px;
 }
 
 QTabBar::tab:left{
-	min-width: 2em;
+	min-width: 1.1em;
+
 }
 
 /* Tree and List Views styling */
@@ -534,6 +543,22 @@ QLabel[Widget="FilePathLabel"]{
 	min-height: 25px;
 }
 
+QToolButton[Widget="CustomToolButton"]{
+	min-height: 10px;
+	min-width: 10px;
+	border: 0px;
+	background-color: transparent;
+}
+
+QToolButton[Widget="CustomToolButton"]::hover{
+	border: 1px solid @BorderColor;
+	background-color: @SelectedObjectColor;
+}
+
+QTabBar[CustomTabWidget="XMLTemplateEditorData"]:tab{
+	min-width: 9em;
+}
+
 QHeaderView:section:horizontal[Widget="XMLTemplateEditorWidget"]{
 }
 
@@ -789,11 +814,12 @@ QWidget[ConfigurationEditor="SectionDescription"]{
 QWidget[ConfigurationEditor="PropertyLabel"]{
 	color:@TextColor;
 	text-align: right;
+	margin:1px;
 }
 
 QWidget[ConfigurationEditor="PropertyDescription"]{
 	color: @DescriptionTextColor;
-	margin-top: 2px;
+	margin:1px;
 }
 
 QWidget[ConfigurationEditor="PropertyEditor"]{
@@ -804,17 +830,13 @@ QWidget[ConfigurationEditor="FieldLabel"]{
 	color:@TextColor;
 	font: bold;
 	font-size: 14px;
-	margin-top: 0px;
-	margin-bottom: 2px;
-	padding:0;
+	margin: 1px;
 }
 
 QWidget[ConfigurationEditor="FieldDescription"]{
-	color:@DescriptionTextColor;;
-	margin-top: 0px;
-	margin-bottom: 2px;
+	color:@DescriptionTextColor;
+	margin: 1px;
 	padding-left: 5px;
-	padding-top: 0;
 }
 
 /* Custom button configuration that lets the editor to pop out to a window for bigger view */

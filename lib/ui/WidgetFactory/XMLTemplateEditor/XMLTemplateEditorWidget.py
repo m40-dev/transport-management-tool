@@ -9,7 +9,7 @@ from PyQt6 import QtWidgets
 
 # XML Management
 from ..CodeEditors.XMLEditor import xml_editor
-from .ContextMenu import XMLObjectContextMenu
+from .ContextMenu import XMLObjectContextMenu, ObjectDataItemContextMenu
 from ..DialogScreens import ScriptEditorDialog
 
 # Data Models
@@ -133,34 +133,42 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         clickedIndex = self.XMLStructureTreeView.indexAt(menuPosition)
         clickedItem = clickedIndex.internalPointer()
         if isinstance(clickedItem, ObjectDataItem):
-            return False
+            contextMenu = ObjectDataItemContextMenu(
+                parent=self.application, 
+                source_index=clickedIndex)
 
-        contextMenu = XMLObjectContextMenu(
-            parent=self.application, 
-            source_index=clickedIndex)
-        
-        contextMenu.onListRelatedObjectData.connect(lambda: self.listObjectDataRequested(
-            source_index = clickedIndex, 
-            override = True))
+            contextMenu.onQueryTableData.connect(self.queryTaskData)
+            if len(contextMenu.menu_items) > 0:
+                menu_target = self.XMLStructureTreeView.mapToGlobal(menuPosition)
+                contextMenu.popup(menu_target)
 
-        contextMenu.onLoadDatabaseObject.connect(self.loadDatabaseObject)
-        contextMenu.onSaveRelationPreset.connect(self.saveRelationPreset)
-        contextMenu.onAddTransportTask.connect(self.addTransportTask)
-        contextMenu.onAddSQLScript.connect(self.addSQLScript)
-        contextMenu.onEditSQLScript.connect(self.editSQLScript)
-        contextMenu.onCopySelectedNodes.connect(self.copyXMLNodes)
-        contextMenu.onPasteSelectedNodes.connect(self.pasteSelectedNodes)
-        contextMenu.onQueryTableData.connect(self.queryTaskData)
+        if isinstance(clickedItem, XMLDataItem):
+            contextMenu = XMLObjectContextMenu(
+                parent=self.application, 
+                source_index=clickedIndex)
+            
+            contextMenu.onListRelatedObjectData.connect(lambda: self.listObjectDataRequested(
+                source_index = clickedIndex, 
+                override = True))
 
-        if len(contextMenu.menu_items) > 0:
-            menu_target = self.XMLStructureTreeView.mapToGlobal(menuPosition)
-            contextMenu.popup(menu_target)
+            contextMenu.onLoadDatabaseObject.connect(self.loadDatabaseObject)
+            contextMenu.onSaveRelationPreset.connect(self.saveRelationPreset)
+            contextMenu.onAddTransportTask.connect(self.addTransportTask)
+            contextMenu.onAddSQLScript.connect(self.addSQLScript)
+            contextMenu.onEditSQLScript.connect(self.editSQLScript)
+            contextMenu.onCopySelectedNodes.connect(self.copyXMLNodes)
+            contextMenu.onPasteSelectedNodes.connect(self.pasteSelectedNodes)
+            contextMenu.onQueryTableData.connect(self.queryTaskData)
+
+            if len(contextMenu.menu_items) > 0:
+                menu_target = self.XMLStructureTreeView.mapToGlobal(menuPosition)
+                contextMenu.popup(menu_target)
 
     """ Context Menu handling functions  """
     def queryTaskData(self, source_index):
         if source_index.isValid():
             source_item = source_index.internalPointer()
-            if isinstance(source_item, XMLDataItem):
+            if isinstance(source_item, (XMLDataItem, ObjectDataItem)):
                 self.parent.tableSelectionRequested.emit(source_item.table_name)
                 
     def pasteSelectedNodes(self, target_index):

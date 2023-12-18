@@ -159,6 +159,7 @@ class TaskExecutionItem(JSONDataItem):
         self._package_definition_data = {}
         self.definition_file_path = None
         self.execution_log = []
+        self.logExecutionState.connect(lambda log_entry: self.execution_log.append(log_entry))
 
         #Configure Default Value
         if task_data: 

@@ -5,120 +5,20 @@ from PyQt6.QtCore import Qt, QRect, pyqtSignal, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QPalette, QPen, QPainterPath,QDrag, QColor, QBrush, QPainter
 
 
-from lib.ui.WidgetFactory.DialogScreens.FormEditorDialog import FormEditorObject, FormEditorWidget
+from lib.ui.WidgetFactory.DialogScreens.FormEditorDialog import FormEditorObject
+from lib.ui.WidgetFactory.CustomViewDelegate import CustomDelegateWidget
 
-class ObjectModelEditorViewDelegate(QStyledItemDelegate):
+class ObjectModelConfigurationWidget(CustomDelegateWidget):
 
-    def __init__(self, parent_widget, model_data, application, configuration_editor):
-        super().__init__(parent_widget)
-        # self.items = ["", "Import", "Export"]
-        self.model_data = model_data
-        self.application = application
-        self.ProgramConfiguration = self.application.ProgramConfiguration
-        self.configuration_editor = configuration_editor
-        self.application_palette = self.application.color_theme    
-    
-    def createEditor(self, parent, option, index):
-        if not index.isValid():
-            return False
-        # column_name = self.model_data.headerData(index.column())
-        configuration_item = index.internalPointer()
-        # print("create editor for column", column_name, item, item.task_class)
+    def __init__(self, parent_view, application, model_item, parent_module):
+        super().__init__(parent_view=parent_view, application=application, model_item=model_item, parent_module=parent_module)
 
-        if configuration_item:
-            editor = ObjectModelConfigurationWidget(
-                configuration_item=configuration_item, 
-                application=self.application, 
-                parent=self.parent(), 
-                configuration_editor=self.configuration_editor)
-            return editor
-
-        return super().createEditor(parent, option, index)
-
-    def setEditorData(self, editor, index):
-        if not index.isValid():
-            return False
-            
-        # column_name = self.model_data.headerData(index.column())
-        item = index.internalPointer()
-        
-        if item:
-            viewport = self.parent().viewport()
-            editor.setParent(viewport)
-        else:
-            super().setEditorData(editor, index)
-
-    def setModelData(self, editor, model, index):
-        if not index.isValid():
-            return False
-        super().setModelData(editor, model, index)
-
-    def paint(self, painter, option, index):
-        if not index.isValid():
-            return False
-
-        # column_name = self.model_data.headerData(index.column())
-        item = index.internalPointer()
-
-        if item:
-            widget = self.parent().indexWidget(index)
-            if not widget:
-                widget = self.createEditor(self.parent(), option, index)
-                self.setEditorData(widget, index)
-                self.parent().setIndexWidget(index, widget)
-                widget.setGeometry(option.rect)
-            else:
-                widget.setGeometry(option.rect)
-
-            # Check if the item is selected
-            if option.state & QStyle.StateFlag.State_Selected:  
-                widget.isSelected = True
-
-                target_x = option.rect.x() + ((widget.rect().width() - widget.frame.rect().width()) / 2)
-
-                # divide by 2 to get just widget size (difference includes both margins)
-                target_y = option.rect.y() + ((widget.rect().height() - widget.frame.rect().height()) / 2)
-                # print(target_x, target_y)
-                # target_rect = QRect(QPoint(target_x, target_y), widget.frame.size())
-                target_rect = QRect(QPoint(target_x, target_y), widget.frame.size())
-
-                selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")
-                # selection_color.setAlphaF(0.4)
-                # # # Set the pen color to the selection color
-                pen = QPen(selection_color)
-                pen.setWidth(2)
-                painter.setPen(pen)
-                painter.setBrush(selection_color)
-                painter.drawRect(target_rect)
-            else:
-                widget.isSelected = False
-        else:
-            super().paint(painter, option, index)
-
-    def sizeHint(self, option, index):
-        if index.isValid():
-            widget = self.parent().indexWidget(index)
-            if widget and isinstance(widget, QWidget):
-                return widget.sizeHint()
-        return QSize(50, 50)
-
-class ObjectModelConfigurationWidget(QFrame):
-
-    def __init__(self, parent, configuration_item, application, configuration_editor):
-        super().__init__(parent=parent)
-        self.application = application
-        self.ProgramConfiguration = self.application.ProgramConfiguration
-        self.configuration_editor = configuration_editor
-        self.configuration_item = configuration_item
         self.widget_data = self.ProgramConfiguration.getConfigurationParameters("ObjectModelConfiguration")
-        self.listview = parent
-        self.parent = parent
-        self.isActive = configuration_item.isActive
-        self.isSelected = False
+        self.isActive = model_item.isActive
+
         # self.drag_start_position = None
         self.setAcceptDrops(True)
 
-        self.setProperty("ConfigurationEditor", "ObjectModelEditorWidget")
         self.editors = {}
         self.setupUi()
 
@@ -126,29 +26,12 @@ class ObjectModelConfigurationWidget(QFrame):
         self.refreshUi()
         self.animate()
         
-        self.listview.model().layoutChanged.emit()
-        self.configuration_item.data_changed.connect(self.refreshUi)
-        self.configuration_editor.currentItemChanged.connect(self.toggleFieldConfiguration)
+        self.parent_view.model().layoutChanged.emit()
+        self.model_item.data_changed.connect(self.refreshUi)
+        self.parent_module.currentItemChanged.connect(self.toggleFieldConfiguration)
         if self.isActive:
-            self.configuration_editor.currentItemChanged.emit(self.configuration_item)
+            self.parent_module.currentItemChanged.emit(self.model_item)
 
-    def animate(self, reverse=False):
-        # animate startup
-        effect = QGraphicsOpacityEffect(self)
-        self.setGraphicsEffect(effect)
-        animation = QPropertyAnimation(self)
-        animation.setPropertyName(bytes("opacity", "utf-8"))
-        animation.setTargetObject(effect)
-        animation.setDuration(200)
-        animation.setStartValue(0)
-        animation.setEndValue(1)
-        if reverse:
-            animation.setStartValue(1)
-            animation.setEndValue(0)
-            animation.setDuration(200)
-        animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
-        animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
-        return animation
 
     def refreshUi(self):
         #UI refresh
@@ -157,8 +40,8 @@ class ObjectModelConfigurationWidget(QFrame):
         #Attributes refresh - configure editors activity
         self.deactivateEditors()
 
-        if self.listview.model():
-            self.listview.model().layoutChanged.emit()
+        if self.parent_view.model():
+            self.parent_view.model().layoutChanged.emit()
 
     def deactivateEditors(self):
         for column, editor in self.editors.items():
@@ -168,35 +51,24 @@ class ObjectModelConfigurationWidget(QFrame):
             if field_dependencies:
                 isEditable = True
                 for dependency_column_name, dependency_column_value in field_dependencies.items():
-                    configuration_item_data = self.configuration_item.data(dependency_column_name)
-                    if configuration_item_data != dependency_column_value:
+                    model_item_data = self.model_item.data(dependency_column_name)
+                    if model_item_data != dependency_column_value:
                         isEditable = False
-                    if isinstance(dependency_column_value, list) and configuration_item_data in dependency_column_value:
+                    if isinstance(dependency_column_value, list) and model_item_data in dependency_column_value:
                         isEditable = True
                     
                 editor.setVisible(isEditable)
                 # print(column, "field dependencies", field_dependencies, "is Editable", isEditable)
 
     def updateConfigurationItem(self, column, value):
-        self.configuration_item.setData(column, value)
-        self.configuration_editor.configurationDataChanged()
+        self.model_item.setData(column, value)
+        self.parent_module.configurationDataChanged()
 
     def setupUi(self):
-        self.main_layout = QGridLayout(self)
-        self.main_layout.setContentsMargins(1,1,1,1)
-        self.main_layout.setSpacing(1)
 
-        self.frame = QFrame()
+        self.setProperty("ConfigurationEditor", "ObjectModelEditorWidget")
         self.frame.setProperty("ConfigurationEditor", "ObjectModelEditorFrame")
 
-        self.main_layout.addWidget(self.frame, 0, 0)
-        self.layout = QGridLayout(self.frame)
-
-        self.layout.setContentsMargins(2,2,2,2)
-        self.layout.setSpacing(4)
-
-        # self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
-        self.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
         self.handleBar = QLabel(self)
         self.handleBar.setText("::")
         self.handleBar.setProperty("ConfigurationEditor", "Handle")
@@ -279,20 +151,20 @@ class ObjectModelConfigurationWidget(QFrame):
         fieldSpecificLayout.setColumnStretch(1, 12)
         
         fieldSpecificLayout.setRowStretch(fieldSpecificLayout.rowCount()+1, 1)
-        self.listview.model().layoutChanged.emit()
+        self.parent_view.model().layoutChanged.emit()
 
     def removeItem(self):
         animation = self.animate(True)
-        animation.finished.connect(lambda: self.listview.model().removeItems([self.configuration_item]))
+        animation.finished.connect(lambda: self.parent_view.model().removeItems([self.model_item]))
 
     def addToFormLayout(self, layout, column_name, row, column, rowSpan=1, colSpan=1):
-        current_value = self.configuration_item.data(column_name, None)
+        current_value = self.model_item.data(column_name, None)
         
         field_configuration = self.widget_data.get(column_name, None)
         if field_configuration:
             if current_value is None and "DefaultValue" in field_configuration.keys():
                 current_value = field_configuration["DefaultValue"]
-                self.configuration_item.setData(column_name, current_value)
+                self.model_item.setData(column_name, current_value)
                 
             field_editor = FormEditorObject(
                 parent=self,
@@ -326,28 +198,31 @@ class ObjectModelConfigurationWidget(QFrame):
     
     def toggleFieldConfiguration(self, event_source):
         
-        isCurrentItem = event_source == self.configuration_item
+        isCurrentItem = event_source == self.model_item
         self.subFrame.setVisible(isCurrentItem)
         self.isActive = isCurrentItem
-        self.configuration_item.isActive = isCurrentItem
+        self.model_item.isActive = isCurrentItem
         if isCurrentItem:
             self.setProperty("ConfigurationEditor", "Active")
         else:
             self.setProperty("ConfigurationEditor", "ObjectModelEditorWidget")
         self.refreshUi()
-        # self.listview.model().layoutChanged.emit()
+        # self.parent_view.model().layoutChanged.emit()
 
     def mousePressEvent(self, event):
         if event.buttons() == Qt.MouseButton.LeftButton:
-            self.configuration_editor.currentItemChanged.emit(self.configuration_item)
+            self.parent_module.currentItemChanged.emit(self.model_item)
         QFrame.mousePressEvent(self, event)
     
-    def sizeHint(self):
-        if not self.isActive:
-            return super().minimumSizeHint()
-        else:
-            minimum_size = super().sizeHint()
-            minimum_size.setHeight(minimum_size.height()*0.9)
-            return minimum_size
-        return super().sizeHint()
+    # def sizeHint(self):
+    #     if not self.isActive:
+    #         minimum_size = super().minimumSizeHint()
+    #         minimum_size.setHeight(minimum_size.height()*1.1)
+    #         return minimum_size
+    #     else:
+    #         minimum_size = super().minimumSizeHint()
+    #         minimum_size.setHeight(minimum_size.height()*1.3)
+    #         return minimum_size
+
+    #     return super().sizeHint()
     

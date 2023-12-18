@@ -29,7 +29,7 @@ class CustomViewDelegate(QStyledItemDelegate):
                 parent_view=self.parent_view, 
                 application=self.application, 
                 model_item=model_item, 
-                parent_module=self.parent_module_widget)
+                parent_module=self.parent_module)
             return editor
 
         return super().createEditor(parent, option, index)
