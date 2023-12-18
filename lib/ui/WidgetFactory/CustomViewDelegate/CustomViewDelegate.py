@@ -78,7 +78,7 @@ class CustomViewDelegate(QStyledItemDelegate):
                 selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")
 
                 pen = QPen(selection_color)
-                pen.setWidth(2)
+                pen.setWidth(3)
                 painter.setPen(pen)
                 painter.setBrush(selection_color)
                 painter.drawRect(target_rect)

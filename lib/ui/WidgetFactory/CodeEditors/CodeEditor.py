@@ -21,6 +21,7 @@ class BaseCodeEditor(QsciScintilla):
         self.setIndentationGuides(True)
         self.setIndentationsUseTabs(False)
         self.setIndentationWidth(4)
+
         self.setMarginLineNumbers(1, True)
         self.setMarginWidth(1, 25)
         self.setMarginWidth(0, 0)
@@ -38,46 +39,48 @@ class BaseCodeEditor(QsciScintilla):
         self.SendScintilla(QsciScintilla.SCI_SETMULTIPLESELECTION, True)
         self.SendScintilla(QsciScintilla.SCI_SETMULTIPASTE, 1)
         self.SendScintilla(QsciScintilla.SCI_SETADDITIONALSELECTIONTYPING, True)
-        self.SendScintilla(QsciScintilla.SCI_SETINDENTATIONGUIDES, QsciScintilla.SC_IV_REAL);
+        self.SendScintilla(QsciScintilla.SCI_SETINDENTATIONGUIDES, QsciScintilla.SC_IV_REAL)
         self.SendScintilla(QsciScintilla.SCI_SETTABWIDTH, 4)
         self.setFolding(QsciScintilla.FoldStyle.PlainFoldStyle)
         self.SCN_MODIFIED = self.modify
-
-        self.reconfigure_editor()
+        
         self.expand_level = 5
 
-    @property
-    def dark_mode(self):
-        return self.application.getConfigurationValue("Appearance", "UseDarkTheme")
+        self.reconfigure_editor()
 
-    def reconfigure_editor(self):
+    def reconfigure_lexer(self):
         lexer = self.lexer
-        # editor_bg_color = QColor("#fff")
-        # editor_text_color = QColor("#222")
-        # caret_bg_color = QColor("#eee")
+
         editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
         editor_text_color = self.ProgramConfiguration.getColor("TextColor")
-        caret_bg_color = self.ProgramConfiguration.getColor("AlternativeBaseColor")
+        selected_color = self.ProgramConfiguration.getColor("HighlightedText")
 
-        if self.dark_mode:
-            editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
-            editor_text_color = self.ProgramConfiguration.getColor("TextColor")
-            caret_bg_color = self.ProgramConfiguration.getColor("AlternativeBaseColor")
-        
-        # TODO: set color for light or dark theme
-        # lexer.setColor(editor_text_color)
+        #Configure colors by their roles
+        lexer.setColor(editor_text_color, QsciLexerPython.Default)
+        lexer.setColor(selected_color, QsciLexerPython.Comment)
+        lexer.setColor(selected_color, QsciLexerPython.CommentBlock)
 
         lexer.setFont(self.font)
         lexer.setDefaultPaper(editor_bg_color)
         lexer.setPaper(editor_bg_color)
         self.setLexer(lexer)
 
-        self.setMarginsBackgroundColor(editor_bg_color)
-        self.setMarginsForegroundColor(editor_text_color)
-        self.setCaretLineBackgroundColor(caret_bg_color)
+    def reconfigure_editor(self):
+        editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
+        editor_text_color = self.ProgramConfiguration.getColor("TextColor")
+        caret_bg_color = self.ProgramConfiguration.getColor("HighlightColor")
 
+        self.reconfigure_lexer()
+
+        self.setCaretLineBackgroundColor(caret_bg_color)
+        
         self.SendScintilla(QsciScintilla.SCI_SETFOLDMARGINHICOLOUR, True, editor_bg_color)
         self.SendScintilla(QsciScintilla.SCI_SETFOLDMARGINCOLOUR, True, editor_bg_color)
+
+        self.setMarginsBackgroundColor(editor_bg_color)
+        self.setMarginsForegroundColor(editor_text_color)
+        
+        
 
     def find_text(self, text):
         if text == self.text_to_find:

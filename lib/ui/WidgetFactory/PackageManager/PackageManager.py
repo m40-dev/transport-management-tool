@@ -506,6 +506,15 @@ class PackageManager(QtWidgets.QWidget):
         # self.horizontalLayout_4.addWidget(self.FindPackageButton)
         self.AddPackageButton = QtWidgets.QToolButton(self.verticalLayoutWidget_5)
         self.AddPackageButton.setObjectName("AddPackageButton")
+        
+        add_object_icon = self.ProgramConfiguration.getIcon("AddObject")
+        if add_object_icon:
+            self.AddPackageButton.setText("")
+            self.AddPackageButton.setToolTip("<i>Add New Object..</i>")
+            self.AddPackageButton.setIcon(add_object_icon)
+            self.AddPackageButton.setProperty("PackageManager", "PackageManagerIcon")
+            self.AddPackageButton.setIconSize(QtCore.QSize(20,20))
+
         self.horizontalLayout_4.addWidget(self.AddPackageButton)
         self.verticalLayout_5.addLayout(self.horizontalLayout_4)
         self.PackageViewTreeView = QtWidgets.QTreeView(self.verticalLayoutWidget_5)
@@ -518,6 +527,7 @@ class PackageManager(QtWidgets.QWidget):
         self.PackageViewTreeView.setWordWrap(True)
         self.PackageViewTreeView.setObjectName("PackageViewTreeView")
         self.PackageViewTreeView.header().setDefaultSectionSize(39)
+        self.PackageViewTreeView.setProperty("PackageManager", "PackageManagerTreeView")
         self.verticalLayout_5.addWidget(self.PackageViewTreeView)
         self.ExecutionPlannerTabWidget = QtWidgets.QTabWidget(self.PackageManagerSplitter)
         self.ExecutionPlannerTabWidget.setTabsClosable(False)

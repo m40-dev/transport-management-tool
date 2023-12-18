@@ -50,6 +50,7 @@ class ExecutionPlannerWidget(QWidget):
         self.treeview = QTreeView()
         self.treeview.setProperty("TreeView", "ExecutionPlanner")
         self.console = QTextEdit()
+        self.console.setProperty("ExecutionPlanner", "ConsoleReader")
         self.console.setAcceptRichText(True)
         self.console.setWordWrapMode(QTextOption.WrapMode.WordWrap)
         self.console.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)

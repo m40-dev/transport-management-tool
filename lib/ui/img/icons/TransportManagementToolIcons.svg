@@ -23,9 +23,9 @@
      inkscape:pagecheckerboard="0"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="1"
-     inkscape:cx="928.5"
-     inkscape:cy="428.5"
+     inkscape:zoom="2"
+     inkscape:cx="713.25"
+     inkscape:cy="652.25"
      inkscape:window-width="3440"
      inkscape:window-height="1369"
      inkscape:window-x="-8"
@@ -924,7 +924,7 @@
     </g>
     <g
        id="g87671-3-2-6"
-       transform="matrix(0.13950438,0,0,0.19563804,155.35362,47.061994)"
+       transform="matrix(0.18666134,0,0,0.26350621,165.38755,27.030718)"
        style="fill:#ffffff;fill-opacity:1;stroke:#655e5e;stroke-width:3.63997;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\SchemaTransportTask.png"
        inkscape:export-xdpi="300"
@@ -1483,7 +1483,7 @@
     </g>
     <g
        id="g105289-1-2"
-       transform="matrix(0.03475099,0,0,0.03746761,122.74248,117.03505)"
+       transform="matrix(0.04649794,0,0,0.05046538,127.04447,119.95498)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\SQLTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300">
@@ -1521,7 +1521,7 @@
     </g>
     <g
        id="g105289-1-2-2"
-       transform="matrix(0.03252757,0.01330435,-0.01212259,0.03507037,115.75182,106.14458)"
+       transform="matrix(0.04352293,0.01791972,-0.01622041,0.04723652,117.69074,105.28654)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\SQLTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300">
@@ -1559,7 +1559,7 @@
     </g>
     <g
        id="g105289-1-1-1"
-       transform="matrix(0.04957705,0.01501331,-0.01390483,0.05368816,97.542138,106.54464)"
+       transform="matrix(0.06633568,0.02022153,-0.01860511,0.07231295,93.3256,105.82538)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\SQLTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300">
@@ -1902,7 +1902,7 @@
        inkscape:export-ydpi="300" />
     <g
        id="g105289-1-2-6-6-0"
-       transform="matrix(0.03475099,0,0,0.03746761,175.23149,112.42275)"
+       transform="matrix(0.04649794,0,0,0.05046538,191.98478,115.06557)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\BufferTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300"
@@ -1922,7 +1922,7 @@
     </g>
     <g
        id="g105289-1-2-6-6-1-0"
-       transform="matrix(0.04204995,0.02025868,-0.02078391,0.04314017,152.55151,90.798006)"
+       transform="matrix(0.05626418,0.02728655,-0.02780954,0.05810579,161.63824,85.939051)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\BufferTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300"
@@ -1942,7 +1942,7 @@
     </g>
     <g
        id="g105289-1-2-4"
-       transform="matrix(0.03475099,0,0,0.03746761,151.17797,115.355)"
+       transform="matrix(0.04649794,0,0,0.05046538,159.8004,119.01503)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\SchemaTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300">
@@ -1980,7 +1980,7 @@
     </g>
     <g
        id="g105289-1-2-2-5"
-       transform="matrix(0.03252757,0.01330435,-0.01212259,0.03507037,144.18731,104.46454)"
+       transform="matrix(0.04352293,0.01791972,-0.01622041,0.04723652,150.44667,104.3466)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\SchemaTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300">
@@ -2018,7 +2018,7 @@
     </g>
     <g
        id="g105289-1-1-1-6"
-       transform="matrix(0.04957705,0.01501331,-0.01390483,0.05368816,125.97762,104.8646)"
+       transform="matrix(0.06633568,0.02022153,-0.01860511,0.07231295,126.08152,104.88544)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\SchemaTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300">
@@ -2056,7 +2056,7 @@
     </g>
     <g
        id="g87671-3-2-6-6"
-       transform="matrix(0.13950438,0,0,0.19563804,177.00595,44.384347)"
+       transform="matrix(0.18666134,0,0,0.26350621,194.35906,23.424177)"
        style="fill:#ffffff;fill-opacity:1;stroke:#1d76cf;stroke-width:3.63997;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\BufferTransportTask.png"
        inkscape:export-xdpi="300"
@@ -2124,7 +2124,7 @@
     </g>
     <g
        id="g105289-1-1-1-4"
-       transform="matrix(0.04957705,0.01501331,-0.01390483,0.05368816,105.58924,108.52186)"
+       transform="matrix(0.06633568,0.02022153,-0.01860511,0.07231295,104.09288,108.48851)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\SQLTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300">
@@ -2291,63 +2291,63 @@
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
-       style="color:#000000;fill:none;stroke-width:0.280252;stroke-linecap:round;stroke-linejoin:bevel;stroke-dashoffset:65.596;-inkscape-stroke:none"
-       d="m 126.27632,91.988167 4.79903,-0.146124 3.99411,3.725979 -0.14412,6.673428 c -0.007,0.27187 -0.20126,0.49084 -0.45125,0.49084 h -8.19773 c -0.25001,0 -0.45126,-0.21892 -0.45126,-0.49084 v -9.762447 c 0,-0.271921 0.20125,-0.490836 0.45126,-0.490836 z"
+       style="color:#000000;fill:none;stroke-width:0.776922;stroke-linecap:round;stroke-linejoin:bevel;stroke-dashoffset:65.596;-inkscape-stroke:none"
+       d="m 122.85651,77.446413 13.57741,-0.396933 11.30011,10.121257 -0.40773,18.127703 c -0.019,0.73852 -0.56942,1.33333 -1.27668,1.33333 h -23.19301 c -0.70732,0 -1.2767,-0.59469 -1.2767,-1.33333 V 78.77972 c 0,-0.738647 0.56938,-1.333307 1.2767,-1.333307 z"
        id="path99011-9-1"
        sodipodi:nodetypes="sccssssss"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
-       style="color:#000000;fill:#655e5e;fill-opacity:1;stroke:#655e5e;stroke-width:0.0398536;stroke-linecap:round;stroke-linejoin:bevel;stroke-dashoffset:65.596;stroke-opacity:1;-inkscape-stroke:none"
-       d="m 126.27628,91.842043 c -0.32206,0 -0.58557,0.286568 -0.58557,0.63696 v 9.762447 c 0,0.35035 0.26351,0.63696 0.58557,0.63696 h 8.19777 c 0.32211,0 0.58508,-0.28661 0.58557,-0.63696 l 0.009,-6.673428 -3.99403,-3.725979 z m 0,0.292248 4.66728,0.01533 3.86211,3.653367 -0.014,6.438692 c 0,0.19345 -0.13899,0.34471 -0.31688,0.34471 h -8.19775 c -0.17789,0 -0.31684,-0.15126 -0.31684,-0.34471 v -9.762448 c 0,-0.193494 0.13899,-0.345297 0.31684,-0.344711 z"
+       style="color:#000000;fill:#655e5e;fill-opacity:1;stroke:#655e5e;stroke-width:0.110483;stroke-linecap:round;stroke-linejoin:bevel;stroke-dashoffset:65.596;stroke-opacity:1;-inkscape-stroke:none"
+       d="m 122.8564,77.04948 c -0.91118,0 -1.65669,0.778435 -1.65669,1.73024 v 26.51872 c 0,0.9517 0.74551,1.73025 1.65669,1.73025 h 23.19311 c 0.9113,0 1.65529,-0.77855 1.65669,-1.73025 L 147.7316,87.170737 136.4317,77.04948 Z m 0,0.793863 13.20465,0.04165 10.92666,9.924013 -0.0395,17.490064 c 0,0.52549 -0.39322,0.93638 -0.8965,0.93638 h -23.19307 c -0.50328,0 -0.8964,-0.41089 -0.8964,-0.93638 V 78.780341 c 0,-0.525607 0.39325,-0.937964 0.8964,-0.936373 z"
        id="path99013-6-8"
        sodipodi:nodetypes="ssssssccssccssssss"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
-       style="fill:#000000;fill-rule:nonzero;stroke:#655e5e;stroke-width:0.36978;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 126.4491,95.757685 c 1.28696,0 5.14784,0 6.4348,0 -1.28696,0 -5.14784,0 -6.4348,0 z"
+       style="fill:#000000;fill-rule:nonzero;stroke:#655e5e;stroke-width:1.02511;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 123.34534,87.685936 c 3.64106,0 14.56424,0 18.2053,0 -3.64106,0 -14.56424,0 -18.2053,0 z"
        id="path100581-0-2"
        inkscape:path-effect="#path-effect105927"
-       inkscape:original-d="m 126.4491,95.757685 h 6.4348"
+       inkscape:original-d="m 123.34534,87.685936 h 18.2053"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
-       style="fill:#000000;fill-rule:nonzero;stroke:#655e5e;stroke-width:0.36978;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 127.82239,97.123463 c 1.28696,0 5.14784,0 6.4348,0 -1.28696,0 -5.14784,0 -6.4348,0 z"
+       style="fill:#000000;fill-rule:nonzero;stroke:#655e5e;stroke-width:1.02511;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 127.23064,91.395939 c 3.64106,0 14.56426,0 18.20532,0 -3.64106,0 -14.56426,0 -18.20532,0 z"
        id="path100581-5-3-9"
        inkscape:path-effect="#path-effect105931"
-       inkscape:original-d="m 127.82239,97.123463 h 6.4348"
+       inkscape:original-d="m 127.23064,91.395939 h 18.20532"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
-       style="fill:#000000;fill-rule:nonzero;stroke:#655e5e;stroke-width:0.36978;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 126.50796,98.318551 c 1.28697,0 5.14786,0 6.43483,0 -1.28697,0 -5.14786,0 -6.43483,0 z"
+       style="fill:#000000;fill-rule:nonzero;stroke:#655e5e;stroke-width:1.02511;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 123.51186,94.642278 c 3.64108,0 14.56432,0 18.2054,0 -3.64108,0 -14.56432,0 -18.2054,0 z"
        id="path100581-5-9-7-7"
        inkscape:path-effect="#path-effect105935"
-       inkscape:original-d="m 126.50796,98.318551 h 6.43483"
+       inkscape:original-d="m 123.51186,94.642278 h 18.2054"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
-       style="fill:#000000;fill-rule:nonzero;stroke:#655e5e;stroke-width:0.36978;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 127.84199,99.513593 c 1.28697,0 5.14788,0 6.43485,0 -1.28697,0 -5.14788,0 -6.43485,0 z"
+       style="fill:#000000;fill-rule:nonzero;stroke:#655e5e;stroke-width:1.02511;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 127.2861,97.888492 c 3.64109,0 14.56436,0 18.20545,0 -3.64109,0 -14.56436,0 -18.20545,0 z"
        id="path100581-5-9-1-8-9"
        inkscape:path-effect="#path-effect105939"
-       inkscape:original-d="m 127.84199,99.513593 h 6.43485"
+       inkscape:original-d="m 127.2861,97.888492 h 18.20545"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
-       style="fill:#000000;fill-rule:nonzero;stroke:#655e5e;stroke-width:0.36978;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 127.80275,100.96478 c 1.28697,0 5.14787,0 6.43484,0 -1.28697,0 -5.14787,0 -6.43484,0 z"
+       style="fill:#000000;fill-rule:nonzero;stroke:#655e5e;stroke-width:1.02511;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       d="m 127.17507,101.8305 c 3.64109,0 14.56436,0 18.20545,0 -3.64109,0 -14.56436,0 -18.20545,0 z"
        id="path100581-5-9-1-1-4-0"
        inkscape:path-effect="#path-effect105943"
-       inkscape:original-d="m 127.80275,100.96478 h 6.43484"
+       inkscape:original-d="m 127.17507,101.8305 h 18.20545"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
@@ -2385,27 +2385,27 @@
     </g>
     <ellipse
        id="path106381"
-       style="fill:#000000;stroke:none;stroke-width:0.00805577"
-       cx="130.19612"
-       cy="90.066467"
-       rx="0.012895602"
-       ry="0.011322942"
+       style="fill:#000000;stroke:none;stroke-width:0.0223324"
+       cx="133.94641"
+       cy="72.226303"
+       rx="0.036484201"
+       ry="0.03075766"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <ellipse
        id="path106383"
-       style="fill:#000000;stroke:none;stroke-width:0.00805577"
-       cx="129.52881"
-       cy="89.919952"
-       rx="0.012895602"
-       ry="0.011322942"
+       style="fill:#000000;stroke:none;stroke-width:0.0223324"
+       cx="132.05846"
+       cy="71.828316"
+       rx="0.036484201"
+       ry="0.03075766"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <g
        id="g111915"
-       transform="matrix(0.0382117,0,0,0.04156618,99.618536,150.96768)"
+       transform="matrix(0.10020196,0,0,0.11790271,55.956674,242.30592)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300">
@@ -2456,16 +2456,16 @@
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\ExecuteGroup.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300"
-       style="fill:#18a7ed;fill-opacity:1;stroke:#44403c;stroke-width:3.51285;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+       style="fill:#148d22;fill-opacity:1;stroke:#44403c;stroke-width:3.51285;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
       <g
          id="g34969-4-3"
-         transform="matrix(1.721202,0,0,1.0487693,1211.753,-1834.5596)"
-         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\ObjectReference.png"
+         transform="matrix(1.721202,0,0,1.0487693,1112.8181,-1834.5596)"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\ExecuteGroup.png"
          inkscape:export-xdpi="300"
          inkscape:export-ydpi="300"
-         style="fill:#18a7ed;fill-opacity:1;stroke:#44403c;stroke-width:2.61459;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+         style="fill:#0bc1ea;fill-opacity:1;stroke:#44403c;stroke-width:2.61459;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
         <path
-           style="color:#000000;fill:#18a7ed;fill-opacity:1;stroke:#44403c;stroke-width:2.61459;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:65.596;stroke-opacity:1"
+           style="color:#000000;fill:#0bc1ea;fill-opacity:1;stroke:#44403c;stroke-width:2.61459;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:65.596;stroke-opacity:1"
            d="m -225.9936,328.62438 -8.10427,19.7932 8.66975,100.806 -8.79307,94.20138 8.87837,17.45259 109.80347,-114.59952 z m 92.26665,117.59192 z"
            id="rect33611-2-0"
            sodipodi:nodetypes="cccccccccccc"
@@ -2473,30 +2473,22 @@
            inkscape:export-xdpi="300"
            inkscape:export-ydpi="300" />
       </g>
-      <rect
-         style="fill:#18a7ed;fill-opacity:1;stroke:#44403c;stroke-width:3.51285;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:65.596;stroke-opacity:1"
-         id="rect106569-5"
-         width="42.666313"
-         height="75.19043"
-         x="698.70959"
-         y="-1401.2933"
-         rx="0"
-         ry="0"
-         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
+      <g
+         id="g34969-4-3-9"
+         transform="matrix(1.721202,0,0,1.0487693,1208.4201,-1833.3517)"
+         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\ExecuteGroup.png"
          inkscape:export-xdpi="300"
-         inkscape:export-ydpi="300" />
-      <rect
-         style="fill:#18a7ed;fill-opacity:1;stroke:#44403c;stroke-width:3.51285;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:65.596;stroke-opacity:1"
-         id="rect106569-9-3"
-         width="42.666313"
-         height="75.19043"
-         x="760.48413"
-         y="-1401.6339"
-         rx="0"
-         ry="0"
-         inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\FileTransportTask.png"
-         inkscape:export-xdpi="300"
-         inkscape:export-ydpi="300" />
+         inkscape:export-ydpi="300"
+         style="fill:#148d22;fill-opacity:1;stroke:#44403c;stroke-width:2.61459;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1">
+        <path
+           style="color:#000000;fill:#148d22;fill-opacity:1;stroke:#44403c;stroke-width:2.61459;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:65.596;stroke-opacity:1"
+           d="m -225.9936,328.62438 -8.10427,19.7932 8.66975,100.806 -8.79307,94.20138 8.87837,17.45259 109.80347,-114.59952 z m 92.26665,117.59192 z"
+           id="rect33611-2-0-3"
+           sodipodi:nodetypes="cccccccccccc"
+           inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\ExecuteGroup.png"
+           inkscape:export-xdpi="300"
+           inkscape:export-ydpi="300" />
+      </g>
     </g>
     <path
        style="color:#000000;fill:#148d22;fill-opacity:1;stroke:#0ba31c;stroke-width:0.0532436;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:65.596;stroke-opacity:1"
@@ -2514,9 +2506,25 @@
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\ExecuteTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
+    <path
+       style="color:#000000;fill:#18a7ed;fill-opacity:1;stroke:#44403c;stroke-width:0.393781;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:65.596;stroke-opacity:1"
+       d="m 200.7456,157.62179 -1.44504,2.08628 1.54586,10.62538 -1.56783,9.92922 1.58303,1.83959 19.57853,-12.07929 z m 16.45162,12.39468 z"
+       id="rect33611-2-2-0-0"
+       sodipodi:nodetypes="cccccccccccc"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\StartBlue.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <path
+       style="color:#000000;fill:#148d22;fill-opacity:1;stroke:#44403c;stroke-width:0.393781;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:65.596;stroke-opacity:1"
+       d="m 245.72476,157.3572 -1.44504,2.08628 1.54586,10.62538 -1.56783,9.92922 1.58303,1.83959 19.57853,-12.07929 z m 16.45162,12.39468 z"
+       id="rect33611-2-2-0-0-2"
+       sodipodi:nodetypes="cccccccccccc"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\StartGreen.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
     <g
        id="g111915-4"
-       transform="matrix(0.03704206,0,0,0.04156618,176.27524,156.59508)"
+       transform="matrix(0.04956346,0,0,0.05598577,193.38135,174.56158)"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\BufferTransportTask.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300"
@@ -2610,6 +2618,16 @@
        x="30.905102"
        y="11.77846"
        inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\PackageManager.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
+    <rect
+       style="fill:#e8e8e8;fill-opacity:0.445977;stroke:#262626;stroke-width:3.15916;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.8"
+       id="rect41056-8"
+       width="29.255713"
+       height="29.072161"
+       x="111.30738"
+       y="190.04025"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\AddObject.png"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <rect
@@ -2720,5 +2738,20 @@
          style="stroke-width:0.339108;fill:#252525;fill-opacity:0.80000001"
          x="203.12613"
          y="134.99635">&gt;_</tspan></text>
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-weight:normal;font-size:34.2321px;line-height:1.25;font-family:sans-serif;fill:#1cea34;fill-opacity:1;stroke:#262626;stroke-width:0.856;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.8"
+       x="109.80811"
+       y="218.36203"
+       id="text12301"
+       transform="scale(1.0129592,0.9872066)"
+       inkscape:export-filename="D:\Development\OI\tools\transport-manager\lib\ui\img\icons\AddObject.png"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300"><tspan
+         sodipodi:role="line"
+         id="tspan12299"
+         style="fill:#1cea34;fill-opacity:1;stroke:#262626;stroke-width:0.856;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:0.8"
+         x="109.80811"
+         y="218.36203">+</tspan></text>
   </g>
 </svg>

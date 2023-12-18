@@ -235,6 +235,7 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
         log_reader_layout = QGridLayout(self.log_reader)
         
         self.log_reader_console = QTextEdit()
+        self.log_reader_console.setProperty("ExecutionPlanner", "ConsoleReader")
         log_reader_layout.addWidget(self.log_reader_console, 0, 0)
 
         self.log_reader_console.setAcceptRichText(True)

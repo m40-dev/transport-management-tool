@@ -328,12 +328,12 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.TemplateEditorSplitter_Left.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.TemplateEditorSplitter_Left.setObjectName("TemplateEditorSplitter_Left")
         
-        self.TemplateEditorSplitter_Relations = QtWidgets.QSplitter(self.TemplateEditorSplitter_Left)
-        self.TemplateEditorSplitter_Relations.setSizePolicy(sizePolicy)
-        self.TemplateEditorSplitter_Relations.setOrientation(QtCore.Qt.Orientation.Vertical)
-        self.TemplateEditorSplitter_Relations.setObjectName("TemplateEditorSplitter_Relations")
+        # self.TemplateEditorSplitter_Relations = QtWidgets.QSplitter(self.TemplateEditorSplitter_Left)
+        # self.TemplateEditorSplitter_Relations.setSizePolicy(sizePolicy)
+        # self.TemplateEditorSplitter_Relations.setOrientation(QtCore.Qt.Orientation.Vertical)
+        # self.TemplateEditorSplitter_Relations.setObjectName("TemplateEditorSplitter_Relations")
         
-        self.TemplateEditorSplitter_Search = QtWidgets.QSplitter(self.TemplateEditorSplitter_Relations)
+        self.TemplateEditorSplitter_Search = QtWidgets.QSplitter(self.TemplateEditorSplitter_Left)
         self.TemplateEditorSplitter_Search.setSizePolicy(sizePolicy)
         self.TemplateEditorSplitter_Search.setOrientation(QtCore.Qt.Orientation.Vertical)
         self.TemplateEditorSplitter_Search.setObjectName("TemplateEditorSplitter_Search")
@@ -397,13 +397,13 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.ListClosedLabelsCheckBox.setEnabled(False)
         self.ObjectQueryTextEdit.setEnabled(False)
 
-        self.SearchResultsGroupBox = QtWidgets.QGroupBox()
+        self.SearchResultsGroupBox = QtWidgets.QGroupBox(self)
 
-        sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Preferred)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.SearchResultsGroupBox.sizePolicy().hasHeightForWidth())
-        self.SearchResultsGroupBox.setSizePolicy(sizePolicy)
+        # sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Preferred)
+        # sizePolicy.setHorizontalStretch(0)
+        # sizePolicy.setVerticalStretch(0)
+        # sizePolicy.setHeightForWidth(self.SearchResultsGroupBox.sizePolicy().hasHeightForWidth())
+        # self.SearchResultsGroupBox.setSizePolicy(sizePolicy)
         self.SearchResultsGroupBox.setObjectName("SearchResultsGroupBox")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.SearchResultsGroupBox)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
@@ -412,7 +412,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.SearchResultsListView.setDefaultDropAction(QtCore.Qt.DropAction.IgnoreAction)
         self.SearchResultsListView.setAlternatingRowColors(True)
         self.SearchResultsListView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.SearchResultsListView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        # self.SearchResultsListView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.SearchResultsListView.setMovement(QtWidgets.QListView.Movement.Free)
         self.SearchResultsListView.setProperty("isWrapping", False)
         self.SearchResultsListView.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
@@ -453,12 +453,12 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.XMLTemplateEditorTabWidget.setMovable(True)
 
         self.TemplateEditorSplitter_Search.setSizes(
-            [round(self.application.height()*0.1), round(self.application.height()*0.7)]
+            [round(self.application.height()*0.2), round(self.application.height()*0.8)]
             )
 
-        self.TemplateEditorSplitter_Relations.setSizes(
-            [round(self.application.height()*0.7), round(self.application.height()*0.4)]
-            )
+        # self.TemplateEditorSplitter_Relations.setSizes(
+        #     [round(self.application.height()*0.7), round(self.application.height()*0.4)]
+        #     )
         
         self.TemplateEditorSplitter_Left.setSizes(
             [round(self.application.width()*0.2), round(self.application.width()*0.8)]

@@ -4,9 +4,10 @@
 */
 
 /* Global Widget Configurations */
-QMainWindow, QDialog, QWidget{
+QMainWindow, QDialog, QWidget, QSplitter{
 	background-color: @BaseColor;
 	border-color: @BorderColor;
+	color: @TextColor;
 }
 
 QSplitter::handle{
@@ -134,9 +135,15 @@ QMenu::item:selected{
 }
 
 /* Tab Widgets Configuration */
+QTabWidget::pane{
+	background-color: @BaseColor;
+	border: 0;
+}
 
 QTabBar{
 	border: 0px;
+	border-color: @BorderColor;
+	margin: 0;
 }
 QTabBar::tab{
 	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @BaseColor, stop: 1 @BaseColor);
@@ -310,18 +317,25 @@ QToolButton[Widget=SelectFileButton]{
 /* Package Manager Custom widgets configuration */
 
 /* Central widget for any item displayed in the package manager view */
+
+QTreeView[PackageManager="PackageManagerTreeView"]{
+	background-color: transparent;
+}
+
+QTreeView[PackageManager="PackageManagerTreeView"]::item:hover{
+	background-color: transparent;
+}
+
+QTreeView::item:selected[PackageManager="PackageManagerTreeView"]{
+	background-color: transparent;
+}
+
 QWidget[PackageManager="PackageManagerWidget"]{
 	background: transparent;
 	margin-top: 2px; 
 	margin-bottom: 2px;
 }
 
-QWidget[PackageManager="PackageManagerIcon"]{
-	min-height: 20px;
-	min-width: 20px;
-	border: 0px;
-	background-color: transparent;
-}
 QWidget[PackageManager="PackageManagerIcon"]:hover{
 	border: 1px solid @BorderColor;
 	background-color: @SelectedObjectColor;
@@ -330,21 +344,17 @@ QWidget[PackageManager="PackageManagerIcon"]:hover{
 /* Inner widget Frame configuration for the Package Definition item objects */
 QFrame[PackageManagerWidget="PackageItem"]{
 	background-color: @GroupObjectColor;
-	/* background: transparent; */
 	border: 1px solid @BorderColor;
-	/* min-height: 3em; */
 }
 
 QFrame[PackageManagerWidget="TaskItem"]{
-	/* background: transparent; */
 	background-color: @TaskObjectColor;
 	border: 1px solid @BorderColor;
 	border-left: 3px solid @BorderColor;
-	/* min-height: 2em; */
 }
 
-QWidget[PackageManagerWidget="PackageItem"]::hover,
-QWidget[PackageManagerWidget="TaskItem"]::hover{
+QFrame[PackageManagerWidget="PackageItem"]::hover,
+QFrame[PackageManagerWidget="TaskItem"]::hover{
 	/* background-color: @SelectedObjectColor; */
 	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @SelectedObjectColor, stop: 1 transparent);
 }
@@ -352,6 +362,13 @@ QWidget[PackageManagerWidget="TaskItem"]::hover{
 /* Global setting for any object in the unsaved state - this definition always needs to be at the bottom to take effect over other stylesheets */
 QWidget[ObjectSaved="False"]{
 	border-left: 3px solid rgba(233, 181, 12, 0.575);
+}
+
+QWidget[PackageManager="PackageManagerIcon"]{
+	min-height: 20px;
+	min-width: 20px;
+	border: 0px;
+	background-color: transparent;
 }
 
 /* Execution Planner Custom widgets configuration */
@@ -536,11 +553,12 @@ QLabel[Label="PropertyValue"], QCheckbox[Label="PropertyValue"], QRadioButton[La
 
 /* File Path label seen in the xml template editor above the xml preview browser */
 QLabel[Widget="FilePathLabel"]{
-	background-color: @AlternativeBaseColor;
+	background-color: @DarkerBaseColor;
 	font: bold 15px;
-	margin-left: 2px;
-	color: @TextColor;
+	margin: 0px;
+	color: @DescriptionTextColor;
 	min-height: 25px;
+	border: 1px solid @BorderColor;
 }
 
 QToolButton[Widget="CustomToolButton"]{
@@ -613,12 +631,15 @@ QLabel[PropertyEditor="IsMandatory"]{
 }
 
 /* Execution Console styling */
-
+QTextEdit[ExecutionPlanner="ConsoleReader"]{
+	background-color: @BaseColor;
+	color: @TextColor;
+}
 /* Console stylesheet - standard console output */
 .execution-log{
 	font-size: 14px;
 	font-family: "Courier New";
-	color:@TextColor;
+	color: @TextColor;
 	padding: 1px;
 	word-wrap: break-word;
 	white-space:pre-wrap;
@@ -633,7 +654,7 @@ QLabel[PropertyEditor="IsMandatory"]{
 
 /* Console stylesheet - transport manager messages formatting */
 .transport-manager{
-	color:#626363;
+	color:@AltTextColor;
 	font: italic;
 }
 
@@ -653,7 +674,7 @@ QLabel[PropertyEditor="IsMandatory"]{
 
 /* Console stylesheet - task information data formatting */
 .task-info{
-	color: #272928;
+	color: @DescriptionTextColor;
 	text-align: center;
 	padding: 2px;
 }
@@ -661,14 +682,14 @@ QLabel[PropertyEditor="IsMandatory"]{
 /* Console stylesheet - task execution success status formatting */
 .task-finished-success{
 	text-align: center;
-	color: #272928;
+	color: @BaseColor;
 	background-color: #92dba1;
 }
 
 /* Console stylesheet - task execution error status formatting */
 .task-finished-error{
 	text-align: center;
-	color: #272928;
+	color: @BaseColor;
 	background-color: #f18775;
 }
 
@@ -739,8 +760,6 @@ QWidget[ConfigurationEditor="Handle"]::hover{
 /* Custom property for any ObjectModelItemWidget displayed in the main view of object model editor*/
 
 QWidget[ConfigurationEditor="ObjectModelEditorWidget"]{
-	/* background-color: @TaskObjectColor;
-	border: 1px solid @BorderColor; */
 	margin-top: 4px;
 	margin-bottom: 4px;
 }
@@ -786,7 +805,7 @@ QFrame[FieldConfigurationFrame="Separator"]{
 /* This is entire widget including margins etc, here the list spacing can be configured for the Object model samples and default objects */
 QWidget[ConfigurationEditor="ObjectModelSampleWidget"]{
 	background: transparent;
-	margin-top: 2%;
+	margin-top: 2px;
 	margin-bottom: 2px;
 }
 

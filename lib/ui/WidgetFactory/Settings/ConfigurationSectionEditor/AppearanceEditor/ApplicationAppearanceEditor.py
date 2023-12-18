@@ -40,20 +40,11 @@ class ApplicationAppearanceEditor(ConfigurationSectionEditor):
         self.layout.addWidget(ApplyButton, 1, 3, 1, 1, Qt.AlignmentFlag.AlignRight)
 
         self.layout.setColumnStretch(0, 10)
-        
-        # print("column configuration", self._section_source.ConfigurationParameters.get("BaseColor", {}))
-        self.addToFormLayout(self.editor_layout, "UseDarkTheme", self._section_source.ConfigurationParameters.get("UseDarkTheme", {}), 0, 0 )
 
         if self._section_source.ConfigurationParameters:
-            # row = 0
             for configuration_key, field_configuration in self._section_source.ConfigurationParameters.items():
-                # skip this for now, manually added
-                if configuration_key == "UseDarkTheme":
-                    continue
                 self.addToFormLayout(self.editor_layout, configuration_key, field_configuration, self.editor_layout.rowCount(), 0, 2, 1)
-                # row += 1
 
-        # self.addToFormLayout(self.editor_layout, "BaseColor", self._section_source.ConfigurationParameters.get("BaseColor", {}), self.editor_layout.rowCount(), 0)
         self.editor_layout.setSpacing(10)
         self.editor_layout.setColumnStretch(0, 2)
         self.editor_layout.setColumnStretch(1, 5)

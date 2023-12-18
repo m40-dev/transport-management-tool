@@ -33,7 +33,7 @@ class PackageManagerItemWidget(CustomDelegateWidget):
 
         self.object_configuration = self.application.getConfigurationParameters(model_item.task_class)
         self.setupUi()
-
+        self.setProperty("PackageManager", "PackageManagerWidget")
         self.model_item.data_changed.connect(self.refreshUi)
 
     def setupUi(self):
@@ -123,6 +123,8 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
         
         super().__init__(parent_view=parent_view, application=application, model_item=model_item, parent_module=parent_module)
 
+        self.frame.setProperty("PackageManagerWidget", "PackageItem")
+
         self.edit_feature_button = QToolButton()
         self.edit_feature_button.setText("Properties")
         self.edit_feature_button.clicked.connect(self.edit_feature)
@@ -149,8 +151,6 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
         self.layout.addWidget(self.edit_feature_button, 0, 4, 1, 1, Qt.AlignmentFlag.AlignRight)
         self.layout.addWidget(self.save_feature_button, 0, 5, 1, 1, Qt.AlignmentFlag.AlignRight)
 
-        self.frame.setProperty("PackageManagerWidget", "PackageItem")
-
         self.save_feature_button.clicked.connect(self.save_feature)
 
     def save_feature(self, save_single=True):
@@ -168,6 +168,8 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
     def __init__(self, parent_view, application, model_item, parent_module):
         
         super().__init__(parent_view=parent_view, application=application, model_item=model_item, parent_module=parent_module)
+        
+        self.frame.setProperty("PackageManagerWidget", "TaskItem")
 
         """ Add Custom Widgets """
         self.edit_xml_definition_button = QToolButton()
@@ -198,8 +200,6 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
         task_buttons_layout.addWidget(self.edit_xml_definition_button)
         task_buttons_layout.addWidget(self.edit_task_definition_button)
         
-        self.frame.setProperty("PackageManagerWidget", "TaskItem")
-
         """ Connect Signals """
         self.edit_xml_definition_button.clicked.connect(self.edit_task_xml_definition)
         self.edit_task_definition_button.clicked.connect(self.edit_task_definition)

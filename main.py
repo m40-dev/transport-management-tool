@@ -25,7 +25,7 @@ from lib.ProgramConfiguration import ProgramConfiguration, ConnectionHandler
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.8.5'
+VERSION = '0.8.7'
 APP_NAME = f"Transport Management Tool - {VERSION}"
 
 class Transport_Manager(QMainWindow):
