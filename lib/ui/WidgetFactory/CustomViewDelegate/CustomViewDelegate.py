@@ -71,8 +71,8 @@ class CustomViewDelegate(QStyledItemDelegate):
                 widget_width_offset = (widget.rect().width() - widget.frame.rect().width()) / 2
                 widget_height_offset = (widget.rect().height() - widget.frame.rect().height()) / 2
 
-                target_x = option.rect.x() + widget_width_offset
-                target_y = option.rect.y() + widget_height_offset
+                target_x = round(option.rect.x() + widget_width_offset)
+                target_y = round(option.rect.y() + widget_height_offset)
 
                 target_rect = QRect(QPoint(target_x, target_y), widget.frame.size())
                 selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")

@@ -5,7 +5,7 @@ from PyQt6.QtGui import QPalette, QPen, QPainterPath, QPainter, QTextOption, QTe
 from PyQt6.QtCore import Qt, QRectF, pyqtSignal
 from PyQt6.QtGui import QPalette, QPen, QPainterPath 
 # from lib.ui.Theme import Application_Theme
-
+from .ExecutionLogsConsole import ExecutionLogsReader
 from lib.ui.WidgetFactory.CustomViewDelegate import CustomViewDelegate, CustomDelegateWidget
 
 class ExecutionPlannerDelegate(CustomViewDelegate):
@@ -126,7 +126,7 @@ class ExecutionGroupWidget(ExecutionPlannerItem):
     
     def sizeHint(self):
         minimum_size = super().minimumSizeHint()
-        minimum_size.setHeight(minimum_size.height()*1.5)
+        minimum_size.setHeight(round(minimum_size.height()*1.5))
         return minimum_size
 
 class ExecutionTaskWidget(ExecutionPlannerItem):
@@ -227,35 +227,13 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
             self.layout.addLayout(task_details_layout, 2, 0, 1, 3)
         # self.layout.addWidget(self.run_status, 1, 3, 1, 2)
 
-        # Setup Log Preview console
-        self.log_reader = QDialog(self)
-        self.log_reader.setMinimumSize(800, 500)
-        
-        self.log_reader_console = QTextEdit()
-        log_reader_layout = QGridLayout(self.log_reader)
-        
-        self.log_reader_console = QTextEdit()
-        self.log_reader_console.setProperty("ExecutionPlanner", "ConsoleReader")
-        log_reader_layout.addWidget(self.log_reader_console, 0, 0)
-
-        self.log_reader_console.setAcceptRichText(True)
-        self.log_reader_console.setWordWrapMode(QTextOption.WrapMode.WordWrap)
-        self.log_reader_console.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
-        self.log_reader_console.setLineWrapColumnOrWidth(self.log_reader_console.width())
-
-        self.defaultBlockFormat = self.log_reader_console.textCursor().blockFormat()
-        self.defaultBlockFormat.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.defaultBlockFormat.setTopMargin(0)
-        self.defaultBlockFormat.setBottomMargin(0)
-        self.defaultBlockFormat.setLeftMargin(0)
-        self.defaultBlockFormat.setRightMargin(0)
-
-        self.log_reader_console.textCursor().setBlockFormat(self.defaultBlockFormat)
-        self.log_reader_console.document().setDefaultStyleSheet(self.ProgramConfiguration.styleSheet())
-
         """ Set initial values """
         self.configureTask()
-
+        self.consoleDialog = ExecutionLogsReader(
+            parent=self,
+            application=self.application,
+            model_item=self.model_item
+        )
         """ Refresh state based on the model data """
         self.refreshTaskUI()
 
@@ -265,24 +243,9 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
         self.task_execution_export.toggled.connect(self.setExecutionType)
         self.connection_box.currentTextChanged.connect(self.setConnection)
         self.model_item.data_changed.connect(self.refreshTaskUI)
-        self.ExecutionLogs.clicked.connect(self.showLogs)
-        self.model_item.logExecutionState.connect(self.appendLogs)
+        self.ExecutionLogs.clicked.connect(self.consoleDialog.showLogs)
+        self.model_item.logExecutionState.connect(self.consoleDialog.appendLogs)
         # self.model_item.executionStateChanged.connect(self.handleExecutionStateChange)
-
-    def showLogs(self):
-        self.log_reader_console.setHtml("\n".join(self.model_item.execution_log))
-        self.log_reader.show()
-
-    def appendLogs(self, formatted_message):
-        cursor = self.log_reader_console.textCursor()
-        cursor.movePosition(QTextCursor.MoveOperation.End, QTextCursor.MoveMode.MoveAnchor)
-        if cursor.blockNumber() > 0:
-            cursor.insertBlock(self.defaultBlockFormat)
-
-        cursor.insertHtml(formatted_message)
-
-        # restore cursor location at the end, this effectively scrolls the log view automatically
-        self.log_reader_console.setTextCursor(cursor)
 
     def refreshConnections(self):
         connections = list(self.application.ConnectionHandler.connections.keys())
@@ -305,6 +268,7 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
         self.frame.setProperty("ExecutionState", str(self.model_item.ExecutionState))
         self.run_status.setProperty("ExecutionState", str(self.model_item.ExecutionState))
         self.setStyleSheet(self.styleSheet())
+        self.consoleDialog.setStyleSheet(self.application.styleSheet())
 
     def setExecutionType(self):
         execution_type = "Export"

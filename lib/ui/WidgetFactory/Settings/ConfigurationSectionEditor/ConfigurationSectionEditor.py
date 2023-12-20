@@ -50,14 +50,28 @@ class ConfigurationSectionEditor(QtWidgets.QWidget):
         separator.setFrameShape(QtWidgets.QFrame.Shape.HLine)
         
         #layout for any dedicated editor widgets
+        
+        self.scroll_area = QtWidgets.QScrollArea(self)
+        
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        
+        self.area_widget = QtWidgets.QWidget()
+        self.scroll_area.setWidget(self.area_widget)
+
         self.editor_layout = QtWidgets.QGridLayout()
         self.editor_layout.setObjectName("EditorLayout")
+
+        self.area_widget.setLayout(self.editor_layout)
+        
 
         #Add Widgets to the main layout
         self.layout.addWidget(name_label, 0, 0)
         self.layout.addWidget(description_label,1, 0)
         self.layout.addWidget(separator, 2, 0, 1, -1)
-        self.layout.addLayout(self.editor_layout, 3, 0, -1, -1)
+
+        self.layout.addWidget(self.scroll_area, 3, 0, -1, -1)
+        # self.layout.addLayout(self.editor_layout, 3, 0, -1, -1)
 
     def updateConfigurationKey(self, configuration_key, new_value):
         # print(configuration_key, new_value)

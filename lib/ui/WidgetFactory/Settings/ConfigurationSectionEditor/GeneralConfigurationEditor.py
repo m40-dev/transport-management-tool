@@ -17,7 +17,7 @@ class GeneralConfigurationEditor(ConfigurationSectionEditor):
         self.editor_layout.setColumnStretch(0, 2)
         self.editor_layout.setColumnStretch(1, 5)
         
-        self.editor_layout.setRowStretch(self.editor_layout.rowCount(), 50)
+        self.editor_layout.setRowStretch(self.editor_layout.rowCount(), 2)
 
 
 

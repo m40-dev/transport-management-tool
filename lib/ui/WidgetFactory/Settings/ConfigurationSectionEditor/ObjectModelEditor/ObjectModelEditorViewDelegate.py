@@ -214,15 +214,3 @@ class ObjectModelConfigurationWidget(CustomDelegateWidget):
             self.parent_module.currentItemChanged.emit(self.model_item)
         QFrame.mousePressEvent(self, event)
     
-    # def sizeHint(self):
-    #     if not self.isActive:
-    #         minimum_size = super().minimumSizeHint()
-    #         minimum_size.setHeight(minimum_size.height()*1.1)
-    #         return minimum_size
-    #     else:
-    #         minimum_size = super().minimumSizeHint()
-    #         minimum_size.setHeight(minimum_size.height()*1.3)
-    #         return minimum_size
-
-    #     return super().sizeHint()
-    

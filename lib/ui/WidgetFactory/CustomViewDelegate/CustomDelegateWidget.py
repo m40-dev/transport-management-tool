@@ -88,5 +88,5 @@ class CustomDelegateWidget(QFrame):
 
     def sizeHint(self):
         preffered_size = super().minimumSizeHint()
-        preffered_size.setHeight(preffered_size.height() * 1.2)
+        preffered_size.setHeight(round(preffered_size.height() * 1.2))
         return preffered_size

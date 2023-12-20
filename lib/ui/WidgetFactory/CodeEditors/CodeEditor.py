@@ -69,10 +69,12 @@ class BaseCodeEditor(QsciScintilla):
         editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
         editor_text_color = self.ProgramConfiguration.getColor("TextColor")
         caret_bg_color = self.ProgramConfiguration.getColor("HighlightColor")
-
-        self.reconfigure_lexer()
+        selected_color = self.ProgramConfiguration.getColor("HighlightedText")
 
         self.setCaretLineBackgroundColor(caret_bg_color)
+        self.setCaretLineFrameWidth(1)
+
+        self.reconfigure_lexer()
         
         self.SendScintilla(QsciScintilla.SCI_SETFOLDMARGINHICOLOUR, True, editor_bg_color)
         self.SendScintilla(QsciScintilla.SCI_SETFOLDMARGINCOLOUR, True, editor_bg_color)

@@ -65,7 +65,7 @@ class Transport_Manager(QMainWindow):
 
         self.setWindowTitle(self.application_name)
         self.qt_app.setApplicationName(self.application_name)
-        window_icon = QIcon("./icon.ico")
+        window_icon = self.ProgramConfiguration.getIcon("ApplicationLogo")
         self.setWindowIcon(window_icon)
 
         # Database and Connection handlers

@@ -46,7 +46,9 @@ class SettingsWidget(QtWidgets.QWidget):
         self.ConfigurationSectionTreeWidget.setHeaderLabels(["Program Configuration Sections"])
         self.ConfigurationSectionTreeWidget.setProperty("SettingsWidget", "ConfigurationSectionsTreeView")
         self.ConfigurationSectionTreeWidget.header().setProperty("SettingsWidget", "ConfigurationSectionsTreeView")
-
+        self.ConfigurationSectionTreeWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
+        self.ConfigurationSectionTreeWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.ConfigurationSectionTreeWidget.setColumnCount(1)
         # Configuration section viewport
         # Configuration Toolbox
         toolbox_layout = QtWidgets.QHBoxLayout()
@@ -105,7 +107,10 @@ class SettingsWidget(QtWidgets.QWidget):
             info = QtWidgets.QMessageBox(
                 QtWidgets.QMessageBox.Icon.Information, 
                 "Configuration Saved", 
-                "All configuration sections have been saved.")
+                "All configuration sections have been saved.",
+                QtWidgets.QMessageBox.StandardButton.Ok,
+                self)
+            
             info.exec()
 
         
