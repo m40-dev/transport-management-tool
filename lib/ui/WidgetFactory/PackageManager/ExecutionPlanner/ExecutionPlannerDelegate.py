@@ -5,7 +5,8 @@ from PyQt6.QtGui import QPalette, QPen, QPainterPath, QPainter, QTextOption, QTe
 from PyQt6.QtCore import Qt, QRectF, pyqtSignal
 from PyQt6.QtGui import QPalette, QPen, QPainterPath 
 # from lib.ui.Theme import Application_Theme
-from .ExecutionLogsConsole import ExecutionLogsReader
+from .ExecutionLogConsole import ExecutionLogConsole
+from .ExecutionLogDialog import ExecutionLogDialog
 from lib.ui.WidgetFactory.CustomViewDelegate import CustomViewDelegate, CustomDelegateWidget
 
 class ExecutionPlannerDelegate(CustomViewDelegate):
@@ -229,7 +230,7 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
 
         """ Set initial values """
         self.configureTask()
-        self.consoleDialog = ExecutionLogsReader(
+        self.consoleDialog = ExecutionLogDialog(
             parent=self,
             application=self.application,
             model_item=self.model_item
@@ -244,8 +245,6 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
         self.connection_box.currentTextChanged.connect(self.setConnection)
         self.model_item.data_changed.connect(self.refreshTaskUI)
         self.ExecutionLogs.clicked.connect(self.consoleDialog.showLogs)
-        self.model_item.logExecutionState.connect(self.consoleDialog.appendLogs)
-        # self.model_item.executionStateChanged.connect(self.handleExecutionStateChange)
 
     def refreshConnections(self):
         connections = list(self.application.ConnectionHandler.connections.keys())

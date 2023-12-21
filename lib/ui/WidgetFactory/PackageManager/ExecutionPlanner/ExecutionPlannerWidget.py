@@ -7,6 +7,7 @@ from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
 from .ExecutionPlannerProcessRunner import ProcessRunner
 from lib.ui.WidgetFactory import FormEditorDialog
 from datetime import datetime
+from .ExecutionLogConsole import ExecutionLogConsole
 
 TIME_FORMAT = "%Y-%m-%d %H:%M:%S"
 
@@ -18,8 +19,11 @@ class ExecutionPlannerWidget(QWidget):
 
         self.parent = parent
         self.application = application
+
+        self.console = ExecutionLogConsole(self, self.application)
+
         self.ProcessRunner = ProcessRunner(self)
-        self.ProcessRunner.logPreformattedMessage.connect(self.logExecutionPlannerMessage)
+        self.ProcessRunner.logPreformattedMessage.connect(self.console.appendLogs)
         self.ProcessRunner.stateChanged.connect(self.processRunnerStateChanged)
 
         self.layout = QGridLayout(self)
@@ -50,20 +54,22 @@ class ExecutionPlannerWidget(QWidget):
         self.treeview = QTreeView()
         self.treeview.setObjectName("ExecutionPlannerTreeView")
         self.treeview.setProperty("TreeView", "ExecutionPlanner")
-        self.console = QTextEdit()
-        self.console.setProperty("ExecutionPlanner", "ConsoleReader")
-        self.console.setAcceptRichText(True)
-        self.console.setWordWrapMode(QTextOption.WrapMode.WordWrap)
-        self.console.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
-        self.console.setLineWrapColumnOrWidth(self.console.width())
+        
 
-        self.defaultBlockFormat = self.console.textCursor().blockFormat()
-        self.defaultBlockFormat.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.defaultBlockFormat.setTopMargin(0)
-        self.defaultBlockFormat.setBottomMargin(0)
-        self.defaultBlockFormat.setLeftMargin(0)
-        self.defaultBlockFormat.setRightMargin(0)
-        self.console.textCursor().setBlockFormat(self.defaultBlockFormat)
+        # self.console = QTextEdit()
+        # self.console.setProperty("ExecutionPlanner", "ConsoleReader")
+        # self.console.setAcceptRichText(True)
+        # self.console.setWordWrapMode(QTextOption.WrapMode.WordWrap)
+        # self.console.setLineWrapMode(QTextEdit.LineWrapMode.WidgetWidth)
+        # self.console.setLineWrapColumnOrWidth(self.console.width())
+
+        # self.defaultBlockFormat = self.console.textCursor().blockFormat()
+        # self.defaultBlockFormat.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        # self.defaultBlockFormat.setTopMargin(0)
+        # self.defaultBlockFormat.setBottomMargin(0)
+        # self.defaultBlockFormat.setLeftMargin(0)
+        # self.defaultBlockFormat.setRightMargin(0)
+        # self.console.textCursor().setBlockFormat(self.defaultBlockFormat)
 
         splitter.addWidget(self.treeview)
         splitter.addWidget(self.console)
@@ -120,7 +126,8 @@ class ExecutionPlannerWidget(QWidget):
         self.refresh_ui()
 
     def refresh_ui(self):
-        self.console.document().setDefaultStyleSheet(self.application.ProgramConfiguration.styleSheet())
+        # self.console.document().setDefaultStyleSheet(self.application.ProgramConfiguration.styleSheet())
+        self.console.refresh_ui()
 
     def processRunnerStateChanged(self, running_state):
         is_running = True

@@ -37,5 +37,5 @@ PROGRAM_ICONS = {
     "RunQuery": "lib/ui/img/icons/StartBlue.png",
     "ApplyPreset": "./lib/ui/img/icons/ApplyPreset.png",
     "AddObject": "./lib/ui/img/icons/AddObject.png",
-    "ApplicationLogo": "./icon.ico"
+    "ApplicationLogo": "./lib/ui/img/icons/ApplicationIcon.png"
 }

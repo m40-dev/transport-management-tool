@@ -42,26 +42,21 @@ class Transport_Manager(QMainWindow):
         """ Map QT UI from parsed file - created and updated in qt designer """
 
         self.application_name = APP_NAME
-        self.ui = Ui_MainWindow()
+        
         
         self.qt_app = qapplication
         self.clipboard = clipboard
         self.current_workdir = None
-
-        # self.color_theme = Application_Theme()
-        # self.qt_app.setPalette(self.color_theme)
-        # self.setStyleSheet(self.color_theme.style_sheet)
 
         self.settings = QSettings("EmergencyCode", "Transport_Manager")
 
         self.ProgramConfiguration = ProgramConfiguration(self)
         self.color_theme = self.ProgramConfiguration.ColorPalette
         
-
         self.statusBarUpdated.connect(self.onStatusBarMessageReceived)
         self._relation_presets = {}
 
-        self.ui.setupUi(self)
+        self.ui = Ui_MainWindow(self)
 
         self.setWindowTitle(self.application_name)
         self.qt_app.setApplicationName(self.application_name)

@@ -5,79 +5,45 @@ import uuid
 from .MessageBox import MsgBox
 import re
 from ..CodeEditors import *
+from lib.ui.WidgetFactory.CustomWindowDecorations import WindowTitleBarDecoration
+from .CustomDialogWindow import CustomDialogWindow
 
-class FormEditorDialog(QtWidgets.QDialog):
+class FormEditorDialog(CustomDialogWindow):
 
     def __init__(self, application, configuration_class, dialog_name="Data Editor", form_configuration=None):
-        super(FormEditorDialog, self).__init__(flags=QtCore.Qt.WindowType.Dialog, parent=application)
+        super(FormEditorDialog, self).__init__(application=application, dialog_name=dialog_name)
 
-        self.application = application
         self.configuration_class = configuration_class
-        self.ProgramConfiguration = self.application.ProgramConfiguration
+        
         self._form_confguration = self.application.getConfigurationParameters(configuration_class)
         if form_configuration is not None:
             self._form_confguration = form_configuration
+
         self._form_data = {}
         self._base_object = None
         self._base_object_data = None
-        self.setMinimumSize(400, 400)
+        
         self.useExperimentalFeatures = self.ProgramConfiguration.getConfigurationValue("ObjectModel", "UseExperimental")
         self.columnMappings = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(configuration_class, "ValuePattern")
-            
-        self.setWindowTitle(f"{self.application.application_name} - {dialog_name}") 
 
-        self.layout = QtWidgets.QGridLayout(self)
-        self.layout.setObjectName("layout")
-        self.layout.setSpacing(2)
-        # self.templatesApplied = True
-        
         self.editors = {}
         self.setup_form()
+        
         self.templatesApplied = True
 
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
-        self.buttonBox.setObjectName("buttonBox")
-
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-
-        self.layout.setRowStretch(self.layout.rowCount(), 2)
-
-        self.layout.setColumnStretch(0, 2)
-        self.layout.setColumnStretch(self.layout.columnCount()-1, 5)
-        self.layout.addWidget(self.buttonBox, self.layout.rowCount()+1, 1, 1, 2)
-        self.restoreWindowState()
-
-    def restoreWindowState(self):
-        """ Restore window settings """
-        # print("restore window")
-        self.settings = self.application.settings
-        if self.settings.value("EditorDialogGeometry") is not None:
-            self.restoreGeometry(self.settings.value("EditorDialogGeometry"))
-
-    def saveWindowState(self):
-        # print("save window")
-        self.application.settings.setValue("EditorDialogGeometry", self.saveGeometry())
+        self.form_layout.setRowStretch(self.form_layout.rowCount(), 2)
+        self.form_layout.setColumnStretch(0, 2)
+        self.form_layout.setColumnStretch(self.form_layout.columnCount()-1, 5)
 
     def accept(self):
-        self.saveWindowState()
-        # if self.useExperimentalFeatures and len(self.columnMappings) > 0 and not self.templatesApplied:
-        #     question = QtWidgets.QMessageBox.question(self, "Reapply Templates?", "There are predefined column mapping patterns in this form.\nWould you like to reapply?")
-        #     if question == QtWidgets.QMessageBox.StandardButton.Yes:
-        #         self.updateFormPatternsComplete()
-        #         return False
-        validation_errors = {}
-        # self.check_mandatory_columns(validation_errors)
         validation_summary = self.check_validators()
-        
         # print("vaildate and accept")
+        
         if len(validation_summary) > 0:
             string_data = json.dumps(validation_summary, indent=4, separators=(',',':'))
             MsgBox(self.application, "Form validation returned errors", string_data)
             return False
-        # print("form data", self.form_data)
+        
         super().accept()
 
     def check_validators(self):
@@ -116,7 +82,7 @@ class FormEditorDialog(QtWidgets.QDialog):
         # print(self._form_data)
         for column, column_configuration in self._form_confguration.items():
             # widget_required = (column_configuration.get("ShowInEditor", True) == True
-            row_id = self.layout.rowCount()
+            row_id = self.form_layout.rowCount()
             editor_object = FormEditorObject(self, self.application, column, column_configuration)
 
             if editor_object.default_value:
@@ -133,11 +99,11 @@ class FormEditorDialog(QtWidgets.QDialog):
 
             if editor_object.editor:
                 self.editors[column] = editor_object
-                self.layout.addWidget(editor_object.label, row_id, 0)
+                self.form_layout.addWidget(editor_object.label, row_id, 0)
                 editor_object.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
                 if editor_object.isMandatory:
-                    self.layout.addWidget(editor_object.MandatoryLabel, row_id, 1)
-                self.layout.addWidget(editor_object.editor, row_id, 2)
+                    self.form_layout.addWidget(editor_object.MandatoryLabel, row_id, 1)
+                self.form_layout.addWidget(editor_object.editor, row_id, 2)
 
                 if isinstance(editor_object.editor, (QtWidgets.QTextEdit, QtWidgets.QPlainTextEdit, FormEditorWidget)):
                     editor_object.editor.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
@@ -148,9 +114,9 @@ class FormEditorDialog(QtWidgets.QDialog):
 
             # self.useMappings.setChecked(True)
             self.useMappings.setProperty("EditorDialog", "PropertyHasValueTemplate")
-            self.layout.addWidget(
+            self.form_layout.addWidget(
                 self.useMappings, 
-                self.layout.rowCount(), 0, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+                self.form_layout.rowCount(), 0, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
     def updateFormPatterns(self, source_column, source_editor):
         if not self.useMappings.isChecked():
