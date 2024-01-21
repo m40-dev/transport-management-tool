@@ -122,7 +122,7 @@ class ObjectModelConfigurationWidget(CustomDelegateWidget):
         editor = self.addToFormLayout(subFrameLayout, "Description", 3, 0, 1, 4)
         if editor and editor.editor:
             # editor.editor.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-            editor.editor.setMaximumHeight(75)
+            editor.editor.setMinimumHeight(75)
 
         separator = QFrame(self)
         separator.setFrameShape(QFrame.Shape.HLine)

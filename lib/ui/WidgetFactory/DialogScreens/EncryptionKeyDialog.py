@@ -1,17 +1,16 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
+from lib.ui.WidgetFactory.DialogScreens.CustomDialogWindow import CustomDialogWindow
+from lib.ui.WidgetFactory.DialogScreens.MessageBox import MsgBox
 
 
-class EncryptionKeyDialog(QtWidgets.QDialog):
+class EncryptionKeyDialog(CustomDialogWindow):
 
     def __init__(self, application, initial=False):
-        super(EncryptionKeyDialog, self).__init__(flags=QtCore.Qt.WindowType.Dialog, parent=application)
+        # super(EncryptionKeyDialog, self).__init__(flags=QtCore.Qt.WindowType.Dialog, parent=application)
+        super(EncryptionKeyDialog, self).__init__(application=application, restore_window_state=False)
 
         self.application = application
-        self.setWindowTitle(self.application.application_name + " - Encryption Key") 
-        # self.setWindowFlags(self.windowFlags())
-        
-        self.layout = QtWidgets.QGridLayout(self)
-        self.layout.setObjectName("layout")
+        self.setMinimumSize(250, 150)
         
         description_text = "Please provide the main password to decrypt session details:"
         
@@ -34,28 +33,14 @@ class EncryptionKeyDialog(QtWidgets.QDialog):
         if not initial:
             self.setWindowFlag(QtCore.Qt.WindowType.WindowStaysOnTopHint)
 
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
-        self.buttonBox.setObjectName("buttonBox")
+        self.form_layout.addWidget(self.description, 0, 0, 1, 0)
+        self.form_layout.addWidget(self.key_label, 1, 0, 1, 1)
+        self.form_layout.addWidget(self.key_input, 1, 1, 1, 1)
 
-        self.layout.addWidget(self.description, 0, 0, 1, 0)
-        self.layout.addWidget(self.key_label, 1, 0, 1, 1)
-        self.layout.addWidget(self.key_input, 1, 1, 1, 1)
-        
         if initial:
-            self.layout.addWidget(self.key_confirm_label, 2, 0, 1, 1)
-            self.layout.addWidget(self.key_confirm, 2, 1, 1, 1)
-        
-        self.layout.addWidget(self.buttonBox, 3, 1, 2, 1)
-
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-
-        self.setPalette(self.application.palette())
-        self.setStyleSheet(self.application.styleSheet())
-
-        QtCore.QMetaObject.connectSlotsByName(self)
+            self.form_layout.addWidget(self.key_confirm_label, 2, 0, 1, 1)
+            self.form_layout.addWidget(self.key_confirm, 2, 1, 1, 1)
+        self.form_layout.setRowStretch(3, 1)
 
     @property 
     def encryption_key(self):
@@ -63,7 +48,14 @@ class EncryptionKeyDialog(QtWidgets.QDialog):
         
     def accept(self):
         if self.key_confirm and self.key_input.text() != self.key_confirm.text():
-            QtWidgets.QMessageBox.information(self.application, "Key does not match", "Provided key does not match the confirmation.")
+            dialog = MsgBox(
+                application=self.application, 
+                window_title="Key does not match",
+                message="Provided key does not match the confirmation.", 
+                window_mode=MsgBox.INFO)
+            dialog.exec()
+            # QtWidgets.QMessageBox.information(self.application, "Key does not match", "Provided key does not match the confirmation.")
             return False
-
         super().accept()
+
+    

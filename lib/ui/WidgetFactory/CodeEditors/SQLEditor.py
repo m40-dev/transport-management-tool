@@ -13,16 +13,26 @@ class sql_editor(BaseCodeEditor):
     def reconfigure_lexer(self):
         lexer = self.lexer
 
-        editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
-        text_color = self.ProgramConfiguration.getColor("TextColor")
-        attribute_color = self.ProgramConfiguration.getColor("AltTextColor")
-        tag_color = self.ProgramConfiguration.getColor("AltTextColor2")
-        description_color = self.ProgramConfiguration.getColor("DescriptionTextColor")
+        editor_bg_color = self.ProgramConfiguration.getColor("CodeEditBGColor")
+        text_color = self.ProgramConfiguration.getColor("CodeEditTextNormal")
+
+        attribute_color = self.ProgramConfiguration.getColor("CodeEditTextKeyword1")
+        tag_color = self.ProgramConfiguration.getColor("CodeEditTextKeyword2")
+        string_color = self.ProgramConfiguration.getColor("CodeEditTextKeyword3")
+
+        description_color = self.ProgramConfiguration.getColor("CodeEditTextComment")
 
         #Configure colors by their roles
         lexer.setColor(text_color, QsciLexerSQL.Default)
-        lexer.setColor(tag_color, QsciLexerSQL.Keyword)
-        lexer.setColor(attribute_color, QsciLexerSQL.SingleQuotedString)
+        lexer.setColor(attribute_color, QsciLexerSQL.Keyword)
+        lexer.setColor(tag_color, QsciLexerSQL.KeywordSet5)
+        lexer.setColor(tag_color, QsciLexerSQL.KeywordSet6)
+        lexer.setColor(tag_color, QsciLexerSQL.KeywordSet7)
+        lexer.setColor(tag_color, QsciLexerSQL.KeywordSet8)
+        
+        lexer.setColor(string_color, QsciLexerSQL.SingleQuotedString)
+        lexer.setColor(string_color, QsciLexerSQL.DoubleQuotedString)
+
         lexer.setColor(description_color, QsciLexerSQL.Comment)
 
         lexer.setFont(self.font)

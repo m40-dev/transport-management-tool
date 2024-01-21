@@ -111,7 +111,7 @@ class ConfigurationSectionEditor(QtWidgets.QWidget):
                     description_label = QtWidgets.QLabel(self)
                     description_label.setText(f"<i>{field_description}</i>")
                     description_label.setWordWrap(True)
-                    description_label.setProperty("ConfigurationEditor", "PropertyDescription")
+                    description_label.setProperty("ConfigurationEditor", "ParameterDescription")
                     layout.addWidget(description_label, row + 1, column, 1, 1, Qt.AlignmentFlag.AlignTop)
                     layout.setRowStretch(row + 1, 2)
                     rowSpan += 1
@@ -131,7 +131,7 @@ class ConfigurationSectionEditor(QtWidgets.QWidget):
 
                 field_editor.dataChanged.connect(self.updateConfigurationKey)
 
-                field_editor.label.setProperty("ConfigurationEditor", "PropertyLabel")
+                field_editor.label.setProperty("ConfigurationEditor", "ParameterName")
                 field_editor.editor.setProperty("ConfigurationEditor", "PropertyEditor")
             else:
                 if field_editor.label:

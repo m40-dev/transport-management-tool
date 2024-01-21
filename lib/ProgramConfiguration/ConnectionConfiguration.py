@@ -22,6 +22,7 @@ class ConnectionHandler(QObject):
         self.application = application
         self.encryption_key = None
         self.connections = {}
+        # self.getEncryptionKey(initial=True)
         self.loadSavedConnections()
         
     def loadSavedConnections(self):
@@ -40,19 +41,39 @@ class ConnectionHandler(QObject):
                 else:
                     # print("connection data decryption failed")
                     self.connections = {}
-                    decision = QMessageBox.question(self.application, "Connection data decryption failed", "Do you want to try again?\nIf not, the connection sessions will not be available.")
-                    if decision == QMessageBox.StandardButton.Yes:
+                    dialog = WidgetFactory.MsgBox(
+                        application=self.application, 
+                        window_title="Decryption Error",
+                        message="Do you want to try again?\nIf not, the connection sessions will not be available.", 
+                        window_mode=WidgetFactory.MsgBox.QUESTION)
+                    if dialog.exec():
+                        # print("accepted?", dialog.accepted)
                         self.loadSavedConnections()
+
+                    # decision = QMessageBox.question(self.application, "Connection data decryption failed", "Do you want to try again?\nIf not, the connection sessions will not be available.")
+
+                    # if decision == QMessageBox.StandardButton.Yes:
+                    #     self.loadSavedConnections()
             else:
                 # print("connection details were not loaded")
                 self.connections = {}
-                decision = QMessageBox.question(
-                    self.application, 
-                    "Connection data decryption skipped.", 
-                    "There was no encryption key provided to decrypt data,\ndo you want to continue without session configurations?")
+                dialog = WidgetFactory.MsgBox(
+                        application=self.application, 
+                        window_title="Decryption Error",
+                        message="There was no encryption key provided to decrypt data,\ndo you want to continue without session configurations?", 
+                        window_mode=WidgetFactory.MsgBox.QUESTION)
+                if dialog.exec():
+                        # print("accepted?", dialog.accepted)
+                        self.loadSavedConnections()
+
+                # decision = QMessageBox.question(
+                #     self.application, 
+                #     "Connection data decryption skipped.", 
+                #     "There was no encryption key provided to decrypt data,\ndo you want to continue without session configurations?")
                 
-                if decision == QMessageBox.StandardButton.No:
-                    self.loadSavedConnections()
+                # if decision == QMessageBox.StandardButton.No:
+                    # self.loadSavedConnections()
+                
 
     """ connection Data Management """
     def getEncryptionKey(self, initial=False):

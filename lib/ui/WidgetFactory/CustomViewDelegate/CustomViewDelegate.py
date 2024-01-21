@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QStyledItemDelegate, QStyle, QWidget
 from PyQt6.QtCore import QRect, QPoint, QSize
-from PyQt6.QtGui import QPen
+from PyQt6.QtGui import QPen, QPainter, QPaintDevice
 
 from .CustomDelegateWidget import CustomDelegateWidget
 
@@ -64,7 +64,7 @@ class CustomViewDelegate(QStyledItemDelegate):
                 widget.setGeometry(option.rect)
             
             # Check if the item is selected
-            if option.state & QStyle.StateFlag.State_Selected:  
+            if option.state & QStyle.StateFlag.State_Selected:
                 widget.isSelected = True
 
                 # divide by 2 to get just widget size (size offset includes both margins)
@@ -75,13 +75,17 @@ class CustomViewDelegate(QStyledItemDelegate):
                 target_y = round(option.rect.y() + widget_height_offset)
 
                 target_rect = QRect(QPoint(target_x, target_y), widget.frame.size())
+
                 selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")
 
                 pen = QPen(selection_color)
                 pen.setWidth(3)
+
+                # painter = QPainter(self)
                 painter.setPen(pen)
                 painter.setBrush(selection_color)
                 painter.drawRect(target_rect)
+            
             else:
                 widget.isSelected = False
         else:

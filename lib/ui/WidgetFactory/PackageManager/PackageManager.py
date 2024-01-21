@@ -24,7 +24,6 @@ class PackageManager(QtWidgets.QWidget):
         self.WorkdirLoader = None
         self.setupUi()
         self.setupViewDelegate()
-        self.rubberBand = QtWidgets.QRubberBand(QtWidgets.QRubberBand.Shape.Rectangle, self.PackageViewTreeView) 
 
         # Package Tree View and Navigation
         self.PackageViewTreeView.dragMoveEvent = self.PackageViewDragMoveEvent
@@ -63,6 +62,35 @@ class PackageManager(QtWidgets.QWidget):
     def refresh_ui(self):
         self.setStyleSheet(self.ProgramConfiguration.styleSheet())
         self.uiRefreshRequested.emit()
+
+    # def showEvent(self, event):
+    #     self.animate()
+    
+    # def hideEvent(self, event):
+    #     self.animate(reverse=True)
+
+    # def animate(self, reverse=False):
+    #     # animate startup
+        
+    #     effect = QtWidgets.QGraphicsOpacityEffect(self)
+    #     self.setGraphicsEffect(effect)
+
+    #     animation = QtCore.QPropertyAnimation(self)
+
+    #     animation.setPropertyName(bytes("opacity", "utf-8"))
+    #     animation.setTargetObject(effect)
+    #     animation.setDuration(250)
+    #     animation.setStartValue(0)
+    #     animation.setEndValue(1)
+
+    #     if reverse:
+    #         animation.setStartValue(1)
+    #         animation.setEndValue(0)
+    #         animation.setDuration(200)
+        
+    #     animation.setEasingCurve(QtCore.QEasingCurve.Type.OutInCubic)
+    #     animation.start(QtCore.QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
+    #     animation.finished.connect(lambda: self.setGraphicsEffect(None))
 
     """ Workdir and File Operations """
     def changeWorkingDirectory(self):
@@ -216,7 +244,6 @@ class PackageManager(QtWidgets.QWidget):
         contextMenu.editSelectedItems.connect(self.onEditSelectedItems)
         contextMenu.sortChildItems.connect(self.onSortChildItems)
         contextMenu.reapplyTemplates.connect(self.onReapplyTemplates)
-        
 
         if len(contextMenu.menu_items) > 0:
             contextMenu.popup(menu_target)
@@ -425,12 +452,6 @@ class PackageManager(QtWidgets.QWidget):
         move_accept = False
         source_index = event.source().currentIndex()
         source_item = source_index.internalPointer()
-        source_widget = self.PackageViewTreeView.indexWidget(source_index)
-        
-        # if source_widget:
-        #     print("Drag source widget!")
-        #     self.rubberBand.setGeometry(QtCore.QRect(event.position().toPoint(), source_widget.size()).normalized())
-        #     self.rubberBand.show()
 
         QtWidgets.QTreeView.dragMoveEvent(self.PackageViewTreeView, event)
         
@@ -579,7 +600,6 @@ class PMWorker(QtCore.QObject):
         self.finished.emit()
         # self.application.statusBarUpdated.emit(f"All Definition files loaded")
 
-
     def loadSingleDefinition(self):
         if self.definitions and len(self.definitions) > 0:
             self.dataLoaded.emit(self.definitions[0])
@@ -698,3 +718,5 @@ class PMWorker(QtCore.QObject):
         self.definitions = definitions
         self.workdirLoaded.emit(definitions, skipped_definitions, mandatory_columns)
         self.processQueue()
+
+    

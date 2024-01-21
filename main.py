@@ -1,9 +1,9 @@
 #""" Required QT Libraries """
-from PyQt6.QtCore import Qt, QSettings, QEvent
+from PyQt6.QtCore import Qt, QSettings, QEvent, QCoreApplication
 from PyQt6.QtWidgets import (
-    QMainWindow, QApplication, QMessageBox, QFileDialog
+    QApplication, QMessageBox, QFileDialog
     )
-from PyQt6.QtGui import QShortcut, QKeySequence, QIcon
+from PyQt6.QtGui import QShortcut, QKeySequence
 
 #""" qt traceback handling"""
 import traceback
@@ -22,13 +22,15 @@ from lib.ui.WidgetFactory.SideBar import SideBar
 from lib.ui.WidgetFactory.XMLTemplateEditor import XMLTemplateEditor
 from lib.ProgramConfiguration import ProgramConfiguration, ConnectionHandler
 
+from lib.ui.CustomWindow.custom_window import CustomBase, CustomMainWindow
+
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.8.7'
+VERSION = '0.9'
 APP_NAME = f"Transport Management Tool - {VERSION}"
 
-class Transport_Manager(QMainWindow):
+class Transport_Manager(CustomMainWindow):
     """Main window class for connection launcher"""
     statusBarUpdated = pyqtSignal(str)
     connectionDataChanged = pyqtSignal()
@@ -38,11 +40,10 @@ class Transport_Manager(QMainWindow):
     def __init__(
         self, parent=None, clipboard=None, event_filter=None, qapplication=None
     ):
-        QMainWindow.__init__(self, parent)
+        CustomBase.__init__(self)
         """ Map QT UI from parsed file - created and updated in qt designer """
 
         self.application_name = APP_NAME
-        
         
         self.qt_app = qapplication
         self.clipboard = clipboard
@@ -108,22 +109,6 @@ class Transport_Manager(QMainWindow):
             self.XMLTemplateEditor.newTransportTemplate)
         
         self.ui.actionSettings.triggered.connect(lambda: self.ui.MainTabWidget.setCurrentWidget(self.SettingsWidget))
-
-        #TODO: Definitely rework required
-        planner_menu = self.ui.menubar.addMenu("Execution Planner")
-        new_plan_action = planner_menu.addAction("Add New Plan")
-        # Connect Menu Signals
-        new_plan_action.triggered.connect(self.PackageManager.addExecutionPlan)
-        new_plan_action.triggered.connect(lambda: self.ui.MainTabWidget.setCurrentWidget(self.PackageManager))
-
-        menu_Presets = self.ui.menubar.addMenu("Relation Presets")
-        action_managePresets = menu_Presets.addAction("Manage Presets")
-        action_ExportPresetData = menu_Presets.addAction("Export Preset Data")
-        action_ImportPresetData = menu_Presets.addAction("Import Preset Data")
-        #Connect Menu Signals
-        action_managePresets.triggered.connect(self.manageRelationPresets)
-        action_ExportPresetData.triggered.connect(self.exportRelationPresets)
-        action_ImportPresetData.triggered.connect(self.importRelationPresets)
         self.styleSheetChanged.connect(self.onStyleSheetChange)
 
         """ Shortcuts """
@@ -179,6 +164,10 @@ class Transport_Manager(QMainWindow):
     def onDatabaseConnection(self):
         self.db.load_session_data()
         self.XMLTemplateEditor.reloadView()
+
+    def addExecutionPlan(self):
+        self.PackageManager.addExecutionPlan()
+        self.ui.MainTabWidget.setCurrentWidget(self.PackageManager)
 
     def manageRelationPresets(self):
         # print("manage relation presets")
@@ -270,10 +259,13 @@ class Transport_Manager(QMainWindow):
         self.XMLTemplateEditor.refresh_ui()
         self.PackageManager.refresh_ui()
         self.SettingsWidget.refresh_ui()
+        self.ui.WindowDecoration.refresh_ui()
 
     def refresh_ui(self):
         """ UI style scheme """
         self.ProgramConfiguration.reloadStyleSheet()
+
+        self.SideBar.animate()
 
         """ Restore window settings """
         if self.settings.value("MainWindowGeometry") is not None:
@@ -289,6 +281,9 @@ class Transport_Manager(QMainWindow):
 
         self.PackageManager.loadWorkingDirectory()
         self.SettingsWidget.configurationReloaded.emit()
+
+        self.ui.WindowDecoration.refresh_ui()
+        
     
     def getObjectData(self, object_class, dialog_name="Object Data", source_index=None, editor_configuration=None):
         if editor_configuration is None:
@@ -315,7 +310,13 @@ class Transport_Manager(QMainWindow):
         return file_content
 
     def databaseConnectionRequired(self):
-        QMessageBox.information(self, "Database Connection Required", "This function requires active Database Connection to work.\nPlease connect to the target database and try again.")
+        # QMessageBox.information(self, "Database Connection Required", "This function requires active Database Connection to work.\nPlease connect to the target database and try again.")
+        WidgetFactory.MsgBox(
+            application=self,
+            window_mode=WidgetFactory.MsgBox.INFO,
+            window_title="Connection Required",
+            message="This function requires active Database Connection to work.\nPlease connect to the target database and try again."
+        ).exec()
 
     def deleteKeyPressEvent(self):
         if self.ui.MainTabWidget.currentWidget() == self.PackageManager:
@@ -362,14 +363,21 @@ class Transport_Manager(QMainWindow):
 if __name__ == "__main__":
     import sys
 
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+
     app = QApplication(sys.argv)
 
     # splash = QSplashScreen()
     # splash.show()
-    
+    QApplication.setHighDpiScaleFactorRoundingPolicy(
+        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
+
     a = Transport_Manager(
         clipboard=app.clipboard(), event_filter=None, qapplication=app
     )
+    # app.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings, True)
+    
     
     # splash.finish(a)
     a.show()

@@ -1,1 +1,1 @@
-from .WindowTitleBarDecoration import *
+from .WindowTitleDecoration import *

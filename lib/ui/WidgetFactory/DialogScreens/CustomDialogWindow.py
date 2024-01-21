@@ -1,29 +1,25 @@
-from PyQt6 import QtCore, QtWidgets
-from lib.ui.WidgetFactory.CustomWindowDecorations import WindowTitleBarDecoration
+from PyQt6 import QtCore, QtWidgets, QtGui
+from lib.ui.WidgetFactory.CustomWindowDecorations import WindowTitleDecoration
+from lib.ui.CustomWindow.custom_window import CustomDialog
 
-class CustomDialogWindow(QtWidgets.QDialog):
+class CustomDialogWindow(CustomDialog):
 
-    def __init__(self, application, dialog_name=""):
-        super(CustomDialogWindow, self).__init__(flags=QtCore.Qt.WindowType.Dialog | QtCore.Qt.WindowType.FramelessWindowHint, parent=application)
-
+    def __init__(self, application, dialog_name="", restore_window_state=True, window_mode=WindowTitleDecoration.Dialog):
+        # super(CustomWindow, self).__init__()
+        super(CustomDialogWindow, self).__init__(parent=self)
+        
         self.application = application
         self.ProgramConfiguration = self.application.ProgramConfiguration
 
         self.setMinimumSize(600, 450)
-        
-        if dialog_name:
-            self.setWindowTitle(f"{self.application.application_name} - {dialog_name}") 
-        else:
-            self.setWindowTitle(f"{self.application.application_name}")
 
         self.layout = QtWidgets.QGridLayout(self)
         self.layout.setSpacing(2)
-        self.layout.setContentsMargins(1,1,1,1)
-        
-        window_decoration = WindowTitleBarDecoration(self, self.application)
-        window_decoration.setWindowTitle(f"{self.application.application_name} - {dialog_name}")
+        self.layout.setContentsMargins(0,0,0,0)
 
-        self.form_layout = QtWidgets.QGridLayout(self)
+        self.windowDecoration = WindowTitleDecoration(self, self.application, WindowMode=window_mode)
+
+        self.form_layout = QtWidgets.QGridLayout()
         self.form_layout.setSpacing(5)
         self.form_layout.setContentsMargins(10, 10, 10, 10)
 
@@ -36,12 +32,25 @@ class CustomDialogWindow(QtWidgets.QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
-        self.layout.addWidget(window_decoration, 0, 0)
+        self.layout.addWidget(self.windowDecoration, 0, 0)
         self.layout.addLayout(self.form_layout, 1, 0)
         self.layout.addWidget(self.buttonBox, 2, 0)
-        self.setSizeGripEnabled(True)
-        self.restoreWindowState()
+
+        if restore_window_state:
+            self.restoreWindowState()
+
+        self.setSizeGripEnabled(False)
+        
         self.accepted = False
+        self.cancelled = False
+
+        if dialog_name:
+            self.setWindowTitle(f"{self.application.application_name} - {dialog_name}") 
+        else:
+            self.setWindowTitle(f"{self.application.application_name}")
+        
+        self.windowDecoration.raise_()
+        
 
     def restoreWindowState(self):
         """ Restore window settings """
@@ -57,9 +66,25 @@ class CustomDialogWindow(QtWidgets.QDialog):
     def accept(self):
         self.saveWindowState()
         self.accepted = True
-        super().reject()
+        return self.close(accepted=True)
 
     def reject(self):
         self.saveWindowState()
         self.accepted = False
-        super().reject()
+        return self.close(accepted=False)
+
+    def setWindowTitle(self, title):
+        super().setWindowTitle(title)
+        self.windowDecoration.setWindowTitle(title)
+
+    def setIcon(self, icon):
+        self.windowDecoration.setWindowIcon(icon)
+
+    def close(self, accepted=None):
+        if self.accepted:
+            return super().accept()
+        
+        if accepted is None:
+            self.cancelled = True
+        
+        return super().reject()

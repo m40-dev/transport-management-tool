@@ -5,7 +5,7 @@ from .ContextMenu import ExecutionPlannerContextMenu
 from lib.data.DataModels import TaskExecutionModel
 from .ExecutionPlannerDelegate import ExecutionPlannerDelegate
 from .ExecutionPlannerProcessRunner import ProcessRunner
-from lib.ui.WidgetFactory import FormEditorDialog
+from lib.ui.WidgetFactory import FormEditorDialog, MsgBox
 from datetime import datetime
 from .ExecutionLogConsole import ExecutionLogConsole
 
@@ -196,8 +196,17 @@ class ExecutionPlannerWidget(QWidget):
         
     def queueExecutionGroup(self, task_item, prompt=True):
         if len(task_item._children) > 0 and prompt:
-            continue_execution = QMessageBox.question(self, "Are You Sure?", "Are you sure to start the goup execution?\nAll Child elements and tasks in child groups will be queued for execution.")
-            if continue_execution in [QMessageBox.StandardButton.No, QMessageBox.StandardButton.Cancel]:
+            # continue_execution = QMessageBox.question(self, "Are You Sure?", "Are you sure to start the goup execution?\nAll Child elements and tasks in child groups will be queued for execution.")
+            # if continue_execution in [QMessageBox.StandardButton.No, QMessageBox.StandardButton.Cancel]:
+            #     return False
+            msg_dialog = MsgBox(
+                application=self.application,
+                window_title="Question",
+                message="Are you sure to start the goup execution?\nAll Child elements and tasks in child groups will be queued for execution.",
+                window_mode=MsgBox.QUESTION
+            )
+            msg_dialog.exec()
+            if not msg_dialog.accepted:
                 return False
         
         for child_task in task_item._children:

@@ -120,8 +120,8 @@ class ProcessRunner(QProcess):
                     finished_class = "task-finished-error"
 
                 log_info = '<table width="100%" align="center" class="execution-log">'
-                log_info += '<tr>'
-                log_info += f'<td colspan="2" class="{finished_class}">Task Execution Finished {end_state}!</td>'
+                log_info += f'<tr>'
+                log_info += f'<td class="{finished_class}" colspan="2">Task Execution Finished {end_state}!</td>'
                 log_info += '</tr>'
                 log_info += '<tr>'
                 log_info += f'<td class="task-info"><b>Executed Task:</b> [{self.current_item.display}]</td>'

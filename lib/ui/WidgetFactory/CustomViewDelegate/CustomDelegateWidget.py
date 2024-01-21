@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QGridLayout, QFrame, QGraphicsOpacityEffect, QSizePolicy, QTreeView
-from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, QAbstractAnimation
+from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, QAbstractAnimation, QRect, QPoint
+from PyQt6.QtGui import QPainter, QPen, QBrush
 
 class CustomDelegateWidget(QFrame):
 
@@ -12,7 +13,7 @@ class CustomDelegateWidget(QFrame):
         self.application = application
         self.model_item = model_item
         self.parent_module = parent_module
-        
+        # self.setVisible(False)
         # Operational Properties
         self.ProgramConfiguration = self.application.ProgramConfiguration
         self.isSelected = False
@@ -44,7 +45,36 @@ class CustomDelegateWidget(QFrame):
             self.parent_view.collapsed.connect(self.collapse_children)
 
         # custom widget show animation
+        # self.animate()
+
+    # def paintEvent(self, event):
+    #     if self.isSelected:
+    #         target_rect = self.frame.rect()
+    #         widget_width_offset = (self.rect().width() - self.frame.rect().width()) / 2
+    #         widget_height_offset = (self.rect().height() - self.frame.rect().height()) / 2
+
+    #         target_x = round(widget_width_offset)
+    #         target_y = round(widget_height_offset)
+
+    #         target_rect = QRect(QPoint(target_x, target_y), self.frame.size())
+
+    #         selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")
+
+    #         pen = QPen(selection_color)
+    #         pen.setWidth(3)
+
+    #         painter = QPainter(self)
+    #         painter.setPen(pen)
+    #         painter.setBrush(selection_color)
+    #         painter.drawRect(target_rect)
+    #     else:
+    #         super().paintEvent(event)
+
+    def showEvent(self, event):
         self.animate()
+
+    def hideEvent(self, event):
+        self.animate(reverse=True)
 
     def animate(self, reverse=False):
         # animate startup
@@ -64,6 +94,7 @@ class CustomDelegateWidget(QFrame):
         
         animation.setEasingCurve(QEasingCurve.Type.OutInCubic)
         animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
+        animation.finished.connect(lambda: self.setGraphicsEffect(None))
 
     def expand_children(self, index):
         if not index.isValid():
@@ -72,7 +103,7 @@ class CustomDelegateWidget(QFrame):
 
         if expanded_item != self.model_item.parent():
             return False
-        self.animate()
+        # self.animate()
         self.parent_view.model().layoutChanged.emit()
         
     def collapse_children(self, index):
@@ -83,7 +114,7 @@ class CustomDelegateWidget(QFrame):
         if collapsed_item != self.model_item.parent():
             return False
         
-        self.animate(reverse=True)
+        # self.animate(reverse=True)
         self.parent_view.model().layoutChanged.emit()
 
     def sizeHint(self):

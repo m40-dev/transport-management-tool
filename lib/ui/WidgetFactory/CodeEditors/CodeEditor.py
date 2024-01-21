@@ -4,7 +4,8 @@ from PyQt6.QtGui import QColor, QFont
 class BaseCodeEditor(QsciScintilla):
     def __init__(self, parent):
         self.parent = parent
-        QsciScintilla.__init__(self, parent)
+        super(BaseCodeEditor, self).__init__(parent=parent)
+
         self.application = parent
         self.ProgramConfiguration = self.application.ProgramConfiguration
         #font
@@ -51,14 +52,14 @@ class BaseCodeEditor(QsciScintilla):
     def reconfigure_lexer(self):
         lexer = self.lexer
 
-        editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
-        editor_text_color = self.ProgramConfiguration.getColor("TextColor")
-        selected_color = self.ProgramConfiguration.getColor("HighlightedText")
+        editor_bg_color = self.ProgramConfiguration.getColor("CodeEditBGColor")
+        editor_text_color = self.ProgramConfiguration.getColor("CodeEditTextNormal")
+        comment_color = self.ProgramConfiguration.getColor("CodeEditTextComment")
 
         #Configure colors by their roles
         lexer.setColor(editor_text_color, QsciLexerPython.Default)
-        lexer.setColor(selected_color, QsciLexerPython.Comment)
-        lexer.setColor(selected_color, QsciLexerPython.CommentBlock)
+        lexer.setColor(comment_color, QsciLexerPython.Comment)
+        lexer.setColor(comment_color, QsciLexerPython.CommentBlock)
 
         lexer.setFont(self.font)
         lexer.setDefaultPaper(editor_bg_color)
@@ -66,10 +67,9 @@ class BaseCodeEditor(QsciScintilla):
         self.setLexer(lexer)
 
     def reconfigure_editor(self):
-        editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
-        editor_text_color = self.ProgramConfiguration.getColor("TextColor")
-        caret_bg_color = self.ProgramConfiguration.getColor("HighlightColor")
-        selected_color = self.ProgramConfiguration.getColor("HighlightedText")
+        editor_bg_color = self.ProgramConfiguration.getColor("CodeEditBGColor")
+        editor_text_color = self.ProgramConfiguration.getColor("CodeEditTextNormal")
+        caret_bg_color = self.ProgramConfiguration.getColor("CodeEditCaret")
 
         self.setCaretLineBackgroundColor(caret_bg_color)
         self.setCaretLineFrameWidth(1)
@@ -81,8 +81,6 @@ class BaseCodeEditor(QsciScintilla):
 
         self.setMarginsBackgroundColor(editor_bg_color)
         self.setMarginsForegroundColor(editor_text_color)
-        
-        
 
     def find_text(self, text):
         if text == self.text_to_find:

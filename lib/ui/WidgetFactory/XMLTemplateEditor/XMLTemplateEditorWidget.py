@@ -16,8 +16,7 @@ from ..DialogScreens import ScriptEditorDialog
 from lib.data.DataModels import XMLDataItem, XMLDataModel, ObjectDataItem, TASKS
 from lib.data.DataModels.XMTemplateEditor.xml_object_definitions import transport_template
 # Custom Widgets
-from lib.ui.WidgetFactory import FormEditorDialog
-
+from lib.ui.WidgetFactory import FormEditorDialog, MsgBox
 
 XML_PREVIEW_TIMER = 100
 
@@ -489,9 +488,23 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
     
     def onWidgetClose(self):
         if self.XMLStructureTreeView.model().isDifferent():
-            decision = QtWidgets.QMessageBox.question(self.application, "Save Changes?", f"Do you want to save changes before closing?")
-            if decision == QtWidgets.QMessageBox.StandardButton.Yes:
-                self.saveXMLTemplate()
+            # decision = QtWidgets.QMessageBox.question(self.application, "Save Changes?", f"Do you want to save changes before closing?")
+            # if decision == QtWidgets.QMessageBox.StandardButton.Yes:
+            #     self.saveXMLTemplate()
+            msg_dialog = MsgBox(
+                application=self.application,
+                window_title="Question",
+                message="Do you want to save changes before closing?",
+                window_mode=MsgBox.QUESTION
+            )
+            msg_dialog.exec()
+            if msg_dialog.accepted:
+                if not self.saveXMLTemplate():
+                    return False
+            
+            if msg_dialog.cancelled:
+                return False
+
         self.XMLPreviewBrowser.parent = None
         self.application = None
         self.parent = None

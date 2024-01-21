@@ -1,11 +1,11 @@
 
-from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6 import QtWidgets, QtCore
 
 from .ConfigurationSectionTreeWidgetItem import ConfigurationSectionTreeWidgetItem
+from lib.ui.WidgetFactory import MsgBox
 
 class SettingsWidget(QtWidgets.QWidget):
-    configurationReloaded = pyqtSignal()
+    configurationReloaded = QtCore.pyqtSignal()
 
     def __init__(self, application):
         super().__init__()
@@ -17,6 +17,7 @@ class SettingsWidget(QtWidgets.QWidget):
 
         self.ConfigurationSectionTreeWidget.itemClicked.connect(self.onSectionChanged)
         self.configurationReloaded.connect(lambda current=self.current_section: self.onSectionChanged(self.current_section))
+        # self.animate()
 
     def refresh_ui(self):
         self.setStyleSheet(self.ProgramConfiguration.styleSheet())
@@ -75,7 +76,7 @@ class SettingsWidget(QtWidgets.QWidget):
         configuration_widget_layout.addWidget(self.ConfigurationSectionTabWidget)
 
         # Add main widgets into splitter layout
-        self.ConfigurationViewSplitter = QtWidgets.QSplitter(Qt.Orientation.Horizontal)
+        self.ConfigurationViewSplitter = QtWidgets.QSplitter(QtCore.Qt.Orientation.Horizontal)
         self.ConfigurationViewSplitter.addWidget(self.ConfigurationSectionTreeWidget)
         self.ConfigurationViewSplitter.addWidget(configuration_widget)
 
@@ -104,15 +105,50 @@ class SettingsWidget(QtWidgets.QWidget):
 
     def saveConfigurationData(self):
         if self.ProgramConfiguration.saveConfiguration():
-            info = QtWidgets.QMessageBox(
-                QtWidgets.QMessageBox.Icon.Information, 
-                "Configuration Saved", 
-                "All configuration sections have been saved.",
-                QtWidgets.QMessageBox.StandardButton.Ok,
-                self)
+            MsgBox(
+            application=self.application,
+            window_mode=MsgBox.INFO,
+            window_title="Configuration Saved",
+            message="Program Configuration saved."
+            ).exec()
+            # info = QtWidgets.QMessageBox(
+            #     QtWidgets.QMessageBox.Icon.Information, 
+            #     "Configuration Saved", 
+            #     "All configuration sections have been saved.",
+            #     QtWidgets.QMessageBox.StandardButton.Ok,
+            #     self)
             
-            info.exec()
+            # info.exec()
 
+
+    # def showEvent(self, event):
+    #     self.animate()
+    
+    # def hideEvent(self, event):
+    #     self.animate(reverse=True)
+
+    # def animate(self, reverse=False):
+    #     # animate startup
+        
+    #     effect = QtWidgets.QGraphicsOpacityEffect(self)
+    #     self.setGraphicsEffect(effect)
+
+    #     animation = QtCore.QPropertyAnimation(self)
+
+    #     animation.setPropertyName(bytes("opacity", "utf-8"))
+    #     animation.setTargetObject(effect)
+    #     animation.setDuration(250)
+    #     animation.setStartValue(0)
+    #     animation.setEndValue(1)
+
+    #     if reverse:
+    #         animation.setStartValue(1)
+    #         animation.setEndValue(0)
+    #         animation.setDuration(200)
+        
+    #     animation.setEasingCurve(QtCore.QEasingCurve.Type.OutInCubic)
+    #     animation.start(QtCore.QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
+    #     animation.finished.connect(lambda: self.setGraphicsEffect(None))
         
 
 

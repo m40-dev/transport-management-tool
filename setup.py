@@ -10,7 +10,8 @@ from main import VERSION
 
 packages = []
 
-includes = ["os", "sys", "PyQt6.QtCore", "PyQt6.QtGui", "PyQt6.QtWidgets", "PyQt6.Qsci", "lxml", "pyodbc"]
+includes = ["os", "sys", "PyQt6.QtCore", "PyQt6.QtGui", "PyQt6.QtWidgets", "PyQt6.Qsci", "lxml", "pyodbc", 
+            "win32api", "win32con", "win32gui", "win32comext","winreg", "ctypes", "enum"]
 excludes = ["tcl", "tk", "Tkinter", "tkinter"]
 
 include_files = [
@@ -18,7 +19,6 @@ include_files = [
     "./Application.qss",
     ("./lib/ui/img", "./lib/ui/img")
 ]
-
 
 options = {
     "build_exe": {

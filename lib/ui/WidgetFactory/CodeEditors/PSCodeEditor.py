@@ -13,11 +13,12 @@ class ps_editor(BaseCodeEditor):
     def reconfigure_lexer(self):
         lexer = self.lexer
 
-        editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
-        text_color = self.ProgramConfiguration.getColor("TextColor")
-        attribute_color = self.ProgramConfiguration.getColor("AltTextColor")
-        tag_color = self.ProgramConfiguration.getColor("AltTextColor2")
-        description_color = self.ProgramConfiguration.getColor("DescriptionTextColor")
+        editor_bg_color = self.ProgramConfiguration.getColor("CodeEditBGColor")
+        text_color = self.ProgramConfiguration.getColor("CodeEditTextNormal")
+        attribute_color = self.ProgramConfiguration.getColor("CodeEditTextKeyword1")
+        tag_color = self.ProgramConfiguration.getColor("CodeEditTextKeyword2")
+        string_color = self.ProgramConfiguration.getColor("CodeEditTextKeyword3")
+        description_color = self.ProgramConfiguration.getColor("CodeEditTextComment")
 
         #Configure colors by their roles
         lexer.setColor(text_color, QsciLexerPOV.Default)
@@ -38,7 +39,7 @@ class ps_editor(BaseCodeEditor):
 
         lexer.setColor(description_color, QsciLexerPOV.CommentLine)
         lexer.setColor(description_color, QsciLexerPOV.Comment)
-        lexer.setColor(description_color, QsciLexerPOV.String)
+        lexer.setColor(string_color, QsciLexerPOV.String)
 
         lexer.setFont(self.font)
         lexer.setDefaultPaper(editor_bg_color)

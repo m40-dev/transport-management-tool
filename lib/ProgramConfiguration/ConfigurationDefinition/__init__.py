@@ -1,4 +1,4 @@
-from .GeneralConfiguration import *
+from .AppearanceConfiguration import *
 from .PackageManagerConfiguration import *
 from .ObjectModelDefinition import *
 from .ExecutionPlannerConfiguration import *
@@ -37,5 +37,9 @@ PROGRAM_ICONS = {
     "RunQuery": "lib/ui/img/icons/StartBlue.png",
     "ApplyPreset": "./lib/ui/img/icons/ApplyPreset.png",
     "AddObject": "./lib/ui/img/icons/AddObject.png",
-    "ApplicationLogo": "./lib/ui/img/icons/ApplicationIcon.png"
+    "ApplicationLogo": "./lib/ui/img/icons/ApplicationIcon.png",
+    "MinimizeButton": "./lib/ui/img/icons/btn_minimize.png",
+    "MaximizeButton": "./lib/ui/img/icons/btn_maximize.png",
+    "RestoreButton": "./lib/ui/img/icons/btn_restore.png",
+    "CloseButton": "./lib/ui/img/icons/btn_close.png"
 }

@@ -254,8 +254,8 @@ class ProgramConfiguration(QObject):
 
     def reloadStyleSheet(self):
         self.application.setStyleSheet(self.ColorPalette.styleSheet())
+        self.application.setPalette(self.ColorPalette)
         self.application.qt_app.setPalette(self.ColorPalette)
-
         return self.styleSheet()
     
     def getIcon(self, icon_id):
@@ -263,12 +263,16 @@ class ProgramConfiguration(QObject):
 
     def getColor(self, color_id):
         color_string = self.getConfigurationValue("Appearance", color_id)
+
         base_color = self.getColorFromRGBAString(color_string)
         if base_color.isValid():
             return base_color
         return QColor()
 
     def getColorFromRGBAString(self, color_string):
+        if color_string is None:
+            return QColor("#fff")
+
         parsed_color = QColor(color_string)
         if "," in color_string:
             #try to work with the data

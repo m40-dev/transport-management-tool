@@ -12,18 +12,19 @@ class xml_editor(BaseCodeEditor):
     def reconfigure_lexer(self):
         lexer = self.lexer
 
-        editor_bg_color = self.ProgramConfiguration.getColor("BaseColor")
-        text_color = self.ProgramConfiguration.getColor("TextColor")
-        attribute_color = self.ProgramConfiguration.getColor("AltTextColor")
-        tag_color = self.ProgramConfiguration.getColor("AltTextColor2")
-        description_color = self.ProgramConfiguration.getColor("DescriptionTextColor")
+        editor_bg_color = self.ProgramConfiguration.getColor("CodeEditBGColor")
+        text_color = self.ProgramConfiguration.getColor("CodeEditTextNormal")
+        attribute_color = self.ProgramConfiguration.getColor("CodeEditTextKeyword1")
+        tag_color = self.ProgramConfiguration.getColor("CodeEditTextKeyword2")
+        string_color = self.ProgramConfiguration.getColor("CodeEditTextKeyword3")
+        description_color = self.ProgramConfiguration.getColor("CodeEditTextComment")
 
         #Configure colors by their roles
         lexer.setColor(text_color, QsciLexerXML.Default)
         lexer.setColor(attribute_color, QsciLexerXML.Attribute)
         lexer.setColor(tag_color, QsciLexerXML.Tag)
         lexer.setColor(description_color, QsciLexerXML.HTMLComment)
-        lexer.setColor(description_color, QsciLexerXML.HTMLDoubleQuotedString)
+        lexer.setColor(string_color, QsciLexerXML.HTMLDoubleQuotedString)
 
         lexer.setFont(self.font)
         lexer.setDefaultPaper(editor_bg_color)

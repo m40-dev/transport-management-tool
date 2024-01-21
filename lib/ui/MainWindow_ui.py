@@ -1,6 +1,5 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
-from lib.ui.WidgetFactory.CustomWindowDecorations import WindowTitleBarDecoration
-
+from lib.ui.WidgetFactory.CustomWindowDecorations import WindowTitleDecoration
 
 class Ui_MainWindow(object):
     def __init__(self, application):
@@ -12,11 +11,11 @@ class Ui_MainWindow(object):
 
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(2121, 1215)
-        MainWindow.setWindowFlags(QtCore.Qt.WindowType.FramelessWindowHint)
-        
+        # self.MainLayout = QtWidgets.QVBoxLayout(MainWindow)
+
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
-        self.WindowDecoration = WindowTitleBarDecoration(MainWindow, self.application)
+        self.WindowDecoration = WindowTitleDecoration(MainWindow, self.application)
         self.gridLayout = QtWidgets.QGridLayout(self.centralwidget)
         
         self.gridLayout.setObjectName("gridLayout")
@@ -38,29 +37,54 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addWidget(self.MainTabWidget)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
-        self.menubar.setGeometry(QtCore.QRect(0, 0, 2121, 22))
+        # self.menubar.setGeometry(QtCore.QRect(0, 0, 2121, 22))
         self.menubar.setObjectName("menubar")
         self.menuMenu = QtWidgets.QMenu(self.menubar)
         self.menuMenu.setObjectName("menuMenu")
-        self.menuAbout = QtWidgets.QMenu(self.menubar)
-        self.menuAbout.setObjectName("menuAbout")
         self.menuConnections = QtWidgets.QMenu(self.menubar)
         self.menuConnections.setObjectName("menuConnections")
+
+        self.menuAbout = QtWidgets.QMenu(self.menubar)
+        self.menuAbout.setObjectName("menuAbout")
+
+        #Execution Planner Menu Configuration
+        self.menuExecutionPlanner = QtWidgets.QMenu(self.menubar)
+        self.menuExecutionPlanner.setObjectName("menuExecutionPlanner")
+
+        new_plan_action = self.menuExecutionPlanner.addAction("Add New Plan")
+        new_plan_action.triggered.connect(MainWindow.addExecutionPlan)
+
+        #Relation Presets Menu Configuration
+        self.menuRelationPresets = QtWidgets.QMenu(self.menubar)
+        self.menuRelationPresets.setObjectName("menuRelationPresets")
+
+        action_managePresets = self.menuRelationPresets.addAction("Manage Presets")
+        action_ExportPresetData = self.menuRelationPresets.addAction("Export Preset Data")
+        action_ImportPresetData = self.menuRelationPresets.addAction("Import Preset Data")
+        
+        #Connect Menu Signals
+        action_managePresets.triggered.connect(MainWindow.manageRelationPresets)
+        action_ExportPresetData.triggered.connect(MainWindow.exportRelationPresets)
+        action_ImportPresetData.triggered.connect(MainWindow.importRelationPresets)
 
         #add Menu elements to the window decoration
         self.WindowDecoration.setMenuBar(self.menubar)
 
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
+        MainWindow.title_bar = self.WindowDecoration
 
-        self.gridLayout.addWidget(self.WindowDecoration, 0, 0)
-        # self.gridLayout.addWidget(self.menubar, 1, 0)
         self.gridLayout.addLayout(self.horizontalLayout, 1, 0)
-        # self.gridLayout.addWidget(self.statusbar, 2, 0)
         MainWindow.setStatusBar(self.statusbar)
 
-        self.gridLayout.setContentsMargins(1,1,1,1)
-        self.gridLayout.setSpacing(1)
+        # leave space for the titlebar
+        self.gridLayout.setContentsMargins(5, 34, 5, 5)
+        self.gridLayout.setSpacing(2)
+
+        # self.MainLayout.addWidget(self.WindowDecoration)
+        # self.MainLayout.addWidget(self.centralwidget)
+        # self.MainLayout.addWidget(self.statusbar)
+
 
         # MainWindow.setStatusBar(self.statusbar)
         self.actionSaveFile = QtGui.QAction(MainWindow)
@@ -100,6 +124,8 @@ class Ui_MainWindow(object):
         self.menuConnections.addSeparator()
         self.menubar.addAction(self.menuMenu.menuAction())
         self.menubar.addAction(self.menuConnections.menuAction())
+        self.menubar.addAction(self.menuExecutionPlanner.menuAction())
+        self.menubar.addAction(self.menuRelationPresets.menuAction())
         self.menubar.addAction(self.menuAbout.menuAction())
 
         self.retranslateUi(MainWindow)
@@ -112,6 +138,8 @@ class Ui_MainWindow(object):
         self.menuMenu.setTitle(_translate("MainWindow", "Menu"))
         self.menuAbout.setTitle(_translate("MainWindow", "About"))
         self.menuConnections.setTitle(_translate("MainWindow", "Connections"))
+        self.menuExecutionPlanner.setTitle(_translate("MainWindow", "Execution Planner"))
+        self.menuRelationPresets.setTitle(_translate("MainWindow", "Relation Presets Configuration"))
         self.actionSaveFile.setText(_translate("MainWindow", "Save File"))
         self.actionSaveFile.setShortcut(_translate("MainWindow", "Ctrl+S"))
         self.actionConnect_to_database.setText(_translate("MainWindow", "Connect to database"))

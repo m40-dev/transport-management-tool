@@ -8,7 +8,6 @@ ExecutionPlanner_ExecutionGroup = {
     "ExportType": "ExportKeys",
     "ConfigurationParameters":{
         "GroupName":{
-            
             "Display":"Group Name",
             "Description":"Configures the Execution Group display name.",
             "FieldType":"StringInput",

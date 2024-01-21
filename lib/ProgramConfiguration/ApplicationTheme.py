@@ -1,6 +1,6 @@
 from PyQt6.QtGui import QPalette, QBrush, QColor
 from PyQt6.QtCore import Qt
-
+import re
 
 
 class ApplicationTheme(QPalette):
@@ -32,7 +32,10 @@ class ApplicationTheme(QPalette):
         for theme_key, key_configuration in self.ProgramConfiguration.getConfigurationParameterValues("Appearance").items():
             color = self.ProgramConfiguration.getColorFromRGBAString(str(key_configuration))
             if color.isValid():
-                style_sheet = style_sheet.replace(f"@{theme_key}", str(key_configuration))
+                # style_sheet = style_sheet.replace(f"@{theme_key}", str(key_configuration))
+                keyword = r"@" + theme_key + r"\b"
+                style_sheet = re.sub(keyword, str(key_configuration), style_sheet)
+
         return style_sheet
 
     @property
@@ -64,7 +67,6 @@ class ApplicationTheme(QPalette):
         self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Base, brush)
         self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Window, brush)
         self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Highlight, brush)
-        
 
         brush = QBrush(self.ProgramConfiguration.getColor("AlternativeBaseColor"))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
@@ -85,12 +87,17 @@ class ApplicationTheme(QPalette):
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.Text, brush)
         self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Text, brush)
         
-        text_color.setAlphaF(0.7)
+        text_color.setAlphaF(0.5)
         brush = QBrush(text_color)
         brush.setStyle(Qt.BrushStyle.SolidPattern)
-        self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.PlaceholderText, brush)
-        
+        self.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Text, brush)
+        self.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.PlaceholderText, brush)
 
+        brush = QBrush(self.ProgramConfiguration.getColor("PlaceholderTextColor"))
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.PlaceholderText, brush)
+        self.setBrush(QPalette.ColorGroup.Inactive, QPalette.ColorRole.PlaceholderText, brush)
+        
         brush = QBrush(self.ProgramConfiguration.getColor("HighlightedText"))
         brush.setStyle(Qt.BrushStyle.SolidPattern)
         self.setBrush(QPalette.ColorGroup.Active, QPalette.ColorRole.HighlightedText, brush)

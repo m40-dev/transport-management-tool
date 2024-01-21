@@ -5,7 +5,6 @@ import uuid
 from .MessageBox import MsgBox
 import re
 from ..CodeEditors import *
-from lib.ui.WidgetFactory.CustomWindowDecorations import WindowTitleBarDecoration
 from .CustomDialogWindow import CustomDialogWindow
 
 class FormEditorDialog(CustomDialogWindow):
@@ -37,14 +36,13 @@ class FormEditorDialog(CustomDialogWindow):
 
     def accept(self):
         validation_summary = self.check_validators()
-        # print("vaildate and accept")
         
         if len(validation_summary) > 0:
             string_data = json.dumps(validation_summary, indent=4, separators=(',',':'))
             MsgBox(self.application, "Form validation returned errors", string_data)
             return False
         
-        super().accept()
+        return super().accept()
 
     def check_validators(self):
         validation_summary = {}
@@ -268,13 +266,18 @@ class FormEditorObject(QtCore.QObject):
             # self.setVisible(True)
 
     def maximizeEditor(self):
-        dialog = QtWidgets.QDialog(self.application)
+        # dialog = QtWidgets.QDialog(self.application)
+        dialog = CustomDialogWindow(
+            application=self.application,
+            dialog_name="Code Editor",
+            window_mode="Window")
         dialog.setMinimumSize(800, 500)
-        layout = QtWidgets.QGridLayout(dialog)
+        # layout = QtWidgets.QGridLayout(dialog)
         editor = self.get_editor()
         dialog.finished.connect(lambda: self.set_editor_data(self._current_value))
         self.set_editor_data(editor_widget=editor, value=self.getValue())
-        layout.addWidget(editor)
+        # layout.addWidget(editor)
+        dialog.form_layout.addWidget(editor, 0, 0)
         dialog.show()
 
     def validate(self, check_value):
