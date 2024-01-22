@@ -17,7 +17,8 @@ excludes = ["tcl", "tk", "Tkinter", "tkinter"]
 include_files = [
     "./icon.ico",
     "./Application.qss",
-    ("./lib/ui/img", "./lib/ui/img")
+    ("./lib/ui/img", "./lib/ui/img"),
+    ("./lib/ui/CustomWindow", "./lib/ui/CustomWindow")
 ]
 
 options = {

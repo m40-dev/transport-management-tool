@@ -62,9 +62,10 @@ class ConnectionHandler(QObject):
                         window_title="Decryption Error",
                         message="There was no encryption key provided to decrypt data,\ndo you want to continue without session configurations?", 
                         window_mode=WidgetFactory.MsgBox.QUESTION)
-                if dialog.exec():
-                        # print("accepted?", dialog.accepted)
-                        self.loadSavedConnections()
+                dialog.exec()
+                    # print("accepted?", dialog.accepted)
+                if not dialog.accepted:
+                    self.loadSavedConnections()
 
                 # decision = QMessageBox.question(
                 #     self.application, 

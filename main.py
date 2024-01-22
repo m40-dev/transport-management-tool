@@ -1,7 +1,7 @@
 #""" Required QT Libraries """
-from PyQt6.QtCore import Qt, QSettings, QEvent, QCoreApplication
+from PyQt6.QtCore import QSettings, QEvent
 from PyQt6.QtWidgets import (
-    QApplication, QMessageBox, QFileDialog
+    QApplication, QFileDialog
     )
 from PyQt6.QtGui import QShortcut, QKeySequence
 
@@ -16,13 +16,9 @@ from lib.ui.MainWindow_ui import Ui_MainWindow
 
 #""" Custom Widgets """
 import lib.ui.WidgetFactory as WidgetFactory
-import lib.ui.WidgetFactory.DialogScreens as DialogScreens
-from lib.ui.WidgetFactory.PackageManager import PackageManager
-from lib.ui.WidgetFactory.SideBar import SideBar
-from lib.ui.WidgetFactory.XMLTemplateEditor import XMLTemplateEditor
 from lib.ProgramConfiguration import ProgramConfiguration, ConnectionHandler
 
-from lib.ui.CustomWindow.custom_window import CustomBase, CustomMainWindow
+from lib.ui.CustomWindow.custom_window import CustomMainWindow
 
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
@@ -36,24 +32,26 @@ class Transport_Manager(CustomMainWindow):
     connectionDataChanged = pyqtSignal()
     currentViewChanged = pyqtSignal(int)
     styleSheetChanged = pyqtSignal()
+    loginReady = pyqtSignal()
     
     def __init__(
-        self, parent=None, clipboard=None, event_filter=None, qapplication=None
+        self, parent=None, clipboard=None, event_filter=None, qapplication=None, loading_screen=None
     ):
-        CustomBase.__init__(self)
+        super().__init__(self)
         """ Map QT UI from parsed file - created and updated in qt designer """
-
-        self.application_name = APP_NAME
         
+        self.application_name = APP_NAME
+        self.splash_screen = loading_screen
         self.qt_app = qapplication
         self.clipboard = clipboard
         self.current_workdir = None
 
         self.settings = QSettings("EmergencyCode", "Transport_Manager")
 
+        # QMessageBox.information(None, "debug", "application settings object created")
+
         self.ProgramConfiguration = ProgramConfiguration(self)
         self.color_theme = self.ProgramConfiguration.ColorPalette
-        
         self.statusBarUpdated.connect(self.onStatusBarMessageReceived)
         self._relation_presets = {}
 
@@ -64,20 +62,23 @@ class Transport_Manager(CustomMainWindow):
         window_icon = self.ProgramConfiguration.getIcon("ApplicationLogo")
         self.setWindowIcon(window_icon)
 
+        # if loading_screen:
+        #     self.animateSplashScreen()
+
         # Database and Connection handlers
         self.db = DatabaseConnection(self)
         self.ConnectionHandler = ConnectionHandler(self) 
         self.ConnectionHandler.databaseConnectionEstablished.connect(self.onDatabaseConnection)
 
         # Sidebar magic
-        self.SideBar = SideBar(application=self)
+        self.SideBar = WidgetFactory.SideBar(application=self)
         self.ui.SideBar_Layout.addWidget(self.SideBar)
         self.SideBar.buttonClicked.connect(lambda index: self.ui.MainTabWidget.setCurrentIndex(index))
         self.ui.MainTabWidget.currentChanged.connect(self.currentViewChanged)
 
         # Bring in the Main Tab Widgets
-        self.PackageManager = PackageManager(self)
-        self.XMLTemplateEditor = XMLTemplateEditor(self)
+        self.PackageManager = WidgetFactory.PackageManager(self)
+        self.XMLTemplateEditor = WidgetFactory.XMLTemplateEditor(self)
 
         self.ui.MainTabWidget.addTab(self.PackageManager, "Package Manager")
         self.ui.MainTabWidget.addTab(self.XMLTemplateEditor, "XML Template Editor")
@@ -126,7 +127,24 @@ class Transport_Manager(CustomMainWindow):
 
         # Application development testing helpers
         # self.ui.MainTabWidget.setCurrentIndex(2)
+        self.show()
         self.setupApplication()
+    
+    # def animateSplashScreen(self):
+    #     effect = QGraphicsOpacityEffect(self.splash_screen)
+    #     self.splash_screen.setGraphicsEffect(effect)
+
+    #     animation = QPropertyAnimation(self.splash_screen)
+
+    #     animation.setPropertyName(bytes("opacity", "utf-8"))
+    #     animation.setTargetObject(effect)
+    #     animation.setDuration(550)
+    #     animation.setStartValue(1)
+    #     animation.setEndValue(0)
+
+    #     animation.setEasingCurve(QEasingCurve.Type.OutInCubic)
+    #     animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
+    #     animation.finished.connect(lambda: self.splash_screen.hide())
 
     def setupApplication(self):
         # load default workdir
@@ -358,29 +376,20 @@ class Transport_Manager(CustomMainWindow):
                                 '{0}: {1}'.format(exc_type.__name__, exc_value)])
         
         print (log_msg)
-        DialogScreens.MsgBox(self, exc_type.__name__, log_msg)
+        WidgetFactory.DialogScreens.MsgBox(self, exc_type.__name__, log_msg)
 
 if __name__ == "__main__":
     import sys
 
-    QApplication.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
-
     app = QApplication(sys.argv)
 
     # splash = QSplashScreen()
+    # splash.setFixedSize(500, 500)
     # splash.show()
-    QApplication.setHighDpiScaleFactorRoundingPolicy(
-        Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
     a = Transport_Manager(
         clipboard=app.clipboard(), event_filter=None, qapplication=app
     )
-    # app.setAttribute(Qt.ApplicationAttribute.AA_DontCreateNativeWidgetSiblings, True)
-    
-    
-    # splash.finish(a)
-    a.show()
 
     sys.excepthook = a.qtExceptionHandler
     app.exec()

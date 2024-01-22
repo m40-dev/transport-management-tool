@@ -1054,10 +1054,14 @@ QToolButton[CustomWindowDecoration="CloseActionButton"]::hover{
 	background-color: rgba(170,0,0,150);
 }
 
-/* CustomDialogWindow{
-	background-color: #c9c9c9;
+CustomDialogWindow{
+	/* background-color: #c9c9c9; */
+	border: 1px solid #9e2015;
+	border-radius: 5px;
 }
 
 CustomMainWindow{
-	background-color: @BaseColor;
-} */
+	/* background-color: @BaseColor; */
+	border: 1px solid #9e2015;
+	border-radius: 5px;
+}

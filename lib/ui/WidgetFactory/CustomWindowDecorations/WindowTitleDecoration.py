@@ -17,10 +17,8 @@ class WindowTitleDecoration(QtWidgets.QFrame):
         # self.managed_window.setSizeGripEnabled(True)
         self.setMinimumHeight(30)
         self.setMaximumHeight(30)
-        self.startPosition = None
         self.max_btn = None
         self.min_btn = None
-        self.max_btn_hovered = False
 
         # 0 - Normal Window, 1 - Maximized Window
         self.window_state = 0
@@ -42,8 +40,8 @@ class WindowTitleDecoration(QtWidgets.QFrame):
         self.setWindowIcon(self.windowIcon)
 
         if WindowMode != self.Dialog:
-            self.min_btn = MinimizeButton(application, True)
-            self.max_btn = MaximizeButton(application, True)
+            self.min_btn = MinimizeButton(application)
+            self.max_btn = MaximizeButton(application)
             self.min_btn.clicked.connect(self.minimizeEvent)
             self.max_btn.clicked.connect(self.maximizeEvent)
 
@@ -56,7 +54,7 @@ class WindowTitleDecoration(QtWidgets.QFrame):
             if max_icon:
                 self.max_btn.setIcon(max_icon)
 
-        self.close_btn = CloseButton(self, True)
+        self.close_btn = CloseButton(self)
         self.close_btn.clicked.connect(self.closeEvent)
         close_icon = self.ProgramConfiguration.getIcon("CloseButton")
         if close_icon:
@@ -70,8 +68,6 @@ class WindowTitleDecoration(QtWidgets.QFrame):
         self.layout.setColumnStretch(1, 2)
         # self.layout.setColumnStretch(2, 1)
 
-        # Make the column 5 grow so the title is always to the left
-        # self.layout.setColumnStretch(5, 2)
         if WindowMode != self.Dialog:
             self.layout.addWidget(self.min_btn, 0, 4)
             self.layout.addWidget(self.max_btn, 0, 5)
@@ -103,9 +99,6 @@ class WindowTitleDecoration(QtWidgets.QFrame):
 
     def setMenuBar(self, menubar):
         self.layout.addWidget(menubar, 0, 2, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
-        # Adjust layout to fit the menubar somewhat in the middle 
-        # self.layout.setColumnStretch(1, 2)
-        # self.layout.setColumnStretch(1, 5)
 
         # Make the column 5 grow so the title is always to the left
         self.layout.setColumnStretch(3, 2)
@@ -127,8 +120,6 @@ class WindowTitleDecoration(QtWidgets.QFrame):
             if self.max_btn:
                 self.max_btn.colors = color_scheme
 
-
-
     def setWindowTitle(self, title):
         self.windowTitle.setText(title)
         self.windowIconLabel.setToolTip(title)
@@ -138,10 +129,13 @@ class WindowTitleDecoration(QtWidgets.QFrame):
 
     def mousePressEvent(self, event) -> None:
         if event.buttons() == QtCore.Qt.MouseButton.LeftButton:
-            # self.startPosition = event.position().toPoint()
-            # print(type(self.managed_window))
             self.window().windowHandle().startSystemMove()
-        # event.accept()
+        self.updateWindowState()
+        event.accept()
+    
+    def mouseReleaseEvent(self, event):
+        self.updateWindowState()
+        event.accept()
         
     def minimizeEvent(self):
         self.window().showMinimized()
@@ -149,29 +143,33 @@ class WindowTitleDecoration(QtWidgets.QFrame):
     def maximizeEvent(self):
         if not self.max_btn:
             return 
-
+            
         if not self.window().isMaximized():
-            self.max_btn.setProperty("CustomWindowDecoration", "RestoreActionButton")
-            # self.max_btn.setText("[-]")
-    
             self.window().showMaximized()
-            restore_icon = self.ProgramConfiguration.getIcon("RestoreButton")
-            if restore_icon:
-                self.max_btn.setIcon(restore_icon)
-
-            self.window_state = 1
         else:
-            self.max_btn.setProperty("CustomWindowDecoration", "MaximizeActionButton")
-            # self.max_btn.setText("[ ]")
             self.window().showNormal()
 
-            max_icon = self.ProgramConfiguration.getIcon("MaximizeButton")
-            if max_icon:
-                self.max_btn.setIcon(max_icon)
-
-            self.window_state = 0
-        self.setStyleSheet(self.styleSheet())
+        self.updateWindowState()
     
+    def updateWindowState(self):
+        if self.window().isMaximized():
+            self.window_state = 1
+            if self.max_btn:
+                self.max_btn.setProperty("CustomWindowDecoration", "RestoreActionButton")
+                restore_icon = self.ProgramConfiguration.getIcon("RestoreButton")
+                if restore_icon:
+                    self.max_btn.setIcon(restore_icon)
+            
+        else:
+            self.window_state = 0
+            if self.max_btn:
+                self.max_btn.setProperty("CustomWindowDecoration", "MaximizeActionButton")
+                max_icon = self.ProgramConfiguration.getIcon("MaximizeButton")
+                if max_icon:
+                    self.max_btn.setIcon(max_icon)
+        self.update()
+
+
     def closeEvent(self):
         self.managed_window.close()
 
