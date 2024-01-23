@@ -176,14 +176,21 @@ class DatabaseRelations(QtWidgets.QWidget):
         sizePolicy.setHeightForWidth(self.RelationPresetsLabel.sizePolicy().hasHeightForWidth())
         self.RelationPresetsLabel.setSizePolicy(sizePolicy)
         self.RelationPresetsLabel.setObjectName("RelationPresetsLabel")
+
         self.horizontalLayout.addWidget(self.RelationPresetsLabel)
         self.RelationPresetsComboBox = QtWidgets.QComboBox(self.SelectedObjectRelationsGroupBox)
         sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.MinimumExpanding, QtWidgets.QSizePolicy.Policy.Minimum)
-        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setHorizontalStretch(1)
         sizePolicy.setVerticalStretch(0)
         sizePolicy.setHeightForWidth(self.RelationPresetsComboBox.sizePolicy().hasHeightForWidth())
         self.RelationPresetsComboBox.setSizePolicy(sizePolicy)
+        
+        listView = QtWidgets.QListView()
+        listView.setObjectName("RelationPresetListView")
+        listView.setWordWrap(True)
+        self.RelationPresetsComboBox.setView(listView)
         self.RelationPresetsComboBox.setObjectName("RelationPresetsComboBox")
+
         self.horizontalLayout.addWidget(self.RelationPresetsComboBox)
         self.ApplyPresetToolButton = QtWidgets.QToolButton(self.SelectedObjectRelationsGroupBox)
         self.ApplyPresetToolButton.setObjectName("ApplyPresetToolButton")

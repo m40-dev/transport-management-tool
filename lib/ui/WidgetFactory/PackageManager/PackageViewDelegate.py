@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QToolButton, QLabel, QHBoxLayout, QSizePolicy
+from PyQt6.QtWidgets import QToolButton, QLabel, QHBoxLayout, QSizePolicy, QVBoxLayout, QGridLayout
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from lib.ui.WidgetFactory.CustomViewDelegate import CustomViewDelegate, CustomDelegateWidget
 
@@ -37,7 +37,7 @@ class PackageManagerItemWidget(CustomDelegateWidget):
         self.model_item.data_changed.connect(self.refreshUi)
 
     def setupUi(self):
-
+        
         self.element_label = QLabel(self)
         self.element_label.setProperty("CustomWidget", "ItemLabel")
         self.setToolTip(f"<i>{self.model_item.description}</i>")
@@ -52,18 +52,37 @@ class PackageManagerItemWidget(CustomDelegateWidget):
             if not show_description:
                 self.element_description.setHidden(True)
 
-        self.layout.addWidget(self.element_label, 0, 0, 1, 4, Qt.AlignmentFlag.AlignLeft)
-        self.layout.addWidget(self.element_description, 1, 0, 1, 5)
+        self.toolbox_layout = QHBoxLayout()
+
+        self.layout.addWidget(self.element_label, 0, 0, 1, 1, Qt.AlignmentFlag.AlignLeft)
+        self.layout.addWidget(self.element_description, 1, 0, 1, 2)
+        self.layout.addLayout(self.toolbox_layout, 0, 1, alignment=Qt.AlignmentFlag.AlignRight)
+
+        self.delete_button = QToolButton()
+        self.delete_button.setText("Delete Object")
+        self.delete_button.clicked.connect(self.delete_object)
+
+        delete_object_icon = self.ProgramConfiguration.getIcon("DeleteObject")
+        if delete_object_icon:
+            self.delete_button.setText("")
+            self.delete_button.setToolTip("<i>Delete Object..</i>")
+            self.delete_button.setIcon(delete_object_icon)
+            self.delete_button.setProperty("PackageManager", "PackageManagerIcon")
+            self.delete_button.setIconSize(QSize(20,20))
+
+        self.toolbox_layout.addWidget(self.delete_button)
 
         self.dynamic_property_labels = {}
         dynamic_property_columns = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(self.model_item.task_class, "ShowInTreeView")
         # lay out items in columns (labels and values)
+
+        self.layout.setColumnStretch(0, 2)
+        dynamic_layout = QGridLayout()
         layout_columns = 4
-        self.layout.setColumnStretch(layout_columns, 1)
         
         if len(dynamic_property_columns) > 0:
             managed_roles = ["DisplayRole", "DescriptionRole"]
-            row = self.layout.rowCount()
+            row = dynamic_layout.rowCount()
             column_count = 0
             for column, column_configuration in dynamic_property_columns.items():
                 show_entry = column_configuration.get("ShowInTreeView", True) == True
@@ -81,8 +100,8 @@ class PackageManagerItemWidget(CustomDelegateWidget):
                 value.setWordWrap(True)
                 value.setSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.MinimumExpanding)
 
-                self.layout.addWidget(label, row, column_count, 1, 1)
-                self.layout.addWidget(value, row, column_count+1, 1, 1)
+                dynamic_layout.addWidget(label, row, column_count, 1, 1)
+                dynamic_layout.addWidget(value, row, column_count+1, 1, 1)
                 self.dynamic_property_labels[column] = value
                 # add 2 added columns to the counter
                 column_count += 2
@@ -90,10 +109,14 @@ class PackageManagerItemWidget(CustomDelegateWidget):
                     row += 1
                     column_count = 0
 
-        self.layout.setColumnStretch(4, 2)
+        # self.layout.setColumnStretch(4, 2)
+        self.layout.addLayout(dynamic_layout, 3, 0, 1, 2)
 
         """ Refresh state based on the model data """
         self.refreshUi()
+    
+    def delete_object(self):
+        self.parent_module.deletePackageDefinitions(self.model_item)
 
     def refreshUi(self):
         object_display = self.model_item.display
@@ -111,8 +134,8 @@ class PackageManagerItemWidget(CustomDelegateWidget):
         
         self.element_label.setText(object_display)
         description_text = self.model_item.description
-        if self.model_item.description and len(str(self.model_item.description)) > 60:
-            description_text = self.model_item.description[:60] + "..."
+        if self.model_item.description and len(str(self.model_item.description)) > 180:
+            description_text = self.model_item.description[:180] + "..."
         self.element_description.setText(description_text)
         
         self.parent_view.model().layoutChanged.emit()
@@ -148,8 +171,8 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
             self.save_feature_button.setProperty("PackageManager", "PackageManagerIcon")
             self.save_feature_button.setIconSize(QSize(20,20))
 
-        self.layout.addWidget(self.edit_feature_button, 0, 4, 1, 1, Qt.AlignmentFlag.AlignRight)
-        self.layout.addWidget(self.save_feature_button, 0, 5, 1, 1, Qt.AlignmentFlag.AlignRight)
+        self.toolbox_layout.addWidget(self.edit_feature_button)
+        self.toolbox_layout.addWidget(self.save_feature_button)
 
         self.save_feature_button.clicked.connect(self.save_feature)
 
@@ -195,17 +218,19 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
             self.edit_xml_definition_button.setProperty("PackageManager", "PackageManagerIcon")
             self.edit_xml_definition_button.setIconSize(QSize(20,20))
 
-        task_buttons_layout = QHBoxLayout()
-        task_buttons_layout.addStretch(2)
-        task_buttons_layout.addWidget(self.edit_xml_definition_button)
-        task_buttons_layout.addWidget(self.edit_task_definition_button)
+        # task_buttons_layout = QHBoxLayout()
+        # task_buttons_layout.addStretch(2)
+        # task_buttons_layout.addWidget(self.edit_xml_definition_button)
+        # task_buttons_layout.addWidget(self.edit_task_definition_button)
         
         """ Connect Signals """
         self.edit_xml_definition_button.clicked.connect(self.edit_task_xml_definition)
         self.edit_task_definition_button.clicked.connect(self.edit_task_definition)
         
         """ Add Widgets to the layout """
-        self.layout.addLayout(task_buttons_layout, 0, 2, 1, 3, Qt.AlignmentFlag.AlignRight)
+        # self.layout.addLayout(task_buttons_layout, 0, 2, 1, 3, Qt.AlignmentFlag.AlignRight)
+        self.toolbox_layout.addWidget(self.edit_task_definition_button)
+        self.toolbox_layout.addWidget(self.edit_xml_definition_button)
 
         self.model_item.data_changed.connect(self.refresh_item_data)
         self.refresh_item_data()

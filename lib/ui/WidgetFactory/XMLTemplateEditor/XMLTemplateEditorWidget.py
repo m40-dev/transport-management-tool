@@ -384,7 +384,10 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         if current_index:
             itemClicked = current_index.internalPointer()
         else:
+            self.parent.switchObjectConfigurationTabs()
             return self.parent.reloadDatabaseRelations(None)
+
+        self.parent.switchObjectConfigurationTabs(current_index)
 
         if itemClicked and isinstance(itemClicked, XMLDataItem) and itemClicked.xml_object_class == "Transport_Object":
             self.parent.reloadDatabaseRelations(current_index)

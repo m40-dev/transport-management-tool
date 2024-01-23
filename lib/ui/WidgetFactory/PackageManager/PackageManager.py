@@ -394,33 +394,77 @@ class PackageManager(QtWidgets.QWidget):
         #remove active execution planner items
         self.ExecutionPlannerTabWidget.currentWidget().deleteSelectedItems()
 
-    def deletePackageDefinitions(self):
+    def deletePackageDefinitions(self, definition_item=None):
+        item_count = len(self.PackageViewTreeView.selectedIndexes())
+        
+        if item_count == 0 and definition_item is None:
+            return True
+        
+        if item_count == 0 and definition_item:
+            return self.deletePackageDefinition(definition_item)
 
         question = MsgBox(self.application, 
-                        message=f"Do you want to delete selected items? ({len(self.PackageViewTreeView.selectedIndexes())} item(s))",
+                        message=f"Do you want to delete selected items? ({item_count} item(s))",
                         window_mode=MsgBox.QUESTION)
+        question.exec()
         if question.accepted:
-            files_to_delete = {}
+            
             for item_index in self.PackageViewTreeView.selectedIndexes():
                 item = item_index.internalPointer()
-                if self.current_workdir:
-                    # attempt file operations only if the workdir is set
-                    files_to_delete = item.get_all_files(recursive=True)
-                    if len(files_to_delete) > 0:
-                        export_data = "\n".join(map(str, files_to_delete))
-                        # export_data = json.dumps(files_to_delete, indent=4, separators=(',',':'))
-                        detailed_message = f"Data lookup returned following files related to the selected object:\n{export_data}"
-                        question = MsgBox(self.application, 
-                            message=f"Existing system files detected for item {item.display} or its child items, do you also want to delete these data files?", 
-                            detailed_message=detailed_message, 
-                            window_mode=MsgBox.QUESTION)
-                        if question.accepted:
-                            #delete data files
-                            for file_path in files_to_delete:
-                                self.deleteFile(file_path)
-                #remove item from model
-                item_index.model().remove_item(item)
+                self.deletePackageDefinition(item, False)
+                # if self.current_workdir:
+                #     # attempt file operations only if the workdir is set
+                #     files_to_delete = item.get_all_files(recursive=True)
+                #     if len(files_to_delete) > 0:
+                #         export_data = "\n".join(map(str, files_to_delete))
+                #         # export_data = json.dumps(files_to_delete, indent=4, separators=(',',':'))
+                #         detailed_message = f"Data lookup returned following files related to the selected object:\n{export_data}"
+                #         question = MsgBox(self.application, 
+                #             message=f"Existing system files detected for item {item.display} or its child items, do you also want to delete these data files?", 
+                #             detailed_message=detailed_message, 
+                #             window_mode=MsgBox.QUESTION)
+                #         question.exec()
+                #         if question.accepted:
+                #             #delete data files
+                #             for file_path in files_to_delete:
+                #                 self.deleteFile(file_path)
+                # #remove item from model
+                # self.PackageViewTreeView.model().remove_item(item)
         return True
+
+    def deletePackageDefinition(self, definition_item, confirm_deletion=True):
+        files_to_delete = {}
+        deletion_confirmed = not confirm_deletion
+        if self.current_workdir:
+            # attempt file operations only if the workdir is set
+            files_to_delete = definition_item.get_all_files(recursive=True)
+            if len(files_to_delete) > 0:
+                export_data = "\n".join(map(str, files_to_delete))
+                # export_data = json.dumps(files_to_delete, indent=4, separators=(',',':'))
+                if confirm_deletion:
+                    detailed_message = f"Data lookup returned following files related to the selected object:\n{export_data}"
+                    question = MsgBox(self.application, 
+                        window_title="Confirm Deletion",
+                        message=f"Are you sure to delete item {definition_item.display}, its child items, and all related data files?", 
+                        detailed_message=detailed_message, 
+                        window_mode=MsgBox.QUESTION)
+                    question.exec()
+
+                    if not question.accepted:
+                        return
+
+                    deletion_confirmed = question.accepted
+
+                if deletion_confirmed:
+                    #delete data files
+                    for file_path in files_to_delete:
+                        self.deleteFile(file_path)
+                    #remove item from model
+                    self.PackageViewTreeView.model().remove_item(definition_item)
+        else:
+            #remove item from model
+            self.PackageViewTreeView.model().remove_item(definition_item)
+        
 
     def deleteFile(self, file_path):
         # print("file to delete", file_path)
@@ -554,6 +598,7 @@ class PackageManager(QtWidgets.QWidget):
         self.ExecutionPlannerTabWidget.setTabsClosable(False)
         self.ExecutionPlannerTabWidget.setMovable(True)
         self.ExecutionPlannerTabWidget.setObjectName("ExecutionPlannerTabWidget")
+        self.ExecutionPlannerTabWidget.tabBar().setObjectName("ExecutionPlannerTabWidget")
         self.gridLayout.addWidget(self.PackageManagerSplitter, 0, 0, 1, 1)
 
         self.retranslateUi(self)

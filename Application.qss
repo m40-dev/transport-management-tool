@@ -29,9 +29,10 @@ QLineEdit, QComboBox{
 	border-radius: 2px;
 	min-height: 1.8em;
 	margin: 1px;
-	min-width: 10em;
+	min-width: 5em;
 	font-size: 12px;
 }
+
 QComboBox::down-arrow{
 	padding:0px;
 	border: 0px;
@@ -84,13 +85,19 @@ QPlainTextEdit:!enabled
 /* Global Group boxes configurations (In XML Template Editor view mostly) */
 QGroupBox{
 	font: bold 14px;
-	color: @TextColor;
+	color: @AltTextColor;
+	border-radius: 3px;
+	border: 1px solid @AltBorderColor;
+	margin-left: 1ex;
+	margin-right: 1ex;
+	margin-top:14px;
 }
 
 QGroupBox::title{
-	margin-top:2px;
-	margin-bottom:2px;
-	padding: 0px;
+	margin-top:6px;
+	margin-left:6px;
+	subcontrol-origin: margin;
+    subcontrol-position: top left; /* position at the top center */
 }
 
 /* Message Box extended log message styling */
@@ -132,34 +139,37 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal,QScrollBar::sub
 
 /* Application and context menu configurations */
 QMenuBar{
-	background-color: @AltBaseColor2;
+	background-color: @AltBaseColor;
 	font-size: 13px;
 	border-radius: 3px;
 	border-top: 0px solid @AltBorderColor;
 	border-left: 2px solid @AltBorderColor;
 	border-right: 2px solid @AltBorderColor;
-	border-bottom: 0px solid @AltBorderColor;
+	border-bottom: 2px solid @AltBorderColor;
 	color: @AltTextColor;
 	min-width: 5em;
 	font: bold;
 }
 
 QMenuBar::item{
+	background-color: @AltBaseColor;
 	padding: 3px;
-	margin-left: 3px;
-	margin-right: 3px;
+	margin:0px;
+	padding-left:5px;
+	padding-right:5px;
 }
 
 QMenuBar::item:selected{
 	background-color: @SelectedObjectColor;
 	color: @HighlightedText;
+
 }
 
 QMenu{
 	min-width: 15em;
 	font-size: 12px;
-	min-height: 30px;
 	color: @TextColor;
+	background-color: @AltBaseColor;
 }
 
 QMenu::item{
@@ -205,13 +215,12 @@ QTabBar::tab:selected{
 	color: @HighlightedText;
 }
 
-QTabBar::tab:top{
-	min-width: 12em;
+QTabBar:tab:top{
+	min-width: 10em;
 }
 
 QTabBar::tab:left{
 	min-width: 1.1em;
-
 }
 
 QTabBar::tab:selected{
@@ -221,20 +230,24 @@ QTabBar::tab:selected{
 
 /* Tree and List Views styling */
 
+QHeaderView{
+	background-color: @AltBaseColor2;
+}
+
 QHeaderView:section:horizontal{
 	margin-left: 3px;
 	padding-left: 8px;
 	padding-right: 8px;
-	font: 14px;
+	font: bold 13px;
 	text-align: center;
 	border-bottom: 2px solid @BorderColor;
-	background-color: @AltBaseColor;
 	border-style: solid;
 	border-left-width: 1px;
 	border-left-color: @BorderColor;
 	border-right-color: @BorderColor;
     border-right-width: 1px;
 	color: @TextColor;
+	background-color: transparent;
 }
 
 QHeaderView:section:first{
@@ -248,12 +261,15 @@ QTreeWidget, QTreeView, QListView{
 	border: 0px;
 	color: @TextColor;
 	/* show-decoration-selected: 1; */
+	background-color: @BaseColor;
+	alternate-background-color: @AltBaseColor;
 }
 
 /* QTreeWidget::indicator, QTreeView::indicator { 
 	width: 30px; 
 	height: 30px;
 } */
+
 QTreeView::branch:open:has-children{
 	image: url("./lib/ui/img/icons/arrow_right_down.png");
 }
@@ -261,27 +277,25 @@ QTreeView::branch:closed:has-children{
 	image: url("./lib/ui/img/icons/arrow_right.png");
 }
 
-QTreeWidget::item, QListWidget::item, QListView::item, QTreeView::item{
+QListWidget::item, QListView::item, QTreeView::item{
 	min-height: 2em;
     color: @TextColor;
-	background-color: @BaseColor;
-	margin-top: 2px;
 }
 
-QTreeWidget::item:alternate, QListWidget::item:alternate, QListView::item:alternate, QTreeView::item:alternate{
-	background-color: @AltBaseColor2;
+QListView::item:alternate, QTreeView::item:alternate{
+	background-color: @AltBaseColor;
 }
 
 QListView::item:hover, QTreeView::item:hover{
 	height: 2em;
 	background-color: @SelectedObjectColor;
 	color: @HighlightedText;
+	font: bold;
 }
 
 QListView::item:selected, QTreeView::item:selected{
 	background-color: @SelectedObjectColor;
 	color: @HighlightedText;
-	margin-left: 3px;
 }
 
 /* Global Buttons configuration */
@@ -648,8 +662,9 @@ QToolButton[Widget="CustomToolButton"]::hover{
 	background-color: @SelectedObjectColor;
 }
 
-QTabBar[CustomTabWidget="XMLTemplateEditorData"]:tab{
-	min-width: 9em;
+QTabBar#DatabaseQueryTabWidget:tab{
+	max-width: 10em;
+	min-width:10px;
 }
 
 QHeaderView:section:horizontal[Widget="XMLTemplateEditorWidget"]{
@@ -678,6 +693,24 @@ QTreeView[Widget="XMLTemplateEditorWidget"]::item:selected{
 	color: @HighlightedText;
 	padding-left: 6px;
 	margin:0;
+}
+
+QTreeView#RelationsViewTreeView{
+	border: 1px solid @AltBorderColor;
+	background-color: @AltBaseColor;
+}
+QTreeView#RelationsViewTreeView::item{
+}
+QTreeView#RelationsViewTreeView::item:alternate{
+}
+
+QListView#RelationPresetListView{
+	min-width: 10em;
+}
+
+QComboBox#RelationPresetsComboBox{
+	min-width: 8em;
+	width:8em;
 }
 
 
@@ -1004,7 +1037,7 @@ QWidget[CustomWindowDecoration="ManagedWindow"]{
 }
 
 QFrame#WindowTitleDecoration{
-	background-color: @AltBaseColor;
+	background-color: @AltBaseColor2;
 	/* border: 1px solid @AltBaseColor; */
 	min-height: 32px;
 	border-color: transparent;
@@ -1037,7 +1070,7 @@ QToolButton[CustomWindowDecoration="CloseActionButton"]{
  border: none;
  margin: 0px;
  /* margin-bottom:2px; */
- min-width: 25;
+ min-width: 25px;
  min-height: 25px;
  height: 25px;
  width: 25px;

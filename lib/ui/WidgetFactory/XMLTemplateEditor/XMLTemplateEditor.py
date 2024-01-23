@@ -208,6 +208,18 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         # refresh XML preview
         self.XMLTemplateEditorTabWidget.currentWidget().xmlStructureChanged.emit()
 
+    def switchObjectConfigurationTabs(self, source_index=None):
+        """ Switch between Search results view and database relations view according to last object that was selected """
+        source_item = None
+        if source_index and source_index.isValid():
+            source_item = source_index.internalPointer()
+            if isinstance(source_item, XMLDataItem) and source_item.xml_object_class == "Transport_Object":
+                self.DatabaseQueryTabWidget.setCurrentWidget(self.DatabaseRelations)
+                return
+        #Fallback to search results view
+        self.DatabaseQueryTabWidget.setCurrentWidget(self.SearchResultsGroupBox)
+
+
     def reloadDatabaseRelations(self, source_index):
         self.DatabaseRelations.loadRelationData(source_index)
 
@@ -359,7 +371,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.ObjectQueryTextEdit.setTabChangesFocus(False)
         self.ObjectQueryTextEdit.setAcceptRichText(False)
         self.ObjectQueryTextEdit.setObjectName("ObjectQueryTextEdit")
-        self.ObjectQueryTextEdit.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.ObjectQueryTextEdit.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
 
         self.FindObjectButton = QtWidgets.QToolButton(self.SearchGroupBox)
         self.FindObjectButton.setObjectName("FindObjectButton")
@@ -367,7 +379,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         start_icon = self.ProgramConfiguration.getIcon("RunQuery")
         if start_icon:
             self.FindObjectButton.setText("")
-            self.FindObjectButton.setToolTip("<i>Query Database..</i>")
+            self.FindObjectButton.setToolTip("<i>Run Query..</i>")
             self.FindObjectButton.setIcon(start_icon)
             self.FindObjectButton.setIconSize(QtCore.QSize(20, 20))
             self.FindObjectButton.setProperty("Widget", "CustomToolButton")
@@ -378,13 +390,13 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         
         #Search GroupBox Layout Configuration
 
-        self.SearchGroupBoxLayout.addWidget(self.FilterComboBox, 0, 0, 1, 2)
-        self.SearchGroupBoxLayout.addWidget(self.FindObjectButton, 0, 2, 1, 1, QtCore.Qt.AlignmentFlag.AlignRight)
+        self.SearchGroupBoxLayout.addWidget(self.FilterComboBox, 0, 0, 1, 3)
         self.SearchGroupBoxLayout.addWidget(self.TableComboBox, 1, 0, 1, 3)
 
         self.SearchGroupBoxLayout.addWidget(self.ChangeLabelComboBox, 2, 0, 1, 1)
         self.SearchGroupBoxLayout.addWidget(self.ListClosedLabelsCheckBox, 2, 1, 1, 2, QtCore.Qt.AlignmentFlag.AlignRight)
         self.SearchGroupBoxLayout.addWidget(self.ObjectQueryTextEdit, 3, 0, 1, 3)
+        self.SearchGroupBoxLayout.addWidget(self.FindObjectButton, 3, 2, 1, 1, QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignBottom)
 
         self.SearchGroupBoxLayout.setColumnStretch(0, 2)
         self.SearchGroupBoxLayout.setRowStretch(3, 2)
@@ -412,10 +424,10 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.SearchResultsListView.setDefaultDropAction(QtCore.Qt.DropAction.IgnoreAction)
         self.SearchResultsListView.setAlternatingRowColors(True)
         self.SearchResultsListView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
-        # self.SearchResultsListView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
+        self.SearchResultsListView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectItems)
         self.SearchResultsListView.setMovement(QtWidgets.QListView.Movement.Free)
         self.SearchResultsListView.setProperty("isWrapping", False)
-        self.SearchResultsListView.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
+        # self.SearchResultsListView.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
         self.SearchResultsListView.setWordWrap(True)
         self.SearchResultsListView.setItemAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
         self.SearchResultsListView.setObjectName("SearchResultsListView")
@@ -436,8 +448,11 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
         # self.DatabaseQueryTabWidget.setTabPosition(QtWidgets.QTabWidget.TabPosition.West)
 
-        self.DatabaseQueryTabWidget.setProperty("CustomTabWidget", "XMLTemplateEditorData")
-        self.DatabaseQueryTabWidget.tabBar().setProperty("CustomTabWidget", "XMLTemplateEditorData")
+        self.DatabaseQueryTabWidget.setProperty("CustomTabWidget", "DatabaseQueryTabWidget")
+        self.DatabaseQueryTabWidget.tabBar().setProperty("CustomTabWidget", "DatabaseQueryTabWidget")
+
+        self.DatabaseQueryTabWidget.setObjectName("DatabaseQueryTabWidget")
+        self.DatabaseQueryTabWidget.tabBar().setObjectName("DatabaseQueryTabWidget")
 
         # Configure Tabs
         self.DatabaseQueryTabWidget.addTab(self.DatabaseRelations, "Relations Configuration")
@@ -451,14 +466,12 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.XMLTemplateEditorTabWidget.setTabsClosable(True)
         self.XMLTemplateEditorTabWidget.tabCloseRequested.connect(self.onTabWidgetClose)
         self.XMLTemplateEditorTabWidget.setMovable(True)
+        self.XMLTemplateEditorTabWidget.setObjectName("XMLTemplateEditorTabWidget")
+        self.XMLTemplateEditorTabWidget.tabBar().setObjectName("XMLTemplateEditorTabWidget")
 
         self.TemplateEditorSplitter_Search.setSizes(
             [round(self.application.height()*0.2), round(self.application.height()*0.8)]
             )
-
-        # self.TemplateEditorSplitter_Relations.setSizes(
-        #     [round(self.application.height()*0.7), round(self.application.height()*0.4)]
-        #     )
         
         self.TemplateEditorSplitter_Left.setSizes(
             [round(self.application.width()*0.2), round(self.application.width()*0.8)]
@@ -467,36 +480,6 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.retranslateUi(self)
 
         QtCore.QMetaObject.connectSlotsByName(self)
-
-    # def showEvent(self, event):
-    #     self.animate()
-    
-    # def hideEvent(self, event):
-        # self.animate(reverse=True)
-
-    # def animate(self, reverse=False):
-    #     # animate startup
-        
-    #     effect = QtWidgets.QGraphicsOpacityEffect(self)
-    #     self.setGraphicsEffect(effect)
-
-    #     animation = QtCore.QPropertyAnimation(self)
-
-    #     animation.setPropertyName(bytes("opacity", "utf-8"))
-    #     animation.setTargetObject(effect)
-    #     animation.setDuration(250)
-    #     animation.setStartValue(0)
-    #     animation.setEndValue(1)
-
-    #     if reverse:
-    #         animation.setStartValue(1)
-    #         animation.setEndValue(0)
-    #         animation.setDuration(200)
-        
-    #     animation.setEasingCurve(QtCore.QEasingCurve.Type.OutInCubic)
-    #     animation.start(QtCore.QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
-    #     animation.finished.connect(lambda: self.setGraphicsEffect(None))
-
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate

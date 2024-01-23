@@ -37,6 +37,7 @@ PROGRAM_ICONS = {
     "RunQuery": "lib/ui/img/icons/StartBlue.png",
     "ApplyPreset": "./lib/ui/img/icons/ApplyPreset.png",
     "AddObject": "./lib/ui/img/icons/AddObject.png",
+    "DeleteObject":"./lib/ui/img/icons/DeleteObject.png",
     "ApplicationLogo": "./lib/ui/img/icons/ApplicationIcon.png",
     "MinimizeButton": "./lib/ui/img/icons/btn_minimize.png",
     "MaximizeButton": "./lib/ui/img/icons/btn_maximize.png",

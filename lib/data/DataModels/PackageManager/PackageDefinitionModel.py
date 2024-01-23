@@ -78,15 +78,17 @@ class PackageDefinitionItem(JSONDataItem):
 
                 if len(self._filtered_children) > 0:
                     detailed_message = f"There seem to be hidden items on the currently saved element ({self.display}).\nAre you sure to save?"
-                    decision = MsgBox(self.application, detailed_message, window_mode=MsgBox.QUESTION)
+                    decision = MsgBox(application=self.application, 
+                    window_title="Are you sure?",
+                    message = detailed_message, 
+                    window_mode=MsgBox.QUESTION)
+                    decision.exec()
                     if not decision.accepted:
                         return False
 
                 export_file = self.get_file_path()
                 export = self.export_data()
                 export_data = json.dumps(export, indent=4, separators=(',',':'))
-                
-                # print(f"PD: Exported {self.display} to: ", str(export_file))
                 
                 export_file.parent.mkdir(parents=True, exist_ok=True)
                 

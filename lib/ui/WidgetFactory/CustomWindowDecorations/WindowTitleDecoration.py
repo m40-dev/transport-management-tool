@@ -1,7 +1,7 @@
 from PyQt6 import QtCore, QtWidgets
 from lib.ui.CustomWindow.custom_window import CloseButton, MaximizeButton, MinimizeButton
 
-IconSize = QtCore.QSize(18, 18)
+IconSize = QtCore.QSize(20, 20)
 
 class WindowTitleDecoration(QtWidgets.QFrame):
     MainWindow = "MAINWINDOW"
@@ -37,6 +37,8 @@ class WindowTitleDecoration(QtWidgets.QFrame):
         self.managed_window.setWindowIcon(self.windowIcon)
 
         self.windowIconLabel = QtWidgets.QLabel(self)
+        self.windowIconLabel.setMinimumSize(IconSize)
+
         self.setWindowIcon(self.windowIcon)
 
         if WindowMode != self.Dialog:
@@ -93,8 +95,6 @@ class WindowTitleDecoration(QtWidgets.QFrame):
         self.refresh_ui()
 
     def setWindowIcon(self, icon):
-        self.windowIconLabel.setMinimumSize(IconSize)
-        self.windowIconLabel.setFixedSize(IconSize)
         self.windowIconLabel.setPixmap(icon.pixmap(IconSize))
 
     def setMenuBar(self, menubar):

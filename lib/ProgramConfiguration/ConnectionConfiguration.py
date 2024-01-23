@@ -46,7 +46,8 @@ class ConnectionHandler(QObject):
                         window_title="Decryption Error",
                         message="Do you want to try again?\nIf not, the connection sessions will not be available.", 
                         window_mode=WidgetFactory.MsgBox.QUESTION)
-                    if dialog.exec():
+                    dialog.exec()
+                    if dialog.accepted:
                         # print("accepted?", dialog.accepted)
                         self.loadSavedConnections()
 

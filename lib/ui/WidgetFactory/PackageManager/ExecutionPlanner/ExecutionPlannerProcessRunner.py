@@ -247,6 +247,7 @@ class ProcessRunner(QProcess):
                 message += "You can preview the script by clicking on the 'Show Details' button."
                 
                 confirmation_dialog = MsgBox(self.application, message, script_content, MsgBox.QUESTION)
+                confirmation_dialog.exec()
                 if not confirmation_dialog.accepted:
                     return False
         
