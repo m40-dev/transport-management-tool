@@ -28,10 +28,14 @@ class WindowTitleDecoration(QtWidgets.QFrame):
         self.layout.setSpacing(0)
 
         self.windowTitle = QtWidgets.QLabel(self)
+        self.windowSubTitle = QtWidgets.QLabel(self)
         self.windowTitle.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.windowTitle.mousePressEvent = self.mousePressEvent
         self.windowTitle.mouseDoubleClickEvent = self.mouseDoubleClickEvent
+
+        self.windowSubTitle.mousePressEvent = self.mousePressEvent
+        self.windowSubTitle.mouseDoubleClickEvent = self.mouseDoubleClickEvent
 
         self.windowIcon = self.ProgramConfiguration.getIcon("ApplicationLogo")
         self.managed_window.setWindowIcon(self.windowIcon)
@@ -64,10 +68,13 @@ class WindowTitleDecoration(QtWidgets.QFrame):
 
         self.layout.addWidget(self.windowIconLabel, 0, 0)
         self.layout.addWidget(self.windowTitle, 0, 1, alignment=QtCore.Qt.AlignmentFlag.AlignCenter | QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.layout.addWidget(self.windowSubTitle, 0, 3)
+
 
         # self.layout.addWidget(spacer, 0, 4)
         
         self.layout.setColumnStretch(1, 2)
+        self.layout.setColumnStretch(3, 2)
         # self.layout.setColumnStretch(2, 1)
 
         if WindowMode != self.Dialog:
@@ -82,6 +89,7 @@ class WindowTitleDecoration(QtWidgets.QFrame):
         self.managed_window.setProperty("CustomWindowDecoration", "ManagedWindow")
         self.windowIconLabel.setProperty("CustomWindowDecoration", "WindowIcon")
         self.windowTitle.setProperty("CustomWindowDecoration", "WindowTitle")
+        self.windowSubTitle.setProperty("CustomWindowDecoration", "WindowSubTitle")
 
         if WindowMode != self.Dialog:
             self.min_btn.setProperty("CustomWindowDecoration", "MinimizeActionButton")
@@ -99,9 +107,6 @@ class WindowTitleDecoration(QtWidgets.QFrame):
 
     def setMenuBar(self, menubar):
         self.layout.addWidget(menubar, 0, 2, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
-
-        # Make the column 5 grow so the title is always to the left
-        self.layout.setColumnStretch(3, 2)
 
     def refresh_ui(self):
         self.managed_window.setStyleSheet(self.ProgramConfiguration.styleSheet())
@@ -123,6 +128,9 @@ class WindowTitleDecoration(QtWidgets.QFrame):
     def setWindowTitle(self, title):
         self.windowTitle.setText(title)
         self.windowIconLabel.setToolTip(title)
+
+    def setSubTitle(self, subtitle):
+        self.windowSubTitle.setText(subtitle)
 
     def mouseDoubleClickEvent(self, event=None) -> None:
         self.maximizeEvent()

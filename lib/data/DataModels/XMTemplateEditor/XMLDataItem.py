@@ -392,8 +392,9 @@ class XMLDataItem(QObject):
             parent_node.xml_remove_children()
             siblings = self.parent()._children
             for xml_node in siblings:
-                # print("add node to hierarchy", xml_node)
-                parent_node.xml_append_node(xml_node._xml_data)
+                if isinstance(xml_node, XMLDataItem):
+                    print("add node to hierarchy", xml_node)
+                    parent_node.xml_append_node(xml_node._xml_data)
 
     def loadDatabaseObject(self):
         if self.application.db and not self.application.db.is_connected:

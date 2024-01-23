@@ -23,7 +23,7 @@ from lib.ui.CustomWindow.custom_window import CustomMainWindow
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.9.1'
+VERSION = '0.9.2'
 APP_NAME = f"Transport Management Tool - {VERSION}"
 
 class Transport_Manager(CustomMainWindow):
@@ -35,13 +35,14 @@ class Transport_Manager(CustomMainWindow):
     loginReady = pyqtSignal()
     
     def __init__(
-        self, parent=None, clipboard=None, event_filter=None, qapplication=None, loading_screen=None
+        self, parent=None, 
+        clipboard=None, 
+        qapplication=None
     ):
         super().__init__(self)
         """ Map QT UI from parsed file - created and updated in qt designer """
         
         self.application_name = APP_NAME
-        self.splash_screen = loading_screen
         self.qt_app = qapplication
         self.clipboard = clipboard
         self.current_workdir = None
@@ -61,9 +62,6 @@ class Transport_Manager(CustomMainWindow):
         self.qt_app.setApplicationName(self.application_name)
         window_icon = self.ProgramConfiguration.getIcon("ApplicationLogo")
         self.setWindowIcon(window_icon)
-
-        # if loading_screen:
-        #     self.animateSplashScreen()
 
         # Database and Connection handlers
         self.db = DatabaseConnection(self)
@@ -129,22 +127,6 @@ class Transport_Manager(CustomMainWindow):
         # self.ui.MainTabWidget.setCurrentIndex(2)
         self.show()
         self.setupApplication()
-    
-    # def animateSplashScreen(self):
-    #     effect = QGraphicsOpacityEffect(self.splash_screen)
-    #     self.splash_screen.setGraphicsEffect(effect)
-
-    #     animation = QPropertyAnimation(self.splash_screen)
-
-    #     animation.setPropertyName(bytes("opacity", "utf-8"))
-    #     animation.setTargetObject(effect)
-    #     animation.setDuration(550)
-    #     animation.setStartValue(1)
-    #     animation.setEndValue(0)
-
-    #     animation.setEasingCurve(QEasingCurve.Type.OutInCubic)
-    #     animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
-    #     animation.finished.connect(lambda: self.splash_screen.hide())
 
     def setupApplication(self):
         # load default workdir
@@ -182,6 +164,10 @@ class Transport_Manager(CustomMainWindow):
     def onDatabaseConnection(self):
         self.db.load_session_data()
         self.XMLTemplateEditor.reloadView()
+        connection_name = self.db.connection_parameters.get("ConnectionName")
+        if len(connection_name) > 45:
+            connection_name = connection_name[:45] + "..."
+        self.ui.WindowDecoration.setSubTitle(f"<b>Connected Session:</b> {connection_name}")
 
     def addExecutionPlan(self):
         self.PackageManager.addExecutionPlan()
@@ -388,7 +374,8 @@ if __name__ == "__main__":
     # splash.show()
 
     a = Transport_Manager(
-        clipboard=app.clipboard(), event_filter=None, qapplication=app
+        clipboard=app.clipboard(),
+        qapplication=app
     )
 
     sys.excepthook = a.qtExceptionHandler

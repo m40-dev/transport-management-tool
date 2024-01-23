@@ -134,8 +134,8 @@ class PackageManagerItemWidget(CustomDelegateWidget):
         
         self.element_label.setText(object_display)
         description_text = self.model_item.description
-        if self.model_item.description and len(str(self.model_item.description)) > 180:
-            description_text = self.model_item.description[:180] + "..."
+        if self.model_item.description and len(str(self.model_item.description)) > 100:
+            description_text = self.model_item.description[:100] + "..."
         self.element_description.setText(description_text)
         
         self.parent_view.model().layoutChanged.emit()

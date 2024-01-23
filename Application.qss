@@ -385,7 +385,6 @@ QToolButton[Widget=DeleteButton]::hover{
 	background-color: #f7b3a3;
 }
 
-
 QToolButton[Widget=SelectFileButton]{
 	background-image: url("./lib/ui/img/search_btn.png");
 	border-radius: 16px;
@@ -636,6 +635,7 @@ QLabel[Label="PropertyValue"], QCheckbox[Label="PropertyValue"], QRadioButton[La
 	color: @TextColor;
 	margin: 1px;
 	font-size: 12px;
+	padding: 3px;
 }
 
 /* XML Template Editor Custom Configurations */
@@ -663,8 +663,19 @@ QToolButton[Widget="CustomToolButton"]::hover{
 }
 
 QTabBar#DatabaseQueryTabWidget:tab{
-	max-width: 10em;
-	min-width:10px;
+	min-width:6em;
+	min-height:10px;
+	margin-left: 15px;
+}
+
+QTabBar#DatabaseQueryTabWidget:tab:selected{
+	margin-top: 5px;
+	border-left:2px solid @HighlightedText;
+	border-right:2px solid @HighlightedText;
+}
+
+QListView#SearchResultsListView{
+	background-color: @AltBaseColor;
 }
 
 QHeaderView:section:horizontal[Widget="XMLTemplateEditorWidget"]{
@@ -699,8 +710,10 @@ QTreeView#RelationsViewTreeView{
 	border: 1px solid @AltBorderColor;
 	background-color: @AltBaseColor;
 }
+
 QTreeView#RelationsViewTreeView::item{
 }
+
 QTreeView#RelationsViewTreeView::item:alternate{
 }
 
@@ -1060,6 +1073,13 @@ QLabel[CustomWindowDecoration="WindowTitle"]{
 	background-color: transparent;
 	text-align: center;
 	margin-left: 10px;
+}
+
+QLabel[CustomWindowDecoration="WindowSubTitle"]{
+	font: 13px;
+	background-color: transparent;
+	margin-left: 10px;
+	color: @AltTextColor2;
 }
 
 QToolButton[CustomWindowDecoration="MinimizeActionButton"],

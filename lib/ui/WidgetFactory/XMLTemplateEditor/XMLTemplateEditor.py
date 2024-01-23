@@ -455,8 +455,8 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.DatabaseQueryTabWidget.tabBar().setObjectName("DatabaseQueryTabWidget")
 
         # Configure Tabs
-        self.DatabaseQueryTabWidget.addTab(self.DatabaseRelations, "Relations Configuration")
         self.DatabaseQueryTabWidget.addTab(self.SearchResultsGroupBox, "Search Results")
+        self.DatabaseQueryTabWidget.addTab(self.DatabaseRelations, "Object Configuration")
 
         # self.TemplateEditorSplitter_Relations.addWidget(self.DatabaseRelations)
         self.DatabaseQueryTabWidget.setCurrentWidget(self.SearchResultsGroupBox)

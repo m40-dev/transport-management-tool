@@ -190,7 +190,7 @@
             "PlaceholderText":"",
             "IsMandatory":true,
             "ShowInEditor":true,
-            "ShowInTreeView":false,
+            "ShowInTreeView":true,
             "IsForDataExport":true,
             "UseTemplates":false,
             "Options":{
@@ -214,7 +214,7 @@
             "PlaceholderText":"",
             "IsMandatory":true,
             "ShowInEditor":true,
-            "ShowInTreeView":false,
+            "ShowInTreeView":true,
             "IsForDataExport":true,
             "UseTemplates":false,
             "Options":{
@@ -233,7 +233,7 @@
             "PlaceholderText":"",
             "IsMandatory":false,
             "ShowInEditor":true,
-            "ShowInTreeView":false,
+            "ShowInTreeView":true,
             "IsForDataExport":true,
             "UseTemplates":false
         },
@@ -247,7 +247,7 @@
             "PlaceholderText":"",
             "IsMandatory":false,
             "ShowInEditor":true,
-            "ShowInTreeView":false,
+            "ShowInTreeView":true,
             "IsForDataExport":true,
             "UseTemplates":false,
             "Separator":","

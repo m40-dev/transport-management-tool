@@ -210,9 +210,9 @@ class object_container(transport_template_custom_object):
     def reset_container_relations(self):
         # print("reset relations")
         table_relations = self._object_relations
-
-        for element in self.object_relations_node.data.getchildren():
-            self.object_relations_node.data.remove(element)
+        if self.object_relations_node:
+            for element in self.object_relations_node.data.getchildren():
+                self.object_relations_node.data.remove(element)
 
         local_relation_list = []
         
@@ -256,7 +256,7 @@ class object_container(transport_template_custom_object):
         
     @property
     def delete_residuals(self):
-        if self.delete_residuals_node.data.text.isnumeric():
+        if self.delete_residuals_node and self.delete_residuals_node.data.text.isnumeric():
             return int(self.delete_residuals_node.text)
         return 0
 

@@ -69,6 +69,7 @@ class Ui_MainWindow(object):
 
         #add Menu elements to the window decoration
         self.WindowDecoration.setMenuBar(self.menubar)
+        
 
         self.statusbar = QtWidgets.QStatusBar(MainWindow)
         self.statusbar.setObjectName("statusbar")
