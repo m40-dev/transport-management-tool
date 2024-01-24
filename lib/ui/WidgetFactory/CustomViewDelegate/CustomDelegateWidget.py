@@ -44,32 +44,6 @@ class CustomDelegateWidget(QFrame):
             self.parent_view.expanded.connect(self.expand_children)
             self.parent_view.collapsed.connect(self.collapse_children)
 
-        # custom widget show animation
-        # self.animate()
-
-    # def paintEvent(self, event):
-    #     if self.isSelected:
-    #         target_rect = self.frame.rect()
-    #         widget_width_offset = (self.rect().width() - self.frame.rect().width()) / 2
-    #         widget_height_offset = (self.rect().height() - self.frame.rect().height()) / 2
-
-    #         target_x = round(widget_width_offset)
-    #         target_y = round(widget_height_offset)
-
-    #         target_rect = QRect(QPoint(target_x, target_y), self.frame.size())
-
-    #         selection_color = self.application.ProgramConfiguration.getColor("SelectedObjectColor")
-
-    #         pen = QPen(selection_color)
-    #         pen.setWidth(3)
-
-    #         painter = QPainter(self)
-    #         painter.setPen(pen)
-    #         painter.setBrush(selection_color)
-    #         painter.drawRect(target_rect)
-    #     else:
-    #         super().paintEvent(event)
-
     def showEvent(self, event):
         self.animate()
 
@@ -95,6 +69,7 @@ class CustomDelegateWidget(QFrame):
         animation.setEasingCurve(QEasingCurve.Type.OutInCubic)
         animation.start(QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
         animation.finished.connect(lambda: self.setGraphicsEffect(None))
+        return animation
 
     def expand_children(self, index):
         if not index.isValid():

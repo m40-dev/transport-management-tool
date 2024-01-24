@@ -1,6 +1,6 @@
 # Transport Management Tool
 
-![200](./lib/ui/img/icons/ApplicationIcon.png)
+![200](ApplicationIcon.png)
 
 The transport management tool is an utility tool to work with the XML template files for the database transporter used in the One Identity Manager as well as the interface to organize and manage transport package operations between administered systems.
 
@@ -35,10 +35,8 @@ You can post your bug reports, issues, suggestions and feature requests in the [
 
 ## Contact
 
-This project is developed and maintained by a single person in free time only, 
+This project is developed and maintained by a single person in free time only, if you have other inquiries related to the project, you can reach me by mail: transport-management-tool@proton.me.
 
-if you have other inquiries related to the project, you can reach me by mail: transport-management-tool@proton.me.
-
-## LICENSE
+## LICENCE
 
 This project is an open source code under GPL v3, see [LICENSE](./LICENSE)

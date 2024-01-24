@@ -126,8 +126,8 @@ class PackageManagerItemWidget(CustomDelegateWidget):
 
         for column, label_widget in self.dynamic_property_labels.items():
             value = self.model_item.data(column)
-            if value:
-                label_widget.setText(str(value))
+            # if value:
+            label_widget.setText(str(value))
 
         if not self.model_item.is_saved:
             object_display = f"* {object_display}"
@@ -217,18 +217,12 @@ class TaskDefinitionWidget(PackageManagerItemWidget):
             self.edit_xml_definition_button.setIcon(edit_xml_icon)
             self.edit_xml_definition_button.setProperty("PackageManager", "PackageManagerIcon")
             self.edit_xml_definition_button.setIconSize(QSize(20,20))
-
-        # task_buttons_layout = QHBoxLayout()
-        # task_buttons_layout.addStretch(2)
-        # task_buttons_layout.addWidget(self.edit_xml_definition_button)
-        # task_buttons_layout.addWidget(self.edit_task_definition_button)
         
         """ Connect Signals """
         self.edit_xml_definition_button.clicked.connect(self.edit_task_xml_definition)
         self.edit_task_definition_button.clicked.connect(self.edit_task_definition)
         
         """ Add Widgets to the layout """
-        # self.layout.addLayout(task_buttons_layout, 0, 2, 1, 3, Qt.AlignmentFlag.AlignRight)
         self.toolbox_layout.addWidget(self.edit_task_definition_button)
         self.toolbox_layout.addWidget(self.edit_xml_definition_button)
 
