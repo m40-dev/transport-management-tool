@@ -1,7 +1,5 @@
 # Transport Management Tool
 
-![200](ApplicationIcon.png)
-
 The transport management tool is an utility tool to work with the XML template files for the database transporter used in the One Identity Manager as well as the interface to organize and manage transport package operations between administered systems.
 
 While this is very specific use case, the goal is to improve the performance and reliability when building templates or working with transport package operations in general (a little bit of automation never hurts).
