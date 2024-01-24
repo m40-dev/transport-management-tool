@@ -13,6 +13,7 @@ class MsgBox(CustomDialogWindow):
         self.detailed_message = detailed_message
         self.window_mode = window_mode
         self.setupUi()
+        self.exec()
     
     def setupUi(self):
         self.label = QtWidgets.QLabel(self)
@@ -30,11 +31,11 @@ class MsgBox(CustomDialogWindow):
             self.textinput.setHtml(f'<pre class="MessageBox-DetailedMessage">{self.detailed_message}</pre>')
 
             self.details_button = QtWidgets.QPushButton(self)
-            self.details_button.setText("Show Details")
+            self.details_button.setText("Toggle Details")
             self.details_button.clicked.connect(self.toggle_details)
 
-            self.form_layout.addWidget(self.textinput, 1, 0, 1, 3)
-            self.form_layout.addWidget(self.details_button, 2, 0, 1, 1)
+            self.form_layout.addWidget(self.textinput, 1, 0)
+            self.form_layout.addWidget(self.details_button, 2, 0)
 
         if self.window_mode == self.QUESTION:
             self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Yes | 
@@ -44,16 +45,15 @@ class MsgBox(CustomDialogWindow):
         else:
             self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Close)
         
-        # self.buttonBox.setObjectName("buttonBox")
-        self.form_layout.addWidget(self.label, 0, 0, 1, 3)
+        self.form_layout.addWidget(self.label, 0, 0)
         self.label.setText(self.message)
-        self.setMinimumSize(250, 150)
+        self.setMinimumSize(300, 200)
 
     def toggle_details(self, state):
         # print(state)
         self.textinput.setVisible(not self.textinput.isVisible())
         if self.textinput.isVisible():
-            self.resize(self.width(), 350)
+            self.resize(600, 350)
         else:
-            self.resize(self.width(), 200)
+            self.resize(300, 200)
 

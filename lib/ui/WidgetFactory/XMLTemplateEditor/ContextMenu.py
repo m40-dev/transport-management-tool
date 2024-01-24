@@ -42,7 +42,7 @@ class XMLObjectContextMenu(QMenu):
         #clicked on a specific object
         if source_index and source_index.isValid():
             source_item = source_index.internalPointer()
-            print("object clicked", source_item.xml_object_class)
+            # print("object clicked", source_item.xml_object_class)
 
             # Add Table Query task on top of the list
             if source_item.table_name is not None:
@@ -170,7 +170,7 @@ class ObjectDataItemContextMenu(QMenu):
         #clicked on a specific object
         if source_index and source_index.isValid():
             source_item = source_index.internalPointer()
-            print("object clicked", source_item, source_item.table_name)
+            # print("object clicked", source_item, source_item.table_name)
 
             menuQueryDatabaseObject = self.addAction("Query this table")
             menuQueryDatabaseObject.triggered.connect(lambda: self.onQueryTableData.emit(source_index))

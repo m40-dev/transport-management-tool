@@ -25,13 +25,7 @@ class ApplicationAppearanceEditor(ConfigurationSectionEditor):
             window_mode=MsgBox.INFO,
             window_title="Configuration Saved",
             message="Program Configuration saved."
-        ).exec()
-
-        # info = QtWidgets.QMessageBox(
-        #     QtWidgets.QMessageBox.Icon.Information, 
-        #     "Configuration Applied", 
-        #     "Program Configuration saved.")
-        # info.exec()
+        )
 
     def setupEditorUi(self):
 

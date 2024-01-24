@@ -1,16 +1,16 @@
 from PyQt6 import QtCore, QtWidgets
+from .CustomDialogWindow import CustomDialogWindow
 
 
-class RelationPresetDialog(QtWidgets.QDialog):
+class RelationPresetDialog(CustomDialogWindow):
 
     def __init__(self, application):
-        super(RelationPresetDialog, self).__init__(flags=QtCore.Qt.WindowType.Dialog, parent=application)
+        super(RelationPresetDialog, self).__init__(application=application, dialog_name="Preset Configuration")
 
-        self.application = application
-        self.setWindowTitle(self.application.application_name + " - Preset Configuration") 
+
         self.relations = []
-        self.layout = QtWidgets.QGridLayout(self)
-        self.layout.setObjectName("layout")
+        # self.layout = QtWidgets.QGridLayout(self)
+        # self.layout.setObjectName("layout")
         
         description_text = "Please provide the preset details:"
 
@@ -24,27 +24,27 @@ class RelationPresetDialog(QtWidgets.QDialog):
         self.always_apply_checkbox = QtWidgets.QCheckBox(self)
         self.always_apply_checkbox.setText("Always apply relation for table")
 
-        self.buttonBox = QtWidgets.QDialogButtonBox(self)
-        self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
-        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
-        self.buttonBox.setObjectName("buttonBox")
+        # self.buttonBox = QtWidgets.QDialogButtonBox(self)
+        # self.buttonBox.setOrientation(QtCore.Qt.Orientation.Horizontal)
+        # self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Cancel|QtWidgets.QDialogButtonBox.StandardButton.Ok)
+        # self.buttonBox.setObjectName("buttonBox")
 
-        self.layout.addWidget(description, 0, 0, 1, 0)
+        self.form_layout.addWidget(description, 0, 0, 1, 0)
 
-        self.layout.addWidget(self.preset_name_label, 1, 0, 1, 1)
-        self.layout.addWidget(self.preset_name, 1, 1, 1, 1)
+        self.form_layout.addWidget(self.preset_name_label, 1, 0, 1, 1)
+        self.form_layout.addWidget(self.preset_name, 1, 1, 1, 1)
 
-        self.layout.addWidget(self.preset_description_label, 2, 0, 1, 1)
-        self.layout.addWidget(self.preset_description, 2, 1, 1, 1)
-        self.layout.addWidget(self.always_apply_checkbox, 3, 1, 1, 1)
+        self.form_layout.addWidget(self.preset_description_label, 2, 0, 1, 1)
+        self.form_layout.addWidget(self.preset_description, 2, 1, 1, 1)
+        self.form_layout.addWidget(self.always_apply_checkbox, 3, 1, 1, 1)
         
         """ Button Box - always in the bottom """
-        self.layout.addWidget(self.buttonBox, self.layout.rowCount()+1, 1, 2, 1)
+        # self.layout.addWidget(self.buttonBox, self.layout.rowCount()+1, 1, 2, 1)
 
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
+        # self.buttonBox.accepted.connect(self.accept)
+        # self.buttonBox.rejected.connect(self.reject)
 
-        QtCore.QMetaObject.connectSlotsByName(self)
+        # QtCore.QMetaObject.connectSlotsByName(self)
 
     @property 
     def name(self):

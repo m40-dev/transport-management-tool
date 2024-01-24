@@ -34,7 +34,7 @@ class XMLDataModel(QAbstractItemModel):
             parsing_status, status_message = self.transport_template.parse_xml_file(data_source)
             if parsing_status is False:
                 if "document is empty" not in status_message.lower():
-                    print("template parsing failed", status_message)
+                    # print("template parsing failed", status_message)
                     MsgBox(self.application, "XML Template Parsing Failed!", f"<b>File path:</b> {data_source}\n<b>Error Message:</b> {status_message}")
 
         data = self.transport_template.children()

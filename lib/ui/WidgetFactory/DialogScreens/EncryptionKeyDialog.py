@@ -53,7 +53,6 @@ class EncryptionKeyDialog(CustomDialogWindow):
                 window_title="Key does not match",
                 message="Provided key does not match the confirmation.", 
                 window_mode=MsgBox.INFO)
-            dialog.exec()
             # QtWidgets.QMessageBox.information(self.application, "Key does not match", "Provided key does not match the confirmation.")
             return False
         super().accept()

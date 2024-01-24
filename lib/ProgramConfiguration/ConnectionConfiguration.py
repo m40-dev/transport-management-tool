@@ -46,7 +46,7 @@ class ConnectionHandler(QObject):
                         window_title="Decryption Error",
                         message="Do you want to try again?\nIf not, the connection sessions will not be available.", 
                         window_mode=WidgetFactory.MsgBox.QUESTION)
-                    dialog.exec()
+
                     if dialog.accepted:
                         # print("accepted?", dialog.accepted)
                         self.loadSavedConnections()
@@ -63,7 +63,7 @@ class ConnectionHandler(QObject):
                         window_title="Decryption Error",
                         message="There was no encryption key provided to decrypt data,\ndo you want to continue without session configurations?", 
                         window_mode=WidgetFactory.MsgBox.QUESTION)
-                dialog.exec()
+
                     # print("accepted?", dialog.accepted)
                 if not dialog.accepted:
                     self.loadSavedConnections()
@@ -245,7 +245,7 @@ Connection_Form_Configuration = {
             {
                 "FieldType": "StringInput",
                 "Display": "Connection Name",
-                "PlaceholderText": "Provide Connection Name",
+                "PlaceholderText": "Provide Connection Friendly Name",
                 "FieldRole": "DisplayRole",
                 "IsMandatory": True
             },
@@ -253,46 +253,52 @@ Connection_Form_Configuration = {
             {
                 "FieldType": "TextInput",
                 "Display": "Connection Description",
-                "PlaceholderText": "Connection Description",
+                "PlaceholderText": "Provide Connection Description",
                 "FieldRole": "DescriptionRole"
             },
         "ServerAddress":
             {
                 "FieldType": "StringInput",
                 "IsMandatory": True,
-                "Display": "Server Address"
+                "Display": "Server Address",
+                "PlaceholderText": "Provide SQL Server Address"
             },
         "DatabaseName":
             {
                 "FieldType": "StringInput",
                 "IsMandatory": True,
-                "Display": "Database Name"
+                "Display": "Database Name",
+                "PlaceholderText": "Provide One Identity Database Name"
             },
         "SQLUserName":
             {
                 "FieldType": "StringInput",
                 "IsMandatory": True,
-                "Display": "SQL User Name"
+                "Display": "SQL User Name",
+                "PlaceholderText": "Provide SQL Server Login Name"
             },
         "SQLPassword":
             {
                 "FieldType": "StringInput",
                 "IsSensitive": True ,
                 "IsMandatory": True,
-                "Display": "SQL User Password"
+                "Display": "SQL User Password",
+                "PlaceholderText": "Provide SQL Server Login Password"
             },
         "ApplicationUserName":
             {
                 "FieldType": "StringInput",
                 "IsMandatory": True,
-                "Display": "Application User Name"
+                "Display": "Application User Name",
+                "PlaceholderText": "Provide One Identity System User Login"
             },
         "ApplicationPassword":
             {
                 "FieldType": "StringInput",
                 "IsSensitive": True,
                 "IsMandatory": True,
-                "Display": "Application User Password"
+                "Display": "Application User Password",
+                "PlaceholderText": "Provide One Identity System User Password"
             },
         "EncryptConnection":
             {
@@ -304,6 +310,7 @@ Connection_Form_Configuration = {
             {
                 "FieldType": "FileInput",
                 "FileSelectionMode": "DirectoryPath",
-                "Display": "Identity Manager Tools Location"
+                "Display": "Identity Manager Tools Location",
+                "PlaceholderText": "Provide One Identity Manager Tools Directory"
             }
         }

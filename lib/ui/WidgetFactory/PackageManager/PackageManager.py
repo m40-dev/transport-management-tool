@@ -160,8 +160,10 @@ class PackageManager(QtWidgets.QWidget):
         if len(skipped_definitions)>0:
             definition_list = "\r\n\t".join(skipped_definitions)
             file_count = len(skipped_definitions)
-            MsgBox(self.application, "Some JSON definition files were ignored due to <b>missing mandatory data.</b><br>If this file should be ignored, please configure the filters in program configuration.", 
-                f"<b>Mandatory columns checked:</b> <i>{mandatory_columns}</i>.\r\n<b>Skipped Entries:</b> <i>{file_count}</i>.\r\n<b>Skipped files (workdir relative):</b>\r\n\t{definition_list}")
+            MsgBox(application=self.application, 
+                window_title="Workdir Loading Errors",
+                message="Some JSON definition files were ignored due to <b>missing mandatory data.</b><br>If this file should be ignored, please configure the filters in program configuration.", 
+                detailed_message=f"<b>Mandatory columns checked:</b> <i>{mandatory_columns}</i>.\r\n<b>Skipped Entries:</b> <i>{file_count}</i>.\r\n<b>Skipped files (workdir relative):</b>\r\n\t{definition_list}")
         
         self.application.statusBarUpdated.emit("Workspace initialization completed.")
 
@@ -244,13 +246,17 @@ class PackageManager(QtWidgets.QWidget):
         contextMenu.editSelectedItems.connect(self.onEditSelectedItems)
         contextMenu.sortChildItems.connect(self.onSortChildItems)
         contextMenu.reapplyTemplates.connect(self.onReapplyTemplates)
+        contextMenu.deleteSelectedItems.connect(self.onDeleteSelectedItems)
 
         if len(contextMenu.menu_items) > 0:
             contextMenu.popup(menu_target)
 
     def addPackageDefinition(self):
         if not self.current_workdir:
-            MsgBox(self.application, "Working Directory is not configured.\n\nPlease configure working directory location first to create any package definition.\n\nWithout working directory, program will not be able to generate the paths and save the files.")
+            MsgBox(
+                application=self.application, 
+                window_title="Working Directory not set",
+                message="Working Directory is not configured.\n\nPlease configure working directory location first to create any package definition.\n\nWithout working directory, program will not be able to generate the paths and save the files.")
             if not self.changeWorkingDirectory():
                 return False
         
@@ -311,7 +317,10 @@ class PackageManager(QtWidgets.QWidget):
 
     def savePackageDefinition(self, source_index, save_single=False):
         if not self.current_workdir:
-            MsgBox(self.application, "Working directory is not set. Please configure the work location first.")
+            MsgBox(
+                application=self.application,
+                window_title="Working Directory not set",
+                message="Working directory is not set. Please configure the work location first.")
             return False
 
         source_item = None
@@ -394,42 +403,30 @@ class PackageManager(QtWidgets.QWidget):
         #remove active execution planner items
         self.ExecutionPlannerTabWidget.currentWidget().deleteSelectedItems()
 
+    def onDeleteSelectedItems(self, source_index):
+        source_item=None
+        if source_index.isValid():
+            source_item = source_index.internalPointer()
+
+        self.deletePackageDefinitions(source_item)
+
     def deletePackageDefinitions(self, definition_item=None):
         item_count = len(self.PackageViewTreeView.selectedIndexes())
         
         if item_count == 0 and definition_item is None:
             return True
         
-        if item_count == 0 and definition_item:
+        if item_count == 1 and definition_item:
             return self.deletePackageDefinition(definition_item)
 
         question = MsgBox(self.application, 
-                        message=f"Do you want to delete selected items? ({item_count} item(s))",
+                        message=f"Do you want to delete all selected items? ({item_count} item(s))",
                         window_mode=MsgBox.QUESTION)
-        question.exec()
+        
         if question.accepted:
-            
             for item_index in self.PackageViewTreeView.selectedIndexes():
                 item = item_index.internalPointer()
                 self.deletePackageDefinition(item, False)
-                # if self.current_workdir:
-                #     # attempt file operations only if the workdir is set
-                #     files_to_delete = item.get_all_files(recursive=True)
-                #     if len(files_to_delete) > 0:
-                #         export_data = "\n".join(map(str, files_to_delete))
-                #         # export_data = json.dumps(files_to_delete, indent=4, separators=(',',':'))
-                #         detailed_message = f"Data lookup returned following files related to the selected object:\n{export_data}"
-                #         question = MsgBox(self.application, 
-                #             message=f"Existing system files detected for item {item.display} or its child items, do you also want to delete these data files?", 
-                #             detailed_message=detailed_message, 
-                #             window_mode=MsgBox.QUESTION)
-                #         question.exec()
-                #         if question.accepted:
-                #             #delete data files
-                #             for file_path in files_to_delete:
-                #                 self.deleteFile(file_path)
-                # #remove item from model
-                # self.PackageViewTreeView.model().remove_item(item)
         return True
 
     def deletePackageDefinition(self, definition_item, confirm_deletion=True):
@@ -448,7 +445,6 @@ class PackageManager(QtWidgets.QWidget):
                         message=f"Are you sure to delete item {definition_item.display}, its child items, and all related data files?", 
                         detailed_message=detailed_message, 
                         window_mode=MsgBox.QUESTION)
-                    question.exec()
 
                     if not question.accepted:
                         return

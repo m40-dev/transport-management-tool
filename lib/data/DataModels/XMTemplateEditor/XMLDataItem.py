@@ -375,7 +375,7 @@ class XMLDataItem(QObject):
         else:
             # fallback to generic class
             node_class = xml_node.tag
-            print("Using FALLBACK CLASS when parsing XML Node", node_class)
+            # print("Using FALLBACK CLASS when parsing XML Node", node_class)
             xml_object = transport_template_custom_object(parent=parent_node, node_class=node_class, source_element=xml_node)
 
         if xml_object is None:
@@ -393,7 +393,7 @@ class XMLDataItem(QObject):
             siblings = self.parent()._children
             for xml_node in siblings:
                 if isinstance(xml_node, XMLDataItem):
-                    print("add node to hierarchy", xml_node)
+                    # print("add node to hierarchy", xml_node)
                     parent_node.xml_append_node(xml_node._xml_data)
 
     def loadDatabaseObject(self):

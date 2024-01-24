@@ -13,6 +13,7 @@ class PackageDefinitionMenu(QMenu):
     editSelectedItems = pyqtSignal(object)
     sortChildItems = pyqtSignal(object)
     reapplyTemplates = pyqtSignal(object)
+    deleteSelectedItems = pyqtSignal(object)
 
     collapseAll = pyqtSignal()
     expandAll = pyqtSignal()
@@ -74,11 +75,17 @@ class PackageDefinitionMenu(QMenu):
                 action_editXMLTemplate.triggered.connect(lambda: self.editXMLTemplate.emit(source_index))
                 self.menu_items.append(action_editXMLTemplate)
             
+            self.addSeparator()
+            action_deleteSelectedItems = self.addAction("Delete Selected Items")
+            action_deleteSelectedItems.triggered.connect(lambda: self.deleteSelectedItems.emit(source_index))
+            self.menu_items.append(action_deleteSelectedItems)
+
             if self.useExperimentalFeatures:
                 self.addSeparator()
                 action_reapplyTemplates = self.addAction("Reapply Attribute Templates")
                 action_reapplyTemplates.triggered.connect(lambda: self.reapplyTemplates.emit(source_index))
                 self.menu_items.append(action_reapplyTemplates)
+            
         self.setStyleSheet(self.parent.styleSheet())
         
 

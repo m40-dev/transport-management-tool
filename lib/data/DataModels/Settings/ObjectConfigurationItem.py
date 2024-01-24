@@ -100,7 +100,7 @@ class ObjectConfigurationItem(QObject):
     def row(self):
         if self.parent() and self in self.parent()._children:
             return self.parent()._children.index(self)
-        print("item not found in the child list")
+        # print("item not found in the child list")
         return 0
     
     def setData(self, column, value):

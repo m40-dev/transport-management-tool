@@ -260,4 +260,4 @@ class TaskExecutionItem(JSONDataItem):
             self.ExecutionState = "Finished"
         if exitCode == 62097:
             self.ExecutionState = "Terminated"
-        print(len(self.execution_log))
+        # print(len(self.execution_log))

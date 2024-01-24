@@ -205,7 +205,6 @@ class ExecutionPlannerWidget(QWidget):
                 message="Are you sure to start the goup execution?\nAll Child elements and tasks in child groups will be queued for execution.",
                 window_mode=MsgBox.QUESTION
             )
-            msg_dialog.exec()
             if not msg_dialog.accepted:
                 return False
         
@@ -268,6 +267,9 @@ class ExecutionPlannerWidget(QWidget):
                 move_accept = True
 
             if drop_item._task_class == "ExecutionPlanner_ExecutionTask" and source_item._task_class == "PackageManager_TaskDefinition":
+                move_accept = True
+
+            if source_item._task_class == "ExecutionPlanner_ExecutionTask":
                 move_accept = True
             
             if source_item._task_class == "PackageManager_PackageDefinition":

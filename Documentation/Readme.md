@@ -22,15 +22,19 @@ Documentation items:
 * Read unsupported transport tasks
 * Open Existing Transport Template files
 * Parse XML Templates and Connect them with the database entries
-* List objects from database by XObjectKey
-* List objects from database tables, table filtering
 
 ## XML Template Definition Editing
 
+* List objects from database by XObjectKey
+* List objects from database tables, table filtering
 * Drag and drop XML Structure objects to adjust order and hierarchy
 * Bulk change supported transport flags or transport container flags
 * Bulk apply relation presets
 * Delete entries from the XML structure
+* copy/paste xml nodes of the template
+* list related objects
+* query table by listed object in the template or any object with table name reference
+* add transport task types (change labels, sync projects, schema, system configuration etc)
 
 ## Object Relations Management 
 
@@ -54,13 +58,6 @@ Documentation items:
 * Object based filters, find package by display, description or any predefined attribute
 * Drag and drop integration with execution planner (one direction only)
   
-## Object configuration editor
-
-* Universal object data editor tied to the object configuration model
-* Allows to show only editable fields
-* Support for most basic data inputs
-* Defines which attributes are exported to the target JSON file
-  
 ## Transport package execution planner 
 
 * Powershell session integration
@@ -76,6 +73,19 @@ Documentation items:
 * Queue transport management operations
 * Support for AutoUpdate or Database Compiler execution after transport installation
 * Create multiple execution plans
+* See execution logs only specific to the related task in the queue
+
+## Application Settings View
+* Application appearance configuration
+* Execution Planner configuration
+* Package Manager configuration
+* Object Model configuration
+### Object Model configuration editor
+
+* Universal object data editor tied to the object configuration model
+* Allows to show only editable fields
+* Support for most basic data inputs
+* Defines which attributes are exported to the target JSON file
 
 # Planned Features #
 
@@ -83,19 +93,14 @@ Documentation items:
 * Transport template optimization and description validation
 * Transport templates merging
 * Find database objects by change label
-* Convert existing change label tasks to object transport tasks
-* Support for all other transport types (Sync Project, Change Label etc.)
-* Support for the tree item edit operations (display names for tasks, containers)
+* Convert existing change label tasks to object transport tasks - this is now partially possible by possibility to search for objects by change label
 * Better management and application of the relation presets
-* Configuration migration functionalities
-* Application Settings View
-* A lot of prompts, messageboxes and action confirmations
-* UI and application layout improvements
-    * Improve transport template editing layouts
-* Dark mode/application theme configuration
 * Transport template definition wizard - simplify the process of custom configurations migration to aid in the template generation
-* Import/export relation presets
 * Import/export execution plans
+* reorganize the menu on top of the application
+* search functionality in the settings view
+* Improvements to the Settings view
+* Performance and UI thread improvements 
 
 # Known Issues and Limitations #
 
@@ -107,13 +112,11 @@ Any exception that program will catch is going to be thrown on the screen in the
 
 * Connecting to the database with wrong connection data will freeze the program until the timeout is reached
 * If you do not decrypt the session data correctly and then create new connection, any previously saved session will be overwritten. There is no warning to that.
-* There is totally no support for any other xml format than the one with structure of the transport template. Program will treat this as empty transport template.
+* There is totally no support for any other xml format than the one with structure of the transport template. Program will handle the error as if empty transport template was opened.
 * SQL script can be edited, but any XML comments left inside the text node will be deleted
 * In some cases the comment descriptions above the containers are not deleted
 * There is almost no validation to what you move around the xml structure - for now you need to know better not to add transport task into another transport task or sql task into object transport container.
 * Object Relations cluster is sometimes weird in what it does (especially selecting relations using the database model). Also there is no hint on which relations you edit (database object or template object). This will get updated and organised better.
-* Working directory is currently heavily used to work with package definitions, templates and should be always selected as first thing. There might be cases that it is not validated yet and program ends up calculating paths out of the transport management tool location instead of expected workdir.
-* There is no indication that you have some unsaved changes in the template comparing to the original file.
+* Working directory is currently heavily used to work with package definitions, templates and should be always selected as first thing. There might be cases that it is not validated yet and program ends up calculating paths out of the transport management tool location instead of expected workspace.
 * There is no auto save. You need to save each changed package definition manually when you move tasks across packages (multi select works though).
 * Searching can sometimes break in syntax parsing (difficult to reproduce). Program might need a restart if that occurs.
-* There is no aid in adjusting program or object configuration files yet, they need to be edited manually at the moment.

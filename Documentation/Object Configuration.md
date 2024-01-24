@@ -1,11 +1,26 @@
 The object model for the package manager is driven with the dedicated JSON file which provides the input to the tool about the structure and model of the transport package as required in your environment.
 
-Default configuration with some mandatory field configurations is provided with the program files (*object_configuration_default.json*) and can be used to provide the custom object model configuration to the program.
+Default configuration with some mandatory field configurations is provided with the program files (*object_configuration_default.json*) and can be used to provide the custom object model configuration.
+
 Custom file must be named "*object_configuration.json*" to be properly loaded by the application.
+
+Any object model customization can be done using the "Object Model Configuration" section in the Application settings view.
+
+![](screenshots/Pasted%20image%2020240124193235.png)
+
+To access the object model configuration use the side bar (**1**) and select the corresponding object model configuration section (**2**).
+
+Central view represents currently configured fields in the object model(**3**), and allows for detailed configuration of the field properties as supported in the application.
+
+Additional views give quick access to the default field configurations for the related object class (**4**) as well as any other predefined standard field configuration examples(**5**).
 
 # Object Configuration 
 There are predefined object classes that can be supported by the application and need to be defined for the tool to work properly.
 Each object class have to have minimum fields configured in order to drive the data model and functionalities built into the program.
+
+**It is recommended to use the application settings to configure the object model fields configuration and only edit the JSON file when you know what you are doing.**
+
+The following section is serving mainly the documentation purpose and possible configuration options that are/were available and required for the tool at given time - most of the assumptions and additional checks are implemented in the object model configuration editor.
 
 ### PackageManager_PackageDefinition
 

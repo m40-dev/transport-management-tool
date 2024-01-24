@@ -49,7 +49,10 @@ class CustomDialogWindow(CustomDialog):
         else:
             self.setWindowTitle(f"{self.application.application_name}")
         
+        
         self.windowDecoration.raise_()
+        # self.show()
+        
         
 
     def restoreWindowState(self):

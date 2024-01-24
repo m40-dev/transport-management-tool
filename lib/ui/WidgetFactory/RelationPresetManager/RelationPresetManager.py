@@ -5,7 +5,7 @@
 from PyQt6 import QtWidgets, QtCore
 from .RelationPresetContextMenu import RelationPresetContextMenu
 from lib.ui.WidgetFactory import FormEditorDialog
-
+from ..DialogScreens.CustomDialogWindow import CustomDialogWindow
 # Data Models
 # from lib.data.DataModels import RelationPresetConfigurationModel
 
@@ -15,35 +15,18 @@ TABLE_REFERENCE = "Relation Reference Table"
 OBJECT_RELATION = "Object Relation"
 
 from PyQt6.QtGui import QShortcut, QKeySequence
-class RelationPresetManager(QtWidgets.QWidget):
+
+class RelationPresetManager(CustomDialogWindow):
 
     def __init__(self, parent, preset_data):
-        super().__init__(parent=parent, flags=QtCore.Qt.WindowType.Dialog)
+        super().__init__(application=parent, dialog_name="Manage Relation Presets")
         self.parent = parent
         self.application = parent
         self.preset_data = preset_data
-        self.setWindowTitle(self.application.application_name + " - Manage Relation Presets") 
         
         self.setupUi()
         self.loadPresetData()
         self.show()
-        self.restoreWindowState()
-        self.closeEvent = self.windowCloseEventHandler
-
-    def windowCloseEventHandler(self, event):
-        self.saveWindowState()
-        event.accept()
-
-    def restoreWindowState(self):
-        """ Restore window settings """
-        # print("restore window")
-        self.settings = self.application.settings
-        if self.settings.value("RelationPresetManagerGeometry") is not None:
-            self.restoreGeometry(self.settings.value("RelationPresetManagerGeometry"))
-
-    def saveWindowState(self):
-        # print("save window")
-        self.application.settings.setValue("RelationPresetManagerGeometry", self.saveGeometry())
 
     def loadPresetData(self):
         for table_name, table_presets in self.preset_data.items():
@@ -104,13 +87,13 @@ class RelationPresetManager(QtWidgets.QWidget):
                 self.RelationPresetTreeWidget.invisibleRootItem().removeChild(selectedItem)
 
     def setupUi(self):
-        self.layout = QtWidgets.QGridLayout(self)
+        # self.layout = QtWidgets.QGridLayout(self)
         self.RelationPresetTreeWidget = QtWidgets.QTreeWidget()
         self.RelationPresetTreeWidget.setHeaderHidden(True)
         self.RelationPresetTreeWidget.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.RelationPresetTreeWidget.setContextMenuPolicy(QtCore.Qt.ContextMenuPolicy.CustomContextMenu)
         self.RelationPresetTreeWidget.customContextMenuRequested.connect(self.contextMenuRequested)
-        self.layout.addWidget(self.RelationPresetTreeWidget, 0, 0, 1, 1)
+        self.form_layout.addWidget(self.RelationPresetTreeWidget, 0, 0, 1, 1)
 
     
 class RelationPresetTreeWidgetItem(QtWidgets.QTreeWidgetItem):

@@ -39,7 +39,7 @@ class FormEditorDialog(CustomDialogWindow):
         
         if len(validation_summary) > 0:
             string_data = json.dumps(validation_summary, indent=4, separators=(',',':'))
-            MsgBox(self.application, "Form validation returned errors", string_data)
+            MsgBox(self.application, message="Form validation returned errors", detailed_message=string_data)
             return False
         
         return super().accept()

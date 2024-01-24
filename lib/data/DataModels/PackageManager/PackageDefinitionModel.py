@@ -82,7 +82,6 @@ class PackageDefinitionItem(JSONDataItem):
                     window_title="Are you sure?",
                     message = detailed_message, 
                     window_mode=MsgBox.QUESTION)
-                    decision.exec()
                     if not decision.accepted:
                         return False
 

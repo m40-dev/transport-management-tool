@@ -110,47 +110,7 @@ class SettingsWidget(QtWidgets.QWidget):
             window_mode=MsgBox.INFO,
             window_title="Configuration Saved",
             message="Program Configuration saved."
-            ).exec()
-            # info = QtWidgets.QMessageBox(
-            #     QtWidgets.QMessageBox.Icon.Information, 
-            #     "Configuration Saved", 
-            #     "All configuration sections have been saved.",
-            #     QtWidgets.QMessageBox.StandardButton.Ok,
-            #     self)
-            
-            # info.exec()
-
-
-    # def showEvent(self, event):
-    #     self.animate()
-    
-    # def hideEvent(self, event):
-    #     self.animate(reverse=True)
-
-    # def animate(self, reverse=False):
-    #     # animate startup
-        
-    #     effect = QtWidgets.QGraphicsOpacityEffect(self)
-    #     self.setGraphicsEffect(effect)
-
-    #     animation = QtCore.QPropertyAnimation(self)
-
-    #     animation.setPropertyName(bytes("opacity", "utf-8"))
-    #     animation.setTargetObject(effect)
-    #     animation.setDuration(250)
-    #     animation.setStartValue(0)
-    #     animation.setEndValue(1)
-
-    #     if reverse:
-    #         animation.setStartValue(1)
-    #         animation.setEndValue(0)
-    #         animation.setDuration(200)
-        
-    #     animation.setEasingCurve(QtCore.QEasingCurve.Type.OutInCubic)
-    #     animation.start(QtCore.QAbstractAnimation.DeletionPolicy.DeleteWhenStopped)
-    #     animation.finished.connect(lambda: self.setGraphicsEffect(None))
-        
-
+            )
 
 
 

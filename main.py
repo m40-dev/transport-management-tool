@@ -48,7 +48,7 @@ class Transport_Manager(CustomMainWindow):
         self.current_workdir = None
 
         self.settings = QSettings("EmergencyCode", "Transport_Manager")
-
+        
         # QMessageBox.information(None, "debug", "application settings object created")
 
         self.ProgramConfiguration = ProgramConfiguration(self)
@@ -320,7 +320,7 @@ class Transport_Manager(CustomMainWindow):
             window_mode=WidgetFactory.MsgBox.INFO,
             window_title="Connection Required",
             message="This function requires active Database Connection to work.\nPlease connect to the target database and try again."
-        ).exec()
+        )
 
     def deleteKeyPressEvent(self):
         if self.ui.MainTabWidget.currentWidget() == self.PackageManager:

@@ -10,10 +10,10 @@ Execution Planner view have following components defined:
 2. **Execution Group toolbox** - quick access to the execution group operations 
 3. **Execution Task node** - overview of the execution task and its properties
 4. **Execution Task toolbox** - quick access to the execution task configuration parameters
-5. **Execution Planner kill switch** - allows termination of the running execution planner queue 
+5. **Execution Planner kill switch** - terminates any activity in the currently running execution planner queue 
 6. **Execution Planner console** - provides the output from the process runner
 
-![](screenshots/Execution%20Planner%20View.png)
+![](screenshots/Pasted%20image%2020240124191410.png)
 
 # Execution Planner actions
 The execution planner view is meant to provide quick access to the transport task executions. This chapter collects all currently available planner actions.
@@ -46,16 +46,29 @@ In case there are tasks running already, process runner will queue all tasks in 
 If there are nested execution groups, they will be processed in the same order as defined in the view.
 Example below shows how the planner will queue the tasks if the top level execution group is started:
 
-1. First child object is an execution task so it is started
-2. Package 1 is an Execution group item so all of its children are added to the execution queue as next
-3. Package 2 is an Execution group item so all of its children are added to the execution queue as next
+1. Group 1 execution started with the "start group" button 
+2. First child object is an execution task so it is started
+3. Package 1 is an Execution group item so all of its children are added to the execution queue as next
+4. Package 2 is an Execution group item so all of its children are added to the execution queue as next
 The same logic is applied recursively until the end of the tree is reached. 
 
-![](screenshots/Execution%20Planner%20Start%20order.png)
+![](screenshots/Pasted%20image%2020240124191710.png)
 
 ## Stop Plan Execution
 In case of errors or unexpected behaviour of the transport task executions you can quickly terminate the task executions with the "Stop Execution" button which will stop immediately all activities and clear the execution queue.
+
+![](screenshots/Pasted%20image%2020240124191846.png)
+The tasks where the execution was terminated will be marked accordingly. 
+
+In case there were transport package errors, further queue execution will be terminated unless configured differently in the application configuration.
+The outcome would then look as on the following example:
+![](screenshots/Pasted%20image%2020240124192137.png)
+
 Please keep in mind that if this action is done in the middle of database compilation you might introduce some issues here.
+The console output related to single tasks can be inspected by clicking on the small console icon (![](screenshots/Pasted%20image%2020240124192320.png)). This will then open the detached console view with execution logs relevant only to this task:
+
+![](screenshots/Pasted%20image%2020240124192308.png)
+
 
 # Execution Planner Tasks
 In general the execution planner can run the tasks queued in the view, but also will run any additionally required tasks according to the execution task definition.
@@ -70,16 +83,20 @@ These operations are always checked and added in this order, so if there is an a
 
 # Execution Planner Custom Configuration
 Custom configuration of the execution planner allows you to run the custom import or export scripts where the standard behaviour of the application is not enough.
-![](screenshots/Execution%20Planner%20Configuration.png)
 
-When all of the local session variables are prepared, the "Task Execution Preparation Script" is executed first to initialize any custom modules or task preparatory operations - this script is executed every time regardless of the operation type.
-If the Import or Export task commands are configured, application will use them instead of the direct one identity tools execution.
+The configuration can be accessed from the Side Bar "Application Settings" Icon (1) and selecting the corresponding configuration section (2). 
 
-## Custom Session variables
+![](screenshots/Pasted%20image%2020240124192428.png)
+
+When all of the local session variables are prepared, the "Execution Pre-Script" is executed first to initialize any custom modules or task preparatory operations - this script is executed every time regardless of the operation type.
+
+If the Import or Export task commands are configured, application will use them instead of the direct one identity tools integration.
+
+## Execution Planner session variables
 When execution task is started, new powershell session is created which prepares all the execution task variables (as defined in the [Object Configuration](Object%20Configuration.md) for the execution task object class).
 
 Application variables:
-	**Workdir** - gives the information about the current working directory location of the package management module. 
+	**WORKDIR** - gives the information about the currently selected working directory location of the package management module. 
 
 Object configuration variables:
 	**Connection** - only connection name is provided as the variable, connection details are not exposed in the session variables.
@@ -87,5 +104,9 @@ Object configuration variables:
 
 
 # Execution Planner Error handling
-There is no error handling in the process runner at the moment, however it is planned to build it together with better execution status indicators (right now it just displays the text in bottom right corner of the task).
-If there is an error in the task execution, process runner will move on to the next task like nothing happened.
+
+By default, the execution planner will stop in case of errors detected in the tasks execution (by reading standard error channel and process exit codes).
+
+The behavior can be changed in the execution planner setting:
+
+![](screenshots/Pasted%20image%2020240124192729.png)

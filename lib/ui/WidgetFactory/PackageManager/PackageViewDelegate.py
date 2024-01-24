@@ -116,7 +116,7 @@ class PackageManagerItemWidget(CustomDelegateWidget):
         self.refreshUi()
     
     def delete_object(self):
-        self.parent_module.deletePackageDefinitions(self.model_item)
+        self.parent_module.deletePackageDefinition(self.model_item)
 
     def refreshUi(self):
         object_display = self.model_item.display

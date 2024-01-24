@@ -102,18 +102,12 @@ class ObjectModelConfigurationEditor(ConfigurationSectionEditor):
         self.configurationDataChanged()
         self.ProgramConfiguration.saveConfiguration(self.section_source.TargetConfigurationFile)
 
-        # info = QtWidgets.QMessageBox(
-        #     QtWidgets.QMessageBox.Icon.Information, 
-        #     "Configuration Applied", 
-        #     "Object model configuration applied.")
-        # info.exec()
-
         MsgBox(
             application=self.application,
             window_mode=MsgBox.INFO,
             window_title="Configuration Saved",
             message="Program Configuration saved."
-        ).exec()
+        )
 
     def setupEditorUi(self):
         self.ObjectModelConfigurationView = QtWidgets.QListView(self)
