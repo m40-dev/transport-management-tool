@@ -41,4 +41,4 @@ if you have other inquiries related to the project, you can reach me by mail: tr
 
 ## LICENSE
 
-This project is an open source code under GPL v3, see [LICENSE](./LICENSE)
+This project is an open source code under GPL v3, see [LICENSE](./Documentation/LICENSE)
