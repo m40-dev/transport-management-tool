@@ -1,5 +1,5 @@
 #""" Required QT Libraries """
-from PyQt6.QtCore import QSettings, QEvent
+from PyQt6.QtCore import QSettings, QEvent, Qt
 from PyQt6.QtWidgets import (
     QApplication, QFileDialog
     )
@@ -372,6 +372,11 @@ if __name__ == "__main__":
     # splash = QSplashScreen()
     # splash.setFixedSize(500, 500)
     # splash.show()
+    # Handle high resolution displays:
+    if hasattr(Qt, 'AA_EnableHighDpiScaling'):
+        QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)
+    if hasattr(Qt, 'AA_UseHighDpiPixmaps'):
+        QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps, True)
 
     a = Transport_Manager(
         clipboard=app.clipboard(),

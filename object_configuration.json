@@ -51,7 +51,7 @@
             "Display":"Package Definition File Name",
             "Description":"Holds the effective package definition file name and location in the workspace.",
             "FieldType":"FileInput",
-            "FieldRole":"DisplayRole",
+            "FieldRole":"",
             "DefaultValue":"definition.json",
             "PlaceholderText":"Enter Package Definition file name.",
             "IsMandatory":true,
