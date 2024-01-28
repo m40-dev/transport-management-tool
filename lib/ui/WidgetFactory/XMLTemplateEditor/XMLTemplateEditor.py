@@ -1,14 +1,18 @@
 from PyQt6 import QtCore, QtWidgets
 from .XMLTemplateEditorWidget import XMLTemplateEditorWidget
+from ..DialogScreens import DatePickerDialog, MsgBox
 from .DatabaseRelations import DatabaseRelations
-from lib.data.DataModels.XMTemplateEditor import ObjectDataListModel, XMLDataItem
+from lib.data.DataModels.XMTemplateEditor import ObjectDataListModel, XMLDataItem, ObjectDataItem
+from .ContextMenu import ObjectDataItemContextMenu
 from copy import deepcopy
+from datetime import datetime
 
 XML_PREVIEW_TIMER = 100
 SEARCH_FILTER_OPTIONS = {
     "TableQuery" : "Select from Database Table",
-    "ChangeLabel": "Select by Change Label",
-    "XObjectKeyQuery": "Find Objects by XObjectKey"
+    "ChangeLabelQuery": "Select by Change Label",
+    "XObjectKeyQuery": "Find Objects by XObjectKey",
+    "GlobalSearch":  "System Wide Object Search"
     }
 
 class XMLTemplateEditor(QtWidgets.QWidget):
@@ -22,6 +26,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.application = application
         self.ProgramConfiguration = self.application.ProgramConfiguration
         self.query_option = "TableQuery"
+        self.query_filters = {}
     
         self.setupUi()
         self.current_file_changed.connect(self.selectXMLTemplateTab)
@@ -29,7 +34,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         #Connect Signals
 
         # Database Relations Handling
-        self.TableComboBox.currentTextChanged.connect(self.queryDatabaseObjects)
+        self.TableComboBox.currentIndexChanged.connect(self.queryDatabaseObjects)
         self.FilterComboBox.currentIndexChanged.connect(self.searchFilterConfigurationChanged)
         self.ListClosedLabelsCheckBox.stateChanged.connect(self.reloadChangeLabels)
         self.ChangeLabelComboBox.currentIndexChanged.connect(self.listChangeLabelObjects)
@@ -48,13 +53,31 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             current_index = self.FilterComboBox.currentIndex()
 
         option = self.FilterComboBox.itemData(current_index)
+        
         self.query_option = option
 
         self.TableComboBox.setVisible(option in ["TableQuery"])
         self.ObjectQueryTextEdit.setVisible(option in ["TableQuery", "XObjectKeyQuery"])
+        self.ObjectQueryTextEdit.setText(self.query_filters.get(self.query_option, ""))
+        self.ChangeLabelComboBox.setVisible(option in ["ChangeLabelQuery"])
+        self.ListClosedLabelsCheckBox.setVisible(option in ["ChangeLabelQuery"])
 
-        self.ChangeLabelComboBox.setVisible(option in ["ChangeLabel"])
-        self.ListClosedLabelsCheckBox.setVisible(option in ["ChangeLabel"])
+        self.ChangesDateCheckbox.setVisible(option in ["GlobalSearch"])
+        self.ChangesDateLabel.setVisible(option in ["GlobalSearch"])
+        self.ChangesDateQuery.setVisible(option in ["GlobalSearch"])
+        self.DatePickerButton.setVisible(option in ["GlobalSearch"])
+
+        self.ChangesDateLabel.setEnabled(self.ChangesDateCheckbox.isChecked())
+        self.ChangesDateQuery.setEnabled(self.ChangesDateCheckbox.isChecked())
+        self.DatePickerButton.setEnabled(self.ChangesDateCheckbox.isChecked())
+        
+        self.UserChangesCheckbox.setVisible(option in ["GlobalSearch"])
+        self.UserChangesQuery.setVisible(option in ["GlobalSearch"])
+        self.UserChangesQuery.setEnabled(self.UserChangesCheckbox.isChecked())
+
+        self.IncludePartialResultsLabel.setVisible(option in ["GlobalSearch"])
+        self.IncludePartialResultsCheckbox.setVisible(option in ["GlobalSearch"])
+
 
         # Option Dependent Configurations 
         if option in ["TableQuery"]:
@@ -70,12 +93,13 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         if self.query_option != "TableQuery":
             target_index = self.FilterComboBox.findData("TableQuery")
             self.FilterComboBox.setCurrentIndex(target_index)
-            self.ObjectQueryTextEdit.clear()
-        
-        if table_name != self.TableComboBox.currentText():
-            self.TableComboBox.setCurrentText(table_name)
-        else:
-            self.queryDatabaseObjects()
+            # self.ObjectQueryTextEdit.clear()
+            
+        if table_name not in self.TableComboBox.currentText():
+            table_index = self.TableComboBox.findData(table_name)
+            self.TableComboBox.setCurrentIndex(table_index)
+
+        self.queryDatabaseObjects()
         
 
     def newTransportTemplate(self, file_path=None):
@@ -138,26 +162,51 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         if current_tab:
             current_tab.saveXMLTemplateAs(initial_directory)
 
-    def queryDatabaseObjects(self, table_name=None):
+    def queryDatabaseObjects(self, index=None):
         if self.application.db and not self.application.db.is_connected:
             return self.application.databaseConnectionRequired()
         
         object_filter = self.ObjectQueryTextEdit.toPlainText()
-        data_rows = []
 
         if self.query_option == "XObjectKeyQuery":
             filter_rows = object_filter.splitlines()
             query_data = self.application.db.get_objects_by_xobjectkey(filter_rows)
-            for table_name, object_data_rows in query_data.items():
-                data_rows += object_data_rows
-            
-            self.listTableObjects(table_name=table_name, data_rows=data_rows)
+            self.SearchResultsTreeView.model().sort_children_by_name = False
+            self.SearchResultsTreeView.model().reloadModelData(query_data)
         
-        if self.query_option == "TableQuery" and self.TableComboBox.currentText().strip() != "":
-            if not table_name:
-                table_name = self.TableComboBox.currentText().strip()
+        if self.query_option == "TableQuery":
+            table_name = self.TableComboBox.itemData(self.TableComboBox.currentIndex())
 
-            self.listTableObjects(table_name=table_name)
+            if table_name and len(table_name) > 0 and table_name in self.application.db.table_info.keys():
+                self.listTableObjects(table_name=table_name)
+        
+        if self.query_option == "ChangeLabelQuery":
+            self.listChangeLabelObjects()
+
+        if self.query_option == "GlobalSearch":
+            min_date = None
+            system_users = None
+            include_partial_results = self.IncludePartialResultsCheckbox.isChecked()
+            if not self.ChangesDateQuery.isEnabled() and not self.UserChangesQuery.isEnabled():
+
+                MsgBox(
+                    application=self.application,
+                    window_title="Operation Cancelled",
+                    message="Global Search operation cancelled,\nplease provide at least one search condition and run query again.",
+                    window_mode=MsgBox.INFO
+                )
+                return
+
+            if self.ChangesDateQuery.isEnabled():
+                min_date = self.ChangesDateQuery.date()
+            
+            if self.UserChangesQuery.isEnabled():
+                system_users = self.UserChangesQuery.text()
+
+            query_data = self.application.db.run_global_query(min_date, system_users, include_partial_results)
+
+            self.SearchResultsTreeView.model().sort_children_by_name = False
+            self.SearchResultsTreeView.model().reloadModelData(query_data)
 
         self.DatabaseQueryTabWidget.setCurrentWidget(self.SearchResultsGroupBox)
 
@@ -188,10 +237,8 @@ class XMLTemplateEditor(QtWidgets.QWidget):
                     query = f"select * from {table_name} {sort_clause}"
 
                 data_rows = self.application.db.run_db_query(query)
-
-        # print(f"table data loaded, {table_name} - ({len(data_rows)})")
-        self.SearchResultsListView.model().tableNameInDisplay = False
-        self.SearchResultsListView.model().reloadModelData(data_rows)
+        
+        self.SearchResultsTreeView.model().reloadModelData(data_rows)
 
     def SearchResultsListDragMoveEvent(self, event):
         event.ignore()
@@ -229,6 +276,7 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
     def reloadView(self):
         self.TableComboBox.clear()
+        self.TableComboBox.addItem("")
         if self.application.db and self.application.db.is_connected:
             self.FilterComboBox.setEnabled(True)
             self.FindObjectButton.setEnabled(True)
@@ -237,12 +285,15 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             self.ListClosedLabelsCheckBox.setEnabled(True)
             self.ObjectQueryTextEdit.setEnabled(True)
 
-            for table_name in self.application.db.table_info.keys():
-                self.TableComboBox.addItem(table_name)
+            for table_name, table_data in self.application.db.table_info.items():
+                table_display = f"{table_name} ({table_data.DisplayName})" 
+                self.TableComboBox.addItem(table_display, table_name)
+                
             self.reloadChangeLabels()
 
     def reloadChangeLabels(self):
         self.ChangeLabelComboBox.clear()
+        self.ChangeLabelComboBox.addItem("")
         label_states = self.ListClosedLabelsCheckBox.isChecked()
         change_labels = self.application.db.get_change_labels(label_states)
         for data_row in change_labels:
@@ -251,19 +302,23 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             # print(display_name, data_row.UID_DialogTag)
         self.ChangeLabelComboBox.model().sort(0)
 
-    def listChangeLabelObjects(self, current_index):
+    def listChangeLabelObjects(self, current_index=None):
+        if current_index is None:
+            current_index = self.ChangeLabelComboBox.currentIndex()
+
         selected_label_uid = self.ChangeLabelComboBox.itemData(current_index)
 
         if self.application.db and not self.application.db.is_connected:
             return self.application.databaseConnectionRequired()
         
-        data_rows = []
+        # data_rows = []
 
         label_data = self.application.db.get_objects_by_change_label(selected_label_uid)
-        for table_name, label_data_rows in label_data.items():
-            data_rows += label_data_rows
-        self.SearchResultsListView.model().tableNameInDisplay = True
-        self.SearchResultsListView.model().reloadModelData(data_rows)
+        # for table_name, label_data_rows in label_data.items():
+        #     data_rows += label_data_rows
+
+        self.SearchResultsTreeView.model().tableNameInDisplay = True
+        self.SearchResultsTreeView.model().reloadModelData(label_data)
 
     def relationSettingsChanged(self, source_item):
         if self.XMLTemplateEditorTabWidget.count() == 0:
@@ -321,8 +376,48 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         if current_tab:
             current_tab.XMLPreviewBrowser.expandByLevel()
 
-    def onDatabaseQueryConditionsChanged(self):
-        print("database query control changed")
+    def onDatePickerInputRequested(self, target):
+        target_x = self.application.x() + self.DatePickerButton.x() + 100
+        target_y = self.application.y() + self.DatePickerButton.y() - 40
+        
+        date_picker = DatePickerDialog(application=self.application)
+        date_picker.setCurrentDate(target.date())
+        date_picker.move(target_x, target_y)
+        if date_picker.exec():
+            if date_picker.accepted and date_picker.selectedDate():
+                target.setDate(date_picker.selectedDate())
+
+    def onQueryWhereClauseTextChange(self):
+        self.query_filters[self.query_option] = self.ObjectQueryTextEdit.toPlainText()
+
+    def onSearchResultsContextMenuRequested(self, menuPosition):
+        clickedIndex = self.SearchResultsTreeView.indexAt(menuPosition)
+        clickedItem = clickedIndex.internalPointer()
+        if isinstance(clickedItem, ObjectDataItem):
+            contextMenu = ObjectDataItemContextMenu(
+                parent=self.application, 
+                source_index=clickedIndex)
+            contextMenu.onQueryTableData.connect(self.queryTaskData)
+            contextMenu.onCollapseTreeStructure.connect(lambda source_index: self.toggleTreeStructure(True, source_index))
+            contextMenu.onExpandTreeStructure.connect(lambda source_index: self.toggleTreeStructure(False, source_index))
+
+            if len(contextMenu.menu_items) > 0:
+                menu_target = self.SearchResultsTreeView.mapToGlobal(menuPosition)
+                contextMenu.popup(menu_target)
+
+    def queryTaskData(self, source_index):
+        if source_index.isValid():
+            source_item = source_index.internalPointer()
+            if isinstance(source_item, (XMLDataItem, ObjectDataItem)):
+                self.tableSelectionRequested.emit(source_item.table_name)
+
+    def toggleTreeStructure(self, collapse_tree, source_index):
+        selected_indexes = self.SearchResultsTreeView.selectedIndexes()
+        for index in selected_indexes:
+            if collapse_tree:
+                self.SearchResultsTreeView.collapse(index)
+            else:
+                self.SearchResultsTreeView.expandRecursively(index)
 
     def setupUi(self):
         self.gridLayout = QtWidgets.QGridLayout(self)
@@ -339,40 +434,32 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.TemplateEditorSplitter_Left.setSizePolicy(sizePolicy)
         self.TemplateEditorSplitter_Left.setOrientation(QtCore.Qt.Orientation.Horizontal)
         self.TemplateEditorSplitter_Left.setObjectName("TemplateEditorSplitter_Left")
-        
-        # self.TemplateEditorSplitter_Relations = QtWidgets.QSplitter(self.TemplateEditorSplitter_Left)
-        # self.TemplateEditorSplitter_Relations.setSizePolicy(sizePolicy)
-        # self.TemplateEditorSplitter_Relations.setOrientation(QtCore.Qt.Orientation.Vertical)
-        # self.TemplateEditorSplitter_Relations.setObjectName("TemplateEditorSplitter_Relations")
-        
         self.TemplateEditorSplitter_Search = QtWidgets.QSplitter(self.TemplateEditorSplitter_Left)
         self.TemplateEditorSplitter_Search.setSizePolicy(sizePolicy)
         self.TemplateEditorSplitter_Search.setOrientation(QtCore.Qt.Orientation.Vertical)
         self.TemplateEditorSplitter_Search.setObjectName("TemplateEditorSplitter_Search")
 
         # Search GroupBox Widgets Preparation
-        
-        # self.gridLayout.addWidget(search_dockWidget, 0, 0, 1, 1)
         self.SearchGroupBox = QtWidgets.QGroupBox(self.TemplateEditorSplitter_Search)
         self.SearchGroupBox.setSizePolicy(sizePolicy)
         self.SearchGroupBox.setObjectName("SearchGroupBox")
-
         self.SearchGroupBoxLayout = QtWidgets.QGridLayout(self.SearchGroupBox)
         self.SearchGroupBoxLayout.setObjectName("SearchGroupBoxLayout")
-
         self.FilterComboBox = QtWidgets.QComboBox(self.SearchGroupBox)
         
         for option_key, display_name in SEARCH_FILTER_OPTIONS.items():
             self.FilterComboBox.addItem(display_name, option_key)
 
-        self.TableComboBox = QtWidgets.QComboBox(self.SearchGroupBox)
+        # self.TableComboBox = QtWidgets.QComboBox(self.SearchGroupBox)
+        self.TableComboBox = ExtendedComboBox(self.SearchGroupBox)
         self.TableComboBox.setObjectName("TableComboBox")
         self.ObjectQueryTextEdit = QtWidgets.QTextEdit(self.SearchGroupBox)
         self.ObjectQueryTextEdit.setTabChangesFocus(False)
         self.ObjectQueryTextEdit.setAcceptRichText(False)
         self.ObjectQueryTextEdit.setObjectName("ObjectQueryTextEdit")
         self.ObjectQueryTextEdit.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContentsOnFirstShow)
-
+        self.ObjectQueryTextEdit.textChanged.connect(self.onQueryWhereClauseTextChange)
+        
         self.FindObjectButton = QtWidgets.QToolButton(self.SearchGroupBox)
         self.FindObjectButton.setObjectName("FindObjectButton")
 
@@ -384,22 +471,60 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             self.FindObjectButton.setIconSize(QtCore.QSize(20, 20))
             self.FindObjectButton.setProperty("Widget", "CustomToolButton")
 
-        self.ChangeLabelComboBox = QtWidgets.QComboBox()
+        self.ChangeLabelComboBox = ExtendedComboBox()
         self.ChangeLabelComboBox.setPlaceholderText("Select Objects by Change Label")
         self.ListClosedLabelsCheckBox = QtWidgets.QCheckBox("Show All\nLabels")
+       
+        self.ChangesDateCheckbox = QtWidgets.QCheckBox()
+        self.ChangesDateCheckbox.setChecked(True)
+        self.ChangesDateCheckbox.stateChanged.connect(lambda: self.searchFilterConfigurationChanged(None))
+        self.ChangesDateLabel = QtWidgets.QLabel()
+        self.ChangesDateQuery = QtWidgets.QDateEdit()
+        self.ChangesDateQuery.setDate(datetime.today())
+
+        self.UserChangesCheckbox = QtWidgets.QCheckBox()
+        self.UserChangesCheckbox.stateChanged.connect(lambda: self.searchFilterConfigurationChanged(None))
+
+        self.UserChangesQuery = QtWidgets.QLineEdit()
+
+        self.DatePickerButton = QtWidgets.QToolButton()
+        self.DatePickerButton.clicked.connect(lambda: self.onDatePickerInputRequested(target=self.ChangesDateQuery))
+
+        datepicker_icon = self.ProgramConfiguration.getIcon("DatePicker")
+        if datepicker_icon:
+            self.DatePickerButton.setText("")
+            self.DatePickerButton.setToolTip("<i>Select From Calendar..</i>")
+            self.DatePickerButton.setIcon(datepicker_icon)
+            self.DatePickerButton.setIconSize(QtCore.QSize(20, 20))
+            self.DatePickerButton.setProperty("Widget", "CustomToolButton")
+
+        self.IncludePartialResultsCheckbox = QtWidgets.QCheckBox()
+        self.IncludePartialResultsLabel = QtWidgets.QLabel()
         
         #Search GroupBox Layout Configuration
+        self.SearchGroupBoxLayout.addWidget(self.FilterComboBox, 0, 0, 1, 4)
+        self.SearchGroupBoxLayout.addWidget(self.TableComboBox, 1, 0, 1, 4)
+        self.SearchGroupBoxLayout.addWidget(self.ChangeLabelComboBox, 2, 0, 1, 3)
+        self.SearchGroupBoxLayout.addWidget(self.ListClosedLabelsCheckBox, 2, 3, 1, 1, QtCore.Qt.AlignmentFlag.AlignRight)
+        self.SearchGroupBoxLayout.addWidget(self.ObjectQueryTextEdit, 2, 0, 5, 4)
+        
+        self.SearchGroupBoxLayout.addWidget(self.ChangesDateCheckbox, 3, 0, 1, 1)
+        self.SearchGroupBoxLayout.addWidget(self.ChangesDateLabel, 3, 1, 1, 1)
+        self.SearchGroupBoxLayout.addWidget(self.ChangesDateQuery, 3, 2, 1, 1)
+        self.SearchGroupBoxLayout.addWidget(self.DatePickerButton, 3, 3, 1, 1)
 
-        self.SearchGroupBoxLayout.addWidget(self.FilterComboBox, 0, 0, 1, 3)
-        self.SearchGroupBoxLayout.addWidget(self.TableComboBox, 1, 0, 1, 3)
+        self.SearchGroupBoxLayout.addWidget(self.UserChangesCheckbox, 4, 0, 1, 1)
+        self.SearchGroupBoxLayout.addWidget(self.UserChangesQuery, 4, 1, 1, 3)
 
-        self.SearchGroupBoxLayout.addWidget(self.ChangeLabelComboBox, 2, 0, 1, 1)
-        self.SearchGroupBoxLayout.addWidget(self.ListClosedLabelsCheckBox, 2, 1, 1, 2, QtCore.Qt.AlignmentFlag.AlignRight)
-        self.SearchGroupBoxLayout.addWidget(self.ObjectQueryTextEdit, 3, 0, 1, 3)
-        self.SearchGroupBoxLayout.addWidget(self.FindObjectButton, 3, 2, 1, 1, QtCore.Qt.AlignmentFlag.AlignRight | QtCore.Qt.AlignmentFlag.AlignBottom)
+        self.SearchGroupBoxLayout.addWidget(self.IncludePartialResultsCheckbox, 5, 0, 1, 1)
+        self.SearchGroupBoxLayout.addWidget(self.IncludePartialResultsLabel, 5, 1, 1, 1)
 
-        self.SearchGroupBoxLayout.setColumnStretch(0, 2)
-        self.SearchGroupBoxLayout.setRowStretch(3, 2)
+        self.SearchGroupBoxLayout.addWidget(self.FindObjectButton, 6, 3, 1, 1, QtCore.Qt.AlignmentFlag.AlignBottom | QtCore.Qt.AlignmentFlag.AlignRight)
+    
+        self.SearchGroupBoxLayout.setColumnStretch(1, 2)
+        self.SearchGroupBoxLayout.setColumnStretch(2, 2)
+        self.SearchGroupBoxLayout.setRowStretch(6, 2)
+        self.SearchGroupBoxLayout.setContentsMargins(10,20,10,10)
 
         #Deactivate widgets where connection is required
         self.FilterComboBox.setEnabled(False)
@@ -410,37 +535,36 @@ class XMLTemplateEditor(QtWidgets.QWidget):
         self.ObjectQueryTextEdit.setEnabled(False)
 
         self.SearchResultsGroupBox = QtWidgets.QGroupBox(self)
-
-        # sizePolicy = QtWidgets.QSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Preferred)
-        # sizePolicy.setHorizontalStretch(0)
-        # sizePolicy.setVerticalStretch(0)
-        # sizePolicy.setHeightForWidth(self.SearchResultsGroupBox.sizePolicy().hasHeightForWidth())
-        # self.SearchResultsGroupBox.setSizePolicy(sizePolicy)
         self.SearchResultsGroupBox.setObjectName("SearchResultsGroupBox")
         self.verticalLayout_3 = QtWidgets.QVBoxLayout(self.SearchResultsGroupBox)
         self.verticalLayout_3.setObjectName("verticalLayout_3")
-        self.SearchResultsListView = QtWidgets.QListView(self.SearchResultsGroupBox)
-        self.SearchResultsListView.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragOnly)
-        self.SearchResultsListView.setDefaultDropAction(QtCore.Qt.DropAction.IgnoreAction)
-        self.SearchResultsListView.setAlternatingRowColors(True)
-        self.SearchResultsListView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.SearchResultsListView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectItems)
-        self.SearchResultsListView.setMovement(QtWidgets.QListView.Movement.Free)
-        self.SearchResultsListView.setProperty("isWrapping", False)
-        # self.SearchResultsListView.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
-        self.SearchResultsListView.setWordWrap(True)
-        self.SearchResultsListView.setItemAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
-        self.SearchResultsListView.setObjectName("SearchResultsListView")
-        self.SearchResultsListView.dragMoveEvent = self.SearchResultsListDragMoveEvent
-        self.verticalLayout_3.addWidget(self.SearchResultsListView)
+        self.SearchResultsTreeView = QtWidgets.QTreeView(self.SearchResultsGroupBox)
+        self.SearchResultsTreeView.setDragDropMode(QtWidgets.QAbstractItemView.DragDropMode.DragOnly)
+        self.SearchResultsTreeView.setDefaultDropAction(QtCore.Qt.DropAction.IgnoreAction)
+        self.SearchResultsTreeView.setAlternatingRowColors(True)
+        self.SearchResultsTreeView.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
+        self.SearchResultsTreeView.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectItems)
+
+        self.SearchResultsTreeView.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.SearchResultsTreeView.customContextMenuRequested.connect(self.onSearchResultsContextMenuRequested)
+
+        # self.SearchResultsTreeView.setMovement(QtWidgets.QListView.Movement.Free)
+        self.SearchResultsTreeView.setProperty("isWrapping", False)
+        # self.SearchResultsTreeView.setResizeMode(QtWidgets.QListView.ResizeMode.Adjust)
+        self.SearchResultsTreeView.setWordWrap(True)
+        # self.SearchResultsTreeView.setItemAlignment(QtCore.Qt.AlignmentFlag.AlignLeading|QtCore.Qt.AlignmentFlag.AlignLeft|QtCore.Qt.AlignmentFlag.AlignVCenter)
+        self.SearchResultsTreeView.setObjectName("SearchResultsTreeView")
+        self.SearchResultsTreeView.dragMoveEvent = self.SearchResultsListDragMoveEvent
+        self.SearchResultsTreeView.header().setVisible(False)
+        
+        self.verticalLayout_3.addWidget(self.SearchResultsTreeView)
 
         #Search Result list
-        data_model = ObjectDataListModel(application=self.application, parent_widget=self.SearchResultsListView)
-        self.SearchResultsListView.setModel(data_model)
+        data_model = ObjectDataListModel(application=self.application, parent_widget=self.SearchResultsTreeView)
+        self.SearchResultsTreeView.setModel(data_model)
 
         # Database Relations Widget
         self.DatabaseRelations = DatabaseRelations(self, self.application)
-
         
         # Results Management Tabwidget
         self.DatabaseQueryTabWidget = QtWidgets.QTabWidget(self.TemplateEditorSplitter_Search)
@@ -450,7 +574,6 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
         self.DatabaseQueryTabWidget.setProperty("CustomTabWidget", "DatabaseQueryTabWidget")
         self.DatabaseQueryTabWidget.tabBar().setProperty("CustomTabWidget", "DatabaseQueryTabWidget")
-
         self.DatabaseQueryTabWidget.setObjectName("DatabaseQueryTabWidget")
         self.DatabaseQueryTabWidget.tabBar().setObjectName("DatabaseQueryTabWidget")
 
@@ -483,11 +606,80 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
     def retranslateUi(self, Form):
         _translate = QtCore.QCoreApplication.translate
-        self.SearchGroupBox.setTitle(_translate("Form", "Search"))
-        self.TableComboBox.setPlaceholderText(_translate("Form", "Select From Table"))
+        self.SearchGroupBox.setTitle(_translate("Form", "Database Search Configuration"))
+        self.TableComboBox.setPlaceholderText(_translate("Form", "Filter Database Tables here..."))
         self.ObjectQueryTextEdit.setPlaceholderText(_translate("Form", "Search Database Objects"))
-        # self.XObjectKeysFilterRadioButton.setText(_translate("Form", "List of XObjectKeys"))
-        # self.SelectedTableFilterRadioButton.setText(_translate("Form", "Selected Table Filter"))
         self.FindObjectButton.setText(_translate("Form", "Find Objects"))
-        self.SearchResultsGroupBox.setTitle(_translate("Form", "Search Results"))
+        self.ChangesDateLabel.setText(_translate("Form", "Find new or changed objects since:"))
+        self.UserChangesQuery.setPlaceholderText(_translate("Form", "Find only objects created or changed by system user.."))
+        self.SearchResultsGroupBox.setTitle(_translate("Form", "Database Search Results"))
+        self.IncludePartialResultsLabel.setText(_translate("Form", "Include Partial Results"))
+        self.IncludePartialResultsLabel.setToolTip("Applies the query conditions also to tables\nwhich have only one type of field type available in schema (xUser, xDate).")
 
+from PyQt6.QtWidgets import QComboBox, QCompleter
+from PyQt6.QtCore import Qt, QSortFilterProxyModel
+
+class ExtendedComboBox(QComboBox):
+    def __init__(self, parent=None):
+        super(ExtendedComboBox, self).__init__(parent)
+
+        # self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
+        self.setEditable(True)
+
+        # add a filter model to filter matching items
+        self.pFilterModel = QSortFilterProxyModel(self)
+        self.pFilterModel.setFilterCaseSensitivity(Qt.CaseSensitivity.CaseInsensitive)
+        self.pFilterModel.setSourceModel(self.model())
+
+        # add a completer, which uses the filter model
+        self.completer = QCompleter(self.pFilterModel, self)
+        # always show all (filtered) completions
+        self.completer.setCompletionMode(QCompleter.CompletionMode.UnfilteredPopupCompletion)
+        self.setCompleter(self.completer)
+
+        # connect signals
+        self.lineEdit().textEdited.connect(self.pFilterModel.setFilterFixedString)
+        self.completer.activated.connect(self.on_completer_activated)
+        self.setInsertPolicy(QComboBox.InsertPolicy.NoInsert)
+
+        self.view().installEventFilter(self)
+
+    def eventFilter(self, source_object, event):
+        # print(source_object, event)
+        if event.type() == QtCore.QEvent.Type.KeyPress:
+            
+            self.setEnabled(False)
+            self.setEnabled(True)
+
+            self.lineEdit().clear()
+            self.lineEdit().setFocus()
+
+            self.on_completer_activated(event.text())
+            self.lineEdit().event(event)
+            return True
+            
+        return super().eventFilter(source_object, event)
+        
+    def setPlaceholderText(self, text):
+        self.lineEdit().setPlaceholderText(text)
+
+    # on selection of an item from the completer, select the corresponding item from combobox 
+    def on_completer_activated(self, text):
+        if text:
+            index = self.findText(text)
+            self.setCurrentIndex(index)
+            # self.currentIndexChanged.emit(index)
+
+
+    # on model change, update the models of the filter and completer as well 
+    def setModel(self, model):
+        super(ExtendedComboBox, self).setModel(model)
+        self.pFilterModel.setSourceModel(model)
+        self.completer.setModel(self.pFilterModel)
+
+
+    # on model column change, update the model column of the filter and completer as well
+    def setModelColumn(self, column):
+        self.completer.setCompletionColumn(column)
+        self.pFilterModel.setFilterKeyColumn(column)
+        super(ExtendedComboBox, self).setModelColumn(column)  

@@ -10,7 +10,7 @@ from .CustomDialogWindow import CustomDialogWindow
 class FormEditorDialog(CustomDialogWindow):
 
     def __init__(self, application, configuration_class, dialog_name="Data Editor", form_configuration=None):
-        super(FormEditorDialog, self).__init__(application=application, dialog_name=dialog_name)
+        super(FormEditorDialog, self).__init__(application=application, dialog_name=dialog_name, restore_window_state=True)
 
         self.configuration_class = configuration_class
         

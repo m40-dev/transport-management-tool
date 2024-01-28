@@ -58,8 +58,6 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         if self.current_file:
             display_name = Path(self.current_file).name
         return display_name
-    
-
 
     def reloadXMLFile(self):
         self.XMLStructureTreeView.model().reload_model_data()
@@ -137,6 +135,9 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                 source_index=clickedIndex)
 
             contextMenu.onQueryTableData.connect(self.queryTaskData)
+            contextMenu.onCollapseTreeStructure.connect(lambda source_index: self.toggleTreeStructure(True, source_index))
+            contextMenu.onExpandTreeStructure.connect(lambda source_index: self.toggleTreeStructure(False, source_index))
+
             if len(contextMenu.menu_items) > 0:
                 menu_target = self.XMLStructureTreeView.mapToGlobal(menuPosition)
                 contextMenu.popup(menu_target)
@@ -159,10 +160,20 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         contextMenu.onCopySelectedNodes.connect(self.copyXMLNodes)
         contextMenu.onPasteSelectedNodes.connect(self.pasteSelectedNodes)
         contextMenu.onQueryTableData.connect(self.queryTaskData)
+        contextMenu.onCollapseTreeStructure.connect(lambda source_index: self.toggleTreeStructure(True, source_index))
+        contextMenu.onExpandTreeStructure.connect(lambda source_index: self.toggleTreeStructure(False, source_index))
 
         if len(contextMenu.menu_items) > 0:
             menu_target = self.XMLStructureTreeView.mapToGlobal(menuPosition)
             contextMenu.popup(menu_target)
+
+    def toggleTreeStructure(self, collapse_tree, source_index):
+        selected_indexes = self.XMLStructureTreeView.selectedIndexes()
+        for index in selected_indexes:
+            if collapse_tree:
+                self.XMLStructureTreeView.collapse(index)
+            else:
+                self.XMLStructureTreeView.expandRecursively(index)
 
     """ Context Menu handling functions  """
     def queryTaskData(self, source_index):

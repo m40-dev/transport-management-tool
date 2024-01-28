@@ -166,6 +166,7 @@ class DatabaseRelations(QtWidgets.QWidget):
         self.SelectedObjectRelationsGroupBox.setObjectName("SelectedObjectRelationsGroupBox")
         self.GroupBoxLayout = QtWidgets.QGridLayout(self.SelectedObjectRelationsGroupBox)
         self.GroupBoxLayout.setObjectName("GroupBoxLayout")
+        self.GroupBoxLayout.setContentsMargins(10,20,10,10)
         self.horizontalLayout = QtWidgets.QHBoxLayout()
         self.horizontalLayout.setContentsMargins(-1, 3, -1, -1)
         self.horizontalLayout.setObjectName("horizontalLayout")

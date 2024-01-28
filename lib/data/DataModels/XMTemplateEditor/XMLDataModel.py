@@ -23,6 +23,7 @@ class XMLDataModel(QAbstractItemModel):
         self.treeview = parent_widget
         self.export_file_path = data_source
         self.treeview.setWordWrap(True)
+        self.sort_children_by_name = False
 
         self.rootItem = XMLDataItem(
             application=self.application, 

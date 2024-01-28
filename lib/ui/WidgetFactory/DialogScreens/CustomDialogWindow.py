@@ -32,12 +32,17 @@ class CustomDialogWindow(CustomDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
 
-        self.layout.addWidget(self.windowDecoration, 0, 0)
+        self.layout.addWidget(self.windowDecoration, 0, 0, alignment=QtCore.Qt.AlignmentFlag.AlignTop)
         self.layout.addLayout(self.form_layout, 1, 0)
         self.layout.addWidget(self.buttonBox, 2, 0)
 
+        
         if restore_window_state:
             self.restoreWindowState()
+        else:
+            target_x = self.application.x() + round(self.application.width() * 0.4)
+            target_y = self.application.y() +round(self.application.height() * 0.2)
+            self.move(target_x, target_y)
 
         self.setSizeGripEnabled(False)
         
@@ -49,11 +54,7 @@ class CustomDialogWindow(CustomDialog):
         else:
             self.setWindowTitle(f"{self.application.application_name}")
         
-        
         self.windowDecoration.raise_()
-        # self.show()
-        
-        
 
     def restoreWindowState(self):
         """ Restore window settings """

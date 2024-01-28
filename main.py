@@ -8,6 +8,7 @@ from PyQt6.QtGui import QShortcut, QKeySequence
 #""" qt traceback handling"""
 import traceback
 import json
+from pathlib import Path
 
 from PyQt6.QtCore import pyqtSignal
 
@@ -23,7 +24,7 @@ from lib.ui.CustomWindow.custom_window import CustomMainWindow
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.9.3'
+VERSION = '0.9.4'
 APP_NAME = f"Transport Management Tool - {VERSION}"
 
 class Transport_Manager(CustomMainWindow):
@@ -43,19 +44,17 @@ class Transport_Manager(CustomMainWindow):
         """ Map QT UI from parsed file - created and updated in qt designer """
         
         self.application_name = APP_NAME
+        self.application_version = VERSION
         self.qt_app = qapplication
         self.clipboard = clipboard
         self.current_workdir = None
 
         self.settings = QSettings("EmergencyCode", "Transport_Manager")
-        
-        # QMessageBox.information(None, "debug", "application settings object created")
 
         self.ProgramConfiguration = ProgramConfiguration(self)
         self.color_theme = self.ProgramConfiguration.ColorPalette
         self.statusBarUpdated.connect(self.onStatusBarMessageReceived)
         self._relation_presets = {}
-
         self.ui = Ui_MainWindow(self)
 
         self.setWindowTitle(self.application_name)
@@ -110,6 +109,8 @@ class Transport_Manager(CustomMainWindow):
         self.ui.actionSettings.triggered.connect(lambda: self.ui.MainTabWidget.setCurrentWidget(self.SettingsWidget))
         self.styleSheetChanged.connect(self.onStyleSheetChange)
 
+        self.ui.actionAbout.triggered.connect(self.showAbout)
+
         """ Shortcuts """
         QShortcut(QKeySequence.StandardKey.Delete, self, self.deleteKeyPressEvent)
         # QShortcut(QKeySequence.StandardKey.InsertParagraphSeparator, self, self.onEnterKeyPress)
@@ -127,6 +128,9 @@ class Transport_Manager(CustomMainWindow):
         # self.ui.MainTabWidget.setCurrentIndex(2)
         self.show()
         self.setupApplication()
+
+    def showAbout(self):
+        WidgetFactory.AboutWindow(application=self)
 
     def setupApplication(self):
         # load default workdir
@@ -309,12 +313,12 @@ class Transport_Manager(CustomMainWindow):
 
     def load_file(self, file_path):
         file_content = ""
-        with open(file_path, 'rb') as f:
-            file_content = f.read()
+        if Path(file_path).is_file():
+            with open(file_path, 'rb') as f:
+                file_content = f.read()
         return file_content
 
     def databaseConnectionRequired(self):
-        # QMessageBox.information(self, "Database Connection Required", "This function requires active Database Connection to work.\nPlease connect to the target database and try again.")
         WidgetFactory.MsgBox(
             application=self,
             window_mode=WidgetFactory.MsgBox.INFO,
@@ -362,16 +366,13 @@ class Transport_Manager(CustomMainWindow):
                                 '{0}: {1}'.format(exc_type.__name__, exc_value)])
         
         print (log_msg)
-        WidgetFactory.DialogScreens.MsgBox(self, exc_type.__name__, log_msg)
+        WidgetFactory.DialogScreens.MsgBox(self, window_title="Exception Handler", message=exc_type.__name__, detailed_message=log_msg)
 
 if __name__ == "__main__":
     import sys
 
     app = QApplication(sys.argv)
 
-    # splash = QSplashScreen()
-    # splash.setFixedSize(500, 500)
-    # splash.show()
     # Handle high resolution displays:
     if hasattr(Qt, 'AA_EnableHighDpiScaling'):
         QApplication.setAttribute(Qt.AA_EnableHighDpiScaling, True)

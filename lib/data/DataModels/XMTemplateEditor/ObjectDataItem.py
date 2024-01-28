@@ -54,7 +54,8 @@ class ObjectDataItem(QObject):
                         object_class="ObjectDataItem",
                         model_reference=self.model_reference)
                     self.addChild(data_item)
-            self.sortChildren()
+            if self.model_reference.sort_children_by_name:
+                self.sortChildren()
 
     def sortChildren(self):
         if len(self._children) > 0:
@@ -236,6 +237,13 @@ class ObjectDataItem(QObject):
 
         export_data['object_info'] = self.object_info()
         export_data['object_data'] = row_data
+
+        children_data = []
+        for child_item in self._children:
+            if isinstance(child_item, ObjectDataItem):
+                children_data.append(child_item.task_data())
+
+        export_data['children'] = children_data
         
         return export_data
 

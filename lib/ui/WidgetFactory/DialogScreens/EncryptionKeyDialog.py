@@ -40,7 +40,16 @@ class EncryptionKeyDialog(CustomDialogWindow):
         if initial:
             self.form_layout.addWidget(self.key_confirm_label, 2, 0, 1, 1)
             self.form_layout.addWidget(self.key_confirm, 2, 1, 1, 1)
+        
         self.form_layout.setRowStretch(3, 1)
+
+        if not initial:
+            # always move window on the application startup
+            desktop_size = QtWidgets.QApplication.primaryScreen().availableGeometry()
+            desktop_center = desktop_size.center()
+            target_x = round(desktop_center.x() - 125)
+            target_y = round(desktop_center.y() - 75)
+            self.move(target_x, target_y)
 
     @property 
     def encryption_key(self):

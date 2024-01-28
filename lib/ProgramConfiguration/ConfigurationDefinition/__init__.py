@@ -42,5 +42,14 @@ PROGRAM_ICONS = {
     "MinimizeButton": "./lib/ui/img/icons/btn_minimize.png",
     "MaximizeButton": "./lib/ui/img/icons/btn_maximize.png",
     "RestoreButton": "./lib/ui/img/icons/btn_restore.png",
-    "CloseButton": "./lib/ui/img/icons/btn_close.png"
+    "CloseButton": "./lib/ui/img/icons/btn_close.png",
+    "DatePicker": "./lib/ui/img/icons/DatePicker.png",
+    "ArrowLeft": "./lib/ui/img/icons/arrow_left.png",
+    "ArrowRight": "./lib/ui/img/icons/arrow_right.png",
+    "ArrowUp": "./lib/ui/img/icons/arrow_up.png",
+    "ArrowDown": "./lib/ui/img/icons/arrow_down.png",
+    "ArrowLeft_Borderless": "./lib/ui/img/icons/arrow_left_borderless.png",
+    "ArrowRight_Borderless": "./lib/ui/img/icons/arrow_right_borderless.png",
+    "ArrowUp_Borderless": "./lib/ui/img/icons/arrow_up_borderless.png",
+    "ArrowDown_Borderless": "./lib/ui/img/icons/arrow_down_borderless.png",
 }

@@ -10,7 +10,7 @@ class DatabaseConnection(object):
         self.db_session = None
         self.db_cursor = None
         self.table_info = {}
-        # self.column_info = {}
+        self.column_info = {}
         self.table_relations = {}
         self.child_table_relations = {}
         
@@ -131,8 +131,8 @@ class DatabaseConnection(object):
     
     def load_session_data(self):
         self.load_table_relations_data()
-        # self.load_column_data()
         self.load_table_data()
+        self.load_column_data()
 
     def load_table_data(self):
         query = "select * from DialogTable order by TableName"
@@ -141,12 +141,70 @@ class DatabaseConnection(object):
         for row in query_result:
             self.table_info[row.TableName] = row
 
-    # def load_column_data(self):
-    #     query = "select * from DialogColumn order by Caption"
-    #     query_result = self.run_db_query(query)
+    def load_column_data(self):
+        query = "select DialogTable.TableName, DialogColumn.ColumnName from DialogColumn join DialogTable on DialogColumn.UID_DialogTable=DialogTable.UID_DialogTable"
+        query_result = self.run_db_query(query)
 
-    #     for row in query_result:
-    #         self.column_info[row.ColumnName] = row
+        for row in query_result:
+            if row.TableName not in self.column_info.keys():
+                self.column_info[row.TableName] = [row.ColumnName.upper()]
+            else:
+                self.column_info[row.TableName].append(row.ColumnName.upper())
+
+    def string_list_to_sql(self, input_string):
+        sql_list = f"'{input_string.strip()}'"
+        if "," in input_string:
+            input_list = [x.strip() for x in input_string.split(",")]
+            input_list = list(filter(None, input_list))
+            sql_list = "'" + "', '".join(input_list) + "'"
+        return sql_list
+
+    def date_to_sql(self, date):
+        return date.toString("yyyy-MM-dd")
+
+    def run_global_query(self, min_date=None, system_users=None, include_partial_results=False):
+        data_rows = {}
+        
+        if not min_date and not system_users:
+            return data_rows
+
+        system_user_where_clause = ""
+        min_date_where_clause = ""
+        if system_users:
+            system_users_list = self.string_list_to_sql(system_users)
+            system_user_where_clause = f"xuserinserted in ({system_users_list}) or xuserupdated in ({system_users_list})"
+        
+        if min_date:
+            str_date = self.date_to_sql(min_date)
+            min_date_where_clause = f"xdateinserted >= '{str_date}' or xdateupdated >= '{str_date}'"
+
+        for table_name, table_columns_list in self.column_info.items():
+            has_min_date_columns = False
+            has_sys_user_columns = False
+            query = None
+
+            if "XDATEINSERTED" in table_columns_list and "XDATEUPDATED" in table_columns_list:
+                has_min_date_columns = True
+                
+            if "XUSERINSERTED" in table_columns_list and "XUSERUPDATED" in table_columns_list:
+                has_sys_user_columns = True
+
+            if min_date and has_min_date_columns and (not system_users or include_partial_results):
+                query = f"select * from {table_name} where ({min_date_where_clause}) order by xdateupdated desc, xdateinserted desc"
+
+            if system_users and has_sys_user_columns and (not min_date or include_partial_results):
+                query = f"select * from {table_name} where ({system_user_where_clause})"
+                if has_min_date_columns:
+                    query += " order by xdateupdated desc, xdateinserted desc"
+
+            if min_date and system_users and has_min_date_columns and has_sys_user_columns:
+                query = f"select * from {table_name} where ({min_date_where_clause}) and ({system_user_where_clause}) order by xdateupdated desc, xdateinserted desc"
+            # print(table_name, query)
+            if query:
+                query_result = self.run_db_query(query)
+                if len(query_result) > 0:
+                    data_rows[table_name] = query_result
+        return data_rows
 
     def get_change_labels(self, list_all=False):
         query = "select * from DialogTag where isClosed=0 order by Ident_DialogTag asc"

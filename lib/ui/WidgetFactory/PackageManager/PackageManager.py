@@ -241,8 +241,8 @@ class PackageManager(QtWidgets.QWidget):
         contextMenu.editTaskDefinition.connect(self.editTaskDefinition)
         contextMenu.editXMLTemplate.connect(self.onEditXMLTemplates)
         contextMenu.savePackageDefinition.connect(self.savePackageDefinition)
-        contextMenu.collapseAll.connect(self.collapseAll)
-        contextMenu.expandAll.connect(self.expandAll)
+        contextMenu.collapseTree.connect(lambda source_index: self.toggleTreeStructure(True, source_index))
+        contextMenu.expandTree.connect(lambda source_index: self.toggleTreeStructure(False, source_index))
         contextMenu.editSelectedItems.connect(self.onEditSelectedItems)
         contextMenu.sortChildItems.connect(self.onSortChildItems)
         contextMenu.reapplyTemplates.connect(self.onReapplyTemplates)
@@ -379,6 +379,14 @@ class PackageManager(QtWidgets.QWidget):
             file_path.parent.mkdir(parents=True, exist_ok=True)
             file_path.touch()
         self.application.XMLTemplateEditor.openXMLTemplate(str(file_path))
+
+    def toggleTreeStructure(self, collapse_tree, source_index):
+        selected_indexes = self.PackageViewTreeView.selectedIndexes()
+        for index in selected_indexes:
+            if collapse_tree:
+                self.PackageViewTreeView.collapse(index)
+            else:
+                self.PackageViewTreeView.expandRecursively(index)
 
     def collapseAll(self):
         self.PackageViewTreeView.collapseAll()

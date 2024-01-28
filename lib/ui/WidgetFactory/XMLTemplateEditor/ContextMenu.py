@@ -33,6 +33,8 @@ class XMLObjectContextMenu(QMenu):
     onCopySelectedNodes = pyqtSignal()
     onPasteSelectedNodes = pyqtSignal(object)
     onQueryTableData = pyqtSignal(object)
+    onCollapseTreeStructure = pyqtSignal(object)
+    onExpandTreeStructure = pyqtSignal(object)
 
     def __init__(self, parent, source_index):
         super(XMLObjectContextMenu, self).__init__()
@@ -114,7 +116,19 @@ class XMLObjectContextMenu(QMenu):
                     menuActionAddPayloadSQLScript = self.addAction("Add User Data SQL Script (PayloadSQL)")
                     menuActionAddPayloadSQLScript.triggered.connect(lambda: self.onAddSQLScript.emit(source_index, "PayloadSQL"))
                     self.menu_items.append(menuActionAddPayloadSQLScript)
-        
+            
+            # handle treeview expand/collapse function
+            self.addSeparator()
+
+            menuActionExpandNodes = self.addAction("Expand Selected Nodes")
+            menuActionExpandNodes.triggered.connect(lambda: self.onExpandTreeStructure.emit(source_index) )  
+            
+            menuActionCollapseNodes = self.addAction("Collapse Selected Nodes")
+            menuActionCollapseNodes.triggered.connect(lambda: self.onCollapseTreeStructure.emit(source_index) )
+            
+            self.menu_items.append(menuActionExpandNodes)
+            self.menu_items.append(menuActionCollapseNodes)
+
         # no index, white space clicked
         if not source_index.isValid():
 
@@ -161,6 +175,8 @@ class XMLObjectContextMenu(QMenu):
 class ObjectDataItemContextMenu(QMenu):
     """ Custom QMenu used to manage relation items """
     onQueryTableData = pyqtSignal(object)
+    onCollapseTreeStructure = pyqtSignal(object)
+    onExpandTreeStructure = pyqtSignal(object)
 
     def __init__(self, parent, source_index):
         super(ObjectDataItemContextMenu, self).__init__()
@@ -175,3 +191,15 @@ class ObjectDataItemContextMenu(QMenu):
             menuQueryDatabaseObject = self.addAction("Query this table")
             menuQueryDatabaseObject.triggered.connect(lambda: self.onQueryTableData.emit(source_index))
             self.menu_items.append(menuQueryDatabaseObject)
+
+            # handle treeview expand/collapse function
+            self.addSeparator()
+
+            menuActionExpandNodes = self.addAction("Expand Selected Nodes")
+            menuActionExpandNodes.triggered.connect(lambda: self.onExpandTreeStructure.emit(source_index) )  
+            
+            menuActionCollapseNodes = self.addAction("Collapse Selected Nodes")
+            menuActionCollapseNodes.triggered.connect(lambda: self.onCollapseTreeStructure.emit(source_index) )
+            
+            self.menu_items.append(menuActionExpandNodes)
+            self.menu_items.append(menuActionCollapseNodes)

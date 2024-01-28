@@ -12,6 +12,7 @@ class ObjectDataListModel(QAbstractItemModel):
         self._headers = ["Database Object"]
         self.treeview = parent_widget
         self.tableNameInDisplay = False
+        self.sort_children_by_name = True
         self.rootItem = ObjectDataItem(
             application=application, 
             object_class="RootItem",
@@ -22,8 +23,12 @@ class ObjectDataListModel(QAbstractItemModel):
 
     def setupModelData(self, data):
         """ Main method used to load all data into the model """
+        if isinstance(data, dict):
+            return self.setupDictModelData(data)
+        return self.setupListModelData(data)
 
-        for task_object in data:
+    def setupListModelData(self, object_data):
+        for task_object in object_data:
             task_item = ObjectDataItem(
                 application=self.application, 
                 object_class="ObjectDataItem",
@@ -32,6 +37,22 @@ class ObjectDataListModel(QAbstractItemModel):
                 parent=self.rootItem)
             task_item.tableNameInDisplay = self.tableNameInDisplay
             self.rootItem.addChild(task_item)
+
+    def setupDictModelData(self, object_data):
+        data_items = []
+        # print("database objects loaded", len(data_items))
+        for table_name, results in object_data.items():
+            table_display_name = table_name
+            if self.application.db:
+                table_display_name = self.application.db.table_info.get(table_name, table_name)
+            # print(f"{table_name} table data loaded - ({len(results)})")
+            table_data_item = ObjectDataItem(parent=self.rootItem, application=self.application, table_data=table_display_name, object_data=results, model_reference=self)
+            data_items.append(table_data_item)
+        for table_record in data_items:
+            self.rootItem.addChild(table_record)
+        # parentIndex = self.indexOf(source_object)
+        # self.treeview.setExpanded(parentIndex, True)
+        # self.insert_items(parentIndex=parentIndex, list_of_items=data_items, sort_children=True)
 
     def reloadModelData(self, object_data):
         self.beginResetModel()

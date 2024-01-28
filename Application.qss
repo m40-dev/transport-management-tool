@@ -17,13 +17,14 @@ QSplitter::handle{
 
 QLabel, QCheckBox, QRadioButton{
 	background: transparent;
-	color: @TextColor;
+	color: @AltTextColor;
 }
+
 QCheckBox::hover, QRadioButton::hover{
 	color: @HighlightedText;
 }
 
-QLineEdit, QComboBox{
+QLineEdit, QComboBox, QDateEdit{
 	background-color: @AltBaseColor;
 	border: 1px solid @BorderColor;
 	border-radius: 2px;
@@ -34,11 +35,26 @@ QLineEdit, QComboBox{
 }
 
 QComboBox::down-arrow{
-	padding:0px;
-	border: 0px;
-	/* background: transparent; */
+	background: transparent;
+	image: url("./lib/ui/img/icons/arrow_down_borderless.png");
+	padding: 0px;
+}
+
+QDateEdit::down-arrow{
+	padding-bottom:3px;
+	padding-left:3px;
+	padding-right:3px;
+	background: transparent;
 	image: url("./lib/ui/img/icons/arrow_down_borderless.png");
 }
+QComboBox::up-arrow, QDateEdit::up-arrow{
+	padding-top:3px;
+	padding-left:3px;
+	padding-right:3px;
+	background: transparent;
+	image: url("./lib/ui/img/icons/arrow_up_borderless.png");
+}
+
 QPlainTextEdit, QTextEdit{
 	background-color: @AltBaseColor;
 	min-height: 75px;
@@ -48,6 +64,15 @@ QPlainTextEdit, QTextEdit{
 QLineEdit::selection, QTextEdit::selection, QPlainTextEdit::selection{
 	background-color: @HighlightColor;
 }
+
+QCalendarWidget QWidget{
+	background-color: @BaseColor;
+	alternate-background-color: @AltBaseColor;
+	selection-background-color: #123;
+	selection-color: @HighlightedText;
+	font: bold 13px;
+}
+
 
 QStatusBar{
 	background: @BaseColor;
@@ -67,9 +92,17 @@ QSizeGrip[Location="NorthWest"]{
 	border: 1px transparent;
 }
 
-QCheckBox::indicator{
-	width: 28px;
-	height: 28px;
+QTreeView::indicator, QCheckBox::indicator{
+	width: 16px;
+	height: 16px;
+}
+
+QCheckBox::indicator:checked, QTreeView::indicator:checked{
+	image: url("./lib/ui/img/icons/checkbox_checked.png");
+}
+
+QCheckBox::indicator:unchecked, QTreeView::indicator:unchecked{
+	image: url("./lib/ui/img/icons/checkbox_unchecked.png");
 }
 
 
@@ -77,11 +110,15 @@ QComboBox:!enabled,
 QPushButton:!enabled,
 QToolButton:!enabled,
 QTextEdit:!enabled,
-QPlainTextEdit:!enabled
+QPlainTextEdit:!enabled,
+QDateEdit:!enabled
 {
 	background-color: @InactiveObjectColor;
 }
 
+QLabel:!enabled{
+	color: @InactiveObjectColor;
+}
 /* Global Group boxes configurations (In XML Template Editor view mostly) */
 QGroupBox{
 	font: bold 14px;
@@ -102,9 +139,12 @@ QGroupBox::title{
 
 /* Message Box extended log message styling */
 .MessageBox-DetailedMessage{
+	max-width: 200px;
 	font-size: 14px;
 	font-family: "Courier New";
 	color: @TextColor;
+	word-wrap: break-word;
+	inline-size: 150px;
 }
 
 /* Global ScrollBar Configurations */
@@ -147,7 +187,7 @@ QMenuBar{
 	border-right: 2px solid @AltBorderColor;
 	border-bottom: 2px solid @AltBorderColor;
 	color: @AltTextColor;
-	min-width: 5em;
+	min-width: 6em;
 	font: bold;
 }
 
@@ -162,7 +202,6 @@ QMenuBar::item{
 QMenuBar::item:selected{
 	background-color: @SelectedObjectColor;
 	color: @HighlightedText;
-
 }
 
 QMenu{
@@ -184,6 +223,13 @@ QMenu::item:selected{
 	background-color: @SelectedObjectColor;
 	font: bold;
 	color: @HighlightedText;
+}
+
+QMenu::separator{
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @AltBaseColor, stop: 0.5 @AltBorderColor, stop: 1 @AltBaseColor);
+	height:1px;
+	margin-left: 10px;
+	margin-right: 10px;
 }
 
 /* Tab Widgets Configuration */
@@ -674,7 +720,7 @@ QTabBar#DatabaseQueryTabWidget:tab:selected{
 	border-right:2px solid @HighlightedText;
 }
 
-QListView#SearchResultsListView{
+QListView#SearchResultsTreeView{
 	background-color: @AltBaseColor;
 }
 

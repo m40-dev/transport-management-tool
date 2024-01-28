@@ -15,8 +15,8 @@ class PackageDefinitionMenu(QMenu):
     reapplyTemplates = pyqtSignal(object)
     deleteSelectedItems = pyqtSignal(object)
 
-    collapseAll = pyqtSignal()
-    expandAll = pyqtSignal()
+    collapseTree = pyqtSignal(object)
+    expandTree = pyqtSignal(object)
 
     def __init__(self, parent, source_index):
         super(PackageDefinitionMenu, self).__init__(parent)
@@ -30,22 +30,27 @@ class PackageDefinitionMenu(QMenu):
             action_EditSelectedItems.triggered.connect(lambda: self.editSelectedItems.emit(source_index))
             self.menu_items.append(action_EditSelectedItems)
 
-        action_collapseAll = self.addAction("Collapse All Items")
-        action_collapseAll.triggered.connect(self.collapseAll)
-
-        action_expandAll = self.addAction("Expand All Items")
-        action_expandAll.triggered.connect(self.expandAll)
-
         self.addSeparator()
 
         action_addPackageDefinition = self.addAction("Add Package Definition")
         action_addPackageDefinition.triggered.connect(lambda: self.addPackageDefinition.emit(source_index) )
         
-        self.menu_items.append(action_expandAll)
-        self.menu_items.append(action_collapseAll)
         self.menu_items.append(action_addPackageDefinition)
 
         if source_item:
+            self.addSeparator()
+
+            action_collapseTree = self.addAction("Collapse Selected Items")
+            action_collapseTree.triggered.connect(lambda: self.collapseTree.emit(source_index))
+
+            action_expandTree = self.addAction("Expand Selected Items")
+            action_expandTree.triggered.connect(lambda: self.expandTree.emit(source_index))
+
+            self.menu_items.append(action_expandTree)
+            self.menu_items.append(action_collapseTree)
+
+            self.addSeparator()
+
             if source_item.task_class == "PackageManager_PackageDefinition":
                 action_addPackageDefinition = self.addAction("Add Task Definition")
                 action_addPackageDefinition.triggered.connect(lambda: self.addTaskDefinition.emit(source_index) )

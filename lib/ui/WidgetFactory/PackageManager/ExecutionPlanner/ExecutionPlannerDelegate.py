@@ -59,7 +59,7 @@ class ExecutionPlannerItem(CustomDelegateWidget):
         self.is_refresh = False
 
         self.button1.setText("Start")
-        self.button1.setIconSize(QSize(20,20))
+        self.button1.setIconSize(QSize(25,25))
 
         self.element_label = QLabel(self)
         self.element_label.setProperty("CustomWidget", "ItemLabel")
@@ -144,6 +144,7 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
             self.button1.setText("")
             self.button1.setToolTip("<i>Start Execution Task</i>")
             self.button1.setIcon(start_icon)
+            self.button1.setIconSize(QSize(20,20))
         
         """ Add Custom Widgets """
         self.connection_box_label = QLabel("Use Connection:")
@@ -176,6 +177,7 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
             self.ExecutionLogs.setText("")
             self.ExecutionLogs.setToolTip("<i>Show Execution Logs</i>")
             self.ExecutionLogs.setIcon(logs_icon)
+            self.ExecutionLogs.setIconSize(QSize(20,20))
         
         self.dynamic_property_labels = {}
         dynamic_property_columns = self.ProgramConfiguration.ObjectModel.get_columns_configuration_by_setting(self.model_item.task_class, "ShowInTreeView")
@@ -226,7 +228,6 @@ class ExecutionTaskWidget(ExecutionPlannerItem):
         self.layout.addLayout(task_params_layout, 0, 1, 1, 3)
         if task_details_layout:
             self.layout.addLayout(task_details_layout, 2, 0, 1, 3)
-        # self.layout.addWidget(self.run_status, 1, 3, 1, 2)
 
         """ Set initial values """
         self.configureTask()

@@ -1,5 +1,6 @@
 from PyQt6 import QtCore, QtGui, QtWidgets
 from .CustomDialogWindow import CustomDialogWindow
+from platform import python_version
 
 class MsgBox(CustomDialogWindow):
 
@@ -28,7 +29,15 @@ class MsgBox(CustomDialogWindow):
             self.textinput.setReadOnly(True)
 
             self.textinput.document().setDefaultStyleSheet(self.application.color_theme.style_sheet)
-            self.textinput.setHtml(f'<pre class="MessageBox-DetailedMessage">{self.detailed_message}</pre>')
+            message = ""
+            max_line_width = 120
+            for line in self.detailed_message.splitlines():
+                if len(line) > max_line_width:
+                    while len(line) > max_line_width:
+                        message += line[:max_line_width] + "\n"
+                        line = line[max_line_width:]
+                    message += line + "\n"
+            self.textinput.setHtml(f'<div class="MessageBox-DetailedMessage"><pre>{message}</pre></div>')
 
             self.details_button = QtWidgets.QPushButton(self)
             self.details_button.setText("Toggle Details")
@@ -47,13 +56,54 @@ class MsgBox(CustomDialogWindow):
         
         self.form_layout.addWidget(self.label, 0, 0)
         self.label.setText(self.message)
-        self.setMinimumSize(300, 200)
+        self.setMinimumSize(200, 150)
 
     def toggle_details(self, state):
-        # print(state)
         self.textinput.setVisible(not self.textinput.isVisible())
         if self.textinput.isVisible():
             self.resize(600, 350)
         else:
-            self.resize(300, 200)
+            self.resize(200, 150)
 
+class AboutWindow(CustomDialogWindow):
+
+    def __init__(self, application):
+        super(AboutWindow, self).__init__(
+            application=application,
+            dialog_name="About Application", 
+            restore_window_state=False)
+        
+        self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Ok)
+        self.setupUi()
+        self.exec()
+
+    def setupUi(self):
+        self.setMinimumSize(300, 350)
+        self.resize(600, 800)
+
+        self.description_input = QtWidgets.QTextBrowser(self)
+        self.description_input.setReadOnly(True)
+        self.description_input.setAcceptRichText(True)
+        self.description_input.setTextInteractionFlags(
+            QtCore.Qt.TextInteractionFlag.TextBrowserInteraction
+            )
+        self.description_input.anchorClicked.connect(self.openHyperlink)
+        self.description_input.setOpenLinks(False)
+
+        self.form_layout.addWidget(self.description_input, 0, 0)
+        self.setDescriptionText()
+    
+    def openHyperlink(self, hyperlink):
+        QtGui.QDesktopServices.openUrl(hyperlink)
+
+    def setDescriptionText(self):
+        source_file = self.application.load_file("./Documentation/About")
+        pyqt_version = QtCore.PYQT_VERSION_STR
+        python_ver = python_version()
+
+        source_file = source_file.replace(b'%APP_VERSION%', bytes(self.application.application_version, 'utf-8'))
+        source_file = source_file.replace(b'%PYQT_VERSION%', bytes(pyqt_version, 'utf-8'))
+        source_file = source_file.replace(b'%PYTHON_VERSION%', bytes(python_ver, 'utf-8'))
+        if source_file:
+            self.description_input.setHtml(source_file.decode("utf-8"))
+        

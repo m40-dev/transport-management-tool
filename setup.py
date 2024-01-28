@@ -11,12 +11,15 @@ from main import VERSION
 packages = []
 
 includes = ["os", "sys", "PyQt6.QtCore", "PyQt6.QtGui", "PyQt6.QtWidgets", "PyQt6.Qsci", "lxml", "pyodbc", 
-            "win32api", "win32con", "win32gui", "win32comext","winreg", "ctypes", "enum"]
+            "win32api", "win32con", "win32gui"]
+
 excludes = ["tcl", "tk", "Tkinter", "tkinter"]
 
 include_files = [
     "./icon.ico",
     "./Application.qss",
+    ("./Documentation/About", "./Documentation/About"),
+    ("./Documentation/LICENSE", "./Documentation/LICENSE"),
     ("./lib/ui/img", "./lib/ui/img")
 ]
 
@@ -29,7 +32,6 @@ options = {
         "include_files": include_files,
         "optimize": 2
     }
-    
 }
 
 executables = [Executable("Main.py", target_name="TransportManager.exe", base=base, icon="./icon.ico")]
