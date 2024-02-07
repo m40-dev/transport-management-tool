@@ -37,8 +37,10 @@ class MsgBox(CustomDialogWindow):
                         message += line[:max_line_width] + "\n"
                         line = line[max_line_width:]
                     message += line + "\n"
-            self.textinput.setHtml(f'<div class="MessageBox-DetailedMessage"><pre>{message}</pre></div>')
+                else:
+                    message += line + "\n"
 
+            self.textinput.setHtml(f'<div class="MessageBox-DetailedMessage"><pre>{message}</pre></div>')
             self.details_button = QtWidgets.QPushButton(self)
             self.details_button.setText("Toggle Details")
             self.details_button.clicked.connect(self.toggle_details)
