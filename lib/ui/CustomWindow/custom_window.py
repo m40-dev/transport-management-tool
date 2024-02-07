@@ -165,12 +165,13 @@ class CustomBase(QWidget):
 # 
         self.win_effects = WindowsEffects()      
 
-        self.setWindowFlags(Qt.WindowType.Window | 
-                            Qt.WindowType.FramelessWindowHint |
-                            Qt.WindowType.WindowSystemMenuHint |
-                            Qt.WindowType.WindowMinimizeButtonHint |
-                            Qt.WindowType.WindowMaximizeButtonHint |
-                            Qt.WindowType.WindowCloseButtonHint) 
+        # Setting window flags somehow breaks the window scaling when maximized. 
+        # Even without the window flags the title decoration is drawn as expected
+        # self.setWindowFlags(Qt.WindowType.Window | 
+        #                     Qt.WindowType.FramelessWindowHint |
+        #                     Qt.WindowType.WindowMinimizeButtonHint |
+        #                     Qt.WindowType.WindowMaximizeButtonHint |
+        #                     Qt.WindowType.WindowCloseButtonHint) 
         
         self.win_effects.add_window_animation(self.winId())
         self.set_effect(True)
@@ -178,11 +179,16 @@ class CustomBase(QWidget):
         if is_win11:
             self.win_effects.add_blur_behind_window(self.winId())
             self.win_effects.add_shadow_effect(self.winId())
+
         
+
         self._effect_timer = QTimer(self)
         self._effect_timer.setInterval(10)
         self._effect_timer.setSingleShot(True)
         self._effect_timer.timeout.connect(self.set_effect)
+
+        
+
         self.animate()
 
     def animate(self, reverse=False):
@@ -269,7 +275,7 @@ class CustomBase(QWidget):
         return False, 0
 
 class CustomWindow(CustomBase):
-    BORDER_WIDTH = 4
+    BORDER_WIDTH = 5
     max_btn_hovered = False
     title_bar = None
 
