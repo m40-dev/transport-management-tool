@@ -429,7 +429,8 @@ class XMLDataItem(QObject):
                         db_relation_items["Relation"] = 0
             
             """ select all base relations that match the xml relation state, skip relations that are not marked for transport in the database """
-            selected_relations, skipped_relations = self.select_referenced_relations(source=self.object_relations, target=db_relations)
+            # ignore_initial_state=True turned for testing, in some cases the relations that should in the same selections were not selected automatically
+            selected_relations, skipped_relations = self.select_referenced_relations(source=self.object_relations, target=db_relations, ignore_initial_state=True)
 
             """ select leftover relations where we can match the parent column with the child column """
             selected_relations, skipped_relations = self.select_skipped_relations(skipped_relations, selected_relations, db_relations, match_parent_column=True)

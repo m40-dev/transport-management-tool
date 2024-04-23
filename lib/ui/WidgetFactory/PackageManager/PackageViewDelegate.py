@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QToolButton, QLabel, QHBoxLayout, QSizePolicy, QVBoxLayout, QGridLayout
+from PyQt6.QtWidgets import QToolButton, QLabel, QHBoxLayout, QSizePolicy, QGridLayout
 from PyQt6.QtCore import Qt, QSize, pyqtSignal
 from lib.ui.WidgetFactory.CustomViewDelegate import CustomViewDelegate, CustomDelegateWidget
+from lib.ui.WidgetFactory import MsgBox
 
 class PackageViewDelegate(CustomViewDelegate):
 
@@ -148,39 +149,39 @@ class PackageDefinitionWidget(PackageManagerItemWidget):
 
         self.frame.setProperty("PackageManagerWidget", "PackageItem")
 
-        self.edit_feature_button = QToolButton()
-        self.edit_feature_button.setText("Properties")
-        self.edit_feature_button.clicked.connect(self.edit_feature)
+        self.edit_package_definition_button = QToolButton()
+        self.edit_package_definition_button.setText("Properties")
+        self.edit_package_definition_button.clicked.connect(self.edit_package_definition)
 
         edit_properties_icon = self.ProgramConfiguration.getIcon("ObjectProperties")
         if edit_properties_icon:
-            self.edit_feature_button.setText("")
-            self.edit_feature_button.setToolTip("<i>Edit Object Properties..</i>")
-            self.edit_feature_button.setIcon(edit_properties_icon)
-            self.edit_feature_button.setProperty("PackageManager", "PackageManagerIcon")
-            self.edit_feature_button.setIconSize(QSize(20,20))
+            self.edit_package_definition_button.setText("")
+            self.edit_package_definition_button.setToolTip("<i>Edit Object Properties..</i>")
+            self.edit_package_definition_button.setIcon(edit_properties_icon)
+            self.edit_package_definition_button.setProperty("PackageManager", "PackageManagerIcon")
+            self.edit_package_definition_button.setIconSize(QSize(20,20))
 
-        self.save_feature_button = QToolButton()
-        self.save_feature_button.setText("Save")
+        self.save_package_definition_button = QToolButton()
+        self.save_package_definition_button.setText("Save")
 
         save_icon = self.ProgramConfiguration.getIcon("SaveObject")
         if save_icon:
-            self.save_feature_button.setText("")
-            self.save_feature_button.setToolTip("<i>Save Package Definition..</i>")
-            self.save_feature_button.setIcon(save_icon)
-            self.save_feature_button.setProperty("PackageManager", "PackageManagerIcon")
-            self.save_feature_button.setIconSize(QSize(20,20))
+            self.save_package_definition_button.setText("")
+            self.save_package_definition_button.setToolTip("<i>Save Package Definition..</i>")
+            self.save_package_definition_button.setIcon(save_icon)
+            self.save_package_definition_button.setProperty("PackageManager", "PackageManagerIcon")
+            self.save_package_definition_button.setIconSize(QSize(20,20))
 
-        self.toolbox_layout.addWidget(self.edit_feature_button)
-        self.toolbox_layout.addWidget(self.save_feature_button)
+        self.toolbox_layout.addWidget(self.edit_package_definition_button)
+        self.toolbox_layout.addWidget(self.save_package_definition_button)
 
-        self.save_feature_button.clicked.connect(self.save_feature)
+        self.save_package_definition_button.clicked.connect(self.save_package_definition)
 
-    def save_feature(self, save_single=True):
+    def save_package_definition(self, save_single=True):
         index = self.parent_view.model().indexOf(self.model_item)
-        self.parent_module.savePackageDefinition(index, save_single)
+        self.parent_module.savePackageDefinition(index, save_single=True)
     
-    def edit_feature(self):
+    def edit_package_definition(self):
         index = self.parent_view.model().indexOf(self.model_item)
         self.parent_module.editPackageDefinition(index)
 

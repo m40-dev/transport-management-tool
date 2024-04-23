@@ -18,7 +18,9 @@ class MsgBox(CustomDialogWindow):
     
     def setupUi(self):
         self.label = QtWidgets.QLabel(self)
+        self.label.setTextFormat(QtCore.Qt.TextFormat.RichText)
         self.label.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.label.setWordWrap(True)
         
         if self.detailed_message is not None:
             self.textinput = QtWidgets.QTextEdit(self)
@@ -58,6 +60,7 @@ class MsgBox(CustomDialogWindow):
         
         self.form_layout.addWidget(self.label, 0, 0)
         self.label.setText(self.message)
+
         self.setMinimumSize(200, 150)
 
     def toggle_details(self, state):

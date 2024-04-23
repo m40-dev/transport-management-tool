@@ -353,6 +353,15 @@ class XMLTemplateEditor(QtWidgets.QWidget):
 
         if preset_table and preset_data:
             selected_items = self.selectedItems()
+            if len(selected_items) > 0:
+                preset_name = preset_data["name"]
+                question = MsgBox(self.application, 
+                        message=f"Are you sure to apply selected relation preset? <br/> (<b>{preset_name}</b>) <br/t> Existing relations for selected objects of the same class (<b>{preset_table}</b>) will be overwritten.",
+                        window_mode=MsgBox.QUESTION)
+        
+                if not question.accepted:
+                    return
+            
             for item in selected_items:
                 if isinstance(item, XMLDataItem) and item.xml_object_class == "Transport_Object" and item.table_name == preset_table:
                     preset_data_relations = deepcopy(preset_data["table_relations"])

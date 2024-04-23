@@ -121,7 +121,7 @@
             "PlaceholderText":"",
             "IsMandatory":true,
             "ShowInEditor":true,
-            "ShowInTreeView":true,
+            "ShowInTreeView":false,
             "IsForDataExport":true,
             "UseTemplates":false
         },
@@ -135,7 +135,7 @@
             "PlaceholderText":"",
             "IsMandatory":false,
             "ShowInEditor":true,
-            "ShowInTreeView":true,
+            "ShowInTreeView":false,
             "IsForDataExport":true,
             "UseTemplates":false,
             "MinValue":1,
@@ -190,7 +190,7 @@
             "PlaceholderText":"",
             "IsMandatory":true,
             "ShowInEditor":true,
-            "ShowInTreeView":true,
+            "ShowInTreeView":false,
             "IsForDataExport":true,
             "UseTemplates":false,
             "Options":{
@@ -233,7 +233,7 @@
             "PlaceholderText":"",
             "IsMandatory":false,
             "ShowInEditor":true,
-            "ShowInTreeView":true,
+            "ShowInTreeView":false,
             "IsForDataExport":true,
             "UseTemplates":false
         },
@@ -251,6 +251,21 @@
             "IsForDataExport":true,
             "UseTemplates":false,
             "Separator":","
+        },
+        "StandardField":{
+            "RowId":9,
+            "Display":"Standard Field",
+            "Description":"Field with minimum configurations.",
+            "FieldType":"StringInput",
+            "FieldRole":"",
+            "DefaultValue":"",
+            "PlaceholderText":"Provide attribute value..",
+            "IsMandatory":false,
+            "ShowInEditor":true,
+            "ShowInTreeView":false,
+            "IsForDataExport":false,
+            "UseTemplates":false,
+            "IsSensitive":false
         }
     },
     "ExecutionPlanner_ExecutionGroup":{

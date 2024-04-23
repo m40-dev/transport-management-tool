@@ -324,16 +324,31 @@ class PackageManager(QtWidgets.QWidget):
             return False
 
         source_item = None
-        if source_index.isValid():
+        selected_items = self.selectedItems()
+        if len(selected_items) > 1 and not save_single:
+            package_count = len([x for x in selected_items if x.task_class == 'PackageManager_PackageDefinition'])
+            question = MsgBox(self.application, 
+                message=f"Do you want to save all of the selected Packages? <br/> ({package_count} package definition(s) selected) <br/> Existing files will be overwritten.",
+                window_mode=MsgBox.QUESTION)
+        
+            if question.accepted:
+                for selected_item in selected_items:
+                    if selected_item.task_class == "PackageManager_PackageDefinition":
+                        selected_item.save()
+        
+        
+        if source_index.isValid() and save_single:
             source_item = source_index.internalPointer()
             if source_item.task_class == "PackageManager_PackageDefinition":
-                source_item.save()
+                question = MsgBox(self.application, 
+                        message=f"Are you sure to save the selected Package? <br/> ({source_item.display}) <br/> Existing file will be overwritten.",
+                        window_mode=MsgBox.QUESTION)
+        
+                if question.accepted:
+                    source_item.save()
 
-        selected_items = self.selectedItems()
-        if len(selected_items) > 0 and not save_single:
-            for selected_item in selected_items:
-                if selected_item.task_class == "PackageManager_PackageDefinition" and selected_item != source_item:
-                    selected_item.save()
+                if save_single:
+                    return
         
     def onSortChildItems(self, source_index):
         if not source_index.isValid():
