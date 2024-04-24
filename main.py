@@ -28,7 +28,7 @@ VERSION = '0.9.5'
 APP_NAME = f"Transport Management Tool - {VERSION}"
 
 class Transport_Manager(CustomMainWindow):
-    """Main window class for connection launcher"""
+    """ Main Application Class """
     statusBarUpdated = pyqtSignal(str)
     connectionDataChanged = pyqtSignal()
     currentViewChanged = pyqtSignal(int)
@@ -40,9 +40,9 @@ class Transport_Manager(CustomMainWindow):
         clipboard=None, 
         qapplication=None
     ):
+        """ Initialize Transport Manager application. """
+
         super().__init__(self)
-        """ Map QT UI from parsed file - created and updated in qt designer """
-        
         self.application_name = APP_NAME
         self.application_version = VERSION
         self.qt_app = qapplication
@@ -73,7 +73,7 @@ class Transport_Manager(CustomMainWindow):
         self.SideBar.buttonClicked.connect(lambda index: self.ui.MainTabWidget.setCurrentIndex(index))
         self.ui.MainTabWidget.currentChanged.connect(self.currentViewChanged)
 
-        # Bring in the Main Tab Widgets
+        # Bring the Main Tab Widgets that will be then changed by the sidebar
         self.PackageManager = WidgetFactory.PackageManager(self)
         self.XMLTemplateEditor = WidgetFactory.XMLTemplateEditor(self)
 
