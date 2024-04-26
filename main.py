@@ -263,6 +263,7 @@ class Transport_Manager(CustomMainWindow):
         return state
 
     def onStyleSheetChange(self):
+        """ callback method that updates the application's styling and UI when style configuration changes."""
         self.setStyleSheet(self.ProgramConfiguration.styleSheet())
         self.XMLTemplateEditor.refresh_ui()
         self.PackageManager.refresh_ui()

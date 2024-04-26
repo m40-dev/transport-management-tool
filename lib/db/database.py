@@ -14,7 +14,6 @@ class DatabaseConnection(object):
         self.table_relations = {}
         self.child_table_relations = {}
         
-
     def connect_db(self):
         # Some other example server values are
         # ENCRYPT defaults to yes starting in ODBC Driver 18. It's good to always specify ENCRYPT=yes on the client side to avoid MITM attacks.
