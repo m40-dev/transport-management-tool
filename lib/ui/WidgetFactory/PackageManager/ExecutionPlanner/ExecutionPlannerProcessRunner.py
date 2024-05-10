@@ -469,6 +469,7 @@ class ProcessRunner(QProcess):
             return False
 
         connection_data = self.ConnectionHandler.connections.get(connection_name, None)
+
         export_file = task_data.get("ExportFile", None)
         definition_file = task_data.get("DefinitionFile", None)
 
@@ -527,7 +528,7 @@ class ProcessRunner(QProcess):
             return False
         command = None
         program = f'& "{tools_directory}\DBTransporterCmd.exe"'
-        temp_db = DatabaseConnection(connection_data)
+        temp_db = DatabaseConnection(self.application, connection_data)
         conn_string = temp_db.get_connection_string()
         auth_string = temp_db.get_authentication_string()
         
@@ -536,6 +537,7 @@ class ProcessRunner(QProcess):
         
         if action_type and action_type == "Import":
             command = f'{program} /File="{export_file}" /Conn="{conn_string}" /Auth="{auth_string}"'
+
         return command
 
     def getSchemaExtensionCommand(self, action_type, definition_file, connection_data):
@@ -548,7 +550,7 @@ class ProcessRunner(QProcess):
             return False
         command = None
         program = f'& "{tools_directory}\SchemaExtensionCmd.exe"'
-        temp_db = DatabaseConnection(connection_data)
+        temp_db = DatabaseConnection(self.application, connection_data)
         conn_string = temp_db.get_connection_string()
         auth_string = temp_db.get_authentication_string()
 
@@ -567,7 +569,7 @@ class ProcessRunner(QProcess):
         
         command = ""
         program = f'& "{tools_directory}\DBCompilerCMD.exe"'
-        temp_db = DatabaseConnection(connection_data)
+        temp_db = DatabaseConnection(self.application, connection_data)
         conn_string = temp_db.get_connection_string()
         auth_string = temp_db.get_authentication_string()
         command = f'{program} /Conn="{conn_string}" /Auth="{auth_string}"'
@@ -589,7 +591,7 @@ class ProcessRunner(QProcess):
         command = ""
         
         program = f'& "{tools_directory}\AutoUpdate.exe"'
-        temp_db = DatabaseConnection(connection_data)
+        temp_db = DatabaseConnection(self.application, connection_data)
         conn_string = temp_db.get_connection_string()
 
         command = f'{program} /conn="{conn_string}" --install="{tools_directory}"'
@@ -627,7 +629,7 @@ class ProcessRunner(QProcess):
             "Transport Manager")
             return False
 
-        connection = DatabaseConnection(connection_data)
+        connection = DatabaseConnection(self.application, connection_data)
         if connection.connect_db():
             # run script if connected
             self.message.emit(
