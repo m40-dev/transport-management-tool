@@ -1,5 +1,5 @@
 import pyodbc, copy, re
-
+import urllib
 
 class DatabaseConnection(object):
     def __init__(self, application, connection_parameters={}):
@@ -42,10 +42,19 @@ class DatabaseConnection(object):
         SQLUserName = self.connection_parameters.get("SQLUserName", None)
         SQLPassword = self.connection_parameters.get("SQLPassword", None)
 
+        SQLPassword = SQLPassword.replace("}", '}}')
+
         if ServerAddress and DatabaseName and SQLUserName and SQLPassword:
-            connection_string = "DRIVER={ODBC Driver 18 for SQL Server};" + f"SERVER={ServerAddress};DATABASE={DatabaseName};ENCRYPT={EncryptConnection};UID={SQLUserName};PWD={SQLPassword};App={self.application.application_name}"
+            connection_string = "DRIVER={ODBC Driver 18 for SQL Server};" \
+                f"SERVER={ServerAddress};" \
+                f"DATABASE={DatabaseName};" \
+                f"ENCRYPT={EncryptConnection};" \
+                f"UID={SQLUserName};" \
+                'PWD={' + SQLPassword + '};' \
+                "App={" + self.application.application_name + "}" 
             if EncryptConnection.upper() == "NO":
                 connection_string += ';TrustServerCertificate=yes'
+
         return connection_string
 
     def get_connection_string(self):
@@ -63,11 +72,14 @@ class DatabaseConnection(object):
         SQLUserName = self.connection_parameters.get("SQLUserName", None)
         SQLPassword = self.connection_parameters.get("SQLPassword", None)
 
+        SQLPassword = SQLPassword.replace("}", '}}')
+
         if ServerAddress and DatabaseName and SQLUserName and SQLPassword:
-            connection_string = f'Data Source={ServerAddress};Initial Catalog={DatabaseName};User ID="{SQLUserName}";Password="{SQLPassword};App={self.application.application_name}"'
+            connection_string = f'Data Source={ServerAddress};Initial Catalog={DatabaseName};User ID={SQLUserName};Password=' + '{' + SQLPassword + '}'
             if EncryptConnection.upper() == "NO":
                 connection_string += ';TrustServerCertificate=yes'
         return connection_string
+        
 
 
     def get_authentication_string(self):
@@ -78,7 +90,7 @@ class DatabaseConnection(object):
         ApplicationPassword = self.connection_parameters.get("ApplicationPassword", None)
 
         if ApplicationUserName and ApplicationPassword:
-            authentication_string = f"Module=DialogUser;User={ApplicationUserName};Password={ApplicationPassword}"
+            authentication_string = f'Module="DialogUser";User="{ApplicationUserName}";Password="{ApplicationPassword}"'
         return authentication_string
 
     @property

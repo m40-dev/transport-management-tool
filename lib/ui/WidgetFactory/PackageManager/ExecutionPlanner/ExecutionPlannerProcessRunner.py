@@ -537,7 +537,7 @@ class ProcessRunner(QProcess):
         
         if action_type and action_type == "Import":
             command = f'{program} /File="{export_file}" /Conn="{conn_string}" /Auth="{auth_string}"'
-
+        print(command)
         return command
 
     def getSchemaExtensionCommand(self, action_type, definition_file, connection_data):
