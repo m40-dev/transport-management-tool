@@ -156,14 +156,14 @@ QScrollBar::vertical,QScrollBar::horizontal{
 }
 
 QScrollBar::handle:vertical{
-	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @AltBaseColor, stop: 1 @BaseColor);
-	border:1px solid @AltBaseColor;
+	background-color: qlineargradient(x1: 0, x2: 1, y1: 0, y2:0, stop: 0 @AltBaseColor2, stop: 1 @BaseColor);
+	border:1px solid @AltBorderColor;
 	border-radius:2px;
 }
 
 QScrollBar::handle:horizontal{
-	background-color: qlineargradient(x1: 1, x2: 1, y1: 0, y2:1, stop: 0 @AltBaseColor, stop: 1 @BaseColor);
-	border:1px solid @AltBaseColor;
+	background-color: qlineargradient(x1: 1, x2: 1, y1: 0, y2:1, stop: 0 @AltBaseColor2, stop: 1 @BaseColor);
+	border:1px solid @AltBorderColor;
 	border-radius:2px;
 }
 

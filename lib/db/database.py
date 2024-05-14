@@ -72,15 +72,14 @@ class DatabaseConnection(object):
         SQLUserName = self.connection_parameters.get("SQLUserName", None)
         SQLPassword = self.connection_parameters.get("SQLPassword", None)
 
-        SQLPassword = SQLPassword.replace("}", '}}')
+        # SQLPassword = SQLPassword.replace("}", '}}')
 
         if ServerAddress and DatabaseName and SQLUserName and SQLPassword:
-            connection_string = f'Data Source={ServerAddress};Initial Catalog={DatabaseName};User ID={SQLUserName};Password=' + '{' + SQLPassword + '}'
+            connection_string = f'Data Source={ServerAddress};Initial Catalog={DatabaseName};User ID={SQLUserName};Password="{SQLPassword}"'
             if EncryptConnection.upper() == "NO":
                 connection_string += ';TrustServerCertificate=yes'
         return connection_string
         
-
 
     def get_authentication_string(self):
 
