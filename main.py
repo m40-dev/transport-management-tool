@@ -24,7 +24,7 @@ from lib.ui.CustomWindow.custom_window import CustomMainWindow
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.9.5'
+VERSION = '0.9.6'
 APP_NAME = f"Transport Management Tool - {VERSION}"
 
 class Transport_Manager(CustomMainWindow):
@@ -68,19 +68,18 @@ class Transport_Manager(CustomMainWindow):
         self.ConnectionHandler.databaseConnectionEstablished.connect(self.onDatabaseConnection)
 
         # Sidebar magic
-        self.SideBar = WidgetFactory.SideBar(application=self)
+        self.SideBar = WidgetFactory.SideBar(application=self, target_widget=self.ui.MainTabWidget)
         self.ui.SideBar_Layout.addWidget(self.SideBar)
-        self.SideBar.buttonClicked.connect(lambda index: self.ui.MainTabWidget.setCurrentIndex(index))
-        self.ui.MainTabWidget.currentChanged.connect(self.currentViewChanged)
 
         # Bring the Main Tab Widgets that will be then changed by the sidebar
         self.PackageManager = WidgetFactory.PackageManager(self)
         self.XMLTemplateEditor = WidgetFactory.XMLTemplateEditor(self)
-
-        self.ui.MainTabWidget.addTab(self.PackageManager, "Package Manager")
-        self.ui.MainTabWidget.addTab(self.XMLTemplateEditor, "XML Template Editor")
         self.SettingsWidget = WidgetFactory.SettingsWidget(self)
-        self.ui.MainTabWidget.addTab(self.SettingsWidget, "Settings")
+
+        self.SideBar.addActionButton(0, "PackageManagerButton", self.PackageManager, show_action_text=False)
+        self.SideBar.addActionButton(1, "TemplateEditorButton", self.XMLTemplateEditor, show_action_text=False)
+        self.SideBar.addActionButton(2, "SettingsButton", self.SettingsWidget, show_action_text=False)
+        self.SideBar.addStretch(2)
 
         self.ui.MainTabWidget.tabBar().setVisible(False)
 

@@ -1,61 +1,41 @@
 
 from PyQt6.QtCore import pyqtSignal, QSize, QEasingCurve, QPropertyAnimation, QAbstractAnimation
 from PyQt6.QtWidgets import QToolButton, QWidget, QVBoxLayout, QGraphicsOpacityEffect, QFrame
+from PyQt6 import QtGui
 
 
 class SideBar(QFrame):
     buttonClicked = pyqtSignal(int)
 
-    def __init__(self, application):
+    def __init__(self, application, target_widget):
         super().__init__()
+        self.target_widget = target_widget
         self.application = application
+
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)
         self.layout.setSpacing(2)
         self.setObjectName("SideBar")
-        self.application.currentViewChanged.connect(self.currentViewChanged)
+        self.navigation_buttons = []
+        self.buttonClicked.connect(lambda index: self.target_widget.setCurrentIndex(index))
+        self.target_widget.currentChanged.connect(self.currentViewChanged)
+        self.target_widget.tabBar().setVisible(False)
 
-        PackageManagerButton = QToolButton()
+    def addActionButton(self, index, action, widget, icon=None, show_action_text=True):
+        button = QToolButton(self)
+        if isinstance(icon, QtGui.QIcon):
+            button.setIcon(icon)
+        if show_action_text:
+            button.setText(action)
+        button.setCheckable(True)
+        button.setProperty("ToolButton", "SideBar")
+        button.setObjectName(action)
 
-        # PackageManagerButton.setText("PM")
-        PackageManagerButton.clicked.connect(lambda: self.buttonClicked.emit(0))
-        # PM_icon = self.application.ProgramConfiguration.getIcon("PackageManager")
-        # PackageManagerButton.setIcon(PM_icon)
-        # PackageManagerButton.setIconSize(QSize(round(PackageManagerButton.width()*0.7), round(PackageManagerButton.height()*0.7)))
+        self.layout.insertWidget(index, button)
 
-        TemplateEditorButton = QToolButton()
-        # TemplateEditorButton.setText("TE")
-        # TE_icon = self.application.ProgramConfiguration.getIcon("XMLTemplateEditor")
-
-        # TemplateEditorButton.setIcon(TE_icon)
-        # TemplateEditorButton.setIconSize(QSize(round(TemplateEditorButton.width()*0.7), round(TemplateEditorButton.height()*0.7)))
-        TemplateEditorButton.clicked.connect(lambda: self.buttonClicked.emit(1))
-
-        SettingsButton = QToolButton()
-        # SettingsButton.setText("S")
-        # Settings_icon = self.application.ProgramConfiguration.getIcon("Settings")
-
-        # SettingsButton.setIcon(Settings_icon)
-        # SettingsButton.setIconSize(QSize(round(SettingsButton.width()*0.7), round(SettingsButton.height()*0.7)))
-        SettingsButton.clicked.connect(lambda: self.buttonClicked.emit(2))
-
-        PackageManagerButton.setProperty("ToolButton", "SideBar")
-        TemplateEditorButton.setProperty("ToolButton", "SideBar")
-        SettingsButton.setProperty("ToolButton", "SideBar")
-
-        PackageManagerButton.setObjectName("PackageManagerButton")
-        TemplateEditorButton.setObjectName("TemplateEditorButton")
-        SettingsButton.setObjectName("SettingsButton")
-
-        PackageManagerButton.setCheckable(True)
-        TemplateEditorButton.setCheckable(True)
-        SettingsButton.setCheckable(True)
-
-        self.navigation_buttons = [PackageManagerButton, TemplateEditorButton, SettingsButton]
-        self.layout.insertWidget(0, PackageManagerButton)
-        self.layout.insertWidget(1, TemplateEditorButton)
-        self.layout.insertStretch(2, 5)
-        self.layout.insertWidget(3, SettingsButton)
+        self.navigation_buttons.insert(index, button)
+        self.target_widget.insertTab(index, widget, action)
+        button.clicked.connect(lambda: self.buttonClicked.emit(index))
 
     def currentViewChanged(self, index):
         # print("mark sidebar button", index)
@@ -66,12 +46,14 @@ class SideBar(QFrame):
         if index <= len(self.navigation_buttons):
             current_button = self.navigation_buttons[index]
             current_button.setChecked(True)
-
         self.animate()
-        
+    
+    def addStretch(self, index, stretch_factor=5): 
+        self.layout.insertStretch(index, 5)
+
     def animate(self, reverse=False):
         # animate startup
-        target = self.application.ui.MainTabWidget.currentWidget()
+        target = self.target_widget.currentWidget()
 
         effect = QGraphicsOpacityEffect(target)
         target.setGraphicsEffect(effect)
