@@ -14,6 +14,7 @@ class PackageDefinitionMenu(QMenu):
     sortChildItems = pyqtSignal(object)
     reapplyTemplates = pyqtSignal(object)
     deleteSelectedItems = pyqtSignal(object)
+    cloneSelectedItem = pyqtSignal(object)
 
     collapseTree = pyqtSignal(object)
     expandTree = pyqtSignal(object)
@@ -58,6 +59,9 @@ class PackageDefinitionMenu(QMenu):
                 action_editPackageDefinition = self.addAction("Edit Package Definition")
                 action_editPackageDefinition.triggered.connect(lambda: self.editPackageDefinition.emit(source_index))
 
+                action_clonePackageItem = self.addAction("Clone Package Definition")
+                action_clonePackageItem.triggered.connect(lambda: self.cloneSelectedItem.emit(source_index))
+
                 action_save_package_definition = self.addAction("Save Package Definition(s)")
                 action_save_package_definition.triggered.connect(lambda: self.savePackageDefinition.emit(source_index))
 
@@ -70,15 +74,20 @@ class PackageDefinitionMenu(QMenu):
                 self.menu_items.append(action_editPackageDefinition)
                 self.menu_items.append(action_save_package_definition)
                 self.menu_items.append(action_sortChildren)
+                self.menu_items.append(action_clonePackageItem)
 
             if source_item.task_class == "PackageManager_TaskDefinition":
                 action_editTaskDefinition = self.addAction("Edit Task")
                 action_editTaskDefinition.triggered.connect(lambda: self.editTaskDefinition.emit(source_index))
                 self.menu_items.append(action_editTaskDefinition)
 
-                action_editXMLTemplate = self.addAction("Edit Task Definition(s)")
+                action_editXMLTemplate = self.addAction("Edit Task XML Definition(s)")
                 action_editXMLTemplate.triggered.connect(lambda: self.editXMLTemplate.emit(source_index))
                 self.menu_items.append(action_editXMLTemplate)
+
+                action_cloneTaskItem = self.addAction("Clone Task")
+                action_cloneTaskItem.triggered.connect(lambda: self.cloneSelectedItem.emit(source_index))
+                self.menu_items.append(action_cloneTaskItem)
             
             self.addSeparator()
             action_deleteSelectedItems = self.addAction("Delete Selected Items")

@@ -635,6 +635,39 @@ class JSONDataItem(QObject):
                 self._task_data[field] = str(uuid.uuid4())
                 continue
 
+    def clone_task_data(self):
+        if self._task_data is None:
+            return {}
+        export_data = {}
+        
+        configuration = self.item_class_configuration
+        object_data = self.task_data()
+
+        if configuration is None:
+            return object_data
+
+        for field, field_configuration in configuration.items():
+
+            object_field_value = object_data.get(field, "")
+
+            field_type = field_configuration.get("FieldType", None)
+            field_role = field_configuration.get("FieldRole", None)
+
+            if field_role and field_role == "UniqueIdentifier":
+                # do not clone UID fields
+                export_data[field] = str(uuid.uuid4())
+                continue
+
+            if field_role and field_role == "DisplayRole":
+                # mark display columns with prefix
+                export_data[field] = "[CLONE] " + object_field_value
+                continue
+
+
+            export_data[field] = object_field_value
+        return export_data
+
+
     def export_data(self):
         if self._task_data is None:
             return self._task_data
@@ -768,7 +801,7 @@ class JSONDataItem(QObject):
             for column in column_configurations.keys():
                 source_file = self.source_files.get(column, None)
                 target_file = self.get_file_path(file_column=column)
-                if source_file and target_file and source_file != target_file:
+                if source_file and target_file and Path(source_file) != Path(target_file):
                     self.moveFile(source_file, target_file)
         self.source_files = self.get_file_data(reload_data=True)
         self.source_files_text = self.get_file_strings(reload_data=True)

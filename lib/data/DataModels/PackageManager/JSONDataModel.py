@@ -259,6 +259,18 @@ class JSONDataModel(QAbstractItemModel):
 
         return True
     
+    def clone_item(self, source_index):
+        parentIndex = source_index.parent()
+        if not parentIndex.isValid():
+            parentIndex = QModelIndex()
+
+        if source_index.isValid():
+            source_item = source_index.internalPointer()
+            source_data = source_item.clone_task_data()
+            self.insert_item(source_item.task_class, source_data, parentIndex)
+
+
+
     def insert_item(self, task_class, dict_data, parentIndex=QModelIndex()):
         parentItem = self.rootItem
         if parentIndex.isValid():

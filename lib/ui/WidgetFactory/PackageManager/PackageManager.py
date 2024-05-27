@@ -218,6 +218,7 @@ class PackageManager(QtWidgets.QWidget):
         contextMenu.sortChildItems.connect(self.onSortChildItems)
         contextMenu.reapplyTemplates.connect(self.onReapplyTemplates)
         contextMenu.deleteSelectedItems.connect(self.onDeleteSelectedItems)
+        contextMenu.cloneSelectedItem.connect(self.onCloneSelectedItem)
 
         if len(contextMenu.menu_items) > 0:
             contextMenu.popup(menu_target)
@@ -403,6 +404,12 @@ class PackageManager(QtWidgets.QWidget):
             source_item = source_index.internalPointer()
 
         self.deletePackageDefinitions(source_item)
+    
+    def onCloneSelectedItem(self, source_index):
+        data_model = self.PackageViewTreeView.model()
+
+        if source_index.isValid() and data_model:
+            data_model.clone_item(source_index)
 
     def deletePackageDefinitions(self, definition_item=None):
         item_count = len(self.PackageViewTreeView.selectedIndexes())

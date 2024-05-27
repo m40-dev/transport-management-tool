@@ -1,8 +1,8 @@
 {
     "Appearance":{
-        "BaseColor":"rgba(41, 42, 41, 255)",
-        "AltBaseColor":"rgba(25, 25, 25, 180)",
-        "AltBaseColor2":"rgba(67, 71, 69, 255)",
+        "BaseColor":"rgba(28, 29, 28, 255)",
+        "AltBaseColor":"rgba(36, 36, 36, 180)",
+        "AltBaseColor2":"rgba(25, 26, 25, 255)",
         "BorderColor":"rgba(59, 59, 59, 255)",
         "AltBorderColor":"rgba(83, 135, 140, 255)",
         "TextColor":"rgba(203, 203, 203, 230)",
