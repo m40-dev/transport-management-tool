@@ -13,19 +13,19 @@ APPEARANCE_CONFIGURATION = {
                 "FieldType": "ColorInput",
                 "Display": "Default Background Color",
                 "Description": "Configures global application background color for most of the views and windows.",
-                "DefaultValue": "rgba(42, 42, 42, 255)"
+                "DefaultValue": "rgba(28, 29, 28, 255)"
             },
             "AltBaseColor":{
                 "FieldType": "ColorInput",
                 "Display": "Alternative Background Color",
                 "Description": "Configures Alternative Background Color used in the displayed widgets (editor widgets, context menu etc).",
-                "DefaultValue": "rgba(26, 26, 26, 120)"
+                "DefaultValue": "rgba(36, 36, 36, 180)"
             },
             "AltBaseColor2":{
                 "FieldType": "ColorInput",
                 "Display": "Alternative Background Color 2",
                 "Description": "Configures Alternative Background Color used in the displayed widgets (window decorations, section headers etc).",
-                "DefaultValue": "rgba(34, 36, 35, 255)"
+                "DefaultValue": "rgba(25, 26, 25, 255)"
             },
             "BorderColor":{
                 "FieldType": "ColorInput",
@@ -37,7 +37,7 @@ APPEARANCE_CONFIGURATION = {
                 "FieldType": "ColorInput",
                 "Display": "Alternative Border Color",
                 "Description": "Configures Alternative Border Color used in the displayed widgets",
-                "DefaultValue": "rgba(91, 95, 95, 255)"
+                "DefaultValue": "rgba(83, 135, 140, 255)"
             },
             "TextColor":{
                 "FieldType": "ColorInput",
