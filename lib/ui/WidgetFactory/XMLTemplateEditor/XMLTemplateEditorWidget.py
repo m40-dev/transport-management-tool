@@ -11,6 +11,7 @@ from PyQt6 import QtWidgets
 from ..CodeEditors.XMLEditor import xml_editor
 from .ContextMenu import XMLObjectContextMenu, ObjectDataItemContextMenu
 from ..DialogScreens import ScriptEditorDialog
+from ..DatabaseObjectViewer import DatabaseObjectViewer
 
 # Data Models
 from lib.data.DataModels import XMLDataItem, XMLDataModel, ObjectDataItem, TASKS
@@ -137,6 +138,7 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
             contextMenu.onQueryTableData.connect(self.queryTaskData)
             contextMenu.onCollapseTreeStructure.connect(lambda source_index: self.toggleTreeStructure(True, source_index))
             contextMenu.onExpandTreeStructure.connect(lambda source_index: self.toggleTreeStructure(False, source_index))
+            contextMenu.onShowDatabaseObject.connect(self.showDatabaseObject)
 
             if len(contextMenu.menu_items) > 0:
                 menu_target = self.XMLStructureTreeView.mapToGlobal(menuPosition)
@@ -162,10 +164,33 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         contextMenu.onQueryTableData.connect(self.queryTaskData)
         contextMenu.onCollapseTreeStructure.connect(lambda source_index: self.toggleTreeStructure(True, source_index))
         contextMenu.onExpandTreeStructure.connect(lambda source_index: self.toggleTreeStructure(False, source_index))
+        contextMenu.onShowDatabaseObject.connect(self.showDatabaseObject)
 
         if len(contextMenu.menu_items) > 0:
             menu_target = self.XMLStructureTreeView.mapToGlobal(menuPosition)
             contextMenu.popup(menu_target)
+
+    def showDatabaseObject(self, source_index):
+        if source_index.isValid():
+            source_item = source_index.internalPointer()
+            column_list = []
+            values_list = []
+
+            if isinstance(source_item, (XMLDataItem)):
+                if source_item.loadDatabaseObject():
+                    column_list = self.application.db.get_object_columns(source_item.object_data)
+                    values_list = source_item.object_data
+            
+            if isinstance(source_item, (ObjectDataItem)):
+                column_list = source_item.object_columns(source_item.object_data)
+                values_list = source_item.object_data
+
+            if len(column_list) > 0 and len(values_list) > 0:
+                viewer = DatabaseObjectViewer(application=self.application)
+                viewer.setTableHeaders(["Object Columns", "Column Values"])
+                viewer.loadTableColumn(0, column_list)
+                viewer.loadTableColumn(1, values_list)
+
 
     def toggleTreeStructure(self, collapse_tree, source_index):
         selected_indexes = self.XMLStructureTreeView.selectedIndexes()

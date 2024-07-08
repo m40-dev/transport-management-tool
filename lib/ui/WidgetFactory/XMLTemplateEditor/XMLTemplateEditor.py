@@ -288,7 +288,6 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             for table_name, table_data in self.application.db.table_info.items():
                 table_display = f"{table_name} ({table_data.DisplayName})" 
                 self.TableComboBox.addItem(table_display, table_name)
-                
             self.reloadChangeLabels()
 
     def reloadChangeLabels(self):

@@ -404,7 +404,7 @@ class XMLDataItem(QObject):
             table_name = self._xml_data.table_name
             
             if not table_name:
-                return
+                return False
 
             self.object_data = self.application.db.get_db_object(table_name, self._xml_data.key_columns, " and " )
             
@@ -448,12 +448,14 @@ class XMLDataItem(QObject):
             table_name = self.table_name
             
             if not table_name:
-                return
+                return False
                 
             self.object_data = self.application.db.get_db_object(table_name, self._xml_data.query_dict, " and " )
             
             if self.object_data and len(self.object_data) > 0:
                 self.object_data = self.object_data[0]
+        
+        return True
     
     def listObjectData(self, override=False):
         if self._xml_data:

@@ -1,7 +1,7 @@
 import uuid
 from PyQt6.QtCore import Qt, pyqtSignal, QObject, pyqtSignal
 from copy import deepcopy
-import re, os
+import re, os, shutil
 from pathlib import Path
 
 FILTER_MIN_LEN = 1
@@ -209,11 +209,9 @@ class JSONDataItem(QObject):
                 return treeview_order
 
             value_range = (max_value - min_value)
-
-            treeview_order = treeview_order + min_value
                             
             if sort_column_configuration.get("DistributeEvenly", False) == True:
-                sorting_step = value_range / sibling_count
+                sorting_step = value_range / (sibling_count - 1)
                 treeview_order = round(sorting_step * treeview_order )
             
             if validate_siblings:
@@ -232,7 +230,7 @@ class JSONDataItem(QObject):
                         treeview_order = min_value
         
         if treeview_order <= min_value:
-            treeview_order = min_value
+            treeview_order = min_value + treeview_order
 
         if treeview_order >= max_value:
             treeview_order = max_value
@@ -662,7 +660,21 @@ class JSONDataItem(QObject):
                 # mark display columns with prefix
                 export_data[field] = "[CLONE] " + object_field_value
                 continue
+            
+            if field_type and field_type == "FileInput":
+                # mark display columns with prefix
+                source_filepath = self.get_file_path(file_column=field)
+                file_name =  "CLONED_" + source_filepath.name
+                if source_filepath.is_file():
+                    # Clone the source file as well
+                    target_filepath =  source_filepath.parent / file_name
+                    shutil.copy(source_filepath, target_filepath)
 
+                
+                export_data[field] = object_field_value.replace(source_filepath.name, file_name)
+
+                
+                continue
 
             export_data[field] = object_field_value
         return export_data

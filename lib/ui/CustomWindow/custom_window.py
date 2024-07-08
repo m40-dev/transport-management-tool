@@ -275,7 +275,7 @@ class CustomBase(QWidget):
         return False, 0
 
 class CustomWindow(CustomBase):
-    BORDER_WIDTH = 5
+    BORDER_WIDTH = 12
     max_btn_hovered = False
     title_bar = None
 

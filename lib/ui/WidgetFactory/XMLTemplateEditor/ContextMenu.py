@@ -35,6 +35,7 @@ class XMLObjectContextMenu(QMenu):
     onQueryTableData = pyqtSignal(object)
     onCollapseTreeStructure = pyqtSignal(object)
     onExpandTreeStructure = pyqtSignal(object)
+    onShowDatabaseObject = pyqtSignal(object)
 
     def __init__(self, parent, source_index):
         super(XMLObjectContextMenu, self).__init__()
@@ -51,6 +52,10 @@ class XMLObjectContextMenu(QMenu):
                 menuQueryDatabaseObject = self.addAction("Query this table")
                 menuQueryDatabaseObject.triggered.connect(lambda: self.onQueryTableData.emit(source_index))
                 self.menu_items.append(menuQueryDatabaseObject)
+            
+                menuShowDatabaseObject = self.addAction("Show Database Object")
+                menuShowDatabaseObject.triggered.connect(lambda: self.onShowDatabaseObject.emit(source_index))
+                self.menu_items.append(menuShowDatabaseObject)
             
             # Prepare Transport Object specific menu items
             if source_item.xml_object_class == "Transport_Object" or (source_item.xml_object_class == "Table_Object_Reference" and source_item.table_name in OBJECT_LISTING_TABLES):
@@ -177,6 +182,7 @@ class ObjectDataItemContextMenu(QMenu):
     onQueryTableData = pyqtSignal(object)
     onCollapseTreeStructure = pyqtSignal(object)
     onExpandTreeStructure = pyqtSignal(object)
+    onShowDatabaseObject = pyqtSignal(object)
 
     def __init__(self, parent, source_index):
         super(ObjectDataItemContextMenu, self).__init__()
@@ -191,6 +197,11 @@ class ObjectDataItemContextMenu(QMenu):
             menuQueryDatabaseObject = self.addAction("Query this table")
             menuQueryDatabaseObject.triggered.connect(lambda: self.onQueryTableData.emit(source_index))
             self.menu_items.append(menuQueryDatabaseObject)
+
+            if source_item.object_class == "ObjectDataItem":
+                menuShowDatabaseObject = self.addAction("Show Database Object")
+                menuShowDatabaseObject.triggered.connect(lambda: self.onShowDatabaseObject.emit(source_index))
+                self.menu_items.append(menuShowDatabaseObject)
 
             # handle treeview expand/collapse function
             self.addSeparator()
