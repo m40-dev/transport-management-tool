@@ -17,8 +17,8 @@ Remove-Item -R .\build\TransportManager\lib\asyncio -ErrorAction SilentlyContinu
 #Remove unnecesary PyQT libraries
 Get-ChildItem .\build\TransportManager\lib\PyQt6\bindings -Exclude Qsci,QtCore,QtGui,QtWidgets | Remove-Item -R -Force -ErrorAction SilentlyContinue
 Get-ChildItem .\build\TransportManager\lib\PyQt6\Qt6\plugins -Exclude imageformats,platforms,styles | Remove-Item -R -Force -ErrorAction SilentlyContinue
-Get-ChildItem .\build\TransportManager\lib\PyQt6\Qt6\bin -Exclude msvcp140.dll,Qt6Svg.dll,msvcp140_2.dll,vcruntime140_1.dll,msvcp140_1.dll | Remove-Item -R -Force -ErrorAction SilentlyContinue
-Get-ChildItem .\build\TransportManager\lib\PyQt6 -Exclude bindings, Qt, Qt6, py.typed, __init__.pyc, sip.pyi, sip.cp39-win_amd64.pyd, Qsci.pyi, QtPrintSupport.pyd, QtGui.pyi, QtCore.pyi, Qt6PrintSupport.dll, QtWidgets.pyi, QtGui.pyd, QtCore.pyd, Qsci.pyd, QtWidgets.pyd, Qt6Core.dll, Qt6Widgets.dll, Qt6Gui.dll | Remove-Item -R -Force -ErrorAction SilentlyContinue
+Get-ChildItem .\build\TransportManager\lib\PyQt6\Qt6\bin -Exclude msvcp140.dll,Qt6Svg.dll,msvcp140_2.dll,vcruntime140_1.dll,msvcp140_1.dll, Qt6Core.dll, Qt6Widgets.dll, Qt6Gui.dll, Qt6Pdf.dll, Qt6Network.dll, Qt6PrintSupport.dll | Remove-Item -R -Force -ErrorAction SilentlyContinue
+Get-ChildItem .\build\TransportManager\lib\PyQt6 -Exclude bindings, Qt, Qt6, py.typed, __init__.pyc, sip.pyi, sip.*-win_amd64.pyd, Qsci.pyi, QtPrintSupport.pyd, QtGui.pyi, QtCore.pyi, Qt6PrintSupport.dll, QtWidgets.pyi, QtGui.pyd, QtCore.pyd, Qsci.pyd, QtWidgets.pyd, Qt6Core.dll, Qt6Widgets.dll, Qt6Gui.dll, _cx_freeze_qt_debug.pyc | Remove-Item -R -Force -ErrorAction SilentlyContinue
 Remove-Item -R .\build\TransportManager\lib\PyQt6\Qt6\qml -Force -ErrorAction SilentlyContinue
 Remove-Item -R .\build\TransportManager\lib\PyQt6\Qt6\translations -Force -ErrorAction SilentlyContinue
 

@@ -24,7 +24,7 @@ from lib.ui.CustomWindow.custom_window import CustomMainWindow
 #""" Database Connector Module """
 from lib.db.database import DatabaseConnection
 
-VERSION = '0.9.7'
+VERSION = '0.9.8'
 APP_NAME = f"Transport Management Tool - {VERSION}"
 
 class Transport_Manager(CustomMainWindow):

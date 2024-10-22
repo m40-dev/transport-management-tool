@@ -38,6 +38,8 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         self.onXMLPreviewRefresh()
         
         self.xmlStructureChanged.connect(self.onXMLPreviewRefresh)
+        self.xmlStructureChanged.connect(self.onTemplateChanged)
+
         self.XMLStructureTreeView.mousePressEvent = self.XMLStructureTreeViewMousePressEvent
         self.XMLStructureTreeView.setWordWrap(True)
         self.parent.refreshUi.connect(self.refresh_ui)
@@ -58,6 +60,10 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
         display_name = "New Template"
         if self.current_file:
             display_name = Path(self.current_file).name
+
+        if self.XMLStructureTreeView.model() and self.XMLStructureTreeView.model().isDifferent():
+            display_name = f"{display_name} (*)"
+
         return display_name
 
     def reloadXMLFile(self):
@@ -77,6 +83,10 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
 
         self.XMLStructureTreeView.header().resizeSection(0, round(self.application.width() * 0.25))
         self.XMLStructureTreeView.header().resizeSection(1, round(self.application.width() * 0.18))
+
+    def onTemplateChanged(self):
+        
+        self.parent.tabNameChanged.emit(self)
 
     def onXMLPreviewRefresh(self):
         self.xml_preview_timer.start(XML_PREVIEW_TIMER)
@@ -100,7 +110,11 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                     doc.write(self.XMLStructureTreeView.model().exportXMLData())
                     # doc.write(self.transport_template.string)
                 self.XMLStructureTreeView.model().fileSaved()
+                self.parent.tabNameChanged.emit(self)
+                
+                MsgBox(self.application, "XML Template Saved", f"XML Template '{self.display}' have been saved.")
                 return self.current_file
+                
             return self.saveXMLTemplateAs(self.current_file)
         return self.saveXMLTemplateAs(self.application.current_workdir)
 
@@ -117,9 +131,12 @@ class XMLTemplateEditorWidget(QtWidgets.QWidget):
                 doc.write(self.XMLStructureTreeView.model().exportXMLData())
                 # doc.write(self.transport_template.string)
             self.current_file = file_path[0]
-            self.parent.tabNameChanged.emit(self)
+            
             self.setCurrentXMLTemplate()
             self.XMLStructureTreeView.model().fileSaved()
+            self.parent.tabNameChanged.emit(self)
+
+            MsgBox(self.application, "XML Template Saved", f"XML Template '{self.display}' have been saved.")
             return file_path[0]
         return False
 

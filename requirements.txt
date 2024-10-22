@@ -2,3 +2,6 @@ pyodbc
 cryptography
 PyQt6
 lxml
+PyQt6-QScintilla
+cx-Freeze
+pypiwin32

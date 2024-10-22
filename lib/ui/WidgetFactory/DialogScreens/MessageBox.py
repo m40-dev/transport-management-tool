@@ -59,7 +59,7 @@ class MsgBox(CustomDialogWindow):
             self.buttonBox.setStandardButtons(QtWidgets.QDialogButtonBox.StandardButton.Close)
         
         self.form_layout.addWidget(self.label, 0, 0)
-        self.label.setText(self.message)
+        self.label.setText(str(self.message))
 
         self.setMinimumSize(200, 150)
 

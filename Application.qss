@@ -17,10 +17,22 @@ QSplitter::handle{
 
 QLabel, QCheckBox, QRadioButton{
 	background: transparent;
-	color: @AltTextColor;
+	color: @TextColor;
 }
 
-QCheckBox::hover, QRadioButton::hover{
+QRadioButton::indicator:!checked{
+	background: @AltBaseColor;
+	border: 2px solid @BorderColor;
+	border-radius: 8px;
+}
+
+QRadioButton::indicator:checked{
+	background: @AltBaseColor;
+	border: 2px solid @HighlightedText;
+	border-radius: 8px;
+}
+
+QCheckBox::hover, QRadioButton::hover, QCheckBox:checked, QRadioButton:checked{
 	color: @HighlightedText;
 }
 
@@ -684,6 +696,10 @@ QLabel[Label="PropertyValue"], QCheckbox[Label="PropertyValue"], QRadioButton[La
 	padding: 3px;
 }
 
+QRadioButton[Label="PropertyValue"]:checked{
+	color: @HighlightedText;
+}
+
 /* XML Template Editor Custom Configurations */
 
 /* File Path label seen in the xml template editor above the xml preview browser */
@@ -1050,6 +1066,7 @@ QWidget[ConfigurationEditor="ParameterGroupSeparator"]{
 }
 
 QWidget[ConfigurationEditor="PropertyLabel"]{
+	background: transparent;
 	color:@TextColor;
 	text-align: right;
 	margin:1px;

@@ -19,8 +19,8 @@ class DatabaseObjectViewer(CustomDialogWindow):
         self.setModal(False)
         self.tableWidget = QtWidgets.QTableWidget(2, 2)
         self.tableWidget.setObjectName("DatabaseObjectViewer")
-        self.tableWidget.setColumnWidth(0, self.width()* 0.45)
-        self.tableWidget.setColumnWidth(1, self.width()* 0.45)
+        self.tableWidget.setColumnWidth(0, round(self.width()* 0.45))
+        self.tableWidget.setColumnWidth(1, round(self.width()* 0.45))
         # self.tableWidget.horizontalHeader().setVisible(False)
 
         self.form_layout.addWidget(self.tableWidget, 0, 0 )
