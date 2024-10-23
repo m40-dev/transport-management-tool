@@ -744,6 +744,14 @@ class XMLDataItem(QObject):
         if self.application.db and not self.application.db.is_connected:
             return self.application.databaseConnectionRequired()
 
+        # check if the query column is valid for given table, otherwise skip query
+        if table_name in self.application.db.column_info.keys():
+            if query_column.upper() not in self.application.db.column_info[table_name]:
+                return []
+        else:
+            # no information available about table columns, skip query
+            return []
+
         query = f"select * from {table_name} where {query_column} in ('{query_values}')"
         
         database_where_clause = self.application.db.get_transport_where_clause(table_name)

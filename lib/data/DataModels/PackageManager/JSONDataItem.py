@@ -669,7 +669,6 @@ class JSONDataItem(QObject):
                     # Clone the source file as well
                     target_filepath =  source_filepath.parent / file_name
                     shutil.copy(source_filepath, target_filepath)
-
                 
                 export_data[field] = object_field_value.replace(source_filepath.name, file_name)
 

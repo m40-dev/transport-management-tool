@@ -10,7 +10,6 @@ class DatabaseObjectViewer(CustomDialogWindow):
         # self.form_layout.addWidget(self.preset_name_label, 1, 0, 1, 1)
         self.setupUi()
         
-
         self.show()
 
     def setupUi(self):
@@ -63,6 +62,6 @@ class DatabaseObjectViewer(CustomDialogWindow):
         # print("save window")
         self.application.settings.setValue("DatabaseObjectViewerWindow", self.saveGeometry())
 
-    def close(self):
+    def close(self, accepted=False):
         self.saveWindowState()
-        super().close()
+        super().close(accepted=accepted)

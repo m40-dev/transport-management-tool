@@ -84,6 +84,7 @@ class DatabaseRelations(QtWidgets.QWidget):
             parent=self, 
             source_index=clickedIndex)
         contextMenu.onFollowTableRelation.connect(self.extendTableRelations)
+
         menu_target = self.RelationsViewTreeView.mapToGlobal(menuPosition)
         contextMenu.popup(menu_target)
 

@@ -2,6 +2,7 @@ from PyQt6 import QtCore, QtWidgets
 from .XMLTemplateEditorWidget import XMLTemplateEditorWidget
 from ..DialogScreens import DatePickerDialog, MsgBox
 from .DatabaseRelations import DatabaseRelations
+from ..DatabaseObjectViewer import DatabaseObjectViewer
 from lib.data.DataModels.XMTemplateEditor import ObjectDataListModel, XMLDataItem, ObjectDataItem
 from .ContextMenu import ObjectDataItemContextMenu
 from copy import deepcopy
@@ -408,10 +409,31 @@ class XMLTemplateEditor(QtWidgets.QWidget):
             contextMenu.onQueryTableData.connect(self.queryTaskData)
             contextMenu.onCollapseTreeStructure.connect(lambda source_index: self.toggleTreeStructure(True, source_index))
             contextMenu.onExpandTreeStructure.connect(lambda source_index: self.toggleTreeStructure(False, source_index))
-
+            contextMenu.onShowDatabaseObject.connect(self.showDatabaseObject)
             if len(contextMenu.menu_items) > 0:
                 menu_target = self.SearchResultsTreeView.mapToGlobal(menuPosition)
                 contextMenu.popup(menu_target)
+
+    def showDatabaseObject(self, source_index):
+        if source_index.isValid():
+            source_item = source_index.internalPointer()
+            column_list = []
+            values_list = []
+
+            if isinstance(source_item, (XMLDataItem)):
+                if source_item.loadDatabaseObject():
+                    column_list = self.application.db.get_object_columns(source_item.object_data)
+                    values_list = source_item.object_data
+            
+            if isinstance(source_item, (ObjectDataItem)):
+                column_list = source_item.object_columns(source_item.object_data)
+                values_list = source_item.object_data
+
+            if len(column_list) > 0 and len(values_list) > 0:
+                viewer = DatabaseObjectViewer(application=self.application)
+                viewer.setTableHeaders(["Object Columns", "Column Values"])
+                viewer.loadTableColumn(0, column_list)
+                viewer.loadTableColumn(1, values_list)
 
     def queryTaskData(self, source_index):
         if source_index.isValid():
