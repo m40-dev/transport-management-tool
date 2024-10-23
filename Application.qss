@@ -20,6 +20,11 @@ QLabel, QCheckBox, QRadioButton{
 	color: @TextColor;
 }
 
+QRadioButton::indicator{
+	width: 13px;
+	height: 13px;
+}
+
 QRadioButton::indicator:!checked{
 	background: @AltBaseColor;
 	border: 2px solid @BorderColor;
@@ -27,13 +32,17 @@ QRadioButton::indicator:!checked{
 }
 
 QRadioButton::indicator:checked{
-	background: @AltBaseColor;
-	border: 2px solid @HighlightedText;
+	background: @AltBaseColor2;
+	border: 3px solid @HighlightedText;
 	border-radius: 8px;
+	width: 11px;
+	height: 11px;
+	
 }
 
 QCheckBox::hover, QRadioButton::hover, QCheckBox:checked, QRadioButton:checked{
 	color: @HighlightedText;
+	font-weight: bold;
 }
 
 QLineEdit, QComboBox, QDateEdit{
