@@ -142,39 +142,40 @@ class XMLObjectContextMenu(QMenu):
 
             self.menu_items.append(menuActionPasteNodes)
 
-            self.addSeparator()
+        # Anything in the viewport really
+        self.addSeparator()
 
-            menuTransportTask = self.addMenu("Add Transport Task")
-            
-            menuActionAddObjectTransportTask = menuTransportTask.addAction("Add Object Transport Task")
-            menuActionAddObjectTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.ObjectTransport, VI.Transport"))
+        menuTransportTask = self.addMenu("Add Transport Task")
+        
+        menuActionAddObjectTransportTask = menuTransportTask.addAction("Add Object Transport Task")
+        menuActionAddObjectTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.ObjectTransport, VI.Transport"))
 
-            menuActionAddSQLTransportTask = menuTransportTask.addAction("Add SQL Transport Task")
-            menuActionAddSQLTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.SQLTransport, VI.Transport"))
+        menuActionAddSQLTransportTask = menuTransportTask.addAction("Add SQL Transport Task")
+        menuActionAddSQLTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.SQLTransport, VI.Transport"))
 
-            menuActionAddTagTransportTask = menuTransportTask.addAction("Add Change Label Transport Task")
-            menuActionAddTagTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.TagTransport, VI.Transport"))
+        menuActionAddTagTransportTask = menuTransportTask.addAction("Add Change Label Transport Task")
+        menuActionAddTagTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.TagTransport, VI.Transport"))
 
-            menuActionAddFileTransportTask = menuTransportTask.addAction("Add File Transport Task")
-            menuActionAddFileTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.FileTransport, VI.Transport"))
+        menuActionAddFileTransportTask = menuTransportTask.addAction("Add File Transport Task")
+        menuActionAddFileTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.FileTransport, VI.Transport"))
 
-            menuActionShellTransportTask = menuTransportTask.addAction("Add Synchronization Project Transport Task")
-            menuActionShellTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.DPR.ShellTransport, VI.Transport.DPR"))
+        menuActionShellTransportTask = menuTransportTask.addAction("Add Synchronization Project Transport Task")
+        menuActionShellTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.DPR.ShellTransport, VI.Transport.DPR"))
 
-            menuActionSchemaTransportTask = menuTransportTask.addAction("Add Schema Transport Task")
-            menuActionSchemaTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.SchemaTransport, VI.Transport"))
+        menuActionSchemaTransportTask = menuTransportTask.addAction("Add Schema Transport Task")
+        menuActionSchemaTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.SchemaTransport, VI.Transport"))
 
-            menuActionBufferTransportTask = menuTransportTask.addAction("Add System Configuration Transport Task")
-            menuActionBufferTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.BufferTransport, VI.Transport"))
-            
-            self.menu_items.append(menuTransportTask)
-            self.menu_items.append(menuActionAddObjectTransportTask)
-            self.menu_items.append(menuActionAddSQLTransportTask)
-            self.menu_items.append(menuActionAddTagTransportTask)
-            self.menu_items.append(menuActionAddFileTransportTask)
-            self.menu_items.append(menuActionShellTransportTask)
-            self.menu_items.append(menuActionSchemaTransportTask)
-            self.menu_items.append(menuActionBufferTransportTask)
+        menuActionBufferTransportTask = menuTransportTask.addAction("Add System Configuration Transport Task")
+        menuActionBufferTransportTask.triggered.connect(lambda: self.onAddTransportTask.emit("VI.Transport.BufferTransport, VI.Transport"))
+        
+        self.menu_items.append(menuTransportTask)
+        self.menu_items.append(menuActionAddObjectTransportTask)
+        self.menu_items.append(menuActionAddSQLTransportTask)
+        self.menu_items.append(menuActionAddTagTransportTask)
+        self.menu_items.append(menuActionAddFileTransportTask)
+        self.menu_items.append(menuActionShellTransportTask)
+        self.menu_items.append(menuActionSchemaTransportTask)
+        self.menu_items.append(menuActionBufferTransportTask)
         
 
 class ObjectDataItemContextMenu(QMenu):
