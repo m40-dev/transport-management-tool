@@ -163,6 +163,8 @@ class object_container(transport_template_custom_object):
                     relation_number += 2
                 if "FK" in relation_state:
                     relation_number += 1
+                if "BOTH" in relation_state.upper():
+                    relation_number += 3
                 
                 relation_entry = {
                         "Caption": f"{child_table} - > {child_column}",
