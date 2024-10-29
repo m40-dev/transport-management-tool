@@ -663,7 +663,7 @@ class JSONDataItem(QObject):
             
             if field_type and field_type == "FileInput":
                 # mark display columns with prefix
-                source_filepath = self.get_file_path(file_column=field)
+                source_filepath = Path(self.get_file_path(file_column=field))
                 file_name =  "CLONED_" + source_filepath.name
                 if source_filepath.is_file():
                     # Clone the source file as well
@@ -671,8 +671,6 @@ class JSONDataItem(QObject):
                     shutil.copy(source_filepath, target_filepath)
                 
                 export_data[field] = object_field_value.replace(source_filepath.name, file_name)
-
-                
                 continue
 
             export_data[field] = object_field_value

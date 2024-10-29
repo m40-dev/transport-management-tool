@@ -177,7 +177,7 @@
             "FileSelectionMode":"FileName",
             "RedirectDirectoryStatic":"",
             "RedirectDirectoryDynamic":"Package_Data/%Parent.PackageName%/%TaskType%",
-            "RedirectDirectoryRelativeTo":"Parent",
+            "RedirectDirectoryRelativeTo":"Workdir",
             "ValuePattern":"%TaskType%-%TaskName%.zip"
         },
         "TaskType":{
