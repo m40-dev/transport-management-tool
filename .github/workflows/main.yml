@@ -24,6 +24,6 @@ jobs:
         uses: Amadevus/pwsh-script@v2.0.3
         with:
           # PowerShell script to execute in Actions-hydrated context
-          script: build.ps1
+          script: ./build.ps1
                 
       
