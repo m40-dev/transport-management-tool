@@ -12,5 +12,5 @@ jobs:
           # Version range or exact version of Python or PyPy to use, using SemVer's version range syntax. Reads from .python-version if unset.
           python-version: 3.14
           # Used to specify the packages to install with pip after setting up Python. 
-          pip-install: requirements.txt
+          pip-install: -r requirements.txt
           
