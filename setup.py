@@ -5,7 +5,7 @@ import os
 # PYTHON_INSTALL_DIR = 'C:/tools/miniconda3'
 from cx_Freeze import setup, Executable
 
-base = "Win32GUI"
+base = "gui"
 from main import VERSION
 
 packages = []
